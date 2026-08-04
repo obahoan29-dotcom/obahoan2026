@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng Thông Tin Đề Thi Trực Tuyến</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --primary-red: #d63031;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #2d3748;
+            --accent: #ff4757;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 12px;
+        }
+
+        /* BANNER ĐẦU TRANG - CHỦ ĐỀ HẢI TẶC / KHO BÁU TOM & JERRY SIÊU BẮT MẮT */
+        .top-banner-box {
+            width: 100%;
+            height: 150px;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+            background: #1e293b;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            position: relative;
+        }
+        .top-banner-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .top-banner-box:hover .top-banner-img {
+            transform: scale(1.02);
+        }
+        
+        /* HEADER HOẠT HÌNH SIÊU BẮT MẮT */
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 40%, #9333ea 70%, #ec4899 100%);
+            background-size: 300% 300%;
+            animation: gradientShift 8s ease infinite;
+            color: white;
+            padding: 26px 15px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        /* Hiệu ứng ánh sáng lấp lánh bay qua */
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            transform: rotate(30deg);
+            pointer-events: none;
+            animation: shimmerEffect 6s linear infinite;
+        }
+        @keyframes shimmerEffect {
+            0% { transform: translateY(-20px) rotate(0deg); }
+            50% { transform: translateY(20px) rotate(180deg); }
+            100% { transform: translateY(-20px) rotate(360deg); }
+        }
+        /* Icon tên lửa hoạt hình bay lượn sinh động */
+        .header-flying-icon {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 30px;
+            animation: flyRocket 4s ease-in-out infinite;
+            z-index: 2;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+        }
+        @keyframes flyRocket {
+            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+            50% { transform: translateY(-10px) rotate(-10deg) scale(1.1); }
+        }
+        
+        .web-avatar {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.95);
+            margin-bottom: 8px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            animation: pulseAvatar 3s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
+        }
+        @keyframes pulseAvatar {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255,255,255,0.6); }
+            50% { transform: scale(1.06); box-shadow: 0 0 25px rgba(255,255,255,1); }
+        }
+        header h1 {
+            margin: 0;
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            background: linear-gradient(to right, #ffffff, #fef08a, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        header p {
+            margin: 6px 0 0;
+            font-size: 13px;
+            opacity: 0.95;
+            position: relative;
+            z-index: 2;
+            font-weight: 500;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* KHU VỰC NHẮC NHỞ TRÊN 2 CỘT */
+        .reminder-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 15px;
+            padding: 12px 18px;
+        }
+        .reminder-header-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primary-red);
+            margin: 0 0 10px 0;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 6px;
+        }
+
+        /* BỐ CỤC 2 CỘT SONG SONG LUÔN CỐ ĐỊNH */
+        .columns-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* FOLDER CHUNG */
+        .folder-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: all 0.25s ease;
+        }
+        .folder-section:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        }
+        .folder-header {
+            padding: 11px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+            border-bottom: 1px solid transparent;
+            transition: background 0.2s;
+        }
+        .folder-header::-webkit-details-marker {
+            display: none;
+        }
+        .folder-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .folder-title {
+            font-size: 14px;
+            font-weight: bold;
+            flex: 1;
+            margin: 0;
+        }
+        .folder-arrow {
+            font-size: 11px;
+            color: #718096;
+            transition: transform 0.3s;
+        }
+        details[open] .folder-arrow {
+            transform: rotate(90deg);
+        }
+
+        /* CỘT TRÁI: TÔNG MÀU ĐỎ NỔI BẬT (HỌC THÊM) */
+        #left-column .folder-header {
+            background: linear-gradient(to right, #fff5f5, #ffe8e8);
+        }
+        #left-column .folder-header:hover {
+            background: linear-gradient(to right, #ffe3e3, #ffd8d8);
+        }
+        #left-column details[open] .folder-header {
+            border-bottom: 2px solid var(--primary-red);
+        }
+        #left-column .folder-title {
+            color: var(--primary-red);
+        }
+
+        /* CỘT PHẢI: TÔNG MÀU XANH DƯƠNG LỊCH LÃM (CHÍNH KHÓA) */
+        #right-column .folder-header {
+            background: linear-gradient(to right, #f0f4f8, #e2e8f0);
+        }
+        #right-column .folder-header:hover {
+            background: linear-gradient(to right, #e2e8f0, #cbd5e1);
+        }
+        #right-column details[open] .folder-header {
+            border-bottom: 2px solid var(--primary-blue);
+        }
+        #right-column .folder-title {
+            color: var(--primary-blue);
+        }
+
+        /* DANH SÁCH LINK TRONG FOLDER */
+        .link-list {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #fff;
+        }
+        .exam-card {
+            background: #fdfdfd;
+            padding: 7px 9px;
+            border-radius: 8px;
+            border: 1px solid #edf2f7;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            transition: all 0.2s;
+        }
+        .exam-card:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+        .exam-card:active {
+            transform: scale(0.98);
+        }
+        .exam-thumb-box {
+            width: 38px;  
+            height: 50px; 
+            border-radius: 5px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 1px solid #e2e8f0;
+            background: #f1f5f9;
+        }
+        .exam-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .exam-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .exam-title {
+            font-weight: 600;
+            font-size: 11px; 
+            color: #1a202c;
+            margin-bottom: 3px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 6; 
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .exam-date {
+            font-size: 10px;
+            color: #718096;
+        }
+        
+        /* NÚT XEM THÊM BÀI CŨ HƠN */
+        .load-more-btn {
+            background: #f1f5f9;
+            border: 1px dashed #cbd5e1;
+            color: var(--primary-blue);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 7px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 4px;
+            transition: all 0.2s;
+        }
+        .load-more-btn:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+        .hidden-links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        /* CÁC NHÃN (BADGE) PHÂN LOẠI */
+        .badge-new {
+            background: var(--accent);
+            color: white;
+            font-size: 8px;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 3px;
+        }
+        .badge-gdrive {
+            background: #10b981;
+            color: white;
+            font-size: 8px;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 3px;
+        }
+        .badge-onedrive {
+            background: #0284c7;
+            color: white;
+            font-size: 8px;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 3px;
+        }
+
+        .arrow {
+            font-size: 14px;
+            color: #a0aec0;
+            margin-left: auto;
+        }
+        .empty-folder {
+            padding: 8px;
+            color: #a0aec0;
+            font-style: italic;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* KHU VỰC BẢNG TIN & DẶN DÒ */
+        .news-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+            margin-top: 15px;
+            padding: 15px 18px;
+        }
+        .news-header-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin: 0 0 12px 0;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 8px;
+        }
+        .news-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #edf2f7;
+            text-decoration: none;
+            color: var(--text);
+            transition: background 0.2s;
+        }
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        .news-item:hover .news-title {
+            color: var(--primary-blue);
+        }
+        .news-content {
+            flex: 1;
+        }
+        .news-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1a202c;
+            margin-bottom: 3px;
+            line-height: 1.4;
+        }
+        .news-date {
+            font-size: 10px;
+            color: #718096;
+        }
+        .news-img-box {
+            width: 100px;
+            height: 65px;
+            border-radius: 6px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 1px solid #e2e8f0;
+            background: #f1f5f9;
+        }
+        .news-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .news-empty {
+            padding: 10px;
+            color: #a0aec0;
+            font-style: italic;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* BANNER CHÂN TRANG */
+        .bottom-banner-box {
+            width: 100%;
+            height: 90px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+            background: #e2e8f0;
+        }
+        .bottom-banner-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* CHÂN TRANG TO ĐỎ CHÓT NỔI BẬT */
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 22px 15px;
+            background-color: var(--primary-red);
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(214, 48, 49, 0.35);
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    // Hàm tự động lấy Ngày và Giờ từ hệ thống
+    function getSystemDateTime() {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} - ${hours}:${minutes}`;
+    }
+
+    // ĐÃ CẬP NHẬT BANNER CHỦ ĐỀ TOM & JERRY HẢI TẶC / KHO BÁU THEO YÊU CẦU CỦA THẦY
+    const TOP_BANNER_URL = "https://i.ibb.co/RpqQDrjp/Screenshot-2026-08-05-022441.png"; 
+    const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
+    const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
+
+    const TOP_REMINDER_DATA = [
+        {
+            title: "Lưu ý quan trọng: Các em kiểm tra lại tài khoản và nộp bài tập đúng hạn trước buổi học tiếp theo.",
+            date: getSystemDateTime(), 
+            image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300",
+            url: "https://example.com"
+        }
+    ];
+
+    const LEFT_FOLDERS_DATA = [
+        {
+            folderName: "Học thêm toán 10",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/2997/2997930.png",
+            links: [
+                { 
+                    title: "Đề nâng cao toán 10 - Chuyên đề tổ hợp xác suất kiểm tra giữa kì cực kỳ quan trọng cho các em học sinh ôn tập chuẩn bị cho kỳ thi sắp tới", 
+                    date: getSystemDateTime(), 
+                    url: "https://example.com", 
+                    isNew: true, 
+                    platform: "", 
+                    avatar: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=200" 
+                },
+                { 
+                    title: "Bài tập tự luyện phương pháp tọa độ trong mặt phẳng Ôn thi", 
+                    date: getSystemDateTime(), 
+                    url: "https://example.com", 
+                    isNew: false, 
+                    platform: "", 
+                    avatar: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200" 
+                },
+                { 
+                    title: "Đề kiểm tra khảo sát chất lượng đầu năm môn Toán 10 nâng cao", 
+                    date: getSystemDateTime(), 
+                    url: "https://example.com", 
+                    isNew: false, 
+                    platform: "", 
+                    avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
+                }
+            ]
+        },
+        {
+            folderName: "Học thêm toán 11",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/2997/2997930.png",
+            links: []
+        },
+        {
+            folderName: "Học thêm toán 12",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/2997/2997930.png",
+            links: []
+        },
+        {
+            folderName: "Thư mục chờ (Học thêm)",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+            links: []
+        }
+    ];
+
+    const RIGHT_FOLDERS_DATA = [
+        {
+            folderName: "Lớp 10A",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png", 
+            links: [
+                { 
+                    title: "Đề kiểm tra Bất phương trình 10 chương trình mới nhất", 
+                    date: getSystemDateTime(), 
+                    url: "https://example.com", 
+                    isNew: true, 
+                    platform: "", 
+                    avatar: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200" 
+                },
+                { 
+                    title: "Tài liệu ôn tập Chương 1 (Google Drive)", 
+                    date: getSystemDateTime(), 
+                    url: "https://drive.google.com/...", 
+                    isNew: false, 
+                    platform: "gdrive", 
+                    avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
+                }
+            ]
+        },
+        {
+            folderName: "Lớp 11A",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png",
+            links: [
+                { 
+                    title: "Bài tập Đại số 11 (OneDrive)", 
+                    date: getSystemDateTime(), 
+                    url: "https://onedrive.live.com/...", 
+                    isNew: false, 
+                    platform: "onedrive", 
+                    avatar: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200" 
+                }
+            ]
+        },
+        {
+            folderName: "Lớp 12A",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png",
+            links: [
+                { 
+                    title: "Đề khảo sát Giải tích 12 ôn thi tốt nghiệp THPT", 
+                    date: getSystemDateTime(), 
+                    url: "https://example.com", 
+                    isNew: false, 
+                    platform: "", 
+                    avatar: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=200" 
+                }
+            ]
+        },
+        {
+            folderName: "Thư mục chờ (Chính khóa)",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+            links: []
+        }
+    ];
+
+    const NEWS_DATA = [
+        {
+            title: "Lịch kiểm tra định kỳ môn Toán tuần tới các em chú ý ôn tập kỹ chương hệ thức lượng trong tam giác.",
+            date: getSystemDateTime(),
+            image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300",
+            url: "https://example.com"
+        },
+        {
+            title: "Hướng dẫn nộp bài tập về nhà qua hệ thống Google Drive đúng hạn trước ngày thứ sáu.",
+            date: getSystemDateTime(),
+            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300",
+            url: "https://example.com"
+        },
+        {
+            title: "Bài viết thông báo số 3 (Đang để chờ - Thầy có thể thay đổi tiêu đề, link ảnh và đường dẫn tại đây)",
+            date: "Đang cập nhật",
+            image: "", 
+            url: "#",
+            isEmpty: true 
+        }
+    ];
+</script>
+
+<div class="container" id="app">
+    <div class="top-banner-box">
+        <img id="top-banner-img" class="top-banner-img" src="" alt="Banner Top Tom & Jerry">
+    </div>
+
+    <header>
+        <div class="header-flying-icon">🚀</div>
+        <img id="web-avatar-img" class="web-avatar" src="" alt="Avatar Web">
+        <h1>🌱 KHO ĐỀ THI VÀ TÀI LIỆU TRỰC TUYẾN 💖</h1>
+        <p>Cổng thông tin học tập toán từ Obahoan</p>
+    </header>
+
+    <div class="reminder-section">
+        <h3 class="reminder-header-title">📌 Nhắc Nhở Quan Trọng</h3>
+        <div id="reminder-container"></div>
+    </div>
+
+    <div class="columns-wrapper">
+        <div class="column" id="left-column"></div>
+        <div class="column" id="right-column"></div>
+    </div>
+
+    <div class="news-section">
+        <h3 class="news-header-title">📋 Bảng Tin & Dặn Dò Từ Thầy Giáo</h3>
+        <div id="news-container"></div>
+    </div>
+
+    <div class="bottom-banner-box">
+        <img id="bottom-banner-img" class="bottom-banner-img" src="" alt="Banner Bottom">
+    </div>
+
+    <footer>
+        Copyright &copy; 2026 Phạm Công Hoan
+    </footer>
+</div>
+
+<script>
+    function renderReminderSection() {
+        const container = document.getElementById("reminder-container");
+        container.innerHTML = "";
+
+        TOP_REMINDER_DATA.forEach(item => {
+            let reminderCard = document.createElement("a");
+            reminderCard.href = item.url;
+            reminderCard.className = "news-item";
+            reminderCard.target = "_blank";
+
+            let imgHtml = item.image ? `<div class="news-img-box"><img src="${item.image}" class="news-img" alt="Illustration"></div>` : '';
+
+            reminderCard.innerHTML = `
+                <div class="news-content">
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-date">🕒 ${item.date}</div>
+                </div>
+                ${imgHtml}
+            `;
+            container.appendChild(reminderCard);
+        });
+    }
+
+    function createExamCard(item) {
+        let card = document.createElement("a");
+        card.href = item.url;
+        card.className = "exam-card";
+        card.target = "_blank";
+
+        let newBadge = item.isNew ? `<span class="badge-new">MỚI</span>` : '';
+        
+        let platformBadge = '';
+        if (item.platform === 'gdrive') {
+            platformBadge = `<span class="badge-gdrive">Drive</span>`;
+        } else if (item.platform === 'onedrive') {
+            platformBadge = `<span class="badge-onedrive">OneDrive</span>`;
+        }
+
+        let thumbHtml = item.avatar ? `<div class="exam-thumb-box"><img src="${item.avatar}" class="exam-thumb" alt="Thumbnail"></div>` : '';
+
+        card.innerHTML = `
+            ${thumbHtml}
+            <div class="exam-info">
+                <div class="exam-title" title="${item.title}">${newBadge}${platformBadge}${item.title}</div>
+                <div class="exam-date">🕒 ${item.date}</div>
+            </div>
+            <div class="arrow">&#8250;</div>
+        `;
+        return card;
+    }
+
+    function renderFoldersToColumn(dataArray, columnId) {
+        const column = document.getElementById(columnId);
+        column.innerHTML = "";
+
+        dataArray.forEach(folder => {
+            let details = document.createElement("details");
+            details.className = "folder-section";
+
+            let summary = document.createElement("summary");
+            summary.className = "folder-header";
+            summary.innerHTML = `
+                <img src="${folder.folderAvatar}" class="folder-avatar" alt="Folder Icon">
+                <h2 class="folder-title">${folder.folderName}</h2>
+                <span class="folder-arrow">&#9658;</span>
+            `;
+            details.appendChild(summary);
+
+            let listDiv = document.createElement("div");
+            listDiv.className = "link-list";
+
+            if (folder.links.length === 0) {
+                listDiv.innerHTML = `<div class="empty-folder">Chưa có bài tập nào (Đang để chờ)...</div>`;
+            } else {
+                const maxVisible = 2;
+                const visibleLinks = folder.links.slice(0, maxVisible);
+                const hiddenLinks = folder.links.slice(maxVisible);
+
+                visibleLinks.forEach(item => {
+                    listDiv.appendChild(createExamCard(item));
+                });
+
+                if (hiddenLinks.length > 0) {
+                    let hiddenContainer = document.createElement("div");
+                    hiddenContainer.className = "hidden-links-container";
+                    hiddenContainer.style.display = "none";
+
+                    hiddenLinks.forEach(item => {
+                        hiddenContainer.appendChild(createExamCard(item));
+                    });
+
+                    let toggleBtn = document.createElement("button");
+                    toggleBtn.className = "load-more-btn";
+                    toggleBtn.innerHTML = `⬇ Xem thêm ${hiddenLinks.length} bài cũ hơn...`;
+                    
+                    toggleBtn.onclick = function(e) {
+                        e.stopPropagation(); 
+                        if (hiddenContainer.style.display === "none") {
+                            hiddenContainer.style.display = "flex";
+                            toggleBtn.innerHTML = `⬆ Thu gọn bớt`;
+                        } else {
+                            hiddenContainer.style.display = "none";
+                            toggleBtn.innerHTML = `⬇ Xem thêm ${hiddenLinks.length} bài cũ hơn...`;
+                        }
+                    };
+
+                    listDiv.appendChild(toggleBtn);
+                    listDiv.appendChild(hiddenContainer);
+                }
+            }
+
+            details.appendChild(listDiv);
+            column.appendChild(details);
+        });
+    }
+
+    function renderNewsSection() {
+        const container = document.getElementById("news-container");
+        container.innerHTML = "";
+
+        NEWS_DATA.forEach(item => {
+            if (item.isEmpty) {
+                let emptyDiv = document.createElement("div");
+                emptyDiv.className = "news-empty";
+                emptyDiv.innerHTML = `📝 ${item.title}`;
+                container.appendChild(emptyDiv);
+            } else {
+                let newsCard = document.createElement("a");
+                newsCard.href = item.url;
+                newsCard.className = "news-item";
+                newsCard.target = "_blank";
+
+                let imgHtml = item.image ? `<div class="news-img-box"><img src="${item.image}" class="news-img" alt="Illustration"></div>` : '';
+
+                newsCard.innerHTML = `
+                    <div class="news-content">
+                        <div class="news-title">${item.title}</div>
+                        <div class="news-date">🕒 ${item.date}</div>
+                    </div>
+                    ${imgHtml}
+                `;
+                container.appendChild(newsCard);
+            }
+        });
+    }
+
+    window.onload = function() {
+        document.getElementById("top-banner-img").src = TOP_BANNER_URL;
+        document.getElementById("web-avatar-img").src = WEB_AVATAR_URL;
+        document.getElementById("bottom-banner-img").src = BOTTOM_BANNER_URL;
+
+        renderReminderSection();
+        renderFoldersToColumn(LEFT_FOLDERS_DATA, "left-column");
+        renderFoldersToColumn(RIGHT_FOLDERS_DATA, "right-column");
+        renderNewsSection();
+    }
+</script>
+
+</body>
+</html>
