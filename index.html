@@ -333,7 +333,7 @@
         }
 
         /* CÁC NHÃN (BADGE) PHÂN LOẠI */
-        .badge-new {
+        .badge-hot {
             background: var(--accent);
             color: white;
             font-size: 8px;
@@ -477,185 +477,6 @@
 </head>
 <body>
 
-<script>
-    // Hàm tự động lấy Ngày và Giờ từ hệ thống
-    function getSystemDateTime() {
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        return `${day}/${month}/${year} - ${hours}:${minutes}`;
-    }
-
-    // ĐÃ CẬP NHẬT BANNER CHỦ ĐỀ TOM & JERRY HẢI TẶC / KHO BÁU THEO YÊU CẦU CỦA THẦY
-    const TOP_BANNER_URL = "https://files.catbox.moe/cf5o9u.jpg"; 
-    const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
-    const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
-
-    const TOP_REMINDER_DATA = [
-        {
-            title: "Lưu ý quan trọng: Các em kiểm tra lại tài khoản và nộp bài tập đúng hạn trước buổi học tiếp theo.",
-            date: getSystemDateTime(), 
-            image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300",
-            url: "https://www.24h.com.vn/"
-        }
-    ];
-
-    const LEFT_FOLDERS_DATA = [
-        {
-            folderName: "Học thêm toán 10",
-            folderAvatar: "https://files.catbox.moe/vwmecw.png",
-            links: [
-                { 
-                    title: "https://so158b-030826-toan12-ktrahk1", 
-                    date: getSystemDateTime(), 
-                    url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", 
-                    isNew: true, 
-                    platform: "", 
-                    avatar: "https://files.catbox.moe/7p62hg.png" 
-                },
-                { 
-                    title: "Bài tập tự luyện phương pháp tọa độ trong mặt phẳng Ôn thi", 
-                    date: getSystemDateTime(), 
-                    url: "https://hoan030826.vercel.app/", 
-                    isNew: false, 
-                    platform: "", 
-                    avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" 
-                },
-                { 
-                    title: "Đề kiểm tra khảo sát chất lượng đầu năm môn Toán 10 nâng cao", 
-                    date: getSystemDateTime(), 
-                    url: "https://example.com", 
-                    isNew: false, 
-                    platform: "", 
-                    avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
-                }
-            ]
-        },
-        {
-            folderName: "Học thêm toán 11",
-            folderAvatar: "https://files.catbox.moe/pcl2va.png",
-            links: [
-
- { 
-                    title: "so87toan11c4hinhkhonggian050826", 
-                    date: getSystemDateTime(), 
-                    url: "https://so87toan11c4hinhkhonggian050826.vercel.app//", 
-                    isNew: true, 
-                    platform: "", 
-                    avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" 
-                }
-                
-            ]
-        },
-        {
-            folderName: "Học thêm toán 12",
-            folderAvatar: "https://files.catbox.moe/t2mpgx.png",
-            links: [
-
-  { 
-                    title: "https://so158a050826toan12thithuhk1.vercel.app/", 
-                    date: getSystemDateTime(), 
-                    url: "https://so158a050826toan12thithuhk1.vercel.app//", 
-                    isNew: true, 
-                    platform: "", 
-                    avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" 
-                }
-
-
-                
-            ]
-        },
-        {
-            folderName: "Thư mục chờ (Học thêm)",
-            folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
-            links: []
-        }
-    ];
-
-    const RIGHT_FOLDERS_DATA = [
-        {
-            folderName: "Lớp 11A",
-            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png", 
-            links: [
-                { 
-                    title: "Đề kiểm tra Bất phương trình 10 chương trình mới nhất", 
-                    date: getSystemDateTime(), 
-                    url: "https://example.com", 
-                    isNew: true, 
-                    platform: "", 
-                    avatar: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200" 
-                },
-                { 
-                    title: "Tài liệu ôn tập Chương 1 (Google Drive)", 
-                    date: getSystemDateTime(), 
-                    url: "https://drive.google.com/...", 
-                    isNew: false, 
-                    platform: "gdrive", 
-                    avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
-                }
-            ]
-        },
-        {
-            folderName: "Lớp 11C",
-            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png",
-            links: [
-                { 
-                    title: "Bài tập Đại số 11 (OneDrive)", 
-                    date: getSystemDateTime(), 
-                    url: "https://onedrive.live.com/...", 
-                    isNew: false, 
-                    platform: "onedrive", 
-                    avatar: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200" 
-                }
-            ]
-        },
-        {
-            folderName: "Lớp 10? chưa biết",
-            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png",
-            links: [
-                { 
-                    title: "Đề khảo sát Giải tích 12 ôn thi tốt nghiệp THPT", 
-                    date: getSystemDateTime(), 
-                    url: "https://example.com", 
-                    isNew: false, 
-                    platform: "", 
-                    avatar: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=200" 
-                }
-            ]
-        },
-        {
-            folderName: "Thư mục chờ (Chính khóa)",
-            folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
-            links: []
-        }
-    ];
-
-    const NEWS_DATA = [
-        {
-            title: "Lịch kiểm tra định kỳ môn Toán tuần tới các em chú ý ôn tập kỹ chương hệ thức lượng trong tam giác.",
-            date: getSystemDateTime(),
-            image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300",
-            url: "https://dantri.com.vn"
-        },
-        {
-            title: "Xem đáp án và điểm bài kiểm tra của em",
-            date: getSystemDateTime(),
-            image: "https://files.catbox.moe/jum4by.png",
-            url: "https://docs.google.com/spreadsheets/d/17ChADrWRK1lfNuFVYdXJR0KPkXjqr_s-TdAVlCkfocs/edit?usp=sharing"
-        },
-        {
-            title: "Bài viết thông báo số 3 (Đang để chờ - Thầy có thể thay đổi tiêu đề, link ảnh và đường dẫn tại đây)",
-            date: "Đang cập nhật",
-            image: "", 
-            url: "#",
-            isEmpty: true 
-        }
-    ];
-</script>
-
 <div class="container" id="app">
     <div class="top-banner-box">
         <img id="top-banner-img" class="top-banner-img" src="" alt="Banner Top Tom & Jerry">
@@ -693,6 +514,220 @@
 </div>
 
 <script>
+    // Hàm lấy ngày giờ hiện tại hệ thống
+    function getSystemDateTime() {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} - ${hours}:${minutes}`;
+    }
+
+    const TOP_BANNER_URL = "https://files.catbox.moe/cf5o9u.jpg"; 
+    const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
+    const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
+
+    const TOP_REMINDER_DATA = [
+        {
+            title: "Lưu ý quan trọng: Các em kiểm tra lại tài khoản và nộp bài tập đúng hạn trước buổi học tiếp theo.",
+            date: "05/08/2026 - 15:00", // Thời gian cố định
+            image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300",
+            url: "https://www.24h.com.vn/"
+        }
+    ];
+
+    // DỮ LIỆU GỐC BAN ĐẦU CỦA CÁC FOLDER BÊN TRÁI
+    const DEFAULT_LEFT_FOLDERS = [
+        {
+            folderName: "Học thêm toán 10",
+            folderAvatar: "https://files.catbox.moe/vwmecw.png",
+            links: [
+                { 
+                    title: "https://so158b-030826-toan12-ktrahk1", 
+                    date: "05/08/2026 - 23:24", // Thời gian đăng được giữ cố định
+                    url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", 
+                    isHot: true, // Đã đổi sang chữ HOT màu đỏ theo ý anh
+                    platform: "", 
+                    avatar: "https://files.catbox.moe/7p62hg.png" 
+                },
+                { 
+                    title: "Bài tập tự luyện phương pháp tọa độ trong mặt phẳng Ôn thi", 
+                    date: "04/08/2026 - 20:10", 
+                    url: "https://hoan030826.vercel.app/", 
+                    isHot: false, 
+                    platform: "", 
+                    avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" 
+                },
+                { 
+                    title: "Đề kiểm tra khảo sát chất lượng đầu năm môn Toán 10 nâng cao", 
+                    date: "01/08/2026 - 08:30", 
+                    url: "https://example.com", 
+                    isHot: false, 
+                    platform: "", 
+                    avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
+                }
+            ]
+        },
+        {
+            folderName: "Học thêm toán 11",
+            folderAvatar: "https://files.catbox.moe/pcl2va.png",
+            links: [
+                { 
+                    title: "so87toan11c4hinhkhonggian050826", 
+                    date: "05/08/2026 - 21:15", 
+                    url: "https://so87toan11c4hinhkhonggian050826.vercel.app//", 
+                    isHot: true, 
+                    platform: "", 
+                    avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" 
+                }
+            ]
+        },
+        {
+            folderName: "Học thêm toán 12",
+            folderAvatar: "https://files.catbox.moe/t2mpgx.png",
+            links: [
+                { 
+                    title: "https://so158a050826toan12thithuhk1.vercel.app/", 
+                    date: "05/08/2026 - 22:00", 
+                    url: "https://so158a050826toan12thithuhk1.vercel.app//", 
+                    isHot: true, 
+                    platform: "", 
+                    avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" 
+                }
+            ]
+        },
+        {
+            folderName: "Thư mục chờ (Học thêm)",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+            links: []
+        }
+    ];
+
+    // DỮ LIỆU GỐC BAN ĐẦU CỦA CÁC FOLDER BÊN PHẢI
+    const DEFAULT_RIGHT_FOLDERS = [
+        {
+            folderName: "Lớp 11A",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png", 
+            links: [
+                { 
+                    title: "Đề kiểm tra Bất phương trình 10 chương trình mới nhất", 
+                    date: "03/08/2026 - 14:20", 
+                    url: "https://example.com", 
+                    isHot: true, 
+                    platform: "", 
+                    avatar: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200" 
+                },
+                { 
+                    title: "Tài liệu ôn tập Chương 1 (Google Drive)", 
+                    date: "02/08/2026 - 09:00", 
+                    url: "https://drive.google.com/...", 
+                    isHot: false, 
+                    platform: "gdrive", 
+                    avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
+                }
+            ]
+        },
+        {
+            folderName: "Lớp 11C",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png",
+            links: [
+                { 
+                    title: "Bài tập Đại số 11 (OneDrive)", 
+                    date: "01/08/2026 - 16:45", 
+                    url: "https://onedrive.live.com/...", 
+                    isHot: false, 
+                    platform: "onedrive", 
+                    avatar: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200" 
+                }
+            ]
+        },
+        {
+            folderName: "Lớp 10? chưa biết",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/3429/3429149.png",
+            links: [
+                { 
+                    title: "Đề khảo sát Giải tích 12 ôn thi tốt nghiệp THPT", 
+                    date: "30/07/2026 - 10:00", 
+                    url: "https://example.com", 
+                    isHot: false, 
+                    platform: "", 
+                    avatar: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=200" 
+                }
+            ]
+        },
+        {
+            folderName: "Thư mục chờ (Chính khóa)",
+            folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+            links: []
+        }
+    ];
+
+    const NEWS_DATA = [
+        {
+            title: "Lịch kiểm tra định kỳ môn Toán tuần tới các em chú ý ôn tập kỹ chương hệ thức lượng trong tam giác.",
+            date: "04/08/2026 - 08:00",
+            image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300",
+            url: "https://dantri.com.vn"
+        },
+        {
+            title: "Xem đáp án và điểm bài kiểm tra của em",
+            date: "03/08/2026 - 12:00",
+            image: "https://files.catbox.moe/jum4by.png",
+            url: "https://docs.google.com/spreadsheets/d/17ChADrWRK1lfNuFVYdXJR0KPkXjqr_s-TdAVlCkfocs/edit?usp=sharing"
+        },
+        {
+            title: "Bài viết thông báo số 3 (Đang để chờ - Thầy có thể thay đổi tiêu đề, link ảnh và đường dẫn tại đây)",
+            date: "Đang cập nhật",
+            image: "", 
+            url: "#",
+            isEmpty: true 
+        }
+    ];
+
+    // --- CƠ CHẾ LƯU TRỮ VÀ TỰ ĐỘNG THÊM BÀI MỚI VỚI THỜI GIAN CỐ ĐỊNH ---
+    function getStoredData(key, defaultData) {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            return JSON.parse(stored);
+        } else {
+            localStorage.setItem(key, JSON.stringify(defaultData));
+            return defaultData;
+        }
+    }
+
+    let LEFT_FOLDERS_DATA = getStoredData("left_folders_data_v1", DEFAULT_LEFT_FOLDERS);
+    let RIGHT_FOLDERS_DATA = getStoredData("right_folders_data_v1", DEFAULT_RIGHT_FOLDERS);
+
+    // HÀM DÙNG ĐỂ THÊM BÀI MỚI HOẶC BẠN CÓ THỂ GỌI TRỰC TIẾP
+    // Khi thêm bài, hệ thống tự động gán giờ hiện tại làm mốc cố định và lưu lại.
+    function addNewPostToFolder(isLeftColumn, folderIndex, title, url, isHot, platform, avatar) {
+        const targetFolders = isLeftColumn ? LEFT_FOLDERS_DATA : RIGHT_FOLDERS_DATA;
+        
+        const newPost = {
+            title: title,
+            date: getSystemDateTime(), // Tự động lấy giờ hiện tại tại đúng khoảnh khắc chạy lệnh này
+            url: url,
+            isHot: isHot,
+            platform: platform || "",
+            avatar: avatar || "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg"
+        };
+
+        // Thêm bài mới lên đầu danh sách của folder
+        targetFolders[folderIndex].links.unshift(newPost);
+
+        // Lưu vào LocalStorage để lần sau bật lên vẫn giữ nguyên giờ cố định này
+        if (isLeftColumn) {
+            localStorage.setItem("left_folders_data_v1", JSON.stringify(LEFT_FOLDERS_DATA));
+        } else {
+            localStorage.setItem("right_folders_data_v1", JSON.stringify(RIGHT_FOLDERS_DATA));
+        }
+        
+        location.reload(); // Tải lại trang để hiển thị bài mới
+    }
+    // -------------------------------------------------------------------------
+
     function renderReminderSection() {
         const container = document.getElementById("reminder-container");
         container.innerHTML = "";
@@ -722,7 +757,7 @@
         card.className = "exam-card";
         card.target = "_blank";
 
-        let newBadge = item.isNew ? `<span class="badge-new">NEW</span>` : '';
+        let hotBadge = item.isHot ? `<span class="badge-hot">HOT</span>` : '';
         
         let platformBadge = '';
         if (item.platform === 'gdrive') {
@@ -736,7 +771,7 @@
         card.innerHTML = `
             ${thumbHtml}
             <div class="exam-info">
-                <div class="exam-title" title="${item.title}">${newBadge}${platformBadge}${item.title}</div>
+                <div class="exam-title" title="${item.title}">${hotBadge}${platformBadge}${item.title}</div>
                 <div class="exam-date">🕒 ${item.date}</div>
             </div>
             <div class="arrow">&#8250;</div>
