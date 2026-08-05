@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- CÁC THẺ META ÉP TRÌNH DUYỆT KHÔNG LƯU CACHE (LUÔN TẢI BẢN MỚI NHẤT) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <title>Cổng Thông Tin Đề Thi Trực Tuyến</title>
     <style>
         :root {
@@ -27,7 +33,7 @@
             padding: 12px;
         }
 
-        /* BANNER ĐẦU TRANG - CHỦ ĐỀ HẢI TẶC / KHO BÁU TOM & JERRY SIÊU BẮT MẮT */
+        /* BANNER ĐẦU TRANG */
         .top-banner-box {
             width: 100%;
             height: 150px;
@@ -49,7 +55,7 @@
             transform: scale(1.02);
         }
         
-        /* HEADER HOẠT HÌNH SIÊU BẮT MẮT */
+        /* HEADER HOẠT HÌNH */
         header {
             text-align: center;
             margin-bottom: 15px;
@@ -68,7 +74,6 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        /* Hiệu ứng ánh sáng lấp lánh bay qua */
         header::before {
             content: '';
             position: absolute;
@@ -86,7 +91,6 @@
             50% { transform: translateY(20px) rotate(180deg); }
             100% { transform: translateY(-20px) rotate(360deg); }
         }
-        /* Icon tên lửa hoạt hình bay lượn sinh động */
         .header-flying-icon {
             position: absolute;
             top: 15px;
@@ -139,7 +143,7 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
-        /* KHU VỰC NHẮC NHỞ TRÊN 2 CỘT */
+        /* KHU VỰC NHẮC NHỞ */
         .reminder-section {
             background: var(--card-bg);
             border-radius: 12px;
@@ -157,7 +161,7 @@
             padding-bottom: 6px;
         }
 
-        /* BỐ CỤC 2 CỘT SONG SONG LUÔN CỐ ĐỊNH */
+        /* BỐ CỤC 2 CỘT */
         .columns-wrapper {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -217,7 +221,7 @@
             transform: rotate(90deg);
         }
 
-        /* CỘT TRÁI: TÔNG MÀU ĐỎ NỔI BẬT (HỌC THÊM) */
+        /* CỘT TRÁI */
         #left-column .folder-header {
             background: linear-gradient(to right, #fff5f5, #ffe8e8);
         }
@@ -231,7 +235,7 @@
             color: var(--primary-red);
         }
 
-        /* CỘT PHẢI: TÔNG MÀU XANH DƯƠNG LỊCH LÃM (CHÍNH KHÓA) */
+        /* CỘT PHẢI */
         #right-column .folder-header {
             background: linear-gradient(to right, #f0f4f8, #e2e8f0);
         }
@@ -245,7 +249,7 @@
             color: var(--primary-blue);
         }
 
-        /* DANH SÁCH LINK TRONG FOLDER */
+        /* DANH SÁCH LINK */
         .link-list {
             padding: 10px;
             display: flex;
@@ -307,7 +311,6 @@
             color: #718096;
         }
         
-        /* NÚT XEM THÊM BÀI CŨ HƠN */
         .load-more-btn {
             background: #f1f5f9;
             border: 1px dashed #cbd5e1;
@@ -332,7 +335,6 @@
             margin-top: 8px;
         }
 
-        /* CÁC NHÃN (BADGE) PHÂN LOẠI */
         .badge-hot {
             background: var(--accent);
             color: white;
@@ -374,7 +376,7 @@
             text-align: center;
         }
 
-        /* KHU VỰC BẢNG TIN & DẶN DÒ */
+        /* BẢNG TIN */
         .news-section {
             background: var(--card-bg);
             border-radius: 12px;
@@ -444,7 +446,7 @@
             text-align: center;
         }
 
-        /* BANNER CHÂN TRANG */
+        /* CHÂN TRANG */
         .bottom-banner-box {
             width: 100%;
             height: 90px;
@@ -459,8 +461,6 @@
             height: 100%;
             object-fit: cover;
         }
-
-        /* CHÂN TRANG TO ĐỎ CHÓT NỔI BẬT */
         footer {
             text-align: center;
             margin-top: 20px;
@@ -514,17 +514,6 @@
 </div>
 
 <script>
-    // Hàm lấy ngày giờ hiện tại hệ thống
-    function getSystemDateTime() {
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        return `${day}/${month}/${year} - ${hours}:${minutes}`;
-    }
-
     const TOP_BANNER_URL = "https://files.catbox.moe/cf5o9u.jpg"; 
     const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
     const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
@@ -532,21 +521,20 @@
     const TOP_REMINDER_DATA = [
         {
             title: "Lưu ý quan trọng: Các em kiểm tra lại tài khoản và nộp bài tập đúng hạn trước buổi học tiếp theo.",
-            date: "05/08/2026 - 15:00", // Thời gian cố định
+            date: "05/08/2026 - 15:00",
             image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300",
             url: "https://www.24h.com.vn/"
         }
     ];
 
-    // DỮ LIỆU GỐC BAN ĐẦU CỦA CÁC FOLDER BÊN TRÁI
+    // DỮ LIỆU CÁC FOLDER BÊN TRÁI 
+    // Khi cần thêm bài mới, bạn TỰ ĐỘNG THÊM 1 CỤM MỚI VÀO ĐÂY và đẩy lên Github
     const DEFAULT_LEFT_FOLDERS = [
         {
             folderName: "Học thêm toán 10",
             folderAvatar: "https://files.catbox.moe/hwd4t8.png",
             links: [
-
-
-{ 
+                { 
                     title: "Đề kiểm tra khảo sát chất lượng đầu năm môn Toán 10 nâng cao", 
                     date: "01/08/2026 - 08:30", 
                     url: "https://example.com", 
@@ -554,13 +542,11 @@
                     platform: "", 
                     avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
                 },
-
-                
                 { 
                     title: "https://so158b-030826-toan12-ktrahk1", 
-                    date: "05/08/2026 - 23:24", // Thời gian đăng được giữ cố định
+                    date: "05/08/2026 - 23:24",
                     url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", 
-                    isHot: true, // Đã đổi sang chữ HOT màu đỏ theo ý anh
+                    isHot: true, 
                     platform: "", 
                     avatar: "https://files.catbox.moe/ge1of8.png" 
                 },
@@ -594,9 +580,7 @@
                     platform: "", 
                     avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" 
                 },
-           
-            
-            { 
+                { 
                     title: "Đề kiểm tra khảo sát chất lượng đầu năm môn Toán 10 nâng cao", 
                     date: "01/08/2026 - 08:30", 
                     url: "https://example.com", 
@@ -604,33 +588,20 @@
                     platform: "", 
                     avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
                 }
-            
-            
-            
-            
-            
-            
             ]
         },
         {
             folderName: "Học thêm toán 12",
             folderAvatar: "https://files.catbox.moe/t2mpgx.png",
             links: [
-
                { 
                     title: "https://so158b-030826-toan12-ktrahk1", 
-                    date: "05/08/2026 - 23:24", // Thời gian đăng được giữ cố định
+                    date: "05/08/2026 - 23:24",
                     url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", 
-                    isHot: true, // Đã đổi sang chữ HOT màu đỏ theo ý anh
+                    isHot: true, 
                     platform: "", 
                     avatar: "https://files.catbox.moe/ge1of8.png" 
                 },  
-                
-                
-                
-                
-                
-                
                 { 
                     title: "so87toan11c4hinhkhonggian050826", 
                     date: "05/08/2026 - 22:00", 
@@ -639,8 +610,7 @@
                     platform: "", 
                     avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" 
                 },
-            
-             { 
+                { 
                     title: "Bài tập tự luyện phương pháp tọa độ trong mặt phẳng Ôn thi", 
                     date: "06/08/2026 - 00:02", 
                     url: "https://hoan030826.vercel.app/", 
@@ -648,7 +618,7 @@
                     platform: "", 
                     avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" 
                 },
-            { 
+                { 
                     title: "Đề kiểm tra khảo sát chất lượng đầu năm môn Toán 10 nâng cao", 
                     date: "06/08/2026 - 00:35", 
                     url: "https://example.com", 
@@ -656,9 +626,7 @@
                     platform: "", 
                     avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
                 },
-
-            
-            { 
+                { 
                     title: "Đề kiểm tra khảo sát chất lượng đầu năm môn Toán 10 nâng cao", 
                     date: "01/08/2026 - 08:30", 
                     url: "https://example.com", 
@@ -666,12 +634,6 @@
                     platform: "", 
                     avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" 
                 }
-            
-            
-            
-            
-            
-            
             ]
         },
         {
@@ -681,7 +643,7 @@
         }
     ];
 
-    // DỮ LIỆU GỐC BAN ĐẦU CỦA CÁC FOLDER BÊN PHẢI
+    // DỮ LIỆU CÁC FOLDER BÊN PHẢI
     const DEFAULT_RIGHT_FOLDERS = [
         {
             folderName: "Lớp 11A",
@@ -762,48 +724,9 @@
         }
     ];
 
-    // --- CƠ CHẾ LƯU TRỮ VÀ TỰ ĐỘNG THÊM BÀI MỚI VỚI THỜI GIAN CỐ ĐỊNH ---
-    function getStoredData(key, defaultData) {
-        const stored = localStorage.getItem(key);
-        if (stored) {
-            return JSON.parse(stored);
-        } else {
-            localStorage.setItem(key, JSON.stringify(defaultData));
-            return defaultData;
-        }
-    }
-
-    let LEFT_FOLDERS_DATA = getStoredData("left_folders_data_v1", DEFAULT_LEFT_FOLDERS);
-    let RIGHT_FOLDERS_DATA = getStoredData("right_folders_data_v1", DEFAULT_RIGHT_FOLDERS);
-
-    // HÀM DÙNG ĐỂ THÊM BÀI MỚI HOẶC BẠN CÓ THỂ GỌI TRỰC TIẾP
-    // Khi thêm bài, hệ thống tự động gán giờ hiện tại làm mốc cố định và lưu lại.
-    function addNewPostToFolder(isLeftColumn, folderIndex, title, url, isHot, platform, avatar) {
-        const targetFolders = isLeftColumn ? LEFT_FOLDERS_DATA : RIGHT_FOLDERS_DATA;
-        
-        const newPost = {
-            title: title,
-            date: getSystemDateTime(), // Tự động lấy giờ hiện tại tại đúng khoảnh khắc chạy lệnh này
-            url: url,
-            isHot: isHot,
-            platform: platform || "",
-            avatar: avatar || "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg"
-        };
-
-        // Thêm bài mới lên đầu danh sách của folder
-        targetFolders[folderIndex].links.unshift(newPost);
-
-        // Lưu vào LocalStorage để lần sau bật lên vẫn giữ nguyên giờ cố định này
-        if (isLeftColumn) {
-            localStorage.setItem("left_folders_data_v1", JSON.stringify(LEFT_FOLDERS_DATA));
-        } else {
-            localStorage.setItem("right_folders_data_v1", JSON.stringify(RIGHT_FOLDERS_DATA));
-        }
-        
-        location.reload(); // Tải lại trang để hiển thị bài mới
-    }
-    // -------------------------------------------------------------------------
-
+    // ==========================================
+    // CÁC HÀM HIỂN THỊ GIAO DIỆN CHÍNH THỨC
+    // ==========================================
     function renderReminderSection() {
         const container = document.getElementById("reminder-container");
         container.innerHTML = "";
@@ -956,8 +879,9 @@
         document.getElementById("bottom-banner-img").src = BOTTOM_BANNER_URL;
 
         renderReminderSection();
-        renderFoldersToColumn(LEFT_FOLDERS_DATA, "left-column");
-        renderFoldersToColumn(RIGHT_FOLDERS_DATA, "right-column");
+        // Lấy trực tiếp mảng gốc để vẽ giao diện thay vì lưu vào điện thoại học sinh như trước
+        renderFoldersToColumn(DEFAULT_LEFT_FOLDERS, "left-column");
+        renderFoldersToColumn(DEFAULT_RIGHT_FOLDERS, "right-column");
         renderNewsSection();
     }
 </script>
