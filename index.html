@@ -10,143 +10,182 @@
     <meta http-equiv="Expires" content="0">
     
     <title>Cổng Thông Tin Đề Thi Trực Tuyến</title>
+    <!-- Font chữ Plus Jakarta Sans hiện đại -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --primary-blue: #0056b3;
-            --primary-red: #d63031;
-            --bg: #f8fafc;
+            --primary-blue: #0284c7;
+            --primary-blue-dark: #0369a1;
+            --primary-red: #e11d48;
+            --primary-red-dark: #be123c;
+            --accent-orange: #f97316;
+            --accent-green: #10b981;
+            --bg: #f1f5f9;
             --card-bg: #ffffff;
-            --text: #2d3748;
-            --accent: #ff4757;
-            --dantri-green: #008844;
-            --dantri-hover: #e8f5e9;
-        }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 0;
-            line-height: 1.5;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 12px;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --dantri-green: #059669;
+            --dantri-hover: #ecfdf5;
+            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.12);
         }
 
-        /* BANNER ĐẦU TRANG */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            font-size: 15px; /* Tăng phông chữ toàn trang */
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* BANNER ĐẦU TRANG CAO CẤP */
         .top-banner-box {
             width: 100%;
-            height: 170px;
-            border-radius: 14px;
+            height: 185px;
+            border-radius: 18px;
             overflow: hidden;
-            margin-bottom: 15px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-            background: #1e293b;
-            border: 2px solid rgba(255, 215, 0, 0.4);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border: 2px solid rgba(255, 215, 0, 0.5);
             position: relative;
         }
+
         .top-banner-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.5s ease;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: brightness(0.9);
         }
+
         .top-banner-box:hover .top-banner-img {
-            transform: scale(1.02);
+            transform: scale(1.03);
+        }
+
+        .banner-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(15,23,42,0.4) 0%, rgba(15,23,42,0.7) 100%);
+            pointer-events: none;
         }
 
         .banner-avatar {
             position: absolute;
-            top: 10px;
-            left: 12px;
-            width: 55px;
-            height: 55px;
+            top: 14px;
+            left: 16px;
+            width: 62px;
+            height: 62px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.9);
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 4px 10px rgba(0,0,0,0.3);
             z-index: 2;
             animation: pulseAvatar 3s ease-in-out infinite;
         }
+
         @keyframes pulseAvatar {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
-            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.9); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(255,255,255,0.6); }
+            50% { transform: scale(1.06); box-shadow: 0 0 22px rgba(255,255,255,1); }
         }
 
         .banner-title {
             position: absolute;
-            top: 12px;
+            top: 16px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 2;
-            font-size: 18px;
+            font-size: 20px; /* Tăng cỡ chữ tiêu đề banner */
             font-weight: 800;
-            color: rgba(255, 255, 255, 0.75);
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
-            letter-spacing: 0.5px;
+            color: #ffffff;
+            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(2, 132, 199, 0.6);
+            letter-spacing: 0.8px;
             white-space: nowrap;
             pointer-events: none;
             text-align: center;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 6px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .banner-rocket {
             position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 26px;
+            top: 14px;
+            right: 18px;
+            font-size: 30px;
             animation: flyRocket 4s ease-in-out infinite;
             z-index: 2;
-            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
         }
+
         @keyframes flyRocket {
             0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
-            50% { transform: translateY(-8px) rotate(-10deg) scale(1.1); }
+            50% { transform: translateY(-10px) rotate(-12deg) scale(1.15); }
         }
 
         .banner-watermark {
             position: absolute;
-            bottom: 8px;
-            left: 14px;
+            bottom: 12px;
+            left: 18px;
             z-index: 2;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.35);
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.5);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
             pointer-events: none;
             user-select: none;
         }
 
         /* KHỐI TIÊU ĐỀ PHÂN MỤC */
         .section-header-title {
-            font-size: 15px;
+            font-size: 17px; /* Tăng cỡ chữ tiêu đề khối */
             font-weight: 800;
-            margin: 18px 0 8px 0;
+            margin: 22px 0 10px 0;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            padding-left: 4px;
         }
         .section-header-title.red-title {
             color: var(--primary-red);
         }
         .section-header-title.blue-title {
-            color: var(--primary-blue);
+            color: var(--primary-blue-dark);
         }
 
         /* THANH MENU TRƯỢT NGANG FULL WIDTH */
         .dantri-nav-container {
             background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 15px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid #cbd5e1;
+            margin-bottom: 20px;
             overflow: hidden;
             width: 100%;
         }
+
         .dantri-scroll-bar {
             display: flex;
             align-items: center;
@@ -155,23 +194,25 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-            padding: 4px 8px;
-            background: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
+            padding: 6px 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 1px solid #e2e8f0;
         }
         .dantri-scroll-bar::-webkit-scrollbar {
-            height: 4px;
+            height: 5px;
         }
         .dantri-scroll-bar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: #94a3b8;
             border-radius: 4px;
         }
+
+        /* NÚT TẬP TIN MENU - TĂNG PHÔNG CHỮ & HIỆU ỨNG NỔI BẬT */
         .dantri-nav-btn {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 10px 16px;
-            font-size: 13px;
+            gap: 7px;
+            padding: 11px 18px;
+            font-size: 14px; /* Tăng kích thước phông chữ menu */
             font-weight: 700;
             color: #334155;
             background: transparent;
@@ -179,362 +220,467 @@
             border-bottom: 3px solid transparent;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-            transition: all 0.2s ease;
+            letter-spacing: 0.4px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             user-select: none;
             flex-shrink: 0;
+            border-radius: 8px 8px 0 0;
+            margin-right: 4px;
         }
+
         .dantri-nav-btn:hover {
             color: var(--dantri-green);
             background-color: var(--dantri-hover);
-            border-radius: 6px 6px 0 0;
-        }
-        .dantri-nav-btn.active {
-            color: var(--dantri-green);
-            border-bottom-color: var(--dantri-green);
-            background-color: #f0fdf4;
-            border-radius: 6px 6px 0 0;
-        }
-        .dantri-nav-btn .caret-icon {
-            font-size: 10px;
-            transition: transform 0.2s ease;
-            color: #64748b;
-        }
-        .dantri-nav-btn.active .caret-icon {
-            transform: rotate(180deg);
-            color: var(--dantri-green);
+            transform: translateY(-1px);
         }
 
-        /* BẢNG NỘI DUNG SỔ RA KHỦNG TỰ ĐỘNG TRÀN HẾT MÀN HÌNH */
+        .dantri-nav-btn.active {
+            color: #047857;
+            border-bottom: 3px solid #059669;
+            background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+            box-shadow: inset 0 -2px 0 #059669;
+            font-weight: 800;
+        }
+
+        .dantri-nav-btn .caret-icon {
+            font-size: 11px;
+            transition: transform 0.25s ease;
+            color: #64748b;
+        }
+
+        .dantri-nav-btn.active .caret-icon {
+            transform: rotate(180deg);
+            color: #047857;
+        }
+
+        /* BẢNG NỘI DUNG SỔ RA */
         .dantri-dropdown-panel {
             display: none;
-            padding: 14px 16px;
+            padding: 16px 18px;
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
             width: 100%;
             box-sizing: border-box;
-            animation: expandDown 0.25s ease-out;
+            animation: expandDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .dantri-dropdown-panel.show {
             display: block;
         }
+
         @keyframes expandDown {
-            from { opacity: 0; transform: translateY(-6px); }
+            from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .dantri-sub-header {
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 13px; /* Tăng cỡ chữ tiêu đề con */
+            font-weight: 800;
             color: #047857;
             text-transform: uppercase;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 6px;
+            letter-spacing: 0.5px;
         }
 
-        /* KHU VỰC NHẮC NHỞ */
+        /* KHU VỰC NHẮC NHỞ QUAN TRỌNG */
         .reminder-section {
             background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 15px;
-            padding: 12px 18px;
-        }
-        .reminder-header-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: var(--primary-red);
-            margin: 0 0 10px 0;
-            border-bottom: 2px solid #edf2f7;
-            padding-bottom: 6px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid #cbd5e1;
+            border-left: 5px solid var(--primary-red);
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);
         }
 
-        /* FOLDER THƯ MỤC KHU VỰC TÀI LIỆU */
+        .reminder-header-title {
+            font-size: 16px; /* Tăng cỡ chữ nhắc nhở */
+            font-weight: 800;
+            color: var(--primary-red);
+            margin: 0 0 12px 0;
+            border-bottom: 2px solid #fecdd3;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* THƯ MỤC KHO TÀI LIỆU */
         .folder-section {
             background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            border-radius: 14px;
+            box-shadow: var(--shadow-md);
             overflow: hidden;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 15px;
+            border: 1px solid #cbd5e1;
+            margin-bottom: 20px;
             transition: all 0.25s ease;
         }
         .folder-section:hover {
-            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-lg);
+            border-color: #94a3b8;
         }
+
         .folder-header {
-            padding: 11px 14px;
+            padding: 14px 18px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             cursor: pointer;
             list-style: none;
             user-select: none;
-            background: linear-gradient(to right, #f0f4f8, #e2e8f0);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             transition: background 0.2s;
         }
         .folder-header::-webkit-details-marker {
             display: none;
         }
         .folder-avatar {
-            width: 30px;
-            height: 30px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid rgba(0,0,0,0.1);
+            border: 2px solid #ffffff;
+            box-shadow: var(--shadow-sm);
         }
         .folder-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: var(--primary-blue);
+            font-size: 16px; /* Tăng phông chữ tiêu đề thư mục */
+            font-weight: 800;
+            color: var(--primary-blue-dark);
             flex: 1;
             margin: 0;
+            letter-spacing: 0.3px;
         }
         .folder-arrow {
-            font-size: 11px;
-            color: #718096;
-            transition: transform 0.3s;
+            font-size: 13px;
+            color: #64748b;
+            transition: transform 0.3s ease;
+            font-weight: bold;
         }
         details[open] .folder-arrow {
             transform: rotate(90deg);
+            color: var(--primary-blue);
         }
 
         /* DANH SÁCH THẺ BÀI TẬP / LIÊN KẾT */
         .link-list {
-            padding: 10px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            background: #fff;
+            gap: 10px;
+            background: #ffffff;
             width: 100%;
             box-sizing: border-box;
         }
+
         .exam-card {
-            background: #fdfdfd;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #edf2f7;
+            background: #ffffff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
             text-decoration: none;
-            color: var(--text);
+            color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
+            gap: 14px;
+            transition: all 0.25s ease;
             width: 100%;
             box-sizing: border-box;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
+
         .exam-card:hover {
-            border-color: #cbd5e1;
-            background: #f8fafc;
-            transform: translateY(-1px);
+            border-color: var(--primary-blue);
+            background: #f0f9ff;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
+
         .exam-card:active {
             transform: scale(0.99);
         }
+
         .exam-thumb-box {
-            width: 38px;  
-            height: 50px; 
-            border-radius: 5px;
+            width: 44px;  
+            height: 56px; 
+            border-radius: 6px;
             overflow: hidden;
             flex-shrink: 0;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #cbd5e1;
             background: #f1f5f9;
+            box-shadow: var(--shadow-sm);
         }
+
         .exam-thumb {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
         .exam-info {
             flex: 1;
             min-width: 0;
         }
+
         .exam-title {
-            font-weight: 600;
-            font-size: 12px; 
-            color: #1a202c;
-            margin-bottom: 3px;
-            line-height: 1.4;
+            font-weight: 700;
+            font-size: 14px; /* Tăng cỡ chữ tên bài tập */
+            color: #0f172a;
+            margin-bottom: 4px;
+            line-height: 1.45;
             display: -webkit-box;
             -webkit-line-clamp: 2; 
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
         .exam-date {
-            font-size: 10px;
-            color: #718096;
+            font-size: 11.5px; /* Tăng cỡ chữ ngày tháng */
+            color: var(--text-sub);
+            font-weight: 500;
         }
         
         .load-more-btn {
-            background: #f1f5f9;
-            border: 1px dashed #cbd5e1;
-            color: var(--primary-blue);
-            font-size: 11px;
-            font-weight: 600;
-            padding: 8px 10px;
-            border-radius: 6px;
+            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px dashed #94a3b8;
+            color: var(--primary-blue-dark);
+            font-size: 13px; /* Tăng kích thước phông chữ nút xem thêm */
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: 8px;
             cursor: pointer;
             text-align: center;
-            margin-top: 4px;
-            transition: all 0.2s;
+            margin-top: 6px;
+            transition: all 0.2s ease;
             width: 100%;
+            box-shadow: var(--shadow-sm);
         }
         .load-more-btn:hover {
-            background: #e2e8f0;
-            border-color: #94a3b8;
+            background: #cbd5e1;
+            color: #0f172a;
+            border-color: #64748b;
         }
+
         .hidden-links-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-top: 8px;
+            gap: 10px;
+            margin-top: 10px;
             width: 100%;
         }
 
+        /* BADGE NỔI BẬT VỚI MÀU SẮC TỰ MẮT */
         .badge-hot {
-            background: var(--accent);
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
             color: white;
-            font-size: 8px;
-            padding: 1px 4px;
+            font-size: 10px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-weight: bold;
-            margin-right: 4px;
+            font-weight: 800;
+            margin-right: 6px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+            display: inline-block;
+            vertical-align: middle;
         }
+
         .badge-gdrive {
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
             color: white;
-            font-size: 8px;
-            padding: 1px 4px;
+            font-size: 10px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-weight: bold;
-            margin-right: 4px;
+            font-weight: 800;
+            margin-right: 6px;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+            display: inline-block;
+            vertical-align: middle;
         }
+
         .badge-onedrive {
-            background: #0284c7;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
             color: white;
-            font-size: 8px;
-            padding: 1px 4px;
+            font-size: 10px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-weight: bold;
-            margin-right: 4px;
+            font-weight: 800;
+            margin-right: 6px;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
+            display: inline-block;
+            vertical-align: middle;
         }
 
         .arrow {
-            font-size: 14px;
-            color: #a0aec0;
+            font-size: 16px;
+            color: #94a3b8;
             margin-left: auto;
+            font-weight: bold;
+            transition: color 0.2s, transform 0.2s;
         }
+        .exam-card:hover .arrow {
+            color: var(--primary-blue);
+            transform: translateX(3px);
+        }
+
         .empty-folder {
-            padding: 12px;
-            color: #a0aec0;
+            padding: 16px;
+            color: #64748b;
             font-style: italic;
-            font-size: 12px;
+            font-size: 13px;
             text-align: center;
         }
 
         /* BẢNG TIN */
         .news-section {
             background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-            border: 1px solid #e2e8f0;
-            margin-top: 15px;
-            padding: 15px 18px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid #cbd5e1;
+            margin-top: 20px;
+            padding: 18px 20px;
         }
+
         .news-header-title {
-            font-size: 15px;
-            font-weight: bold;
-            color: var(--primary-blue);
-            margin: 0 0 12px 0;
-            border-bottom: 2px solid #edf2f7;
-            padding-bottom: 8px;
+            font-size: 17px; /* Tăng phông chữ bảng tin */
+            font-weight: 800;
+            color: var(--primary-blue-dark);
+            margin: 0 0 14px 0;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
         .news-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 15px;
-            padding: 10px 0;
-            border-bottom: 1px solid #edf2f7;
+            gap: 16px;
+            padding: 12px 10px;
+            border-bottom: 1px solid #f1f5f9;
             text-decoration: none;
-            color: var(--text);
-            transition: background 0.2s;
+            color: var(--text-main);
+            border-radius: 8px;
+            transition: background 0.2s, transform 0.2s;
         }
+
         .news-item:last-child {
             border-bottom: none;
         }
+
+        .news-item:hover {
+            background-color: #f8fafc;
+            transform: translateX(2px);
+        }
+
         .news-item:hover .news-title {
             color: var(--primary-blue);
         }
+
         .news-content {
             flex: 1;
         }
+
         .news-title {
-            font-weight: 600;
-            font-size: 13px;
-            color: #1a202c;
-            margin-bottom: 3px;
-            line-height: 1.4;
+            font-weight: 700;
+            font-size: 14.5px; /* Tăng phông chữ tiêu đề bài viết */
+            color: #1e293b;
+            margin-bottom: 4px;
+            line-height: 1.45;
         }
+
         .news-date {
-            font-size: 10px;
-            color: #718096;
+            font-size: 11.5px; /* Tăng cỡ chữ ngày bài viết */
+            color: var(--text-sub);
         }
+
         .news-img-box {
-            width: 100px;
-            height: 65px;
-            border-radius: 6px;
+            width: 108px;
+            height: 72px;
+            border-radius: 8px;
             overflow: hidden;
             flex-shrink: 0;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #cbd5e1;
             background: #f1f5f9;
+            box-shadow: var(--shadow-sm);
         }
+
         .news-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
         }
+
+        .news-item:hover .news-img {
+            transform: scale(1.05);
+        }
+
         .news-empty {
-            padding: 10px;
-            color: #a0aec0;
+            padding: 14px;
+            color: #64748b;
             font-style: italic;
-            font-size: 12px;
+            font-size: 13px;
             text-align: center;
         }
 
-        /* CHÂN TRANG */
+        /* CHÂN TRANG FOOTER RỰC RỠ */
         .bottom-banner-box {
             width: 100%;
-            height: 90px;
-            border-radius: 10px;
+            height: 100px;
+            border-radius: 12px;
             overflow: hidden;
-            margin-top: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-            background: #e2e8f0;
+            margin-top: 24px;
+            box-shadow: var(--shadow-md);
+            background: #cbd5e1;
+            border: 1px solid #94a3b8;
         }
+
         .bottom-banner-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
         footer {
             text-align: center;
             margin-top: 20px;
-            padding: 22px 15px;
-            background-color: var(--primary-red);
-            color: white;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 12px;
-            box-shadow: 0 6px 16px rgba(214, 48, 49, 0.35);
-            letter-spacing: 0.5px;
+            padding: 22px 20px;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            color: #ffffff;
+            font-size: 16px; /* Tăng phông chữ footer */
+            font-weight: 800;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(225, 29, 72, 0.35);
+            letter-spacing: 0.8px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         @media (max-width: 640px) {
+            body {
+                font-size: 14px;
+            }
             .banner-title {
+                font-size: 15px;
+                padding: 4px 12px;
+            }
+            .banner-watermark {
+                font-size: 18px;
+            }
+            .dantri-nav-btn {
+                padding: 9px 14px;
                 font-size: 13px;
+            }
+            .news-img-box {
+                width: 85px;
+                height: 58px;
+            }
+            .exam-thumb-box {
+                width: 38px;
+                height: 48px;
             }
         }
     </style>
@@ -545,8 +691,9 @@
     <!-- BANNER ĐẦU TRANG -->
     <div class="top-banner-box">
         <img id="top-banner-img" class="top-banner-img" src="" alt="Banner Top Tom & Jerry">
+        <div class="banner-overlay"></div>
         <img id="web-avatar-img" class="banner-avatar" src="" alt="Avatar Web">
-        <div class="banner-title">Kho đề thi và tài liệu trực tuyến</div>
+        <div class="banner-title">Kho Đề Thi & Tài Liệu Trực Tuyến</div>
         <div class="banner-rocket">🚀</div>
         <div class="banner-watermark">OBAWAN</div>
     </div>
@@ -556,7 +703,7 @@
         <div class="dantri-scroll-bar" id="dantri-nav-bar"></div>
         <div class="dantri-dropdown-panel" id="dantri-dropdown-panel">
             <div class="dantri-sub-header" id="dantri-sub-title">📌 TIN TỨC NỔI BẬT</div>
-            <div id="dantri-news-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div id="dantri-news-list" style="display:flex; flex-direction:column; gap:10px;"></div>
         </div>
     </div>
 
@@ -608,8 +755,19 @@
     const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
     const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
 
-    // 1. DỮ LIỆU THANH BẢN TIN THỜI SỰ (ĐÃ BỔ SUNG: SỨC KHỎE, DU LỊCH, THỂ THAO, MÊ XE)
+    // 1. DỮ LIỆU THANH BẢN TIN
+    // THỨ TỰ MỚI THEO YÊU CẦU: VUI VUI -> THỜI SỰ -> GIÁO DỤC -> THỂ THAO -> MÊ XE -> THẾ GIỚI -> SỨC KHỎE -> DU LỊCH
     const DANTRI_NAV_CATEGORIES = [
+        {
+            id: "vui-vui",
+            title: "🤣 VUI VUI",
+            subTitle: "🎉 THƯ GIÃN & BẢN TIN VUI VẺ HỌC ĐƯỜNG",
+            news: [
+                { tag: "GIẢI TRÍ", title: "Góc thư giãn: Những câu nói bất hủ của học sinh trong giờ kiểm tra Toán", date: "22/08/2026 - 10:00", url: "https://dantri.com.vn" },
+                { tag: "CƯỜI MẮT", title: "Chuyện lạ lớp học: Khi thầy giáo ra đề toán bằng thơ lục bát cực chất", date: "21/08/2026 - 18:20", url: "https://dantri.com.vn" },
+                { tag: "MEME MATH", title: "Tổng hợp Meme Toán học giúp xả stress cực hiệu quả cho các sĩ tử 2026", date: "20/08/2026 - 15:30", url: "https://dantri.com.vn" }
+            ]
+        },
         {
             id: "thoi-su",
             title: "🔴 THỜI SỰ",
@@ -621,16 +779,6 @@
             ]
         },
         {
-            id: "the-gioi",
-            title: "🌍 THẾ GIỚI",
-            subTitle: "🌐 TIN THẾ GIỚI - QUÂN SỰ - PHÂN TÍCH - KIỀU BÀO",
-            news: [
-                { tag: "QUÂN SỰ", title: "Cập nhật diễn biến thời sự quốc tế và tình hình an ninh thế giới mới nhất", date: "22/08/2026 - 09:10", url: "https://dantri.com.vn/the-gioi.htm" },
-                { tag: "PHÂN TÍCH", title: "Bình luận chuyên sâu về xu hướng phát triển công nghệ giáo dục toàn cầu", date: "21/08/2026 - 16:40", url: "https://dantri.com.vn/the-gioi.htm" },
-                { tag: "KIỀU BÀO", title: "Học sinh Việt Nam giành nhiều huy chương vàng tại Olympic Toán Quốc tế", date: "19/08/2026 - 11:20", url: "https://dantri.com.vn/the-gioi.htm" }
-            ]
-        },
-        {
             id: "giao-duc",
             title: "🏫 GIÁO DỤC",
             subTitle: "📚 BẢN TIN GIÁO DỤC & TRƯỜNG HỌC",
@@ -638,24 +786,6 @@
                 { tag: "TIÊU ĐIỂM", title: "Phụ huynh nhiều tỉnh thành chuẩn bị SGK và tài liệu ôn thi đầu năm học", date: "22/08/2026 - 07:45", url: "https://dantri.com.vn/giao-duc.htm" },
                 { tag: "KHOA HỌC", title: "Phương pháp học Toán hiệu quả giúp tăng tư duy logic và kỹ năng giải đề", date: "21/08/2026 - 15:30", url: "https://dantri.com.vn/giao-duc.htm" },
                 { tag: "DẶN DÒ", title: "Kinh nghiệm làm bài trắc nghiệm Toán đạt điểm tối đa không lo sót đáp án", date: "18/08/2026 - 08:00", url: "https://dantri.com.vn/giao-duc.htm" }
-            ]
-        },
-        {
-            id: "suc-khoe",
-            title: "🩺 SỨC KHỎE",
-            subTitle: "💊 BẢN TIN SỨC KHỎE & ĐỜI SỐNG HỌC ĐƯỜNG",
-            news: [
-                { tag: "TƯ VẤN", title: "Bí quyết giữ gìn sức khỏe và cột sống cho học sinh - giáo viên mùa thi", date: "22/08/2026 - 09:00", url: "https://dantri.com.vn/suc-khoe.htm" },
-                { tag: "DINH DƯỠNG", title: "Thực đơn dinh dưỡng khoa học giúp cải thiện trí nhớ và tập trung tối đa", date: "21/08/2026 - 11:30", url: "https://dantri.com.vn/suc-khoe.htm" }
-            ]
-        },
-        {
-            id: "du-lich",
-            title: "✈️ DU LỊCH",
-            subTitle: "🏔️ KHÁM PHÁ & TRẢI NGHIỆM DU LỊCH",
-            news: [
-                { tag: "KHÁM PHÁ", title: "Gợi ý các điểm du lịch trải nghiệm học tập và ngoại khóa hấp dẫn", date: "22/08/2026 - 08:00", url: "https://dantri.com.vn/du-lich.htm" },
-                { tag: "CẨM NANG", title: "Kinh nghiệm chuẩn bị cho chuyến dã ngoại và du lịch ngắn ngày", date: "20/08/2026 - 15:10", url: "https://dantri.com.vn/du-lich.htm" }
             ]
         },
         {
@@ -675,10 +805,38 @@
                 { tag: "ĐÁNH GIÁ", title: "Phân tích các dòng xe gia đình 5 chỗ và 7 chỗ phổ biến hiện nay", date: "22/08/2026 - 08:20", url: "https://dantri.com.vn/o-to-xe-may.htm" },
                 { tag: "KỸ THUẬT", title: "Mẹo bảo dưỡng và kiểm tra xe định kỳ giúp vận hành an toàn mượt mà", date: "19/08/2026 - 14:00", url: "https://dantri.com.vn/o-to-xe-may.htm" }
             ]
+        },
+        {
+            id: "the-gioi",
+            title: "🌍 THẾ GIỚI",
+            subTitle: "🌐 TIN THẾ GIỚI - QUÂN SỰ - PHÂN TÍCH - KIỀU BÀO",
+            news: [
+                { tag: "QUÂN SỰ", title: "Cập nhật diễn biến thời sự quốc tế và tình hình an ninh thế giới mới nhất", date: "22/08/2026 - 09:10", url: "https://dantri.com.vn/the-gioi.htm" },
+                { tag: "PHÂN TÍCH", title: "Bình luận chuyên sâu về xu hướng phát triển công nghệ giáo dục toàn cầu", date: "21/08/2026 - 16:40", url: "https://dantri.com.vn/the-gioi.htm" },
+                { tag: "KIỀU BÀO", title: "Học sinh Việt Nam giành nhiều huy chương vàng tại Olympic Toán Quốc tế", date: "19/08/2026 - 11:20", url: "https://dantri.com.vn/the-gioi.htm" }
+            ]
+        },
+        {
+            id: "suc-khoe",
+            title: "🩺 SỨC KHỎE",
+            subTitle: "💊 BẢN TIN SỨC KHỎE & ĐỜI SỐNG HỌC ĐƯỜNG",
+            news: [
+                { tag: "TƯ VẤN", title: "Bí quyết giữ gìn sức khỏe và cột sống cho học sinh - giáo viên mùa thi", date: "22/08/2026 - 09:00", url: "https://dantri.com.vn/suc-khoe.htm" },
+                { tag: "DINH DƯỠNG", title: "Thực đơn dinh dưỡng khoa học giúp cải thiện trí nhớ và tập trung tối đa", date: "21/08/2026 - 11:30", url: "https://dantri.com.vn/suc-khoe.htm" }
+            ]
+        },
+        {
+            id: "du-lich",
+            title: "✈️ DU LỊCH",
+            subTitle: "🏔️ KHÁM PHÁ & TRẢI NGHIỆM DU LỊCH",
+            news: [
+                { tag: "KHÁM PHÁ", title: "Gợi ý các điểm du lịch trải nghiệm học tập và ngoại khóa hấp dẫn", date: "22/08/2026 - 08:00", url: "https://dantri.com.vn/du-lich.htm" },
+                { tag: "CẨM NANG", title: "Kinh nghiệm chuẩn bị cho chuyến dã ngoại và du lịch ngắn ngày", date: "20/08/2026 - 15:10", url: "https://dantri.com.vn/du-lich.htm" }
+            ]
         }
     ];
 
-    // 2. DỮ LIỆU CÁC LỚP DẠY THÊM (THÊM 10, THÊM 11, THÊM 12)
+    // 2. DỮ LIỆU CÁC LỚP DẠY THÊM
     const DAY_THEM_CATEGORIES = [
         {
             id: "them-10",
@@ -706,8 +864,6 @@
             id: "them-12",
             title: "🎓 THÊM 12",
             links: [
-
-                 { title: "so163hoan22082026newthunghiem", date: "14/08/2026 - 16:00", url: "https://hoan22082026newthunghiem.vercel.app/", isHot: true, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
                 { title: "so161toan12chuong123onhocki1140826", date: "14/08/2026 - 16:00", url: "https://so161toan12chuong123onhocki1140826.vercel.app/", isHot: true, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
                 { title: "so160toan12chuong123-hamso-oxyz-tho", date: "10/08/2026 - 17:00", url: "https://so160toan12chuong123-hamso-oxyz-tho.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
                 { title: "so159-12c3thongke070826", date: "07/08/2026 - 17:00", url: "https://so159-12c3thongke070826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" },
@@ -718,7 +874,7 @@
         }
     ];
 
-    // 3. DỮ LIỆU CÁC LỚP CHÍNH KHÓA (LỚP 11A, LỚP 11C, LỚP 10P)
+    // 3. DỮ LIỆU CÁC LỚP CHÍNH KHÓA
     const CHINH_KHOA_CATEGORIES = [
         {
             id: "lop-11a",
@@ -845,7 +1001,7 @@
     let activeDayThemId = null;
     let activeChinhKhoaId = null;
 
-    // RENDER THANH DÂN TRÍ (TỰ ĐỘNG CUỘN ĐẾN MỤC ĐƯỢC CHỌN)
+    // RENDER THANH MENU DÂN TRÍ
     function renderDanTriNavBar() {
         const navBar = document.getElementById("dantri-nav-bar");
         navBar.innerHTML = "";
@@ -876,12 +1032,15 @@
                         card.href = item.url;
                         card.className = "dantri-news-card";
                         card.target = "_blank";
-                        card.style.cssText = "display:flex; align-items:flex-start; gap:12px; padding:9px 12px; background:#fff; border-radius:8px; border:1px solid #e2e8f0; text-decoration:none; color:inherit;";
+                        card.style.cssText = "display:flex; align-items:flex-start; gap:12px; padding:10px 14px; background:#fff; border-radius:10px; border:1px solid #cbd5e1; text-decoration:none; color:inherit; box-shadow:0 2px 6px rgba(0,0,0,0.03); transition:all 0.2s;";
+                        
+                        let tagBg = item.tag === "GIẢI TRÍ" || item.tag === "CƯỜI MẮT" || item.tag === "MEME MATH" ? "background:#fef3c7; color:#b45309;" : "background:#dcfce7; color:#15803d;";
+
                         card.innerHTML = `
-                            <span style="font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; background:#dcfce7; color:#15803d; white-space:nowrap; margin-top:2px;">${item.tag}</span>
+                            <span style="font-size:10px; font-weight:800; padding:3px 8px; border-radius:5px; ${tagBg} white-space:nowrap; margin-top:2px;">${item.tag}</span>
                             <div style="flex:1; min-width:0;">
-                                <div style="font-size:12px; font-weight:600; color:#1e293b; line-height:1.4; margin-bottom:2px;">${item.title}</div>
-                                <div style="font-size:10px; color:#64748b;">🕒 ${item.date}</div>
+                                <div style="font-size:13.5px; font-weight:700; color:#0f172a; line-height:1.45; margin-bottom:3px;">${item.title}</div>
+                                <div style="font-size:11px; color:#64748b; font-weight:500;">🕒 ${item.date}</div>
                             </div>
                         `;
                         newsList.appendChild(card);
