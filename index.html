@@ -44,15 +44,15 @@
             color: var(--text-main);
             margin: 0;
             padding: 0;
-            line-height: 1.6;
-            font-size: 15px; /* Tăng phông chữ toàn trang */
+            line-height: 1.5;
+            font-size: 15px;
             -webkit-font-smoothing: antialiased;
         }
 
         .container {
             max-width: 1040px;
             margin: 0 auto;
-            padding: 16px;
+            padding: 10px 12px; /* Thu gọn lề container */
         }
 
         /* BANNER ĐẦU TRANG CAO CẤP */
@@ -61,7 +61,7 @@
             height: 185px;
             border-radius: 18px;
             overflow: hidden;
-            margin-bottom: 20px;
+            margin-bottom: 10px; /* Giảm từ 20px xuống 10px */
             box-shadow: var(--shadow-lg);
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             border: 2px solid rgba(255, 215, 0, 0.5);
@@ -87,6 +87,7 @@
             pointer-events: none;
         }
 
+        /* AVATAR BANNER TĂNG ĐỘ SÁNG */
         .banner-avatar {
             position: absolute;
             top: 14px;
@@ -96,35 +97,37 @@
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid #ffffff;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 0 18px rgba(255, 255, 255, 0.95), 0 4px 10px rgba(0,0,0,0.3);
             z-index: 2;
+            filter: brightness(1.2) contrast(1.05); /* Tăng độ sáng avatar */
             animation: pulseAvatar 3s ease-in-out infinite;
         }
 
         @keyframes pulseAvatar {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(255,255,255,0.6); }
-            50% { transform: scale(1.06); box-shadow: 0 0 22px rgba(255,255,255,1); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(255,255,255,0.7); }
+            50% { transform: scale(1.06); box-shadow: 0 0 24px rgba(255,255,255,1); }
         }
 
+        /* TIÊU ĐỀ BANNER CHO NHỎ LẠI MỘT CHÚT */
         .banner-title {
             position: absolute;
             top: 16px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 2;
-            font-size: 20px; /* Tăng cỡ chữ tiêu đề banner */
+            font-size: 15px; /* Thu nhỏ cỡ chữ từ 20px xuống 15px */
             font-weight: 800;
             color: #ffffff;
             text-shadow: 0 3px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(2, 132, 199, 0.6);
-            letter-spacing: 0.8px;
+            letter-spacing: 0.6px;
             white-space: nowrap;
             pointer-events: none;
             text-align: center;
-            background: rgba(15, 23, 42, 0.4);
-            padding: 6px 20px;
+            background: rgba(15, 23, 42, 0.45);
+            padding: 5px 16px;
             border-radius: 30px;
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.25);
         }
 
         .banner-rocket {
@@ -156,11 +159,11 @@
             user-select: none;
         }
 
-        /* KHỐI TIÊU ĐỀ PHÂN MỤC */
+        /* KHỐI TIÊU ĐỀ PHÂN MỤC THU GỌN LỀ */
         .section-header-title {
-            font-size: 17px; /* Tăng cỡ chữ tiêu đề khối */
+            font-size: 16px;
             font-weight: 800;
-            margin: 22px 0 10px 0;
+            margin: 12px 0 6px 0; /* Giảm khoảng cách lề trên dưới */
             text-transform: uppercase;
             letter-spacing: 0.6px;
             display: flex;
@@ -178,10 +181,10 @@
         /* THANH MENU TRƯỢT NGANG FULL WIDTH */
         .dantri-nav-container {
             background: var(--card-bg);
-            border-radius: 14px;
+            border-radius: 12px;
             box-shadow: var(--shadow-md);
             border: 1px solid #cbd5e1;
-            margin-bottom: 20px;
+            margin-bottom: 10px; /* Giảm từ 20px xuống 10px */
             overflow: hidden;
             width: 100%;
         }
@@ -194,25 +197,24 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-            padding: 6px 10px;
+            padding: 4px 8px;
             background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             border-bottom: 1px solid #e2e8f0;
         }
         .dantri-scroll-bar::-webkit-scrollbar {
-            height: 5px;
+            height: 4px;
         }
         .dantri-scroll-bar::-webkit-scrollbar-thumb {
             background: #94a3b8;
             border-radius: 4px;
         }
 
-        /* NÚT TẬP TIN MENU - TĂNG PHÔNG CHỮ & HIỆU ỨNG NỔI BẬT */
         .dantri-nav-btn {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            padding: 11px 18px;
-            font-size: 14px; /* Tăng kích thước phông chữ menu */
+            gap: 6px;
+            padding: 9px 15px;
+            font-size: 13.5px;
             font-weight: 700;
             color: #334155;
             background: transparent;
@@ -224,8 +226,8 @@
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             user-select: none;
             flex-shrink: 0;
-            border-radius: 8px 8px 0 0;
-            margin-right: 4px;
+            border-radius: 6px 6px 0 0;
+            margin-right: 2px;
         }
 
         .dantri-nav-btn:hover {
@@ -253,10 +255,9 @@
             color: #047857;
         }
 
-        /* BẢNG NỘI DUNG SỔ RA */
         .dantri-dropdown-panel {
             display: none;
-            padding: 16px 18px;
+            padding: 12px 14px;
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
             width: 100%;
@@ -273,36 +274,36 @@
         }
 
         .dantri-sub-header {
-            font-size: 13px; /* Tăng cỡ chữ tiêu đề con */
+            font-size: 13px;
             font-weight: 800;
             color: #047857;
             text-transform: uppercase;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
             letter-spacing: 0.5px;
         }
 
-        /* KHU VỰC NHẮC NHỞ QUAN TRỌNG */
+        /* KHU VỰC NHẮC NHỞ QUAN TRỌNG THU GỌN */
         .reminder-section {
             background: var(--card-bg);
-            border-radius: 14px;
+            border-radius: 12px;
             box-shadow: var(--shadow-md);
             border: 1px solid #cbd5e1;
             border-left: 5px solid var(--primary-red);
-            margin-bottom: 20px;
-            padding: 16px 20px;
+            margin-bottom: 10px; /* Giảm từ 20px xuống 10px */
+            padding: 12px 16px;
             background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);
         }
 
         .reminder-header-title {
-            font-size: 16px; /* Tăng cỡ chữ nhắc nhở */
+            font-size: 15px;
             font-weight: 800;
             color: var(--primary-red);
-            margin: 0 0 12px 0;
+            margin: 0 0 8px 0;
             border-bottom: 2px solid #fecdd3;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -311,11 +312,11 @@
         /* THƯ MỤC KHO TÀI LIỆU */
         .folder-section {
             background: var(--card-bg);
-            border-radius: 14px;
+            border-radius: 12px;
             box-shadow: var(--shadow-md);
             overflow: hidden;
             border: 1px solid #cbd5e1;
-            margin-bottom: 20px;
+            margin-bottom: 10px; /* Giảm lề dưới */
             transition: all 0.25s ease;
         }
         .folder-section:hover {
@@ -324,10 +325,10 @@
         }
 
         .folder-header {
-            padding: 14px 18px;
+            padding: 10px 14px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             cursor: pointer;
             list-style: none;
             user-select: none;
@@ -338,15 +339,15 @@
             display: none;
         }
         .folder-avatar {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid #ffffff;
             box-shadow: var(--shadow-sm);
         }
         .folder-title {
-            font-size: 16px; /* Tăng phông chữ tiêu đề thư mục */
+            font-size: 15px;
             font-weight: 800;
             color: var(--primary-blue-dark);
             flex: 1;
@@ -354,7 +355,7 @@
             letter-spacing: 0.3px;
         }
         .folder-arrow {
-            font-size: 13px;
+            font-size: 12px;
             color: #64748b;
             transition: transform 0.3s ease;
             font-weight: bold;
@@ -366,10 +367,10 @@
 
         /* DANH SÁCH THẺ BÀI TẬP / LIÊN KẾT */
         .link-list {
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             background: #ffffff;
             width: 100%;
             box-sizing: border-box;
@@ -377,14 +378,14 @@
 
         .exam-card {
             background: #ffffff;
-            padding: 10px 14px;
-            border-radius: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
             border: 1px solid #e2e8f0;
             text-decoration: none;
             color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             transition: all 0.25s ease;
             width: 100%;
             box-sizing: border-box;
@@ -403,8 +404,8 @@
         }
 
         .exam-thumb-box {
-            width: 44px;  
-            height: 56px; 
+            width: 40px;  
+            height: 50px; 
             border-radius: 6px;
             overflow: hidden;
             flex-shrink: 0;
@@ -426,10 +427,10 @@
 
         .exam-title {
             font-weight: 700;
-            font-size: 14px; /* Tăng cỡ chữ tên bài tập */
+            font-size: 13.5px;
             color: #0f172a;
-            margin-bottom: 4px;
-            line-height: 1.45;
+            margin-bottom: 2px;
+            line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2; 
             -webkit-box-orient: vertical;
@@ -437,7 +438,7 @@
         }
 
         .exam-date {
-            font-size: 11.5px; /* Tăng cỡ chữ ngày tháng */
+            font-size: 11px;
             color: var(--text-sub);
             font-weight: 500;
         }
@@ -446,13 +447,13 @@
             background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
             border: 1px dashed #94a3b8;
             color: var(--primary-blue-dark);
-            font-size: 13px; /* Tăng kích thước phông chữ nút xem thêm */
+            font-size: 12.5px;
             font-weight: 700;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
             text-align: center;
-            margin-top: 6px;
+            margin-top: 4px;
             transition: all 0.2s ease;
             width: 100%;
             box-shadow: var(--shadow-sm);
@@ -466,12 +467,11 @@
         .hidden-links-container {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 8px;
             width: 100%;
         }
 
-        /* BADGE NỔI BẬT VỚI MÀU SẮC TỰ MẮT */
         .badge-hot {
             background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
             color: white;
@@ -525,30 +525,30 @@
         }
 
         .empty-folder {
-            padding: 16px;
+            padding: 12px;
             color: #64748b;
             font-style: italic;
             font-size: 13px;
             text-align: center;
         }
 
-        /* BẢNG TIN */
+        /* BẢNG TIN THU GỌN */
         .news-section {
             background: var(--card-bg);
-            border-radius: 14px;
+            border-radius: 12px;
             box-shadow: var(--shadow-md);
             border: 1px solid #cbd5e1;
-            margin-top: 20px;
-            padding: 18px 20px;
+            margin-top: 10px; /* Giảm từ 20px xuống 10px */
+            padding: 14px 16px;
         }
 
         .news-header-title {
-            font-size: 17px; /* Tăng phông chữ bảng tin */
+            font-size: 16px;
             font-weight: 800;
             color: var(--primary-blue-dark);
-            margin: 0 0 14px 0;
+            margin: 0 0 10px 0;
             border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -558,8 +558,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
-            padding: 12px 10px;
+            gap: 12px;
+            padding: 8px 8px;
             border-bottom: 1px solid #f1f5f9;
             text-decoration: none;
             color: var(--text-main);
@@ -586,21 +586,21 @@
 
         .news-title {
             font-weight: 700;
-            font-size: 14.5px; /* Tăng phông chữ tiêu đề bài viết */
+            font-size: 14px;
             color: #1e293b;
-            margin-bottom: 4px;
-            line-height: 1.45;
+            margin-bottom: 3px;
+            line-height: 1.4;
         }
 
         .news-date {
-            font-size: 11.5px; /* Tăng cỡ chữ ngày bài viết */
+            font-size: 11px;
             color: var(--text-sub);
         }
 
         .news-img-box {
-            width: 108px;
-            height: 72px;
-            border-radius: 8px;
+            width: 96px;
+            height: 64px;
+            border-radius: 6px;
             overflow: hidden;
             flex-shrink: 0;
             border: 1px solid #cbd5e1;
@@ -620,20 +620,20 @@
         }
 
         .news-empty {
-            padding: 14px;
+            padding: 12px;
             color: #64748b;
             font-style: italic;
             font-size: 13px;
             text-align: center;
         }
 
-        /* CHÂN TRANG FOOTER RỰC RỠ */
+        /* CHÂN TRANG FOOTER MÀU XANH LÁ CÂY */
         .bottom-banner-box {
             width: 100%;
-            height: 100px;
+            height: 90px;
             border-radius: 12px;
             overflow: hidden;
-            margin-top: 24px;
+            margin-top: 12px; /* Giảm từ 24px xuống 12px */
             box-shadow: var(--shadow-md);
             background: #cbd5e1;
             border: 1px solid #94a3b8;
@@ -647,16 +647,17 @@
 
         footer {
             text-align: center;
-            margin-top: 20px;
-            padding: 22px 20px;
-            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            margin-top: 10px; /* Giảm từ 20px xuống 10px */
+            padding: 16px 20px;
+            /* Đổi nền footer thành màu xanh lá cây tươi sáng */
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
             color: #ffffff;
-            font-size: 16px; /* Tăng phông chữ footer */
+            font-size: 15px;
             font-weight: 800;
-            border-radius: 14px;
-            box-shadow: 0 8px 20px rgba(225, 29, 72, 0.35);
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
             letter-spacing: 0.8px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.25);
         }
 
         @media (max-width: 640px) {
@@ -664,23 +665,23 @@
                 font-size: 14px;
             }
             .banner-title {
-                font-size: 15px;
-                padding: 4px 12px;
+                font-size: 13px;
+                padding: 4px 10px;
             }
             .banner-watermark {
                 font-size: 18px;
             }
             .dantri-nav-btn {
-                padding: 9px 14px;
-                font-size: 13px;
+                padding: 8px 12px;
+                font-size: 12.5px;
             }
             .news-img-box {
-                width: 85px;
-                height: 58px;
+                width: 80px;
+                height: 54px;
             }
             .exam-thumb-box {
-                width: 38px;
-                height: 48px;
+                width: 36px;
+                height: 46px;
             }
         }
     </style>
@@ -703,7 +704,7 @@
         <div class="dantri-scroll-bar" id="dantri-nav-bar"></div>
         <div class="dantri-dropdown-panel" id="dantri-dropdown-panel">
             <div class="dantri-sub-header" id="dantri-sub-title">📌 TIN TỨC NỔI BẬT</div>
-            <div id="dantri-news-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+            <div id="dantri-news-list" style="display:flex; flex-direction:column; gap:8px;"></div>
         </div>
     </div>
 
@@ -755,8 +756,6 @@
     const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
     const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
 
-    // 1. DỮ LIỆU THANH BẢN TIN
-    // THỨ TỰ MỚI THEO YÊU CẦU: VUI VUI -> THỜI SỰ -> GIÁO DỤC -> THỂ THAO -> MÊ XE -> THẾ GIỚI -> SỨC KHỎE -> DU LỊCH
     const DANTRI_NAV_CATEGORIES = [
         {
             id: "vui-vui",
@@ -836,7 +835,6 @@
         }
     ];
 
-    // 2. DỮ LIỆU CÁC LỚP DẠY THÊM
     const DAY_THEM_CATEGORIES = [
         {
             id: "them-10",
@@ -874,7 +872,6 @@
         }
     ];
 
-    // 3. DỮ LIỆU CÁC LỚP CHÍNH KHÓA
     const CHINH_KHOA_CATEGORIES = [
         {
             id: "lop-11a",
@@ -902,7 +899,6 @@
         }
     ];
 
-    // 4. DỮ LIỆU KHO TÀI LIỆU
     const KHO_TAI_LIEU_FOLDER = {
         folderName: "KHO TÀI LIỆU PDF, WORD, ẢNH...",
         folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
@@ -923,7 +919,6 @@
         { title: "Bài viết thông báo số 3 (Đang để chờ - Thầy có thể thay đổi tiêu đề, link ảnh và đường dẫn tại đây)", date: "Đang cập nhật", image: "", url: "#", isEmpty: true }
     ];
 
-    // HÀM TẠO THẺ BÀI TẬP / LIÊN KẾT
     function createExamCard(item) {
         let card = document.createElement("a");
         card.href = item.url;
@@ -951,7 +946,6 @@
         return card;
     }
 
-    // HÀM ĐIỀN NỘI DUNG VÀO BẢNG SỔ RA
     function renderLinkListToContainer(linksArray, containerElement) {
         containerElement.innerHTML = "";
         if (!linksArray || linksArray.length === 0) {
@@ -996,12 +990,10 @@
         }
     }
 
-    // BIẾN LƯU TRẠNG THÁI ACTIVE CỦA CÁC THANH MENU
     let activeDanTriId = null;
     let activeDayThemId = null;
     let activeChinhKhoaId = null;
 
-    // RENDER THANH MENU DÂN TRÍ
     function renderDanTriNavBar() {
         const navBar = document.getElementById("dantri-nav-bar");
         navBar.innerHTML = "";
@@ -1032,14 +1024,14 @@
                         card.href = item.url;
                         card.className = "dantri-news-card";
                         card.target = "_blank";
-                        card.style.cssText = "display:flex; align-items:flex-start; gap:12px; padding:10px 14px; background:#fff; border-radius:10px; border:1px solid #cbd5e1; text-decoration:none; color:inherit; box-shadow:0 2px 6px rgba(0,0,0,0.03); transition:all 0.2s;";
+                        card.style.cssText = "display:flex; align-items:flex-start; gap:10px; padding:8px 12px; background:#fff; border-radius:8px; border:1px solid #cbd5e1; text-decoration:none; color:inherit; box-shadow:0 2px 5px rgba(0,0,0,0.03); transition:all 0.2s;";
                         
                         let tagBg = item.tag === "GIẢI TRÍ" || item.tag === "CƯỜI MẮT" || item.tag === "MEME MATH" ? "background:#fef3c7; color:#b45309;" : "background:#dcfce7; color:#15803d;";
 
                         card.innerHTML = `
-                            <span style="font-size:10px; font-weight:800; padding:3px 8px; border-radius:5px; ${tagBg} white-space:nowrap; margin-top:2px;">${item.tag}</span>
+                            <span style="font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; ${tagBg} white-space:nowrap; margin-top:2px;">${item.tag}</span>
                             <div style="flex:1; min-width:0;">
-                                <div style="font-size:13.5px; font-weight:700; color:#0f172a; line-height:1.45; margin-bottom:3px;">${item.title}</div>
+                                <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.4; margin-bottom:2px;">${item.title}</div>
                                 <div style="font-size:11px; color:#64748b; font-weight:500;">🕒 ${item.date}</div>
                             </div>
                         `;
@@ -1054,7 +1046,6 @@
         });
     }
 
-    // RENDER THANH LỚP DẠY THÊM
     function renderDayThemNavBar() {
         const navBar = document.getElementById("daythem-nav-bar");
         const panel = document.getElementById("daythem-dropdown-panel");
@@ -1084,7 +1075,6 @@
         });
     }
 
-    // RENDER THANH LỚP CHÍNH KHÓA
     function renderChinhKhoaNavBar() {
         const navBar = document.getElementById("chinhkhoa-nav-bar");
         const panel = document.getElementById("chinhkhoa-dropdown-panel");
@@ -1114,7 +1104,6 @@
         });
     }
 
-    // RENDER KHU VỰC KHO TÀI LIỆU PDF, WORD, ẢNH
     function renderKhoTaiLieu() {
         const container = document.getElementById("kho-tai-lieu-container");
         container.innerHTML = "";
