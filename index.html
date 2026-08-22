@@ -45,7 +45,7 @@
             margin: 0;
             padding: 0;
             line-height: 1.5;
-            font-size: 17px; /* Tăng cỡ chữ tổng thể toàn trang */
+            font-size: 17px;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -68,13 +68,12 @@
             position: relative;
         }
 
-        /* TĂNG ĐỘ SÁNG ẢNH BANNER TOP */
         .top-banner-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            filter: brightness(1.2) contrast(1.05); /* Tăng độ sáng ảnh banner */
+            filter: brightness(1.2) contrast(1.05);
         }
 
         .top-banner-box:hover .top-banner-img {
@@ -84,11 +83,10 @@
         .banner-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.35) 100%); /* Giảm độ tối lớp phủ */
+            background: linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.35) 100%);
             pointer-events: none;
         }
 
-        /* AVATAR BANNER TĂNG ĐỘ SÁNG */
         .banner-avatar {
             position: absolute;
             top: 14px;
@@ -109,14 +107,13 @@
             50% { transform: scale(1.06); box-shadow: 0 0 24px rgba(255,255,255,1); }
         }
 
-        /* TIÊU ĐỀ BANNER CHO NHỎ LẠI THÊM MỘT CHÚT */
         .banner-title {
             position: absolute;
             top: 16px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 2;
-            font-size: 11.5px; /* Đã giảm nhỏ lại nữa theo yêu cầu */
+            font-size: 11.5px;
             font-weight: 800;
             color: #ffffff;
             text-shadow: 0 3px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(2, 132, 199, 0.6);
@@ -160,9 +157,8 @@
             user-select: none;
         }
 
-        /* KHỐI TIÊU ĐỀ PHÂN MỤC (CÁC LỚP DẠY THÊM & CHÍNH KHÓA NHỎ HƠN MỘT CHÚT) */
         .section-header-title {
-            font-size: 14.5px; /* Giảm nhỏ hơn theo yêu cầu */
+            font-size: 14.5px;
             font-weight: 800;
             margin: 10px 0 5px 0;
             text-transform: uppercase;
@@ -179,7 +175,6 @@
             color: var(--primary-blue-dark);
         }
 
-        /* THANH MENU TRƯỢT NGANG FULL WIDTH */
         .dantri-nav-container {
             background: var(--card-bg);
             border-radius: 12px;
@@ -190,7 +185,6 @@
             width: 100%;
         }
 
-        /* TĂNG KÍCH THƯỚC THANH CHỨA VÀ CHỮ CHO MENU BẢN TIN (VUI VUI, THỜI SỰ, GIÁO DỤC, THỂ THAO...) */
         .dantri-scroll-bar {
             display: flex;
             align-items: center;
@@ -199,12 +193,12 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-            padding: 6px 10px; /* Tăng kích thước thanh chứa */
+            padding: 4px 6px;
             background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             border-bottom: 1px solid #e2e8f0;
         }
         .dantri-scroll-bar::-webkit-scrollbar {
-            height: 4px;
+            height: 3px;
         }
         .dantri-scroll-bar::-webkit-scrollbar-thumb {
             background: #94a3b8;
@@ -215,8 +209,8 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 11px 18px; /* Tăng nút & khoảng cách */
-            font-size: 15.5px; /* Tăng cỡ chữ vui vui, thời sự... */
+            padding: 11px 18px;
+            font-size: 15.5px;
             font-weight: 700;
             color: #334155;
             background: transparent;
@@ -224,7 +218,7 @@
             border-bottom: 3px solid transparent;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.2px;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             user-select: none;
             flex-shrink: 0;
@@ -232,10 +226,18 @@
             margin-right: 2px;
         }
 
-        /* TĂNG KÍCH THƯỚC CHỮ CHO DÒNG THÊM 10, 11, 12 VÀ LỚP 11A, 11C, 10P */
+        /* TỐI ƯU CỘT CHỮ VÀ CỠ CHỮ CHO DÒNG BẢN TIN DƯỚI BANNER */
+        #dantri-nav-bar .dantri-nav-btn {
+            padding: 5px 7px;
+            font-size: 12px;
+            line-height: 1.15;
+            text-align: center;
+            gap: 3px;
+        }
+
         #daythem-nav-bar .dantri-nav-btn,
         #chinhkhoa-nav-bar .dantri-nav-btn {
-            font-size: 18px; /* Tăng cỡ chữ to lên theo yêu cầu */
+            font-size: 18px;
             font-weight: 800;
             padding: 12px 22px;
         }
@@ -255,7 +257,7 @@
         }
 
         .dantri-nav-btn .caret-icon {
-            font-size: 11px;
+            font-size: 10px;
             transition: transform 0.25s ease;
             color: #64748b;
         }
@@ -295,7 +297,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* KHU VỰC NHẮC NHỞ QUAN TRỌNG */
         .reminder-section {
             background: var(--card-bg);
             border-radius: 12px;
@@ -319,7 +320,6 @@
             gap: 8px;
         }
 
-        /* THƯ MỤC KHO TÀI LIỆU */
         .folder-section {
             background: var(--card-bg);
             border-radius: 12px;
@@ -375,7 +375,6 @@
             color: var(--primary-blue);
         }
 
-        /* DANH SÁCH THẺ BÀI TẬP / LIÊN KẾT */
         .link-list {
             padding: 10px;
             display: flex;
@@ -542,7 +541,6 @@
             text-align: center;
         }
 
-        /* BẢNG TIN THU GỌN */
         .news-section {
             background: var(--card-bg);
             border-radius: 12px;
@@ -637,7 +635,6 @@
             text-align: center;
         }
 
-        /* CHÂN TRANG FOOTER MÀU XANH LÁ CÂY */
         .bottom-banner-box {
             width: 100%;
             height: 90px;
@@ -681,8 +678,12 @@
                 font-size: 18px;
             }
             .dantri-nav-btn {
-                padding: 9px 14px;
-                font-size: 14px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            #dantri-nav-bar .dantri-nav-btn {
+                padding: 4px 5px;
+                font-size: 11px;
             }
             #daythem-nav-bar .dantri-nav-btn,
             #chinhkhoa-nav-bar .dantri-nav-btn {
@@ -770,10 +771,11 @@
     const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
     const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
 
+    /* CÁC TIÊU ĐỀ ĐƯỢC ĐỔI DẠNG THÀNH CỘT (TRÊN - DƯỚI) VÀ THÊM MỤC "ANH CHỜ... GÌ ĐÓ" */
     const DANTRI_NAV_CATEGORIES = [
         {
             id: "vui-vui",
-            title: "🤣 VUI VUI",
+            title: "🤣 VUI<br>VUI",
             subTitle: "🎉 THƯ GIÃN & BẢN TIN VUI VẺ HỌC ĐƯỜNG",
             news: [
                 { tag: "GIẢI TRÍ", title: "Góc thư giãn: Những câu nói bất hủ của học sinh trong giờ kiểm tra Toán", date: "22/08/2026 - 10:00", url: "https://dantri.com.vn" },
@@ -783,7 +785,7 @@
         },
         {
             id: "thoi-su",
-            title: "🔴 THỜI SỰ",
+            title: "🔴 THỜI<br>SỰ",
             subTitle: "📢 THỜI SỰ & SỰ KIỆN GIÁO DỤC NỔI BẬT",
             news: [
                 { tag: "MỚI NHẤT", title: "Bộ GD&ĐT ban hành hướng dẫn cấu trúc đề thi Tốt nghiệp THPT 2026", date: "22/08/2026 - 08:30", url: "https://dantri.com.vn" },
@@ -793,7 +795,7 @@
         },
         {
             id: "giao-duc",
-            title: "🏫 GIÁO DỤC",
+            title: "🏫 GIÁO<br>DỤC",
             subTitle: "📚 BẢN TIN GIÁO DỤC & TRƯỜNG HỌC",
             news: [
                 { tag: "TIÊU ĐIỂM", title: "Phụ huynh nhiều tỉnh thành chuẩn bị SGK và tài liệu ôn thi đầu năm học", date: "22/08/2026 - 07:45", url: "https://dantri.com.vn/giao-duc.htm" },
@@ -803,7 +805,7 @@
         },
         {
             id: "the-thao",
-            title: "⚽ THỂ THAO",
+            title: "⚽ THỂ<br>THAO",
             subTitle: "🏆 THỂ THAO TRONG NƯỚC & QUỐC TẾ",
             news: [
                 { tag: "BÓNG ĐÁ", title: "Tổng hợp các giải thể thao học sinh, sinh viên toàn quốc mới nhất", date: "22/08/2026 - 10:15", url: "https://dantri.com.vn/the-thao.htm" },
@@ -812,7 +814,7 @@
         },
         {
             id: "me-xe",
-            title: "🚗 MÊ XE",
+            title: "🚗 MÊ<br>XE",
             subTitle: "🚘 THẾ GIỚI XE & CÔNG NGHỆ BỐN BÁNH",
             news: [
                 { tag: "ĐÁNH GIÁ", title: "Phân tích các dòng xe gia đình 5 chỗ và 7 chỗ phổ biến hiện nay", date: "22/08/2026 - 08:20", url: "https://dantri.com.vn/o-to-xe-may.htm" },
@@ -821,7 +823,7 @@
         },
         {
             id: "the-gioi",
-            title: "🌍 THẾ GIỚI",
+            title: "🌍 THẾ<br>GIỚI",
             subTitle: "🌐 TIN THẾ GIỚI - QUÂN SỰ - PHÂN TÍCH - KIỀU BÀO",
             news: [
                 { tag: "QUÂN SỰ", title: "Cập nhật diễn biến thời sự quốc tế và tình hình an ninh thế giới mới nhất", date: "22/08/2026 - 09:10", url: "https://dantri.com.vn/the-gioi.htm" },
@@ -831,7 +833,7 @@
         },
         {
             id: "suc-khoe",
-            title: "🩺 SỨC KHỎE",
+            title: "🩺 SỨC<br>KHỎE",
             subTitle: "💊 BẢN TIN SỨC KHỎE & ĐỜI SỐNG HỌC ĐƯỜNG",
             news: [
                 { tag: "TƯ VẤN", title: "Bí quyết giữ gìn sức khỏe và cột sống cho học sinh - giáo viên mùa thi", date: "22/08/2026 - 09:00", url: "https://dantri.com.vn/suc-khoe.htm" },
@@ -840,11 +842,19 @@
         },
         {
             id: "du-lich",
-            title: "✈️ DU LỊCH",
+            title: "✈️ DU<br>LỊCH",
             subTitle: "🏔️ KHÁM PHÁ & TRẢI NGHIỆM DU LỊCH",
             news: [
                 { tag: "KHÁM PHÁ", title: "Gợi ý các điểm du lịch trải nghiệm học tập và ngoại khóa hấp dẫn", date: "22/08/2026 - 08:00", url: "https://dantri.com.vn/du-lich.htm" },
                 { tag: "CẨM NANG", title: "Kinh nghiệm chuẩn bị cho chuyến dã ngoại và du lịch ngắn ngày", date: "20/08/2026 - 15:10", url: "https://dantri.com.vn/du-lich.htm" }
+            ]
+        },
+        {
+            id: "anh-cho",
+            title: "⏳ ANH CHỜ...<br>GÌ ĐÓ",
+            subTitle: "⏳ MỤC ĐANG CHỜ CẬP NHẬT NỘI DUNG",
+            news: [
+                { tag: "CHỜ DỮ LIỆU", title: "Mục này đang chờ bổ sung thêm thông tin mới...", date: "Đang cập nhật", url: "#" }
             ]
         }
     ];
@@ -1015,7 +1025,7 @@
         DANTRI_NAV_CATEGORIES.forEach(cat => {
             let btn = document.createElement("button");
             btn.className = "dantri-nav-btn";
-            btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
+            btn.innerHTML = `<div style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">${cat.title}</div><span class="caret-icon">&#9660;</span>`;
             
             btn.onclick = function() {
                 const panel = document.getElementById("dantri-dropdown-panel");
