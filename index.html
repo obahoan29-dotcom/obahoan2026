@@ -45,7 +45,7 @@
             margin: 0;
             padding: 0;
             line-height: 1.5;
-            font-size: 16px; /* Tăng cỡ chữ tổng thể toàn trang */
+            font-size: 17px; /* Tăng cỡ chữ tổng thể toàn trang */
             -webkit-font-smoothing: antialiased;
         }
 
@@ -109,14 +109,14 @@
             50% { transform: scale(1.06); box-shadow: 0 0 24px rgba(255,255,255,1); }
         }
 
-        /* TIÊU ĐỀ BANNER CHO NHỎ LẠI MỘT CHÚT */
+        /* TIÊU ĐỀ BANNER CHO NHỎ LẠI THÊM MỘT CHÚT */
         .banner-title {
             position: absolute;
             top: 16px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 2;
-            font-size: 13.5px; /* Giảm nhẹ cỡ chữ tiêu đề banner */
+            font-size: 11.5px; /* Đã giảm nhỏ lại nữa theo yêu cầu */
             font-weight: 800;
             color: #ffffff;
             text-shadow: 0 3px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(2, 132, 199, 0.6);
@@ -125,7 +125,7 @@
             pointer-events: none;
             text-align: center;
             background: rgba(15, 23, 42, 0.55);
-            padding: 4px 14px;
+            padding: 4px 12px;
             border-radius: 30px;
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255,255,255,0.25);
@@ -160,11 +160,11 @@
             user-select: none;
         }
 
-        /* KHỐI TIÊU ĐỀ PHÂN MỤC */
+        /* KHỐI TIÊU ĐỀ PHÂN MỤC (CÁC LỚP DẠY THÊM & CHÍNH KHÓA NHỎ HƠN MỘT CHÚT) */
         .section-header-title {
-            font-size: 17px;
+            font-size: 14.5px; /* Giảm nhỏ hơn theo yêu cầu */
             font-weight: 800;
-            margin: 12px 0 6px 0;
+            margin: 10px 0 5px 0;
             text-transform: uppercase;
             letter-spacing: 0.6px;
             display: flex;
@@ -190,6 +190,7 @@
             width: 100%;
         }
 
+        /* TĂNG KÍCH THƯỚC THANH CHỨA VÀ CHỮ CHO MENU BẢN TIN (VUI VUI, THỜI SỰ, GIÁO DỤC, THỂ THAO...) */
         .dantri-scroll-bar {
             display: flex;
             align-items: center;
@@ -198,7 +199,7 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-            padding: 4px 8px;
+            padding: 6px 10px; /* Tăng kích thước thanh chứa */
             background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             border-bottom: 1px solid #e2e8f0;
         }
@@ -214,8 +215,8 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 9px 15px;
-            font-size: 14px;
+            padding: 11px 18px; /* Tăng nút & khoảng cách */
+            font-size: 15.5px; /* Tăng cỡ chữ vui vui, thời sự... */
             font-weight: 700;
             color: #334155;
             background: transparent;
@@ -231,12 +232,12 @@
             margin-right: 2px;
         }
 
-        /* TĂNG KÍCH THƯỚC CHỮ CHO DÒNG DẠY THÊM VÀ CHÍNH KHÓA */
+        /* TĂNG KÍCH THƯỚC CHỮ CHO DÒNG THÊM 10, 11, 12 VÀ LỚP 11A, 11C, 10P */
         #daythem-nav-bar .dantri-nav-btn,
         #chinhkhoa-nav-bar .dantri-nav-btn {
-            font-size: 15.5px;
+            font-size: 18px; /* Tăng cỡ chữ to lên theo yêu cầu */
             font-weight: 800;
-            padding: 10px 18px;
+            padding: 12px 22px;
         }
 
         .dantri-nav-btn:hover {
@@ -436,7 +437,7 @@
 
         .exam-title {
             font-weight: 700;
-            font-size: 14px;
+            font-size: 14.5px;
             color: #0f172a;
             margin-bottom: 2px;
             line-height: 1.4;
@@ -670,23 +671,23 @@
 
         @media (max-width: 640px) {
             body {
-                font-size: 15px;
+                font-size: 16px;
             }
             .banner-title {
-                font-size: 12px;
+                font-size: 11px;
                 padding: 4px 10px;
             }
             .banner-watermark {
                 font-size: 18px;
             }
             .dantri-nav-btn {
-                padding: 8px 12px;
-                font-size: 13px;
+                padding: 9px 14px;
+                font-size: 14px;
             }
             #daythem-nav-bar .dantri-nav-btn,
             #chinhkhoa-nav-bar .dantri-nav-btn {
-                font-size: 14px;
-                padding: 8px 14px;
+                font-size: 16px;
+                padding: 10px 16px;
             }
             .news-img-box {
                 width: 80px;
