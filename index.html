@@ -193,7 +193,7 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-            padding: 4px 6px;
+            padding: 6px 8px;
             background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             border-bottom: 1px solid #e2e8f0;
         }
@@ -223,10 +223,37 @@
             user-select: none;
             flex-shrink: 0;
             border-radius: 6px 6px 0 0;
-            margin-right: 2px;
+            margin-right: 4px;
         }
 
-        /* TỐI ƯU CỘT CHỮ VÀ CỠ CHỮ CHO DÒNG BẢN TIN DƯỚI BANNER */
+        /* NÚT TỰ LUẬN PADLET ĐƯỢC THIẾT KẾ THÀNH Ô CHỮ NHẬT BO GÓC MÀU CAM */
+        .dantri-nav-btn.padlet-orange-btn {
+            color: #ffffff;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            border: 1px solid #f97316;
+            border-radius: 8px;
+            padding: 8px 16px;
+            margin-left: 6px;
+            box-shadow: 0 3px 8px rgba(249, 115, 22, 0.35);
+        }
+
+        .dantri-nav-btn.padlet-orange-btn:hover {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(249, 115, 22, 0.45);
+        }
+
+        .dantri-nav-btn.padlet-orange-btn.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+            border-color: #9a3412;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(249, 115, 22, 0.4);
+        }
+
+        .dantri-nav-btn.padlet-orange-btn .caret-icon {
+            color: #ffffff;
+        }
+
         #dantri-nav-bar .dantri-nav-btn {
             padding: 5px 7px;
             font-size: 12px;
@@ -237,9 +264,8 @@
 
         #daythem-nav-bar .dantri-nav-btn,
         #chinhkhoa-nav-bar .dantri-nav-btn {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 800;
-            padding: 12px 22px;
         }
 
         .dantri-nav-btn:hover {
@@ -687,8 +713,8 @@
             }
             #daythem-nav-bar .dantri-nav-btn,
             #chinhkhoa-nav-bar .dantri-nav-btn {
-                font-size: 16px;
-                padding: 10px 16px;
+                font-size: 15px;
+                padding: 8px 14px;
             }
             .news-img-box {
                 width: 80px;
@@ -723,7 +749,7 @@
         </div>
     </div>
 
-    <!-- KHỐI NHẮC NHỞ QUAN TRỌNG -->
+    <!-- KHỐI NHẮC NHỜ QUAN TRỌNG -->
     <div class="reminder-section">
         <h3 class="reminder-header-title">📌 Nhắc Nhở Quan Trọng</h3>
         <div id="reminder-container"></div>
@@ -771,7 +797,6 @@
     const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
     const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
 
-    /* CÁC TIÊU ĐỀ ĐƯỢC ĐỔI DẠNG THÀNH CỘT (TRÊN - DƯỚI) VÀ THÊM MỤC "ANH CHỜ... GÌ ĐÓ" */
     const DANTRI_NAV_CATEGORIES = [
         {
             id: "vui-vui",
@@ -864,13 +889,11 @@
             id: "them-10",
             title: "📐 THÊM 10",
             links: [
-                  { title: "so18toan10chuong1taphop150926", date: "15/09/2026 - 13:00", url: "https://so18toan10chuong1taphop150926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so18toan10chuong1taphop150926", date: "15/09/2026 - 13:00", url: "https://so18toan10chuong1taphop150926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
                 { title: "so17toan10taphop-onhk1-120926", date: "12/09/2026 - 13:00", url: "https://so17toan10taphop-onhk1-120926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-{ title: "so16toanthongke080926", date: "08/09/2026 - 13:00", url: "https://so16toanthongke080926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so16toanthongke080926", date: "08/09/2026 - 13:00", url: "https://so16toanthongke080926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
                 { title: "so15toan10ontaphk1050926", date: "05/09/2026 - 13:00", url: "https://so15toan10ontaphk1050926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-
                 { title: "so14toan10vectotoado290826", date: "29/08/2026 - 13:00", url: "https://so14toan10vectotoado290826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-
                 { title: "so13toan10chuong4vectotoado220826", date: "22/08/2026 - 14:00", url: "https://so13toan10chuong4vectotoado220826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
                 { title: "so10toan10cccc444444", date: "01/08/2026 - 17:00", url: "https://so10toan10cccc444444.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
                 { title: "so9toan10chuong12tronma080826", date: "08/08/2026 - 00:35", url: "https://so9toan10chuong12tronma080826.vercel.app/", isHot: true, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
@@ -883,10 +906,10 @@
             id: "them-11",
             title: "✍️ THÊM 11",
             links: [
-{ title: "so97toan11c1luonggiac-lim13092", date: "13/09/2026 - 15:35", url: "https://so97toan11c1luonggiac-lim130926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-{ title: "so96toan11ontapc1luonggiac090926", date: "09/09/2026 - 15:35", url: "https://so96toan11ontapc1luonggiac090926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                  { title: "so94toan11gioihandaysohamso300826", date: "23/08/2026 - 15:35", url: "https://so94toan11gioihandaysohamso300826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                 { title: "so93toan11ontaphk12608.vercel.app/", date: "23/08/2026 - 15:35", url: "https://so93toan11ontaphk12608.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so97toan11c1luonggiac-lim13092", date: "13/09/2026 - 15:35", url: "https://so97toan11c1luonggiac-lim130926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so96toan11ontapc1luonggiac090926", date: "09/09/2026 - 15:35", url: "https://so96toan11ontapc1luonggiac090926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so94toan11gioihandaysohamso300826", date: "23/08/2026 - 15:35", url: "https://so94toan11gioihandaysohamso300826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so93toan11ontaphk12608.vercel.app/", date: "23/08/2026 - 15:35", url: "https://so93toan11ontaphk12608.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
                 { title: "so89toan11chuong4khonggiansongsong", date: "12/08/2026 - 00:35", url: "https://so89toan11chuong4khonggiansongsong.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
                 { title: "so88toan11c123luoggiac-cscn-kg", date: "09/08/2026 - 18:35", url: "https://so88toan11c123luoggiac-cscn-kg.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
                 { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, platform: "", avatar: "https://files.catbox.moe/ge1of8.png" },
@@ -898,13 +921,12 @@
             id: "them-12",
             title: "🎓 THÊM 12",
             links: [
-                
- { title: "so169toan12chuong1hamso140926", date: "14/09/2026 - 17:00", url: "https://so169toan12chuong1hamso140926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                 { title: "so168toan12ontapchuon1-110926", date: "11/09/2026 - 17:00", url: "https://so168toan12ontapchuon1-110926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                 { title: "so167toan12ontaphk1070926", date: "07/09/2026 - 14:00", url: "https://so167toan12ontaphk1070926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so169toan12chuong1hamso140926", date: "14/09/2026 - 17:00", url: "https://so169toan12chuong1hamso140926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so168toan12ontapchuon1-110926", date: "11/09/2026 - 17:00", url: "https://so168toan12ontapchuon1-110926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so167toan12ontaphk1070926", date: "07/09/2026 - 14:00", url: "https://so167toan12ontaphk1070926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
                 { title: "so165toan12nguyenhamtichphan310826", date: "31/08/2026 - 17:00", url: "https://so165toan12nguyenhamtichphan310826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
- { title: "so165toan12chuong4tichphanungdung280826", date: "28/08/2026 - 14:00", url: "https://so165toan12chuong4tichphanungdung28.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                 { title: "so164toan12c4nuyenhamtp240826", date: "24/08/2026 - 17:00", url: "https://so164toan12c4nuyenhamtp240826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so165toan12chuong4tichphanungdung280826", date: "28/08/2026 - 14:00", url: "https://so165toan12chuong4tichphanungdung28.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
+                { title: "so164toan12c4nuyenhamtp240826", date: "24/08/2026 - 17:00", url: "https://so164toan12c4nuyenhamtp240826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
                 { title: "so161toan12chuong123onhocki1140826", date: "14/08/2026 - 16:00", url: "https://so161toan12chuong123onhocki1140826.vercel.app/", isHot: true, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
                 { title: "so160toan12chuong123-hamso-oxyz-tho", date: "10/08/2026 - 17:00", url: "https://so160toan12chuong123-hamso-oxyz-tho.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
                 { title: "so159-12c3thongke070826", date: "07/08/2026 - 17:00", url: "https://so159-12c3thongke070826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" },
@@ -938,6 +960,18 @@
             title: "🏫 LỚP 10P",
             links: [
                 { title: "Đề khảo sát Giải tích 12 ôn thi tốt nghiệp THPT", date: "30/07/2026 - 10:00", url: "https://example.com", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=200" }
+            ]
+        },
+        {
+            id: "tu-luan-padlet",
+            title: "🟧 TỰ LUẬN PADLET",
+            isOrange: true,
+            visibleCount: 3, // HIỂN THỊ 3 LINK ĐẦU
+            links: [
+                { title: "Bảng nộp bài Tự luận Padlet - Trang 1 (Đang chờ)", date: "16/09/2026 - 10:00", url: "#", isHot: true, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+                { title: "Bảng tổng hợp bài làm Tự luận Padlet - Trang 2 (Đang chờ)", date: "16/09/2026 - 10:00", url: "#", isHot: false, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+                { title: "Góc trao đổi Tự luận Padlet - Trang 3 (Đang chờ)", date: "16/09/2026 - 10:00", url: "#", isHot: false, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+                { title: "Lưu trữ Tự luận Padlet - Trang 4 (Đang chờ)", date: "16/09/2026 - 10:00", url: "#", isHot: false, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
             ]
         }
     ];
@@ -989,14 +1023,14 @@
         return card;
     }
 
-    function renderLinkListToContainer(linksArray, containerElement) {
+    function renderLinkListToContainer(linksArray, containerElement, customVisibleCount = 2) {
         containerElement.innerHTML = "";
         if (!linksArray || linksArray.length === 0) {
             containerElement.innerHTML = `<div class="empty-folder">Chưa có bài tập nào trong mục này...</div>`;
             return;
         }
 
-        const maxVisible = 2;
+        const maxVisible = customVisibleCount;
         const visibleLinks = linksArray.slice(0, maxVisible);
         const hiddenLinks = linksArray.slice(maxVisible);
 
@@ -1109,7 +1143,7 @@
                 } else {
                     activeDayThemId = cat.id;
                     btn.classList.add("active");
-                    renderLinkListToContainer(cat.links, container);
+                    renderLinkListToContainer(cat.links, container, cat.visibleCount || 2);
                     panel.classList.add("show");
                     btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                 }
@@ -1126,7 +1160,7 @@
 
         CHINH_KHOA_CATEGORIES.forEach(cat => {
             let btn = document.createElement("button");
-            btn.className = "dantri-nav-btn";
+            btn.className = cat.isOrange ? "dantri-nav-btn padlet-orange-btn" : "dantri-nav-btn";
             btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
 
             btn.onclick = function() {
@@ -1138,7 +1172,7 @@
                 } else {
                     activeChinhKhoaId = cat.id;
                     btn.classList.add("active");
-                    renderLinkListToContainer(cat.links, container);
+                    renderLinkListToContainer(cat.links, container, cat.visibleCount || 2);
                     panel.classList.add("show");
                     btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                 }
@@ -1165,7 +1199,7 @@
 
         let listDiv = document.createElement("div");
         listDiv.className = "link-list";
-        renderLinkListToContainer(KHO_TAI_LIEU_FOLDER.links, listDiv);
+        renderLinkListToContainer(KHO_TAI_LIEU_FOLDER.links, listDiv, 2);
 
         details.appendChild(listDiv);
         container.appendChild(details);
