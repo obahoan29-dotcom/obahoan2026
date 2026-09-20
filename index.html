@@ -55,17 +55,23 @@
         .admin-gear-btn.active-gear { background: var(--primary-blue); border-color: #fff; box-shadow: 0 0 15px rgba(2, 132, 199, 0.8); animation: glow 2s infinite; }
         @keyframes glow { 0%,100%{box-shadow: 0 0 10px #0284c7;} 50%{box-shadow: 0 0 20px #38bdf8;} }
 
-        /* ================= BẢNG QUẢN TRỊ (POP-OVER) ================= */
-        .admin-popover-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 380px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 20px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.6); z-index: 999; display: none; opacity: 0; transform: translateY(-10px) scale(0.95); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top right; }
+        /* ================= BẢNG QUẢN TRỊ (POP-OVER NÂNG CẤP) ================= */
+        .admin-popover-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 420px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 20px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.6); z-index: 999; display: none; opacity: 0; transform: translateY(-10px) scale(0.95); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top right; border: 2px solid var(--primary-blue);}
         .admin-popover-panel.show { display: block; opacity: 1; transform: translateY(0) scale(1); }
-        .admin-popover-title { font-size: 1.2rem; font-weight: 800; color: transparent; background-clip: text; -webkit-background-clip: text; background-image: linear-gradient(135deg, #0284c7 0%, #be123c 100%); margin-bottom: 12px; border-bottom: 2px dashed #cbd5e1; padding-bottom: 8px; display: flex; align-items: center; gap: 6px;}
+        .admin-popover-title { font-size: 1.15rem; font-weight: 900; color: transparent; background-clip: text; -webkit-background-clip: text; background-image: linear-gradient(135deg, #0284c7 0%, #be123c 100%); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;}
+        
+        /* TABS QUẢN TRỊ */
+        .admin-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
+        .admin-tab-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer; color: #475569; background: transparent; transition: 0.3s; font-family: inherit;}
+        .admin-tab-btn.active { background: #fff; color: var(--primary-blue); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        
         .admin-input-group { margin-bottom: 12px; }
-        .admin-input-group label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.9rem; color: #1e293b; }
-        .admin-input-group select, .admin-input-group input[type="file"] { width: 100%; padding: 8px; border: 2px solid rgba(203, 213, 225, 0.8); border-radius: 10px; outline: none; background: rgba(255,255,255,0.9); font-family: inherit; font-size: 14px; font-weight: 600; transition: 0.3s; }
-        .admin-input-group select:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2); }
+        .admin-input-group label { display: block; font-weight: 800; margin-bottom: 6px; font-size: 0.85rem; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;}
+        .admin-input-group select, .admin-input-group input[type="text"], .admin-input-group input[type="file"] { width: 100%; padding: 10px; border: 2px solid #cbd5e1; border-radius: 10px; outline: none; background: #f8fafc; font-family: inherit; font-size: 14px; font-weight: 600; transition: 0.3s; color: #0f172a;}
+        .admin-input-group select:focus, .admin-input-group input[type="text"]:focus { border-color: var(--primary-blue); background: #fff; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
         /* LƯỚI CHỌN AVATAR NHỎ GỌN (6 CỘT) */
-        .avatar-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 150px; overflow-y: auto; padding: 6px; background: rgba(241, 245, 249, 0.6); border-radius: 10px; border: 1px solid #e2e8f0; }
+        .avatar-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 6px; background: #f1f5f9; border-radius: 10px; border: 1px solid #e2e8f0; }
         .avatar-picker-grid::-webkit-scrollbar { width: 4px; }
         .avatar-picker-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .avatar-option { width: 100%; aspect-ratio: 1; border-radius: 6px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: 0.2s; filter: grayscale(20%) brightness(0.9); background: #fff; padding: 2px;}
@@ -73,7 +79,7 @@
         .avatar-option.selected { border-color: var(--primary-blue); filter: grayscale(0%) brightness(1); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3); transform: scale(1.1); background: #f0f9ff;}
 
         .admin-btn-row { display: flex; gap: 10px; margin-top: 16px; }
-        .btn-admin { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; color: #fff; font-family: inherit; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-transform: uppercase; letter-spacing: 0.5px;}
+        .btn-admin { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; color: #fff; font-family: inherit; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem;}
         .btn-cancel { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
         .btn-cancel:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(100, 116, 139, 0.3); }
         .btn-submit { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); }
@@ -124,13 +130,17 @@
 
         .link-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: #ffffff; width: 100%; box-sizing: border-box; }
 
-        /* Nút chức năng admin - CỐ ĐỊNH, KHÔNG BỊ ẨN NỮA */
-        .admin-link-tools { display: flex; gap: 6px; margin-left: 8px; align-items: center; z-index: 10;}
-        .tool-btn { width: 30px; height: 30px; border-radius: 6px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; flex-shrink: 0;}
+        /* Nút chức năng admin - CỐ ĐỊNH, KHÔNG BỊ ẨN NỮA, BỔ SUNG LÊN XUỐNG */
+        .admin-link-tools { display: flex; gap: 4px; margin-left: 8px; align-items: center; z-index: 10;}
+        .tool-btn { width: 28px; height: 28px; border-radius: 6px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; flex-shrink: 0;}
         .tool-btn-edit { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
         .tool-btn-edit:hover { background: #1d4ed8; transform: scale(1.1); box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);}
-        .tool-btn-move { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-        .tool-btn-move:hover { background: #b45309; transform: scale(1.1); box-shadow: 0 4px 8px rgba(217, 119, 6, 0.4);}
+        .tool-btn-move { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+        .tool-btn-move:hover { background: #5b21b6; transform: scale(1.1); box-shadow: 0 4px 8px rgba(109, 40, 217, 0.4);}
+        .tool-btn-up { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .tool-btn-up:hover { background: #047857; transform: scale(1.1); box-shadow: 0 4px 8px rgba(5, 150, 105, 0.4);}
+        .tool-btn-down { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .tool-btn-down:hover { background: #b45309; transform: scale(1.1); box-shadow: 0 4px 8px rgba(217, 119, 6, 0.4);}
         .tool-btn-delete { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
         .tool-btn-delete:hover { background: #991b1b; transform: scale(1.1); box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4);}
 
@@ -151,8 +161,7 @@
         .hidden-links-container { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; width: 100%; }
 
         .badge-hot { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4); display: inline-block; vertical-align: middle; }
-        .badge-gdrive { background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3); display: inline-block; vertical-align: middle; }
-        .badge-onedrive { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3); display: inline-block; vertical-align: middle; }
+        .badge-doc { background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3); display: inline-block; vertical-align: middle; }
 
         .arrow { font-size: 18px; color: #94a3b8; font-weight: bold; transition: color 0.2s, transform 0.2s; margin-left: auto; }
         .exam-card:hover .arrow { color: var(--primary-blue); transform: translateX(3px); }
@@ -192,7 +201,7 @@
 
         @media (max-width: 640px) {
             body { font-size: 16px; }
-            .admin-popover-panel { position: fixed; top: auto; bottom: 0; left: 0; right: 0; width: 100%; border-radius: 24px 24px 0 0; margin: 0; transform: translateY(100%); }
+            .admin-popover-panel { position: fixed; top: auto; bottom: 0; left: 0; right: 0; width: 100%; border-radius: 24px 24px 0 0; margin: 0; transform: translateY(100%); border-bottom: none;}
             .admin-popover-panel.show { transform: translateY(0); }
             .banner-title { font-size: 11px; padding: 4px 10px; }
             .banner-watermark { font-size: 18px; }
@@ -203,6 +212,7 @@
             .exam-thumb-box { width: 38px; height: 48px; }
             .auth-input { width: 100px; }
             /* Mobile tweaks for tools */
+            .admin-link-tools { gap: 3px; margin-left: 4px;}
             .tool-btn { width: 26px; height: 26px; font-size: 11px;}
         }
     </style>
@@ -234,10 +244,17 @@
 
             <!-- Bảng Dropdown Chức Năng (Chỉ hiện khi login thành công) -->
             <div class="admin-popover-panel" id="admin-popover-panel">
-                <div class="admin-popover-title">🚀 Đăng Đề Thi Mới</div>
+                <div class="admin-popover-title">🚀 Đăng đề thi và tài liệu-videos</div>
                 
+                <!-- TABS -->
+                <div class="admin-tabs">
+                    <button class="admin-tab-btn active" id="tab-btn-quiz" onclick="switchAdminTab('quiz')">📝 Đăng Đề Thi (JS)</button>
+                    <button class="admin-tab-btn" id="tab-btn-doc" onclick="switchAdminTab('doc')">📁 Đăng Link Tài Liệu</button>
+                </div>
+
+                <!-- CHUNG: CHỌN LỚP & ICON -->
                 <div class="admin-input-group">
-                    <label>Lớp / Chuyên mục:</label>
+                    <label>Lớp / Chuyên mục đăng vào:</label>
                     <select id="admin-category-select">
                         <option value="them-10">📐 THÊM 10</option>
                         <option value="them-11">✍️ THÊM 11</option>
@@ -256,15 +273,34 @@
                     </div>
                 </div>
 
-                <div class="admin-input-group">
-                    <label>Tải lên file (questions.js):</label>
-                    <input type="file" id="admin-file-upload" accept=".js, .txt">
+                <!-- TAB 1: ĐĂNG ĐỀ THI JS -->
+                <div id="admin-tab-quiz">
+                    <div class="admin-input-group">
+                        <label>Tải lên file đề thi (questions.js):</label>
+                        <input type="file" id="admin-file-upload" accept=".js, .txt">
+                    </div>
+                    <div class="admin-btn-row">
+                        <button class="btn-admin btn-cancel" onclick="closeAdminPanel()">Thoát</button>
+                        <button class="btn-admin btn-submit" id="btn-create-quiz" onclick="processUpload()">✨ Đăng Đề Thi</button>
+                    </div>
                 </div>
 
-                <div class="admin-btn-row">
-                    <button class="btn-admin btn-cancel" onclick="closeAdminPanel()">Thoát</button>
-                    <button class="btn-admin btn-submit" id="btn-create-quiz" onclick="processUpload()">✨ Đăng Đề</button>
+                <!-- TAB 2: ĐĂNG LINK TÀI LIỆU / VIDEO -->
+                <div id="admin-tab-doc" style="display: none;">
+                    <div class="admin-input-group">
+                        <label>Tên Tài Liệu / Video:</label>
+                        <input type="text" id="admin-doc-title" placeholder="VD: File ôn tập, Video bài giảng...">
+                    </div>
+                    <div class="admin-input-group">
+                        <label>Link gốc (Google Drive, Youtube...):</label>
+                        <input type="text" id="admin-doc-url" placeholder="Dán đường link vào đây...">
+                    </div>
+                    <div class="admin-btn-row">
+                        <button class="btn-admin btn-cancel" onclick="closeAdminPanel()">Thoát</button>
+                        <button class="btn-admin btn-submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" id="btn-create-doc" onclick="processAddDocument()">📤 Đăng Tài Liệu</button>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -302,7 +338,7 @@
         </div>
     </div>
 
-    <!-- KHO TÀI LIỆU PDF, WORD, ẢNH... -->
+    <!-- KHO TÀI LIỆU CŨ -->
     <div id="kho-tai-lieu-container"></div>
 
     <!-- BẢNG TIN VÀ DẶN DÒ TỪ THẦY GIÁO -->
@@ -330,6 +366,7 @@
             <option value="lop-11a">🏫 LỚP 11A</option>
             <option value="lop-11c">🏫 LỚP 11C</option>
             <option value="lop-10p">🏫 LỚP 10P</option>
+            <option value="tu-luan-padlet">🟧 TỰ LUẬN PADLET</option>
         </select>
         <div class="move-btn-row">
             <button class="move-btn-cancel" onclick="closeMoveModal()">Hủy</button>
@@ -398,19 +435,19 @@
     ];
 
     let DAY_THEM_CATEGORIES = [
-        { id: "them-10", title: "📐 THÊM 10", links: [ { title: "so18toan10chuong1taphop150926", date: "15/09/2026 - 13:00", url: "https://so18toan10chuong1taphop150926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" }, { title: "so17toan10taphop-onhk1-120926", date: "12/09/2026 - 13:00", url: "https://so17toan10taphop-onhk1-120926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
-        { id: "them-11", title: "✍️ THÊM 11", links: [ { title: "so98toan11c1luonggiac160926", date: "16/09/2026 - 15:35", url: "https://so98toan11c1luonggiac160926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" }, { title: "so97toan11c1luonggiac-lim13092", date: "13/09/2026 - 15:35", url: "https://so97toan11c1luonggiac-lim130926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
-        { id: "them-12", title: "🎓 THÊM 12", links: [ { title: "so170toan12onthihk1180926", date: "18/09/2026 - 17:00", url: "https://so170toan12onthihk1180926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" }, { title: "so169toan12chuong1hamso140926", date: "14/09/2026 - 17:00", url: "https://so169toan12chuong1hamso140926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] }
+        { id: "them-10", title: "📐 THÊM 10", links: [ { title: "so18toan10chuong1taphop150926", date: "15/09/2026 - 13:00", url: "https://so18toan10chuong1taphop150926.vercel.app/", isHot: true, isDoc: false, avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
+        { id: "them-11", title: "✍️ THÊM 11", links: [ { title: "so98toan11c1luonggiac160926", date: "16/09/2026 - 15:35", url: "https://so98toan11c1luonggiac160926.vercel.app/", isHot: false, isDoc: false, avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
+        { id: "them-12", title: "🎓 THÊM 12", links: [ { title: "so170toan12onthihk1180926", date: "18/09/2026 - 17:00", url: "https://so170toan12onthihk1180926.vercel.app/", isHot: true, isDoc: false, avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] }
     ];
 
     let CHINH_KHOA_CATEGORIES = [
-        { id: "lop-11a", title: "🏫 LỚP 11A", links: [ { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, platform: "", avatar: "https://files.catbox.moe/ge1of8.png" } ] },
-        { id: "lop-11c", title: "🏫 LỚP 11C", links: [ { title: "Bài tập Đại số 11 (OneDrive)", date: "01/08/2026 - 16:45", url: "https://onedrive.live.com/...", isHot: false, platform: "onedrive", avatar: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200" } ] },
-        { id: "lop-10p", title: "🏫 LỚP 10P", links: [ { title: "so01toan10p-so18-190926", date: "19/09/2026 - 10:00", url: "https://so01toan10p-so18-190926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
-        { id: "tu-luan-padlet", title: "🟧 TỰ LUẬN PADLET", isOrange: true, visibleCount: 3, links: [ { title: "Bảng nộp bài Tự luận Padlet - Trang 1", date: "16/09/2026 - 10:00", url: "#", isHot: true, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }, { title: "Bảng tổng hợp bài làm Tự luận Padlet - Trang 2", date: "16/09/2026 - 10:00", url: "#", isHot: false, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" } ] }
+        { id: "lop-11a", title: "🏫 LỚP 11A", links: [ { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, isDoc: false, avatar: "https://files.catbox.moe/ge1of8.png" } ] },
+        { id: "lop-11c", title: "🏫 LỚP 11C", links: [] },
+        { id: "lop-10p", title: "🏫 LỚP 10P", links: [] },
+        { id: "tu-luan-padlet", title: "🟧 TỰ LUẬN PADLET", isOrange: true, visibleCount: 3, links: [ { title: "Bảng nộp bài Tự luận Padlet - Trang 1", date: "16/09/2026 - 10:00", url: "#", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" } ] }
     ];
 
-    const KHO_TAI_LIEU_FOLDER = { folderName: "KHO TÀI LIỆU PDF, WORD, ẢNH...", folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", links: [ { title: "so 140-de-cuoi-hoc-ky-2-toan-11.pdf", date: "06/08/2026 - 02:30", url: "https://drive.google.com/file/...", isHot: false, platform: "gdrive", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" }, { title: "số 141-thi thu hk2.doc", date: "06/08/2026 - 02:30", url: "https://docs.google.com/...", isHot: false, platform: "gdrive", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" } ] };
+    const KHO_TAI_LIEU_FOLDER = { folderName: "KHO TÀI LIỆU PDF, WORD, ẢNH...", folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", links: [ { title: "so 140-de-cuoi-hoc-ky-2-toan-11.pdf", date: "06/08/2026 - 02:30", url: "https://drive.google.com/file/...", isHot: false, isDoc: true, avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" } ] };
     const TOP_REMINDER_DATA = [ { title: "Lưu ý quan trọng: Các em kiểm tra lại tài khoản và nộp bài tập đúng hạn.", date: "05/08/2026 - 15:00", image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300", url: "#" } ];
     const NEWS_DATA = [ { title: "Lịch kiểm tra định kỳ môn Toán tuần tới các em chú ý ôn tập kỹ.", date: "04/08/2026 - 08:00", image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300", url: "#" }, { title: "Xem đáp án và điểm bài kiểm tra của em", date: "03/08/2026 - 12:00", image: "https://files.catbox.moe/jum4by.png", url: "#" } ];
 
@@ -419,12 +456,10 @@
     // 2. LOGIC QUẢN TRỊ VIÊN & FIREBASE
     // ==========================================
     
-    // Khởi tạo lưới 30 Avatar
     function initAvatarGrid() {
         const grid = document.getElementById("avatar-grid");
         grid.innerHTML = "";
         selectedAvatarUrl = PRESET_AVATARS[0];
-        
         PRESET_AVATARS.forEach((url, index) => {
             let img = document.createElement("img");
             img.src = url;
@@ -458,13 +493,11 @@
         const pass = document.getElementById("admin-pass-input").value;
         if (pass === ADMIN_PASSWORD) {
             isAdminLoggedIn = true;
-            sessionStorage.setItem("adminLoggedInSession", "true"); // Lưu phiên làm việc
+            sessionStorage.setItem("adminLoggedInSession", "true");
             document.getElementById("auth-container").classList.remove("show");
             document.getElementById("admin-popover-panel").classList.add("show");
             document.getElementById("gear-btn").classList.add("active-gear");
             document.getElementById("admin-pass-input").value = "";
-            
-            // Render lại để hiện nút Xóa/Chuyển/Sửa trên Card cố định
             renderDayThemNavBar();
             renderChinhKhoaNavBar();
         } else {
@@ -475,6 +508,22 @@
     function closeAdminPanel() {
         document.getElementById("admin-popover-panel").classList.remove("show");
         document.getElementById("gear-btn").classList.remove("active-gear");
+    }
+
+    // Chuyển Tab trong bảng Quản trị
+    function switchAdminTab(tabName) {
+        document.getElementById("tab-btn-quiz").classList.remove("active");
+        document.getElementById("tab-btn-doc").classList.remove("active");
+        document.getElementById("admin-tab-quiz").style.display = "none";
+        document.getElementById("admin-tab-doc").style.display = "none";
+
+        if(tabName === 'quiz') {
+            document.getElementById("tab-btn-quiz").classList.add("active");
+            document.getElementById("admin-tab-quiz").style.display = "block";
+        } else {
+            document.getElementById("tab-btn-doc").classList.add("active");
+            document.getElementById("admin-tab-doc").style.display = "block";
+        }
     }
 
     async function loadDynamicLinksFromFirebase() {
@@ -488,17 +537,24 @@
                 let targetCategory = DAY_THEM_CATEGORIES.find(c => c.id === categoryId) || CHINH_KHOA_CATEGORIES.find(c => c.id === categoryId);
                 
                 if (targetCategory) {
+                    let items = [];
                     for (const linkId in linksObj) {
                         let item = linksObj[linkId];
                         item.firebaseId = linkId;
                         item.categoryId = categoryId;
-                        targetCategory.links.unshift(item);
+                        // Sắp xếp: Nếu chưa có order/timestamp, tự tạo để xếp sau cùng
+                        if (!item.timestamp) item.timestamp = Date.now() - Math.random() * 10000; 
+                        items.push(item);
                     }
+                    // Sort giảm dần theo timestamp (mới lên đầu)
+                    items.sort((a, b) => b.timestamp - a.timestamp);
+                    targetCategory.links = items.concat(targetCategory.links);
                 }
             }
         } catch (e) { console.error("Lỗi tải link Firebase", e); }
     }
 
+    // Đăng Bài Thi (questions.js)
     function processUpload() {
         const fileInput = document.getElementById("admin-file-upload");
         const category = document.getElementById("admin-category-select").value;
@@ -525,64 +581,123 @@
                 const now = new Date();
                 const dateStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
                 
-                const linkData = { title: parsedData.title, date: dateStr, url: `./webthichung.html?id=${quizId}`, isHot: true, avatar: selectedAvatarUrl };
+                const linkData = { title: parsedData.title, date: dateStr, url: `./thi.html?id=${quizId}`, isHot: true, isDoc: false, avatar: selectedAvatarUrl, timestamp: Date.now() };
 
                 await fetch(`${FIREBASE_DB_URL}/custom_links/${category}/${quizId}.json`, { method: 'PUT', body: JSON.stringify(linkData) });
 
                 alert("✨ Tạo đề thi thành công!");
                 window.location.reload(); 
             } catch (err) { alert("❌ Lỗi: " + err.message); } 
-            finally { btn.innerText = "✨ Đăng Đề"; btn.disabled = false; }
+            finally { btn.innerText = "✨ Đăng Đề Thi"; btn.disabled = false; }
         };
         reader.readAsText(file);
     }
 
-    async function deleteQuiz(categoryId, quizId, event) {
-        event.preventDefault();
-        event.stopPropagation();
-        if(!confirm("⚠️ Bạn có chắc chắn muốn XÓA vĩnh viễn đề này không?")) return;
+    // Đăng Link Tài Liệu / Video
+    async function processAddDocument() {
+        const titleInput = document.getElementById("admin-doc-title").value.trim();
+        const urlInput = document.getElementById("admin-doc-url").value.trim();
+        const category = document.getElementById("admin-category-select").value;
+        const btn = document.getElementById("btn-create-doc");
+
+        if (!titleInput || !urlInput) { alert("⚠️ Vui lòng nhập đủ Tên tài liệu và Đường link!"); return; }
+
+        btn.innerText = "⏳ Đang đăng..."; btn.disabled = true;
+
         try {
-            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${quizId}.json`, { method: 'DELETE' });
-            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { method: 'DELETE' });
+            const docId = "doc_" + Date.now();
+            const now = new Date();
+            const dateStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            
+            const linkData = { title: titleInput, date: dateStr, url: urlInput, isHot: false, isDoc: true, avatar: selectedAvatarUrl, timestamp: Date.now() };
+
+            await fetch(`${FIREBASE_DB_URL}/custom_links/${category}/${docId}.json`, { method: 'PUT', body: JSON.stringify(linkData) });
+
+            alert("📤 Đăng tài liệu thành công!");
+            window.location.reload(); 
+        } catch (err) { alert("❌ Lỗi: " + err.message); } 
+        finally { btn.innerText = "📤 Đăng Tài Liệu"; btn.disabled = false; }
+    }
+
+    async function deleteItem(categoryId, itemId, event) {
+        event.preventDefault(); event.stopPropagation();
+        if(!confirm("⚠️ Bạn có chắc chắn muốn XÓA vĩnh viễn mục này không?")) return;
+        try {
+            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, { method: 'DELETE' });
+            // Chỉ xóa trong thư mục quizzes nếu nó là bài test (id bắt đầu bằng quiz_)
+            if(itemId.startsWith('quiz_')) {
+                await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, { method: 'DELETE' });
+            }
             window.location.reload();
         } catch(e) { alert("Lỗi khi xóa!"); }
     }
 
-    async function renameQuiz(categoryId, quizId, currentTitle, event) {
-        event.preventDefault();
-        event.stopPropagation();
-        let newTitle = prompt("✏️ Nhập tên mới cho đề thi:", currentTitle);
+    async function renameItem(categoryId, itemId, isDoc, currentTitle, event) {
+        event.preventDefault(); event.stopPropagation();
+        let newTitle = prompt("✏️ Nhập tên mới:", currentTitle);
         if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== currentTitle) {
             try {
-                // Cập nhật tên ở menu link
-                await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${quizId}.json`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ title: newTitle.trim() })
-                });
-                // Cập nhật tên bên trong nội dung đề thi gốc (Để khi học sinh mở ra thấy tên mới)
-                await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ title: newTitle.trim() })
-                });
+                await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, { method: 'PATCH', body: JSON.stringify({ title: newTitle.trim() }) });
+                if (!isDoc && itemId.startsWith('quiz_')) {
+                    await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, { method: 'PATCH', body: JSON.stringify({ title: newTitle.trim() }) });
+                }
                 window.location.reload();
             } catch(e) { alert("Lỗi khi sửa tên!"); }
         }
     }
 
+    // Logic Đổi Thứ Tự (Lên / Xuống)
+    async function moveItemOrder(categoryId, currentId, direction, event) {
+        event.preventDefault(); event.stopPropagation();
+        
+        try {
+            // Lấy toàn bộ items của category này từ Firebase để biết chính xác thứ tự
+            const res = await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}.json`);
+            const data = await res.json();
+            if(!data) return;
+
+            let arr = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            // Đảm bảo ai cũng có timestamp
+            arr.forEach(item => { if(!item.timestamp) item.timestamp = Date.now(); });
+            // Sort giảm dần theo timestamp
+            arr.sort((a, b) => b.timestamp - a.timestamp);
+
+            const currentIndex = arr.findIndex(item => item.id === currentId);
+            if (currentIndex === -1) return;
+
+            let targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+            if (targetIndex >= 0 && targetIndex < arr.length) {
+                // Hoán đổi timestamp của 2 thằng
+                let tempTs = arr[currentIndex].timestamp;
+                arr[currentIndex].timestamp = arr[targetIndex].timestamp;
+                arr[targetIndex].timestamp = tempTs;
+
+                // Update lên Firebase
+                await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${arr[currentIndex].id}.json`, {
+                    method: 'PATCH', body: JSON.stringify({ timestamp: arr[currentIndex].timestamp })
+                });
+                await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${arr[targetIndex].id}.json`, {
+                    method: 'PATCH', body: JSON.stringify({ timestamp: arr[targetIndex].timestamp })
+                });
+                window.location.reload();
+            } else {
+                alert(direction === 'up' ? "Mục này đã ở trên cùng!" : "Mục này đã ở dưới cùng!");
+            }
+        } catch(e) { alert("Lỗi khi đổi thứ tự!"); }
+    }
+
     function openMoveModal(oldCategory, quizId, stringifiedData, event) {
-        event.preventDefault();
-        event.stopPropagation();
+        event.preventDefault(); event.stopPropagation();
         currentMoveData = { oldCategory, quizId, quizData: JSON.parse(decodeURIComponent(stringifiedData)) };
         document.getElementById("move-category-select").value = oldCategory;
         document.getElementById("move-modal").style.display = "flex";
     }
-
     function closeMoveModal() { document.getElementById("move-modal").style.display = "none"; }
 
     async function confirmMoveQuiz() {
         const newCategory = document.getElementById("move-category-select").value;
-        if(newCategory === currentMoveData.oldCategory) { alert("Đề đã nằm ở lớp này rồi!"); return; }
-
+        if(newCategory === currentMoveData.oldCategory) { alert("Đã nằm ở lớp này rồi!"); return; }
         try {
             await fetch(`${FIREBASE_DB_URL}/custom_links/${newCategory}/${currentMoveData.quizId}.json`, { method: 'PUT', body: JSON.stringify(currentMoveData.quizData) });
             await fetch(`${FIREBASE_DB_URL}/custom_links/${currentMoveData.oldCategory}/${currentMoveData.quizId}.json`, { method: 'DELETE' });
@@ -598,10 +713,8 @@
     function createExamCard(item) {
         let card = document.createElement("a"); card.href = item.url; card.className = "exam-card"; card.target = "_blank";
         
-        let hotBadge = item.isHot ? `<span class="badge-hot">HOT</span>` : '';
-        let platformBadge = '';
-        if (item.platform === 'gdrive') platformBadge = `<span class="badge-gdrive">Drive</span>`;
-        else if (item.platform === 'onedrive') platformBadge = `<span class="badge-onedrive">OneDrive</span>`;
+        let badgeHtml = item.isHot ? `<span class="badge-hot">HOT</span>` : '';
+        if (item.isDoc) badgeHtml += `<span class="badge-doc">TÀI LIỆU</span>`;
 
         let thumbHtml = item.avatar ? `<div class="exam-thumb-box"><img src="${item.avatar}" class="exam-thumb"></div>` : '';
 
@@ -611,22 +724,25 @@
         
         if (isAdminLoggedIn && item.firebaseId) {
             arrowHtml = ""; // Ẩn mũi tên để nhường chỗ cho cụm nút Admin
-            let cleanData = { title: item.title, date: item.date, url: item.url, isHot: item.isHot, avatar: item.avatar };
+            let cleanData = { title: item.title, date: item.date, url: item.url, isHot: item.isHot, isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp };
             let strData = encodeURIComponent(JSON.stringify(cleanData));
-            let escapedTitle = item.title.replace(/'/g, "\\'"); // Xử lý dấu nháy đơn
+            let escapedTitle = item.title.replace(/'/g, "\\'"); 
+            let isDocFlag = item.isDoc ? 'true' : 'false';
             
             adminTools = `
             <div class="admin-link-tools" onclick="event.preventDefault();">
-                <button class="tool-btn tool-btn-edit" onclick="renameQuiz('${item.categoryId}', '${item.firebaseId}', '${escapedTitle}', event)" title="Sửa tên">✏️</button>
+                <button class="tool-btn tool-btn-edit" onclick="renameItem('${item.categoryId}', '${item.firebaseId}', ${isDocFlag}, '${escapedTitle}', event)" title="Sửa tên">✏️</button>
                 <button class="tool-btn tool-btn-move" onclick="openMoveModal('${item.categoryId}', '${item.firebaseId}', '${strData}', event)" title="Chuyển lớp">🔄</button>
-                <button class="tool-btn tool-btn-delete" onclick="deleteQuiz('${item.categoryId}', '${item.firebaseId}', event)" title="Xóa đề">🗑️</button>
+                <button class="tool-btn tool-btn-up" onclick="moveItemOrder('${item.categoryId}', '${item.firebaseId}', 'up', event)" title="Đưa lên trên">⬆️</button>
+                <button class="tool-btn tool-btn-down" onclick="moveItemOrder('${item.categoryId}', '${item.firebaseId}', 'down', event)" title="Đưa xuống dưới">⬇️</button>
+                <button class="tool-btn tool-btn-delete" onclick="deleteItem('${item.categoryId}', '${item.firebaseId}', event)" title="Xóa">🗑️</button>
             </div>`;
         }
 
         card.innerHTML = `
             ${thumbHtml}
             <div class="exam-info">
-                <div class="exam-title" title="${item.title}">${hotBadge}${platformBadge}${item.title}</div>
+                <div class="exam-title" title="${item.title}">${badgeHtml}${item.title}</div>
                 <div class="exam-date">🕒 ${item.date}</div>
             </div>
             ${adminTools}
@@ -754,10 +870,7 @@
     }
 
     window.onload = async function() {
-        // Kiểm tra xem trong phiên làm việc hiện tại đã đăng nhập Admin chưa
-        if (sessionStorage.getItem("adminLoggedInSession") === "true") {
-            isAdminLoggedIn = true;
-        }
+        if (sessionStorage.getItem("adminLoggedInSession") === "true") { isAdminLoggedIn = true; }
 
         document.getElementById("top-banner-img").src = TOP_BANNER_URL;
         document.getElementById("web-avatar-img").src = WEB_AVATAR_URL;
@@ -765,7 +878,6 @@
         
         initAvatarGrid();
 
-        // Load Link Firebase TRƯỚC khi Render
         await loadDynamicLinksFromFirebase();
 
         renderDanTriNavBar();
