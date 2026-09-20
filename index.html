@@ -28,7 +28,6 @@
 
         * { box-sizing: border-box; }
         
-        /* 1. NÂNG CỠ CHỮ TO RÕ, ĐỌC DỄ DÀNG */
         body { 
             font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif; 
             background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
@@ -115,12 +114,31 @@
         .section-header-title.red-title { color: var(--primary-red-dark); }
         .section-header-title.blue-title { color: var(--primary-blue-dark); }
 
-        /* 2. THANH MENU & NÚT VIÊN THUỐC TĂNG CHIỀU CAO CHO DỄ CHẠM CẢM ỨNG */
+        /* THANH MENU & NÚT VIÊN THUỐC */
         .dantri-nav-container { margin-bottom: 10px; width: 100%; border: none; background: transparent; }
         .dantri-scroll-bar { display: flex; align-items: center; overflow-x: auto; white-space: nowrap; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 4px 2px 8px 2px; }
         .dantri-scroll-bar::-webkit-scrollbar { display: none; }
 
-        /* Viên thuốc: chiều cao tăng lên, đệm thoải mái ngón tay bấm */
+        /* KHU VỰC 2 HÀNG CHO CÁC LỚP CHÍNH KHÓA */
+        .chinhkhoa-multi-row { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            overflow-x: auto; 
+            white-space: nowrap; 
+            scroll-behavior: smooth; 
+            -webkit-overflow-scrolling: touch; 
+            scrollbar-width: none; 
+            padding: 4px 2px 8px 2px; 
+        }
+        .chinhkhoa-multi-row::-webkit-scrollbar { display: none; }
+        .chinhkhoa-row { 
+            display: flex; 
+            align-items: center; 
+            white-space: nowrap; 
+        }
+
+        /* Nút viên thuốc chuẩn */
         .dantri-nav-btn { 
             display: inline-flex; align-items: center; justify-content: center; gap: 6px; 
             padding: 9px 16px; min-height: 42px; font-size: 14px; font-weight: 700; color: #334155; 
@@ -134,15 +152,44 @@
         .dantri-nav-btn .caret-icon { font-size: 11px; transition: transform 0.25s ease; color: inherit; opacity: 0.75; }
         .dantri-nav-btn.active .caret-icon { transform: rotate(180deg); opacity: 1; }
 
-        /* Nút Tự luận Padlet màu cam nổi bật */
-        .dantri-nav-btn.padlet-orange-btn { color: #ffffff; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border-color: transparent; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); }
-        .dantri-nav-btn.padlet-orange-btn:hover { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); transform: translateY(-2px); }
-        .dantri-nav-btn.padlet-orange-btn.active { background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%); }
+        /* 2. NÚT HSG TOÁN 11 MÀU VÀNG NỔI BẬT */
+        .dantri-nav-btn.hsg-gold-btn { 
+            color: #ffffff; 
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); 
+            border-color: transparent; 
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4); 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+        }
+        .dantri-nav-btn.hsg-gold-btn:hover { 
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5); 
+        }
+        .dantri-nav-btn.hsg-gold-btn.active { 
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%); 
+            box-shadow: 0 5px 16px rgba(180, 83, 9, 0.55);
+        }
+
+        /* Nút Tự luận Padlet màu tím mộng mơ */
+        .dantri-nav-btn.padlet-purple-btn { 
+            color: #ffffff; 
+            background: linear-gradient(135deg, #c084fc 0%, #8b5cf6 50%, #7c3aed 100%); 
+            border-color: transparent; 
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.38); 
+        }
+        .dantri-nav-btn.padlet-purple-btn:hover { 
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 18px rgba(139, 92, 246, 0.45); 
+        }
+        .dantri-nav-btn.padlet-purple-btn.active { 
+            background: linear-gradient(135deg, #7c3aed 0%, #581c87 100%); 
+            box-shadow: 0 5px 16px rgba(109, 40, 217, 0.5);
+        }
         
-        /* Riêng nút thời sự trên cùng: tăng chiều cao vừa vặn cho chữ 2 dòng */
         #dantri-nav-bar .dantri-nav-btn { min-height: 44px; padding: 6px 12px; font-size: 13px; line-height: 1.25; border-radius: 14px; gap: 4px;}
 
-        /* 5. GIAO DIỆN TRONG SUỐT (GLASSMORPHISM) */
+        /* BẢNG THÔNG TIN XÒE XUỐNG TRONG SUỐT */
         .dantri-dropdown-panel { 
             display: none; padding: 14px; 
             background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -155,7 +202,7 @@
 
         .dantri-sub-header { font-size: 15px; font-weight: 800; color: #047857; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
-        /* 5. KHỐI NHẮC NHỞ TRONG SUỐT MỜ NHẸ NHÀNG */
+        /* KHỐI NHẮC NHỞ TRONG SUỐT MỜ NHẸ NHÀNG */
         .reminder-section { 
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 241, 242, 0.82) 100%); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -191,7 +238,7 @@
         .tool-btn-down { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
         .tool-btn-delete { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
 
-        /* 1. ITEM LINK & ĐỀ THI: CỠ CHỮ TO HƠN, THẺ KÍNH MỜ */
+        /* ITEM LINK & ĐỀ THI */
         .exam-card { 
             position: relative; 
             background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -304,7 +351,7 @@
                     <button class="admin-tab-btn" id="tab-btn-doc" onclick="switchAdminTab('doc')">📁 Đăng link tài liệu</button>
                 </div>
 
-                <!-- LỰA CHỌN CHUYÊN MỤC: Tự luận Padlet nằm dưới Lớp 11 -->
+                <!-- LỰA CHỌN CHUYÊN MỤC -->
                 <div class="admin-input-group">
                     <label>Lớp / Chuyên mục đăng vào:</label>
                     <select id="admin-category-select">
@@ -315,9 +362,9 @@
                         <option value="them-12">🎓 Thêm 12</option>
                         <option value="lop-11a">🏫 Lớp 11A</option>
                         <option value="lop-11c">🏫 Lớp 11C</option>
-                        <option value="tu-luan-padlet">🟧 Tự luận Padlet</option>
                         <option value="lop-10p">🏫 Lớp 10P</option>
                         <option value="hsg-toan-11">🏆 HSG Toán 11</option>
+                        <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
                     </select>
                 </div>
 
@@ -358,7 +405,7 @@
         </div>
     </div>
 
-    <!-- THANH MENU BẢN TIN / THỜI SỰ (NÚT VIÊN THUỐC ĐÃ NÂNG CAO) -->
+    <!-- THANH MENU BẢN TIN / THỜI SỰ -->
     <div class="dantri-nav-container">
         <div class="dantri-scroll-bar" id="dantri-nav-bar"></div>
         <div class="dantri-dropdown-panel" id="dantri-dropdown-panel">
@@ -367,7 +414,7 @@
         </div>
     </div>
 
-    <!-- KHỐI NHẮC NHỜ QUAN TRỌNG (GIAO DIỆN TRONG SUỐT GLASSMORPHISM & ICON ĐẸP) -->
+    <!-- KHỐI NHẮC NHỜ QUAN TRỌNG -->
     <div class="reminder-section">
         <h3 class="reminder-header-title">📌 Nhắc nhở quan trọng</h3>
         <div class="link-list" style="padding:0; background:transparent;" id="reminder-container"></div>
@@ -382,10 +429,10 @@
         </div>
     </div>
 
-    <!-- CHÍNH KHÓA (TỰ LUẬN PADLET ĐÃ ĐƯỢC CHUYỂN NGAY DƯỚI LỚP 11) -->
+    <!-- CHÍNH KHÓA (GỒM 2 HÀNG: HÀNG 1 [11A, 11C, 10P] | HÀNG 2 [HSG TOÁN 11 VÀNG, PADLET TÍM]) -->
     <div class="section-header-title blue-title">🔵 Các lớp chính khóa</div>
     <div class="dantri-nav-container">
-        <div class="dantri-scroll-bar" id="chinhkhoa-nav-bar"></div>
+        <div class="chinhkhoa-multi-row" id="chinhkhoa-nav-bar"></div>
         <div class="dantri-dropdown-panel" id="chinhkhoa-dropdown-panel">
             <div class="link-list" id="chinhkhoa-links-container"></div>
         </div>
@@ -420,9 +467,9 @@
             <option value="them-12">🎓 Thêm 12</option>
             <option value="lop-11a">🏫 Lớp 11A</option>
             <option value="lop-11c">🏫 Lớp 11C</option>
-            <option value="tu-luan-padlet">🟧 Tự luận Padlet</option>
             <option value="lop-10p">🏫 Lớp 10P</option>
             <option value="hsg-toan-11">🏆 HSG Toán 11</option>
+            <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
         </select>
         <div class="move-btn-row">
             <button class="move-btn-cancel" onclick="closeMoveModal()">Hủy</button>
@@ -443,9 +490,9 @@
             <option value="them-12">🎓 Thêm 12</option>
             <option value="lop-11a">🏫 Lớp 11A</option>
             <option value="lop-11c">🏫 Lớp 11C</option>
-            <option value="tu-luan-padlet">🟧 Tự luận Padlet</option>
             <option value="lop-10p">🏫 Lớp 10P</option>
             <option value="hsg-toan-11">🏆 HSG Toán 11</option>
+            <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
         </select>
         <div class="move-btn-row">
             <button class="move-btn-cancel" onclick="closeCopyModal()">Hủy</button>
@@ -498,7 +545,6 @@
         { id: "du-lich", title: "✈️ Du<br>lịch", subTitle: "🏔️ Khám phá & Trải nghiệm du lịch", news: [ { tag: "KHÁM PHÁ", title: "Gợi ý các điểm du lịch ngoại khóa", date: "22/08/2026 - 08:00", url: "https://dantri.com.vn/du-lich.htm" } ] }
     ];
 
-    // 4. THAY ĐỔI AVATAR PHẦN NHẮC NHỞ QUAN TRỌNG CHO ĐẸP VÀ CHUYÊN NGHIỆP
     let REMINDER_CATEGORY = {
         id: "nhac-nho",
         links: [
@@ -519,25 +565,25 @@
         { id: "them-12", title: "🎓 Thêm 12", links: [ { title: "so170toan12onthihk1180926", date: "18/09/2026 - 17:00", url: "https://so170toan12onthihk1180926.vercel.app/", isHot: true, isDoc: false, avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] }
     ];
 
-    // 3. CHUYỂN NÚT TỰ LUẬN PADLET VÀO VỊ TRÍ NGAY SAU CÁC LỚP 11
+    // CÁC LỚP CHÍNH KHÓA: DÒNG 1 [11A, 11C, 10P] - DÒNG 2 [HSG TOÁN 11 VÀNG, PADLET TÍM]
     let CHINH_KHOA_CATEGORIES = [
-        { id: "lop-11a", title: "🏫 Lớp 11A", links: [ { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, isDoc: false, avatar: "https://files.catbox.moe/ge1of8.png" } ] },
-        { id: "lop-11c", title: "🏫 Lớp 11C", links: [] },
+        { id: "lop-11a", title: "🏫 Lớp 11A", row: 1, links: [ { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, isDoc: false, avatar: "https://files.catbox.moe/ge1of8.png" } ] },
+        { id: "lop-11c", title: "🏫 Lớp 11C", row: 1, links: [] },
+        { id: "lop-10p", title: "🏫 Lớp 10P", row: 1, links: [] },
         { 
-            id: "tu-luan-padlet", title: "🟧 Tự luận Padlet", isOrange: true, visibleCount: 5, 
-            links: [ 
-                { title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-                { title: "11C chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-                { title: "10P chụp tự luận Padlet", date: "05/09/2026 - 08:00", url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
-            ] 
-        },
-        { id: "lop-10p", title: "🏫 Lớp 10P", links: [] },
-        { 
-            id: "hsg-toan-11", title: "🏆 HSG Toán 11", visibleCount: 2, 
+            id: "hsg-toan-11", title: "🏆 HSG Toán 11", isGold: true, row: 2, visibleCount: 2, 
             links: [
                 { title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 01", date: "20/09/2026 - 08:30", url: "https://hethongthitracnghiem-518c5.web.app/", isHot: true, isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" },
                 { title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 02", date: "19/09/2026 - 15:00", url: "https://hethongthitracnghiem-518c5.web.app/", isHot: false, isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" },
                 { title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 03 (Đề rèn luyện)", date: "18/09/2026 - 19:30", url: "https://hethongthitracnghiem-518c5.web.app/", isHot: false, isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" }
+            ] 
+        },
+        { 
+            id: "tu-luan-padlet", title: "💜 Nộp tự luận Padlet", isPurple: true, row: 2, visibleCount: 5, 
+            links: [ 
+                { title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+                { title: "11C chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+                { title: "10P chụp tự luận Padlet", date: "05/09/2026 - 08:00", url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
             ] 
         }
     ];
@@ -968,17 +1014,38 @@
         if(activeDayThemId) { let activeCat = DAY_THEM_CATEGORIES.find(c=>c.id===activeDayThemId); if(activeCat) renderLinkListToContainer(activeCat.links, container, activeCat.visibleCount || 2); }
     }
 
+    // RENDER THANH CHÍNH KHÓA THÀNH 2 HÀNG THẲNG CỘT
     function renderChinhKhoaNavBar() {
-        const navBar = document.getElementById("chinhkhoa-nav-bar"); const panel = document.getElementById("chinhkhoa-dropdown-panel"); const container = document.getElementById("chinhkhoa-links-container"); navBar.innerHTML = "";
+        const navBar = document.getElementById("chinhkhoa-nav-bar"); 
+        const panel = document.getElementById("chinhkhoa-dropdown-panel"); 
+        const container = document.getElementById("chinhkhoa-links-container"); 
+        navBar.innerHTML = "";
+        
+        // Tạo 2 hàng chứa nút
+        const row1 = document.createElement("div");
+        row1.className = "chinhkhoa-row";
+        const row2 = document.createElement("div");
+        row2.className = "chinhkhoa-row";
+
         CHINH_KHOA_CATEGORIES.forEach(cat => {
             let btn = document.createElement("button"); 
-            btn.className = cat.isOrange ? "dantri-nav-btn padlet-orange-btn" : "dantri-nav-btn"; 
+            if (cat.isGold) {
+                btn.className = "dantri-nav-btn hsg-gold-btn";
+            } else if (cat.isPurple) {
+                btn.className = "dantri-nav-btn padlet-purple-btn";
+            } else {
+                btn.className = "dantri-nav-btn";
+            }
+
             btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
             if(activeChinhKhoaId === cat.id) btn.classList.add("active");
+            
             btn.onclick = function() {
                 navBar.querySelectorAll(".dantri-nav-btn").forEach(b => b.classList.remove("active"));
-                if (activeChinhKhoaId === cat.id) { panel.classList.remove("show"); activeChinhKhoaId = null; } 
-                else { 
+                if (activeChinhKhoaId === cat.id) { 
+                    panel.classList.remove("show"); 
+                    activeChinhKhoaId = null; 
+                } else { 
                     activeChinhKhoaId = cat.id; 
                     btn.classList.add("active"); 
                     renderLinkListToContainer(cat.links, container, cat.visibleCount || 2); 
@@ -986,8 +1053,17 @@
                     btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
                 }
             };
-            navBar.appendChild(btn);
+
+            if (cat.row === 2) {
+                row2.appendChild(btn);
+            } else {
+                row1.appendChild(btn);
+            }
         });
+
+        navBar.appendChild(row1);
+        navBar.appendChild(row2);
+
         if(activeChinhKhoaId) { 
             let activeCat = CHINH_KHOA_CATEGORIES.find(c=>c.id===activeChinhKhoaId); 
             if(activeCat) renderLinkListToContainer(activeCat.links, container, activeCat.visibleCount || 2); 
