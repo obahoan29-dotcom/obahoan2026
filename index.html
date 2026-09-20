@@ -46,7 +46,13 @@
         .admin-controls-wrapper { position: absolute; bottom: 12px; right: 16px; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
         .auth-container { display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); padding: 4px 6px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.3); opacity: 0; transform: translateX(20px); pointer-events: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .auth-container.show { opacity: 1; transform: translateX(0); pointer-events: all; }
-        .auth-input { background: rgba(255,255,255,0.9); border: none; outline: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-family: inherit; width: 130px; font-weight: 600; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        
+        /* Cụm input mật khẩu có nút mắt xem */
+        .auth-input-wrapper { position: relative; display: flex; align-items: center; }
+        .auth-input { background: rgba(255,255,255,0.92); border: none; outline: none; padding: 6px 30px 6px 12px; border-radius: 20px; font-size: 13px; font-family: inherit; width: 140px; font-weight: 600; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .eye-toggle-btn { position: absolute; right: 8px; background: transparent; border: none; cursor: pointer; font-size: 13px; padding: 0; line-height: 1; opacity: 0.65; transition: 0.2s; user-select: none; }
+        .eye-toggle-btn:hover { opacity: 1; transform: scale(1.15); }
+        
         .auth-btn { background: var(--accent-green); color: white; border: none; border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.4); }
         .auth-btn:hover { background: #059669; }
 
@@ -97,13 +103,15 @@
 
         .dantri-nav-btn { display: inline-flex; align-items: center; gap: 6px; padding: 11px 18px; font-size: 16px; font-weight: 700; color: #334155; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); user-select: none; flex-shrink: 0; border-radius: 6px 6px 0 0; margin-right: 4px; font-family: inherit;}
         
-        .dantri-nav-btn.padlet-orange-btn { color: #ffffff; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border: 1px solid #f97316; border-radius: 8px; padding: 8px 16px; margin-left: 6px; box-shadow: 0 3px 8px rgba(249, 115, 22, 0.35); }
-        .dantri-nav-btn.padlet-orange-btn:hover { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); transform: translateY(-2px); box-shadow: 0 5px 12px rgba(249, 115, 22, 0.45); }
+        /* NÚT TỰ LUẬN PADLET THU GỌN BÉ LẠI NHÃ NHẶN */
+        .dantri-nav-btn.padlet-orange-btn { color: #ffffff; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border: 1px solid #ea580c; border-radius: 6px; padding: 6px 11px; font-size: 13.5px; font-weight: 700; margin-left: 6px; box-shadow: 0 2px 6px rgba(249, 115, 22, 0.3); }
+        .dantri-nav-btn.padlet-orange-btn:hover { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4); }
         .dantri-nav-btn.padlet-orange-btn.active { color: #ffffff; background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%); border-color: #9a3412; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(249, 115, 22, 0.4); }
         .dantri-nav-btn.padlet-orange-btn .caret-icon { color: #ffffff; }
 
         #dantri-nav-bar .dantri-nav-btn { padding: 5px 7px; font-size: 12.5px; line-height: 1.15; text-align: center; gap: 3px; font-weight: 800;}
         #daythem-nav-bar .dantri-nav-btn, #chinhkhoa-nav-bar .dantri-nav-btn { font-size: 17px; font-weight: 800; }
+        #chinhkhoa-nav-bar .dantri-nav-btn.padlet-orange-btn { font-size: 13.5px; } /* Đảm bảo nút padlet luôn gọn gàng */
         .dantri-nav-btn:hover { color: var(--dantri-green); background-color: var(--dantri-hover); transform: translateY(-1px); }
         .dantri-nav-btn.active { color: #047857; border-bottom: 3px solid #059669; background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%); box-shadow: inset 0 -2px 0 #059669; font-weight: 800; }
         .dantri-nav-btn .caret-icon { font-size: 10px; transition: transform 0.25s ease; color: #64748b; }
@@ -130,7 +138,7 @@
 
         .link-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: #ffffff; width: 100%; box-sizing: border-box; }
 
-        /* Nút chức năng admin - CỐ ĐỊNH, KHÔNG BỊ ẨN NỮA, BỔ SUNG LÊN XUỐNG */
+        /* Nút chức năng admin */
         .admin-link-tools { display: flex; gap: 4px; margin-left: 8px; align-items: center; z-index: 10;}
         .tool-btn { width: 28px; height: 28px; border-radius: 6px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; flex-shrink: 0;}
         .tool-btn-edit { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
@@ -208,10 +216,10 @@
             .dantri-nav-btn { padding: 8px 12px; font-size: 14px; }
             #dantri-nav-bar .dantri-nav-btn { padding: 4px 5px; font-size: 11.5px; }
             #daythem-nav-bar .dantri-nav-btn, #chinhkhoa-nav-bar .dantri-nav-btn { font-size: 16px; padding: 8px 14px; }
+            #chinhkhoa-nav-bar .dantri-nav-btn.padlet-orange-btn { font-size: 12.5px; padding: 6px 10px; }
             .news-img-box { width: 80px; height: 54px; }
             .exam-thumb-box { width: 38px; height: 48px; }
-            .auth-input { width: 100px; }
-            /* Mobile tweaks for tools */
+            .auth-input { width: 110px; }
             .admin-link-tools { gap: 3px; margin-left: 4px;}
             .tool-btn { width: 26px; height: 26px; font-size: 11px;}
         }
@@ -233,14 +241,17 @@
         
         <!-- ================= KHU VỰC ĐIỀU KHIỂN QUẢN TRỊ ================= -->
         <div class="admin-controls-wrapper">
-            <!-- Ô nhập mật khẩu trượt ra -->
+            <!-- Ô nhập mật khẩu trượt ra có nút xem mật khẩu -->
             <div class="auth-container" id="auth-container">
-                <input type="password" id="admin-pass-input" class="auth-input" placeholder="Mật khẩu..." onkeypress="handleEnter(event)">
+                <div class="auth-input-wrapper">
+                    <input type="password" id="admin-pass-input" class="auth-input" placeholder="Mật khẩu..." onkeypress="handleEnter(event)">
+                    <button type="button" class="eye-toggle-btn" id="eye-toggle-btn" onclick="togglePasswordVisibility()" title="Hiện/Ẩn mật khẩu">👁️</button>
+                </div>
                 <button class="auth-btn" onclick="checkAdminPassword()">VÀO</button>
             </div>
             
             <!-- Nút Bánh Răng -->
-            <div class="admin-gear-btn" id="gear-btn" onclick="toggleAdminPanel()" title="Quản trị viên">⚙️</div>
+            <div class="admin-gear-btn" id="gear-btn" onclick="toggleAdminPanel(event)" title="Quản trị viên">⚙️</div>
 
             <!-- Bảng Dropdown Chức Năng (Chỉ hiện khi login thành công) -->
             <div class="admin-popover-panel" id="admin-popover-panel">
@@ -262,6 +273,7 @@
                         <option value="lop-11a">🏫 LỚP 11A</option>
                         <option value="lop-11c">🏫 LỚP 11C</option>
                         <option value="lop-10p">🏫 LỚP 10P</option>
+                        <option value="hsg-toan-11">🏆 HSGTOAN11</option>
                         <option value="tu-luan-padlet">🟧 TỰ LUẬN PADLET</option>
                     </select>
                 </div>
@@ -366,6 +378,7 @@
             <option value="lop-11a">🏫 LỚP 11A</option>
             <option value="lop-11c">🏫 LỚP 11C</option>
             <option value="lop-10p">🏫 LỚP 10P</option>
+            <option value="hsg-toan-11">🏆 HSGTOAN11</option>
             <option value="tu-luan-padlet">🟧 TỰ LUẬN PADLET</option>
         </select>
         <div class="move-btn-row">
@@ -385,38 +398,38 @@
     let selectedAvatarUrl = "";
     let currentMoveData = { oldCategory: null, quizId: null, quizData: null };
 
-    // Kho 30 Avatars Đẹp Mắt (3D, Icons đủ màu sắc)
+    // Kho 30 Avatars Đẹp Mắt
     const PRESET_AVATARS = [
-        "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg", // 1 Khủng long
-        "https://cdn-icons-png.flaticon.com/512/3755/3755251.png", // 2 3D Book
-        "https://cdn-icons-png.flaticon.com/512/3062/3062279.png", // 3 Rocket 3D
-        "https://cdn-icons-png.flaticon.com/512/4144/4144683.png", // 4 Target
-        "https://cdn-icons-png.flaticon.com/512/4144/4144672.png", // 5 Medal
-        "https://cdn-icons-png.flaticon.com/512/2996/2996841.png", // 6 Star
-        "https://cdn-icons-png.flaticon.com/512/10061/10061805.png", // 7 Cute Fox
-        "https://cdn-icons-png.flaticon.com/512/9308/9308006.png", // 8 Panda
-        "https://cdn-icons-png.flaticon.com/512/9068/9068641.png", // 9 Idea Bulb
-        "https://cdn-icons-png.flaticon.com/512/9181/9181285.png", // 10 Calculator
-        "https://cdn-icons-png.flaticon.com/512/3074/3074058.png", // 11 Test Paper
-        "https://cdn-icons-png.flaticon.com/512/4243/4243003.png", // 12 Magic Hat
-        "https://cdn-icons-png.flaticon.com/512/3135/3135810.png", // 13 Math symbols
-        "https://cdn-icons-png.flaticon.com/512/4144/4144724.png", // 14 Compass
-        "https://cdn-icons-png.flaticon.com/512/4144/4144773.png", // 15 Diamond
-        "https://cdn-icons-png.flaticon.com/512/4762/4762295.png", // 16 Telescope
-        "https://cdn-icons-png.flaticon.com/512/6168/6168641.png", // 17 3D Backpack
-        "https://cdn-icons-png.flaticon.com/512/3253/3253258.png", // 18 Magnifying Glass
-        "https://cdn-icons-png.flaticon.com/512/2275/2275069.png", // 19 Globe
-        "https://cdn-icons-png.flaticon.com/512/4006/4006511.png", // 20 DNA / Science
-        "https://cdn-icons-png.flaticon.com/512/3358/3358327.png", // 21 Trophy
-        "https://cdn-icons-png.flaticon.com/512/10061/10061732.png", // 22 Cute Bear
-        "https://cdn-icons-png.flaticon.com/512/4539/4539472.png", // 23 Astronaut
-        "https://cdn-icons-png.flaticon.com/512/3081/3081371.png", // 24 Palette
-        "https://cdn-icons-png.flaticon.com/512/864/864685.png",   // 25 Clock
-        "https://cdn-icons-png.flaticon.com/512/3143/3143657.png", // 26 Game controller
-        "https://cdn-icons-png.flaticon.com/512/2072/2072138.png", // 27 Keyboard
-        "https://cdn-icons-png.flaticon.com/512/4207/4207253.png", // 28 Brain
-        "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", // 29 Folder
-        "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"  // 30 Abacus
+        "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg",
+        "https://cdn-icons-png.flaticon.com/512/3755/3755251.png",
+        "https://cdn-icons-png.flaticon.com/512/3062/3062279.png",
+        "https://cdn-icons-png.flaticon.com/512/4144/4144683.png",
+        "https://cdn-icons-png.flaticon.com/512/4144/4144672.png",
+        "https://cdn-icons-png.flaticon.com/512/2996/2996841.png",
+        "https://cdn-icons-png.flaticon.com/512/10061/10061805.png",
+        "https://cdn-icons-png.flaticon.com/512/9308/9308006.png",
+        "https://cdn-icons-png.flaticon.com/512/9068/9068641.png",
+        "https://cdn-icons-png.flaticon.com/512/9181/9181285.png",
+        "https://cdn-icons-png.flaticon.com/512/3074/3074058.png",
+        "https://cdn-icons-png.flaticon.com/512/4243/4243003.png",
+        "https://cdn-icons-png.flaticon.com/512/3135/3135810.png",
+        "https://cdn-icons-png.flaticon.com/512/4144/4144724.png",
+        "https://cdn-icons-png.flaticon.com/512/4144/4144773.png",
+        "https://cdn-icons-png.flaticon.com/512/4762/4762295.png",
+        "https://cdn-icons-png.flaticon.com/512/6168/6168641.png",
+        "https://cdn-icons-png.flaticon.com/512/3253/3253258.png",
+        "https://cdn-icons-png.flaticon.com/512/2275/2275069.png",
+        "https://cdn-icons-png.flaticon.com/512/4006/4006511.png",
+        "https://cdn-icons-png.flaticon.com/512/3358/3358327.png",
+        "https://cdn-icons-png.flaticon.com/512/10061/10061732.png",
+        "https://cdn-icons-png.flaticon.com/512/4539/4539472.png",
+        "https://cdn-icons-png.flaticon.com/512/3081/3081371.png",
+        "https://cdn-icons-png.flaticon.com/512/864/864685.png",
+        "https://cdn-icons-png.flaticon.com/512/3143/3143657.png",
+        "https://cdn-icons-png.flaticon.com/512/2072/2072138.png",
+        "https://cdn-icons-png.flaticon.com/512/4207/4207253.png",
+        "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+        "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"
     ];
 
     const TOP_BANNER_URL = "https://files.catbox.moe/cf5o9u.jpg"; 
@@ -444,10 +457,30 @@
         { id: "lop-11a", title: "🏫 LỚP 11A", links: [ { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, isDoc: false, avatar: "https://files.catbox.moe/ge1of8.png" } ] },
         { id: "lop-11c", title: "🏫 LỚP 11C", links: [] },
         { id: "lop-10p", title: "🏫 LỚP 10P", links: [] },
-        { id: "tu-luan-padlet", title: "🟧 TỰ LUẬN PADLET", isOrange: true, visibleCount: 3, links: [ { title: "Bảng nộp bài Tự luận Padlet - Trang 1", date: "16/09/2026 - 10:00", url: "#", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" } ] }
+        { 
+            id: "hsg-toan-11", 
+            title: "🏆 HSGTOAN11", 
+            visibleCount: 2, 
+            links: [
+                { title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 01", date: "20/09/2026 - 08:30", url: "https://hethongthitracnghiem-518c5.web.app/", isHot: true, isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" },
+                { title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 02", date: "19/09/2026 - 15:00", url: "https://hethongthitracnghiem-518c5.web.app/", isHot: false, isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" },
+                { title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 03 (Đề rèn luyện)", date: "18/09/2026 - 19:30", url: "https://hethongthitracnghiem-518c5.web.app/", isHot: false, isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" }
+            ] 
+        },
+        { 
+            id: "tu-luan-padlet", 
+            title: "🟧 TỰ LUẬN PADLET", 
+            isOrange: true, 
+            visibleCount: 5, 
+            links: [ 
+                { title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+                { title: "11C chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+                { title: "10P chụp tự luận Padlet", date: "05/09/2026 - 08:00", url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0", isHot: true, isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
+            ] 
+        }
     ];
 
-    const KHO_TAI_LIEU_FOLDER = { folderName: "KHO TÀI LIỆU PDF, WORD, ẢNH...", folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", links: [ { title: "so 140-de-cuoi-hoc-ky-2-toan-11.pdf", date: "06/08/2026 - 02:30", url: "https://drive.google.com/file/...", isHot: false, isDoc: true, avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" } ] };
+    const KHO_TAI_LIEU_FOLDER = { folderName: "KHO TÀI LIỆU PDF, WORD, ẢNH...", folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", links: [ { title: "so 140-de-cuoi-hoc-ky-2-toan-11.pdf", date: "06/08/2026 - 02:30", url: "https://drive.google.com/", isHot: false, isDoc: true, avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" } ] };
     const TOP_REMINDER_DATA = [ { title: "Lưu ý quan trọng: Các em kiểm tra lại tài khoản và nộp bài tập đúng hạn.", date: "05/08/2026 - 15:00", image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300", url: "#" } ];
     const NEWS_DATA = [ { title: "Lịch kiểm tra định kỳ môn Toán tuần tới các em chú ý ôn tập kỹ.", date: "04/08/2026 - 08:00", image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300", url: "#" }, { title: "Xem đáp án và điểm bài kiểm tra của em", date: "03/08/2026 - 12:00", image: "https://files.catbox.moe/jum4by.png", url: "#" } ];
 
@@ -473,7 +506,23 @@
         });
     }
 
-    function toggleAdminPanel() {
+    // BẬT / TẮT XEM MẬT KHẨU
+    function togglePasswordVisibility() {
+        const input = document.getElementById("admin-pass-input");
+        const btn = document.getElementById("eye-toggle-btn");
+        if (input.type === "password") {
+            input.type = "text";
+            btn.innerText = "🙈";
+            btn.title = "Ẩn mật khẩu";
+        } else {
+            input.type = "password";
+            btn.innerText = "👁️";
+            btn.title = "Hiện mật khẩu";
+        }
+    }
+
+    function toggleAdminPanel(e) {
+        if (e) e.stopPropagation();
         const authContainer = document.getElementById("auth-container");
         const panel = document.getElementById("admin-popover-panel");
         const gear = document.getElementById("gear-btn");
@@ -510,6 +559,28 @@
         document.getElementById("gear-btn").classList.remove("active-gear");
     }
 
+    // TỰ ĐỘNG TẮT CỬA SỔ QUẢN TRỊ KHI NHẤP RA NGOÀI
+    document.addEventListener("click", function(e) {
+        const panel = document.getElementById("admin-popover-panel");
+        const gear = document.getElementById("gear-btn");
+        const authContainer = document.getElementById("auth-container");
+        const moveModal = document.getElementById("move-modal");
+
+        // Đóng popover đăng bài nếu ấn ra bên ngoài nó và không phải nút bánh răng
+        if (panel && panel.classList.contains("show")) {
+            if (!panel.contains(e.target) && !gear.contains(e.target) && (!moveModal || !moveModal.contains(e.target))) {
+                closeAdminPanel();
+            }
+        }
+
+        // Đóng ô nhập mật khẩu nếu ấn ra bên ngoài
+        if (authContainer && authContainer.classList.contains("show")) {
+            if (!authContainer.contains(e.target) && !gear.contains(e.target)) {
+                authContainer.classList.remove("show");
+            }
+        }
+    });
+
     // Chuyển Tab trong bảng Quản trị
     function switchAdminTab(tabName) {
         document.getElementById("tab-btn-quiz").classList.remove("active");
@@ -542,11 +613,9 @@
                         let item = linksObj[linkId];
                         item.firebaseId = linkId;
                         item.categoryId = categoryId;
-                        // Sắp xếp: Nếu chưa có order/timestamp, tự tạo để xếp sau cùng
                         if (!item.timestamp) item.timestamp = Date.now() - Math.random() * 10000; 
                         items.push(item);
                     }
-                    // Sort giảm dần theo timestamp (mới lên đầu)
                     items.sort((a, b) => b.timestamp - a.timestamp);
                     targetCategory.links = items.concat(targetCategory.links);
                 }
@@ -624,7 +693,6 @@
         if(!confirm("⚠️ Bạn có chắc chắn muốn XÓA vĩnh viễn mục này không?")) return;
         try {
             await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, { method: 'DELETE' });
-            // Chỉ xóa trong thư mục quizzes nếu nó là bài test (id bắt đầu bằng quiz_)
             if(itemId.startsWith('quiz_')) {
                 await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, { method: 'DELETE' });
             }
@@ -651,15 +719,12 @@
         event.preventDefault(); event.stopPropagation();
         
         try {
-            // Lấy toàn bộ items của category này từ Firebase để biết chính xác thứ tự
             const res = await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}.json`);
             const data = await res.json();
             if(!data) return;
 
             let arr = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            // Đảm bảo ai cũng có timestamp
             arr.forEach(item => { if(!item.timestamp) item.timestamp = Date.now(); });
-            // Sort giảm dần theo timestamp
             arr.sort((a, b) => b.timestamp - a.timestamp);
 
             const currentIndex = arr.findIndex(item => item.id === currentId);
@@ -668,12 +733,10 @@
             let targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
 
             if (targetIndex >= 0 && targetIndex < arr.length) {
-                // Hoán đổi timestamp của 2 thằng
                 let tempTs = arr[currentIndex].timestamp;
                 arr[currentIndex].timestamp = arr[targetIndex].timestamp;
                 arr[targetIndex].timestamp = tempTs;
 
-                // Update lên Firebase
                 await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${arr[currentIndex].id}.json`, {
                     method: 'PATCH', body: JSON.stringify({ timestamp: arr[currentIndex].timestamp })
                 });
@@ -707,7 +770,7 @@
 
 
     // ==========================================
-    // 3. RENDER UI (TÍCH HỢP QUẢN TRỊ CỐ ĐỊNH)
+    // 3. RENDER GIAO DIỆN
     // ==========================================
     
     function createExamCard(item) {
@@ -718,12 +781,11 @@
 
         let thumbHtml = item.avatar ? `<div class="exam-thumb-box"><img src="${item.avatar}" class="exam-thumb"></div>` : '';
 
-        // CHỨC NĂNG ADMIN (CỐ ĐỊNH PHÍA BÊN PHẢI)
         let adminTools = ""; 
         let arrowHtml = `<div class="arrow">&#8250;</div>`;
         
         if (isAdminLoggedIn && item.firebaseId) {
-            arrowHtml = ""; // Ẩn mũi tên để nhường chỗ cho cụm nút Admin
+            arrowHtml = "";
             let cleanData = { title: item.title, date: item.date, url: item.url, isHot: item.isHot, isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp };
             let strData = encodeURIComponent(JSON.stringify(cleanData));
             let escapedTitle = item.title.replace(/'/g, "\\'"); 
@@ -827,16 +889,27 @@
     function renderChinhKhoaNavBar() {
         const navBar = document.getElementById("chinhkhoa-nav-bar"); const panel = document.getElementById("chinhkhoa-dropdown-panel"); const container = document.getElementById("chinhkhoa-links-container"); navBar.innerHTML = "";
         CHINH_KHOA_CATEGORIES.forEach(cat => {
-            let btn = document.createElement("button"); btn.className = cat.isOrange ? "dantri-nav-btn padlet-orange-btn" : "dantri-nav-btn"; btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
+            let btn = document.createElement("button"); 
+            btn.className = cat.isOrange ? "dantri-nav-btn padlet-orange-btn" : "dantri-nav-btn"; 
+            btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
             if(activeChinhKhoaId === cat.id) btn.classList.add("active");
             btn.onclick = function() {
                 navBar.querySelectorAll(".dantri-nav-btn").forEach(b => b.classList.remove("active"));
                 if (activeChinhKhoaId === cat.id) { panel.classList.remove("show"); activeChinhKhoaId = null; } 
-                else { activeChinhKhoaId = cat.id; btn.classList.add("active"); renderLinkListToContainer(cat.links, container, cat.visibleCount || 2); panel.classList.add("show"); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+                else { 
+                    activeChinhKhoaId = cat.id; 
+                    btn.classList.add("active"); 
+                    renderLinkListToContainer(cat.links, container, cat.visibleCount || 2); 
+                    panel.classList.add("show"); 
+                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
+                }
             };
             navBar.appendChild(btn);
         });
-        if(activeChinhKhoaId) { let activeCat = CHINH_KHOA_CATEGORIES.find(c=>c.id===activeChinhKhoaId); if(activeCat) renderLinkListToContainer(activeCat.links, container, activeCat.visibleCount || 2); }
+        if(activeChinhKhoaId) { 
+            let activeCat = CHINH_KHOA_CATEGORIES.find(c=>c.id===activeChinhKhoaId); 
+            if(activeCat) renderLinkListToContainer(activeCat.links, container, activeCat.visibleCount || 2); 
+        }
     }
 
     function renderKhoTaiLieu() {
