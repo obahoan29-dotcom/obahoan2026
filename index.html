@@ -10,720 +10,200 @@
     <meta http-equiv="Expires" content="0">
     
     <title>Cổng Thông Tin Đề Thi Trực Tuyến</title>
-    <!-- Font chữ Plus Jakarta Sans hiện đại -->
+    <!-- Font chữ Outfit hiện đại, quốc tế, thanh lịch -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary-blue: #0284c7;
-            --primary-blue-dark: #0369a1;
-            --primary-red: #e11d48;
-            --primary-red-dark: #be123c;
-            --accent-orange: #f97316;
-            --accent-green: #10b981;
-            --bg: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-sub: #475569;
-            --dantri-green: #059669;
-            --dantri-hover: #ecfdf5;
-            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.08);
+            --primary-blue: #0284c7; --primary-blue-dark: #0369a1; --primary-red: #e11d48; --primary-red-dark: #be123c;
+            --accent-orange: #f97316; --accent-green: #10b981; --bg: #f1f5f9; --card-bg: #ffffff;
+            --text-main: #0f172a; --text-sub: #475569; --dantri-green: #059669; --dantri-hover: #ecfdf5;
+            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05); --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.08);
             --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.12);
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            line-height: 1.5;
-            font-size: 17px;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .container {
-            max-width: 1040px;
-            margin: 0 auto;
-            padding: 10px 12px;
-        }
+        * { box-sizing: border-box; }
+        /* Áp dụng Font Outfit toàn trang */
+        body { font-family: 'Outfit', 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding: 0; line-height: 1.5; font-size: 17px; -webkit-font-smoothing: antialiased; letter-spacing: 0.2px; }
+        .container { max-width: 1040px; margin: 0 auto; padding: 10px 12px; }
 
         /* BANNER ĐẦU TRANG CAO CẤP */
-        .top-banner-box {
-            width: 100%;
-            height: 185px;
-            border-radius: 18px;
-            overflow: hidden;
-            margin-bottom: 10px;
-            box-shadow: var(--shadow-lg);
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            border: 2px solid rgba(255, 215, 0, 0.5);
-            position: relative;
-        }
+        .top-banner-box { width: 100%; height: 185px; border-radius: 18px; margin-bottom: 10px; box-shadow: var(--shadow-lg); background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 2px solid rgba(255, 215, 0, 0.5); position: relative; z-index: 100;}
+        .top-banner-img-wrap { width:100%; height:100%; position:absolute; inset:0; border-radius:16px; overflow:hidden;}
+        .top-banner-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); filter: brightness(1.2) contrast(1.05); }
+        .top-banner-box:hover .top-banner-img { transform: scale(1.03); }
+        .banner-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.35) 100%); pointer-events: none; border-radius:16px;}
+        .banner-avatar { position: absolute; top: 14px; left: 16px; width: 62px; height: 62px; border-radius: 50%; object-fit: cover; border: 3px solid #ffffff; box-shadow: 0 0 18px rgba(255, 255, 255, 0.95), 0 4px 10px rgba(0,0,0,0.3); z-index: 2; filter: brightness(1.2) contrast(1.05); animation: pulseAvatar 3s ease-in-out infinite; }
+        @keyframes pulseAvatar { 0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(255,255,255,0.7); } 50% { transform: scale(1.06); box-shadow: 0 0 24px rgba(255,255,255,1); } }
+        .banner-title { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 2; font-size: 12px; font-weight: 800; color: #ffffff; text-shadow: 0 3px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(2, 132, 199, 0.6); letter-spacing: 0.8px; text-transform: uppercase; white-space: nowrap; pointer-events: none; text-align: center; background: rgba(15, 23, 42, 0.55); padding: 5px 14px; border-radius: 30px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.25); }
+        .banner-rocket { position: absolute; top: 14px; right: 18px; font-size: 30px; animation: flyRocket 4s ease-in-out infinite; z-index: 2; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); }
+        @keyframes flyRocket { 0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); } 50% { transform: translateY(-10px) rotate(-12deg) scale(1.15); } }
+        .banner-watermark { position: absolute; bottom: 12px; left: 18px; z-index: 2; font-size: 26px; font-weight: 900; letter-spacing: 4px; color: rgba(255, 255, 255, 0.7); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); pointer-events: none; user-select: none; }
 
-        .top-banner-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            filter: brightness(1.2) contrast(1.05);
-        }
+        /* ================= QUẢN TRỊ VIÊN: NÚT & PASSWORD UI ================= */
+        .admin-controls-wrapper { position: absolute; bottom: 12px; right: 16px; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .auth-container { display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); padding: 4px 6px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.3); opacity: 0; transform: translateX(20px); pointer-events: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .auth-container.show { opacity: 1; transform: translateX(0); pointer-events: all; }
+        .auth-input { background: rgba(255,255,255,0.9); border: none; outline: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-family: inherit; width: 130px; font-weight: 600; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .auth-btn { background: var(--accent-green); color: white; border: none; border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.4); }
+        .auth-btn:hover { background: #059669; }
 
-        .top-banner-box:hover .top-banner-img {
-            transform: scale(1.03);
-        }
+        .admin-gear-btn { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.4); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.4s; color: white; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 11; }
+        .admin-gear-btn:hover { background: rgba(255, 255, 255, 0.4); transform: rotate(90deg) scale(1.1); }
+        .admin-gear-btn.active-gear { background: var(--primary-blue); border-color: #fff; box-shadow: 0 0 15px rgba(2, 132, 199, 0.8); animation: glow 2s infinite; }
+        @keyframes glow { 0%,100%{box-shadow: 0 0 10px #0284c7;} 50%{box-shadow: 0 0 20px #38bdf8;} }
 
-        .banner-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.35) 100%);
-            pointer-events: none;
-        }
+        /* ================= BẢNG QUẢN TRỊ (POP-OVER) ================= */
+        .admin-popover-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 380px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 20px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.6); z-index: 999; display: none; opacity: 0; transform: translateY(-10px) scale(0.95); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top right; }
+        .admin-popover-panel.show { display: block; opacity: 1; transform: translateY(0) scale(1); }
+        .admin-popover-title { font-size: 1.2rem; font-weight: 800; color: transparent; background-clip: text; -webkit-background-clip: text; background-image: linear-gradient(135deg, #0284c7 0%, #be123c 100%); margin-bottom: 12px; border-bottom: 2px dashed #cbd5e1; padding-bottom: 8px; display: flex; align-items: center; gap: 6px;}
+        .admin-input-group { margin-bottom: 12px; }
+        .admin-input-group label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.9rem; color: #1e293b; }
+        .admin-input-group select, .admin-input-group input[type="file"] { width: 100%; padding: 8px; border: 2px solid rgba(203, 213, 225, 0.8); border-radius: 10px; outline: none; background: rgba(255,255,255,0.9); font-family: inherit; font-size: 14px; font-weight: 600; transition: 0.3s; }
+        .admin-input-group select:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2); }
 
-        .banner-avatar {
-            position: absolute;
-            top: 14px;
-            left: 16px;
-            width: 62px;
-            height: 62px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #ffffff;
-            box-shadow: 0 0 18px rgba(255, 255, 255, 0.95), 0 4px 10px rgba(0,0,0,0.3);
-            z-index: 2;
-            filter: brightness(1.2) contrast(1.05);
-            animation: pulseAvatar 3s ease-in-out infinite;
-        }
+        /* LƯỚI CHỌN AVATAR NHỎ GỌN (6 CỘT) */
+        .avatar-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 150px; overflow-y: auto; padding: 6px; background: rgba(241, 245, 249, 0.6); border-radius: 10px; border: 1px solid #e2e8f0; }
+        .avatar-picker-grid::-webkit-scrollbar { width: 4px; }
+        .avatar-picker-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .avatar-option { width: 100%; aspect-ratio: 1; border-radius: 6px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: 0.2s; filter: grayscale(20%) brightness(0.9); background: #fff; padding: 2px;}
+        .avatar-option:hover { transform: scale(1.15); filter: grayscale(0%) brightness(1); z-index: 2; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .avatar-option.selected { border-color: var(--primary-blue); filter: grayscale(0%) brightness(1); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3); transform: scale(1.1); background: #f0f9ff;}
 
-        @keyframes pulseAvatar {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(255,255,255,0.7); }
-            50% { transform: scale(1.06); box-shadow: 0 0 24px rgba(255,255,255,1); }
-        }
+        .admin-btn-row { display: flex; gap: 10px; margin-top: 16px; }
+        .btn-admin { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; color: #fff; font-family: inherit; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-transform: uppercase; letter-spacing: 0.5px;}
+        .btn-cancel { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
+        .btn-cancel:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(100, 116, 139, 0.3); }
+        .btn-submit { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(2, 132, 199, 0.3); }
 
-        .banner-title {
-            position: absolute;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2;
-            font-size: 11.5px;
-            font-weight: 800;
-            color: #ffffff;
-            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(2, 132, 199, 0.6);
-            letter-spacing: 0.6px;
-            white-space: nowrap;
-            pointer-events: none;
-            text-align: center;
-            background: rgba(15, 23, 42, 0.55);
-            padding: 4px 12px;
-            border-radius: 30px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.25);
-        }
+        /* ================= GIAO DIỆN CHUNG ================= */
+        .section-header-title { font-size: 15px; font-weight: 800; margin: 12px 0 6px 0; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 8px; padding-left: 4px; }
+        .section-header-title.red-title { color: var(--primary-red); }
+        .section-header-title.blue-title { color: var(--primary-blue-dark); }
 
-        .banner-rocket {
-            position: absolute;
-            top: 14px;
-            right: 18px;
-            font-size: 30px;
-            animation: flyRocket 4s ease-in-out infinite;
-            z-index: 2;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
-        }
+        .dantri-nav-container { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-md); border: 1px solid #cbd5e1; margin-bottom: 10px; overflow: hidden; width: 100%; }
+        .dantri-scroll-bar { display: flex; align-items: center; overflow-x: auto; white-space: nowrap; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: thin; padding: 6px 8px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-bottom: 1px solid #e2e8f0; }
+        .dantri-scroll-bar::-webkit-scrollbar { height: 3px; }
+        .dantri-scroll-bar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
 
-        @keyframes flyRocket {
-            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
-            50% { transform: translateY(-10px) rotate(-12deg) scale(1.15); }
-        }
-
-        .banner-watermark {
-            position: absolute;
-            bottom: 12px;
-            left: 18px;
-            z-index: 2;
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            color: rgba(255, 255, 255, 0.6);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-            pointer-events: none;
-            user-select: none;
-        }
-
-        .section-header-title {
-            font-size: 14.5px;
-            font-weight: 800;
-            margin: 10px 0 5px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding-left: 4px;
-        }
-        .section-header-title.red-title {
-            color: var(--primary-red);
-        }
-        .section-header-title.blue-title {
-            color: var(--primary-blue-dark);
-        }
-
-        .dantri-nav-container {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid #cbd5e1;
-            margin-bottom: 10px;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .dantri-scroll-bar {
-            display: flex;
-            align-items: center;
-            overflow-x: auto;
-            white-space: nowrap;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
-            padding: 6px 8px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .dantri-scroll-bar::-webkit-scrollbar {
-            height: 3px;
-        }
-        .dantri-scroll-bar::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 4px;
-        }
-
-        .dantri-nav-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 11px 18px;
-            font-size: 15.5px;
-            font-weight: 700;
-            color: #334155;
-            background: transparent;
-            border: none;
-            border-bottom: 3px solid transparent;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.2px;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            user-select: none;
-            flex-shrink: 0;
-            border-radius: 6px 6px 0 0;
-            margin-right: 4px;
-        }
-
-        /* NÚT TỰ LUẬN PADLET ĐƯỢC THIẾT KẾ THÀNH Ô CHỮ NHẬT BO GÓC MÀU CAM */
-        .dantri-nav-btn.padlet-orange-btn {
-            color: #ffffff;
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            border: 1px solid #f97316;
-            border-radius: 8px;
-            padding: 8px 16px;
-            margin-left: 6px;
-            box-shadow: 0 3px 8px rgba(249, 115, 22, 0.35);
-        }
-
-        .dantri-nav-btn.padlet-orange-btn:hover {
-            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 12px rgba(249, 115, 22, 0.45);
-        }
-
-        .dantri-nav-btn.padlet-orange-btn.active {
-            color: #ffffff;
-            background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
-            border-color: #9a3412;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(249, 115, 22, 0.4);
-        }
-
-        .dantri-nav-btn.padlet-orange-btn .caret-icon {
-            color: #ffffff;
-        }
-
-        #dantri-nav-bar .dantri-nav-btn {
-            padding: 5px 7px;
-            font-size: 12px;
-            line-height: 1.15;
-            text-align: center;
-            gap: 3px;
-        }
-
-        #daythem-nav-bar .dantri-nav-btn,
-        #chinhkhoa-nav-bar .dantri-nav-btn {
-            font-size: 17px;
-            font-weight: 800;
-        }
-
-        .dantri-nav-btn:hover {
-            color: var(--dantri-green);
-            background-color: var(--dantri-hover);
-            transform: translateY(-1px);
-        }
-
-        .dantri-nav-btn.active {
-            color: #047857;
-            border-bottom: 3px solid #059669;
-            background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
-            box-shadow: inset 0 -2px 0 #059669;
-            font-weight: 800;
-        }
-
-        .dantri-nav-btn .caret-icon {
-            font-size: 10px;
-            transition: transform 0.25s ease;
-            color: #64748b;
-        }
-
-        .dantri-nav-btn.active .caret-icon {
-            transform: rotate(180deg);
-            color: #047857;
-        }
-
-        .dantri-dropdown-panel {
-            display: none;
-            padding: 12px 14px;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            width: 100%;
-            box-sizing: border-box;
-            animation: expandDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .dantri-dropdown-panel.show {
-            display: block;
-        }
-
-        @keyframes expandDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dantri-sub-header {
-            font-size: 13.5px;
-            font-weight: 800;
-            color: #047857;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            letter-spacing: 0.5px;
-        }
-
-        .reminder-section {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid #cbd5e1;
-            border-left: 5px solid var(--primary-red);
-            margin-bottom: 10px;
-            padding: 12px 16px;
-            background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);
-        }
-
-        .reminder-header-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--primary-red);
-            margin: 0 0 8px 0;
-            border-bottom: 2px solid #fecdd3;
-            padding-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .folder-section {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-            border: 1px solid #cbd5e1;
-            margin-bottom: 10px;
-            transition: all 0.25s ease;
-        }
-        .folder-section:hover {
-            box-shadow: var(--shadow-lg);
-            border-color: #94a3b8;
-        }
-
-        .folder-header {
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            list-style: none;
-            user-select: none;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            transition: background 0.2s;
-        }
-        .folder-header::-webkit-details-marker {
-            display: none;
-        }
-        .folder-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #ffffff;
-            box-shadow: var(--shadow-sm);
-        }
-        .folder-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--primary-blue-dark);
-            flex: 1;
-            margin: 0;
-            letter-spacing: 0.3px;
-        }
-        .folder-arrow {
-            font-size: 12px;
-            color: #64748b;
-            transition: transform 0.3s ease;
-            font-weight: bold;
-        }
-        details[open] .folder-arrow {
-            transform: rotate(90deg);
-            color: var(--primary-blue);
-        }
-
-        .link-list {
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background: #ffffff;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .exam-card {
-            background: #ffffff;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            text-decoration: none;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.25s ease;
-            width: 100%;
-            box-sizing: border-box;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-        }
-
-        .exam-card:hover {
-            border-color: var(--primary-blue);
-            background: #f0f9ff;
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .exam-card:active {
-            transform: scale(0.99);
-        }
-
-        .exam-thumb-box {
-            width: 40px;  
-            height: 50px; 
-            border-radius: 6px;
-            overflow: hidden;
-            flex-shrink: 0;
-            border: 1px solid #cbd5e1;
-            background: #f1f5f9;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .exam-thumb {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .exam-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .exam-title {
-            font-weight: 700;
-            font-size: 14.5px;
-            color: #0f172a;
-            margin-bottom: 2px;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2; 
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .exam-date {
-            font-size: 11.5px;
-            color: var(--text-sub);
-            font-weight: 500;
-        }
+        .dantri-nav-btn { display: inline-flex; align-items: center; gap: 6px; padding: 11px 18px; font-size: 16px; font-weight: 700; color: #334155; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); user-select: none; flex-shrink: 0; border-radius: 6px 6px 0 0; margin-right: 4px; font-family: inherit;}
         
-        .load-more-btn {
-            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-            border: 1px dashed #94a3b8;
-            color: var(--primary-blue-dark);
-            font-size: 13px;
-            font-weight: 700;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-            margin-top: 4px;
-            transition: all 0.2s ease;
-            width: 100%;
-            box-shadow: var(--shadow-sm);
-        }
-        .load-more-btn:hover {
-            background: #cbd5e1;
-            color: #0f172a;
-            border-color: #64748b;
-        }
+        .dantri-nav-btn.padlet-orange-btn { color: #ffffff; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border: 1px solid #f97316; border-radius: 8px; padding: 8px 16px; margin-left: 6px; box-shadow: 0 3px 8px rgba(249, 115, 22, 0.35); }
+        .dantri-nav-btn.padlet-orange-btn:hover { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); transform: translateY(-2px); box-shadow: 0 5px 12px rgba(249, 115, 22, 0.45); }
+        .dantri-nav-btn.padlet-orange-btn.active { color: #ffffff; background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%); border-color: #9a3412; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(249, 115, 22, 0.4); }
+        .dantri-nav-btn.padlet-orange-btn .caret-icon { color: #ffffff; }
 
-        .hidden-links-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 8px;
-            width: 100%;
-        }
+        #dantri-nav-bar .dantri-nav-btn { padding: 5px 7px; font-size: 12.5px; line-height: 1.15; text-align: center; gap: 3px; font-weight: 800;}
+        #daythem-nav-bar .dantri-nav-btn, #chinhkhoa-nav-bar .dantri-nav-btn { font-size: 17px; font-weight: 800; }
+        .dantri-nav-btn:hover { color: var(--dantri-green); background-color: var(--dantri-hover); transform: translateY(-1px); }
+        .dantri-nav-btn.active { color: #047857; border-bottom: 3px solid #059669; background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%); box-shadow: inset 0 -2px 0 #059669; font-weight: 800; }
+        .dantri-nav-btn .caret-icon { font-size: 10px; transition: transform 0.25s ease; color: #64748b; }
+        .dantri-nav-btn.active .caret-icon { transform: rotate(180deg); color: #047857; }
 
-        .badge-hot {
-            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 800;
-            margin-right: 6px;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
-            display: inline-block;
-            vertical-align: middle;
-        }
+        .dantri-dropdown-panel { display: none; padding: 12px 14px; background: #f8fafc; border-top: 1px solid #e2e8f0; width: 100%; box-sizing: border-box; animation: expandDown 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .dantri-dropdown-panel.show { display: block; }
+        @keyframes expandDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-        .badge-gdrive {
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 800;
-            margin-right: 6px;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-            display: inline-block;
-            vertical-align: middle;
-        }
+        .dantri-sub-header { font-size: 14px; font-weight: 800; color: #047857; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; }
 
-        .badge-onedrive {
-            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 800;
-            margin-right: 6px;
-            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
-            display: inline-block;
-            vertical-align: middle;
-        }
+        .reminder-section { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-md); border: 1px solid #cbd5e1; border-left: 5px solid var(--primary-red); margin-bottom: 10px; padding: 12px 16px; background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%); }
+        .reminder-header-title { font-size: 16px; font-weight: 800; color: var(--primary-red); margin: 0 0 8px 0; border-bottom: 2px solid #fecdd3; padding-bottom: 6px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
 
-        .arrow {
-            font-size: 16px;
-            color: #94a3b8;
-            margin-left: auto;
-            font-weight: bold;
-            transition: color 0.2s, transform 0.2s;
-        }
-        .exam-card:hover .arrow {
-            color: var(--primary-blue);
-            transform: translateX(3px);
-        }
+        /* FOLDER TÀI LIỆU */
+        .folder-section { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-md); overflow: hidden; border: 1px solid #cbd5e1; margin-bottom: 10px; transition: all 0.25s ease; }
+        .folder-section:hover { box-shadow: var(--shadow-lg); border-color: #94a3b8; }
+        .folder-header { padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; user-select: none; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); transition: background 0.2s; }
+        .folder-header::-webkit-details-marker { display: none; }
+        .folder-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: var(--shadow-sm); }
+        .folder-title { font-size: 16px; font-weight: 800; color: var(--primary-blue-dark); flex: 1; margin: 0; letter-spacing: 0.3px; }
+        .folder-arrow { font-size: 12px; color: #64748b; transition: transform 0.3s ease; font-weight: bold; }
+        details[open] .folder-arrow { transform: rotate(90deg); color: var(--primary-blue); }
 
-        .empty-folder {
-            padding: 12px;
-            color: #64748b;
-            font-style: italic;
-            font-size: 13.5px;
-            text-align: center;
-        }
+        .link-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: #ffffff; width: 100%; box-sizing: border-box; }
 
-        .news-section {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid #cbd5e1;
-            margin-top: 10px;
-            padding: 14px 16px;
-        }
+        /* Nút chức năng admin - CỐ ĐỊNH, KHÔNG BỊ ẨN NỮA */
+        .admin-link-tools { display: flex; gap: 6px; margin-left: 8px; align-items: center; z-index: 10;}
+        .tool-btn { width: 30px; height: 30px; border-radius: 6px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; flex-shrink: 0;}
+        .tool-btn-edit { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .tool-btn-edit:hover { background: #1d4ed8; transform: scale(1.1); box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);}
+        .tool-btn-move { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .tool-btn-move:hover { background: #b45309; transform: scale(1.1); box-shadow: 0 4px 8px rgba(217, 119, 6, 0.4);}
+        .tool-btn-delete { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
+        .tool-btn-delete:hover { background: #991b1b; transform: scale(1.1); box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4);}
 
-        .news-header-title {
-            font-size: 17px;
-            font-weight: 800;
-            color: var(--primary-blue-dark);
-            margin: 0 0 10px 0;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .exam-card { position: relative; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 12px; transition: all 0.25s ease; width: 100%; box-sizing: border-box; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .exam-card:hover { border-color: var(--primary-blue); background: #f0f9ff; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .exam-card:active { transform: scale(0.99); }
+        
+        .exam-thumb-box { width: 44px; height: 54px; border-radius: 6px; overflow: hidden; flex-shrink: 0; border: 1px solid #cbd5e1; background: #f1f5f9; box-shadow: var(--shadow-sm); }
+        .exam-thumb { width: 100%; height: 100%; object-fit: cover; }
+        
+        .exam-info { flex: 1; min-width: 0; padding-right: 10px;}
+        .exam-title { font-weight: 700; font-size: 15px; color: #0f172a; margin-bottom: 2px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .exam-date { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+        
+        .load-more-btn { background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); border: 1px dashed #94a3b8; color: var(--primary-blue-dark); font-size: 14px; font-weight: 700; padding: 10px 12px; border-radius: 8px; cursor: pointer; text-align: center; margin-top: 4px; transition: all 0.2s ease; width: 100%; box-shadow: var(--shadow-sm); font-family: inherit;}
+        .load-more-btn:hover { background: #cbd5e1; color: #0f172a; border-color: #64748b; }
+        
+        .hidden-links-container { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; width: 100%; }
 
-        .news-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 8px 8px;
-            border-bottom: 1px solid #f1f5f9;
-            text-decoration: none;
-            color: var(--text-main);
-            border-radius: 8px;
-            transition: background 0.2s, transform 0.2s;
-        }
+        .badge-hot { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4); display: inline-block; vertical-align: middle; }
+        .badge-gdrive { background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3); display: inline-block; vertical-align: middle; }
+        .badge-onedrive { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3); display: inline-block; vertical-align: middle; }
 
-        .news-item:last-child {
-            border-bottom: none;
-        }
+        .arrow { font-size: 18px; color: #94a3b8; font-weight: bold; transition: color 0.2s, transform 0.2s; margin-left: auto; }
+        .exam-card:hover .arrow { color: var(--primary-blue); transform: translateX(3px); }
 
-        .news-item:hover {
-            background-color: #f8fafc;
-            transform: translateX(2px);
-        }
+        .empty-folder { padding: 12px; color: #64748b; font-style: italic; font-size: 14px; text-align: center; }
 
-        .news-item:hover .news-title {
-            color: var(--primary-blue);
-        }
+        /* BẢNG TIN */
+        .news-section { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-md); border: 1px solid #cbd5e1; margin-top: 10px; padding: 14px 16px; }
+        .news-header-title { font-size: 17px; font-weight: 800; color: var(--primary-blue-dark); margin: 0 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .news-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px; border-bottom: 1px solid #f1f5f9; text-decoration: none; color: var(--text-main); border-radius: 8px; transition: background 0.2s, transform 0.2s; }
+        .news-item:last-child { border-bottom: none; }
+        .news-item:hover { background-color: #f8fafc; transform: translateX(2px); }
+        .news-item:hover .news-title { color: var(--primary-blue); }
+        .news-content { flex: 1; }
+        .news-title { font-weight: 700; font-size: 15px; color: #1e293b; margin-bottom: 3px; line-height: 1.4; }
+        .news-date { font-size: 12px; color: var(--text-sub); }
+        .news-img-box { width: 96px; height: 64px; border-radius: 6px; overflow: hidden; flex-shrink: 0; border: 1px solid #cbd5e1; background: #f1f5f9; box-shadow: var(--shadow-sm); }
+        .news-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+        .news-item:hover .news-img { transform: scale(1.05); }
+        .news-empty { padding: 12px; color: #64748b; font-style: italic; font-size: 14px; text-align: center; }
 
-        .news-content {
-            flex: 1;
-        }
+        .bottom-banner-box { width: 100%; height: 90px; border-radius: 12px; overflow: hidden; margin-top: 12px; box-shadow: var(--shadow-md); background: #cbd5e1; border: 1px solid #94a3b8; }
+        .bottom-banner-img { width: 100%; height: 100%; object-fit: cover; }
+        footer { text-align: center; margin-top: 10px; padding: 16px 20px; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; font-size: 15.5px; font-weight: 800; border-radius: 12px; box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35); letter-spacing: 0.8px; border: 1px solid rgba(255,255,255,0.25); text-transform: uppercase; }
 
-        .news-title {
-            font-weight: 700;
-            font-size: 14.5px;
-            color: #1e293b;
-            margin-bottom: 3px;
-            line-height: 1.4;
-        }
-
-        .news-date {
-            font-size: 11.5px;
-            color: var(--text-sub);
-        }
-
-        .news-img-box {
-            width: 96px;
-            height: 64px;
-            border-radius: 6px;
-            overflow: hidden;
-            flex-shrink: 0;
-            border: 1px solid #cbd5e1;
-            background: #f1f5f9;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .news-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .news-item:hover .news-img {
-            transform: scale(1.05);
-        }
-
-        .news-empty {
-            padding: 12px;
-            color: #64748b;
-            font-style: italic;
-            font-size: 13.5px;
-            text-align: center;
-        }
-
-        .bottom-banner-box {
-            width: 100%;
-            height: 90px;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 12px;
-            box-shadow: var(--shadow-md);
-            background: #cbd5e1;
-            border: 1px solid #94a3b8;
-        }
-
-        .bottom-banner-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 10px;
-            padding: 16px 20px;
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-            color: #ffffff;
-            font-size: 15.5px;
-            font-weight: 800;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
-            letter-spacing: 0.8px;
-            border: 1px solid rgba(255,255,255,0.25);
-        }
+        /* Modal Chuyển Lớp Mini */
+        .move-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); z-index: 99999; display: none; align-items: center; justify-content: center; }
+        .move-modal-box { background: #fff; border-radius: 12px; padding: 20px; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popIn 0.2s; font-family: 'Outfit', sans-serif;}
+        .move-modal-box h4 { margin: 0 0 12px 0; color: var(--primary-blue-dark); font-size: 18px; font-weight: 800;}
+        .move-modal-box select { width: 100%; padding: 10px; margin-bottom: 16px; border-radius: 8px; border: 2px solid #cbd5e1; font-family: inherit; font-weight: 600; font-size: 15px; outline: none; transition: 0.2s;}
+        .move-modal-box select:focus { border-color: var(--primary-blue); }
+        .move-btn-row { display: flex; gap: 10px; }
+        .move-btn-row button { flex:1; padding: 10px; border:none; border-radius: 8px; font-weight: 800; cursor: pointer; color: white; font-family: inherit; font-size: 14px; transition: 0.2s;}
+        .move-btn-cancel { background: #64748b;} .move-btn-cancel:hover { background: #475569;}
+        .move-btn-submit { background: var(--primary-blue);} .move-btn-submit:hover { background: var(--primary-blue-dark);}
+        @keyframes popIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
 
         @media (max-width: 640px) {
-            body {
-                font-size: 16px;
-            }
-            .banner-title {
-                font-size: 11px;
-                padding: 4px 10px;
-            }
-            .banner-watermark {
-                font-size: 18px;
-            }
-            .dantri-nav-btn {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-            #dantri-nav-bar .dantri-nav-btn {
-                padding: 4px 5px;
-                font-size: 11px;
-            }
-            #daythem-nav-bar .dantri-nav-btn,
-            #chinhkhoa-nav-bar .dantri-nav-btn {
-                font-size: 15px;
-                padding: 8px 14px;
-            }
-            .news-img-box {
-                width: 80px;
-                height: 54px;
-            }
-            .exam-thumb-box {
-                width: 36px;
-                height: 46px;
-            }
+            body { font-size: 16px; }
+            .admin-popover-panel { position: fixed; top: auto; bottom: 0; left: 0; right: 0; width: 100%; border-radius: 24px 24px 0 0; margin: 0; transform: translateY(100%); }
+            .admin-popover-panel.show { transform: translateY(0); }
+            .banner-title { font-size: 11px; padding: 4px 10px; }
+            .banner-watermark { font-size: 18px; }
+            .dantri-nav-btn { padding: 8px 12px; font-size: 14px; }
+            #dantri-nav-bar .dantri-nav-btn { padding: 4px 5px; font-size: 11.5px; }
+            #daythem-nav-bar .dantri-nav-btn, #chinhkhoa-nav-bar .dantri-nav-btn { font-size: 16px; padding: 8px 14px; }
+            .news-img-box { width: 80px; height: 54px; }
+            .exam-thumb-box { width: 38px; height: 48px; }
+            .auth-input { width: 100px; }
+            /* Mobile tweaks for tools */
+            .tool-btn { width: 26px; height: 26px; font-size: 11px;}
         }
     </style>
 </head>
@@ -732,12 +212,61 @@
 <div class="container" id="app">
     <!-- BANNER ĐẦU TRANG -->
     <div class="top-banner-box">
-        <img id="top-banner-img" class="top-banner-img" src="" alt="Banner Top Tom & Jerry">
-        <div class="banner-overlay"></div>
+        <div class="top-banner-img-wrap">
+            <img id="top-banner-img" class="top-banner-img" src="" alt="Banner Top">
+            <div class="banner-overlay"></div>
+        </div>
         <img id="web-avatar-img" class="banner-avatar" src="" alt="Avatar Web">
         <div class="banner-title">Kho Đề Thi & Tài Liệu Trực Tuyến</div>
         <div class="banner-rocket">🚀</div>
         <div class="banner-watermark">OBAWAN</div>
+        
+        <!-- ================= KHU VỰC ĐIỀU KHIỂN QUẢN TRỊ ================= -->
+        <div class="admin-controls-wrapper">
+            <!-- Ô nhập mật khẩu trượt ra -->
+            <div class="auth-container" id="auth-container">
+                <input type="password" id="admin-pass-input" class="auth-input" placeholder="Mật khẩu..." onkeypress="handleEnter(event)">
+                <button class="auth-btn" onclick="checkAdminPassword()">VÀO</button>
+            </div>
+            
+            <!-- Nút Bánh Răng -->
+            <div class="admin-gear-btn" id="gear-btn" onclick="toggleAdminPanel()" title="Quản trị viên">⚙️</div>
+
+            <!-- Bảng Dropdown Chức Năng (Chỉ hiện khi login thành công) -->
+            <div class="admin-popover-panel" id="admin-popover-panel">
+                <div class="admin-popover-title">🚀 Đăng Đề Thi Mới</div>
+                
+                <div class="admin-input-group">
+                    <label>Lớp / Chuyên mục:</label>
+                    <select id="admin-category-select">
+                        <option value="them-10">📐 THÊM 10</option>
+                        <option value="them-11">✍️ THÊM 11</option>
+                        <option value="them-12">🎓 THÊM 12</option>
+                        <option value="lop-11a">🏫 LỚP 11A</option>
+                        <option value="lop-11c">🏫 LỚP 11C</option>
+                        <option value="lop-10p">🏫 LỚP 10P</option>
+                        <option value="tu-luan-padlet">🟧 TỰ LUẬN PADLET</option>
+                    </select>
+                </div>
+
+                <div class="admin-input-group">
+                    <label>Chọn Icon Đại Diện:</label>
+                    <div class="avatar-picker-grid" id="avatar-grid">
+                        <!-- Render JS tại đây -->
+                    </div>
+                </div>
+
+                <div class="admin-input-group">
+                    <label>Tải lên file (questions.js):</label>
+                    <input type="file" id="admin-file-upload" accept=".js, .txt">
+                </div>
+
+                <div class="admin-btn-row">
+                    <button class="btn-admin btn-cancel" onclick="closeAdminPanel()">Thoát</button>
+                    <button class="btn-admin btn-submit" id="btn-create-quiz" onclick="processUpload()">✨ Đăng Đề</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- THANH MENU BẢN TIN / THỜI SỰ GIÁO DỤC -->
@@ -787,235 +316,312 @@
         <img id="bottom-banner-img" class="bottom-banner-img" src="" alt="Banner Bottom">
     </div>
 
-    <footer>
-        Copyright &copy; 2026 Phạm Công Hoan
-    </footer>
+    <footer>Copyright &copy; 2026 Phạm Công Hoan</footer>
+</div>
+
+<!-- Modal Nhỏ Để Chọn Chuyển Lớp -->
+<div class="move-modal-overlay" id="move-modal">
+    <div class="move-modal-box">
+        <h4>🔄 Chuyển sang lớp:</h4>
+        <select id="move-category-select">
+            <option value="them-10">📐 THÊM 10</option>
+            <option value="them-11">✍️ THÊM 11</option>
+            <option value="them-12">🎓 THÊM 12</option>
+            <option value="lop-11a">🏫 LỚP 11A</option>
+            <option value="lop-11c">🏫 LỚP 11C</option>
+            <option value="lop-10p">🏫 LỚP 10P</option>
+        </select>
+        <div class="move-btn-row">
+            <button class="move-btn-cancel" onclick="closeMoveModal()">Hủy</button>
+            <button class="move-btn-submit" onclick="confirmMoveQuiz()">Xác Nhận</button>
+        </div>
+    </div>
 </div>
 
 <script>
+    // ==========================================
+    // 1. CẤU HÌNH & DỮ LIỆU TĨNH
+    // ==========================================
+    const ADMIN_PASSWORD = "Hopan130384";
+    const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
+    let isAdminLoggedIn = false;
+    let selectedAvatarUrl = "";
+    let currentMoveData = { oldCategory: null, quizId: null, quizData: null };
+
+    // Kho 30 Avatars Đẹp Mắt (3D, Icons đủ màu sắc)
+    const PRESET_AVATARS = [
+        "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg", // 1 Khủng long
+        "https://cdn-icons-png.flaticon.com/512/3755/3755251.png", // 2 3D Book
+        "https://cdn-icons-png.flaticon.com/512/3062/3062279.png", // 3 Rocket 3D
+        "https://cdn-icons-png.flaticon.com/512/4144/4144683.png", // 4 Target
+        "https://cdn-icons-png.flaticon.com/512/4144/4144672.png", // 5 Medal
+        "https://cdn-icons-png.flaticon.com/512/2996/2996841.png", // 6 Star
+        "https://cdn-icons-png.flaticon.com/512/10061/10061805.png", // 7 Cute Fox
+        "https://cdn-icons-png.flaticon.com/512/9308/9308006.png", // 8 Panda
+        "https://cdn-icons-png.flaticon.com/512/9068/9068641.png", // 9 Idea Bulb
+        "https://cdn-icons-png.flaticon.com/512/9181/9181285.png", // 10 Calculator
+        "https://cdn-icons-png.flaticon.com/512/3074/3074058.png", // 11 Test Paper
+        "https://cdn-icons-png.flaticon.com/512/4243/4243003.png", // 12 Magic Hat
+        "https://cdn-icons-png.flaticon.com/512/3135/3135810.png", // 13 Math symbols
+        "https://cdn-icons-png.flaticon.com/512/4144/4144724.png", // 14 Compass
+        "https://cdn-icons-png.flaticon.com/512/4144/4144773.png", // 15 Diamond
+        "https://cdn-icons-png.flaticon.com/512/4762/4762295.png", // 16 Telescope
+        "https://cdn-icons-png.flaticon.com/512/6168/6168641.png", // 17 3D Backpack
+        "https://cdn-icons-png.flaticon.com/512/3253/3253258.png", // 18 Magnifying Glass
+        "https://cdn-icons-png.flaticon.com/512/2275/2275069.png", // 19 Globe
+        "https://cdn-icons-png.flaticon.com/512/4006/4006511.png", // 20 DNA / Science
+        "https://cdn-icons-png.flaticon.com/512/3358/3358327.png", // 21 Trophy
+        "https://cdn-icons-png.flaticon.com/512/10061/10061732.png", // 22 Cute Bear
+        "https://cdn-icons-png.flaticon.com/512/4539/4539472.png", // 23 Astronaut
+        "https://cdn-icons-png.flaticon.com/512/3081/3081371.png", // 24 Palette
+        "https://cdn-icons-png.flaticon.com/512/864/864685.png",   // 25 Clock
+        "https://cdn-icons-png.flaticon.com/512/3143/3143657.png", // 26 Game controller
+        "https://cdn-icons-png.flaticon.com/512/2072/2072138.png", // 27 Keyboard
+        "https://cdn-icons-png.flaticon.com/512/4207/4207253.png", // 28 Brain
+        "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", // 29 Folder
+        "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"  // 30 Abacus
+    ];
+
     const TOP_BANNER_URL = "https://files.catbox.moe/cf5o9u.jpg"; 
     const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
     const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
 
     const DANTRI_NAV_CATEGORIES = [
-        {
-            id: "vui-vui",
-            title: "🤣 VUI<br>VUI",
-            subTitle: "🎉 THƯ GIÃN & BẢN TIN VUI VẺ HỌC ĐƯỜNG",
-            news: [
-                { tag: "GIẢI TRÍ", title: "Góc thư giãn: Những câu nói bất hủ của học sinh trong giờ kiểm tra Toán", date: "22/08/2026 - 10:00", url: "https://dantri.com.vn" },
-                { tag: "CƯỜI MẮT", title: "Chuyện lạ lớp học: Khi thầy giáo ra đề toán bằng thơ lục bát cực chất", date: "21/08/2026 - 18:20", url: "https://dantri.com.vn" },
-                { tag: "MEME MATH", title: "Tổng hợp Meme Toán học giúp xả stress cực hiệu quả cho các sĩ tử 2026", date: "20/08/2026 - 15:30", url: "https://dantri.com.vn" }
-            ]
-        },
-        {
-            id: "thoi-su",
-            title: "🔴 THỜI<br>SỰ",
-            subTitle: "📢 THỜI SỰ & SỰ KIỆN GIÁO DỤC NỔI BẬT",
-            news: [
-                { tag: "MỚI NHẤT", title: "Bộ GD&ĐT ban hành hướng dẫn cấu trúc đề thi Tốt nghiệp THPT 2026", date: "22/08/2026 - 08:30", url: "https://dantri.com.vn" },
-                { tag: "THỜI SỰ", title: "Lịch kiểm tra đánh giá năng lực định kỳ học kỳ 1 trên toàn tỉnh", date: "21/08/2026 - 14:15", url: "https://dantri.com.vn" },
-                { tag: "SỰ KIỆN", title: "Tăng cường ứng dụng công nghệ thông tin và AI trong tự học Toán", date: "20/08/2026 - 10:00", url: "https://dantri.com.vn" }
-            ]
-        },
-        {
-            id: "giao-duc",
-            title: "🏫 GIÁO<br>DỤC",
-            subTitle: "📚 BẢN TIN GIÁO DỤC & TRƯỜNG HỌC",
-            news: [
-                { tag: "TIÊU ĐIỂM", title: "Phụ huynh nhiều tỉnh thành chuẩn bị SGK và tài liệu ôn thi đầu năm học", date: "22/08/2026 - 07:45", url: "https://dantri.com.vn/giao-duc.htm" },
-                { tag: "KHOA HỌC", title: "Phương pháp học Toán hiệu quả giúp tăng tư duy logic và kỹ năng giải đề", date: "21/08/2026 - 15:30", url: "https://dantri.com.vn/giao-duc.htm" },
-                { tag: "DẶN DÒ", title: "Kinh nghiệm làm bài trắc nghiệm Toán đạt điểm tối đa không lo sót đáp án", date: "18/08/2026 - 08:00", url: "https://dantri.com.vn/giao-duc.htm" }
-            ]
-        },
-        {
-            id: "the-thao",
-            title: "⚽ THỂ<br>THAO",
-            subTitle: "🏆 THỂ THAO TRONG NƯỚC & QUỐC TẾ",
-            news: [
-                { tag: "BÓNG ĐÁ", title: "Tổng hợp các giải thể thao học sinh, sinh viên toàn quốc mới nhất", date: "22/08/2026 - 10:15", url: "https://dantri.com.vn/the-thao.htm" },
-                { tag: "RÈN LUYỆN", title: "Tầm quan trọng của việc rèn luyện thể chất đối với học sinh ôn thi", date: "21/08/2026 - 16:00", url: "https://dantri.com.vn/the-thao.htm" }
-            ]
-        },
-        {
-            id: "me-xe",
-            title: "🚗 MÊ<br>XE",
-            subTitle: "🚘 THẾ GIỚI XE & CÔNG NGHỆ BỐN BÁNH",
-            news: [
-                { tag: "ĐÁNH GIÁ", title: "Phân tích các dòng xe gia đình 5 chỗ và 7 chỗ phổ biến hiện nay", date: "22/08/2026 - 08:20", url: "https://dantri.com.vn/o-to-xe-may.htm" },
-                { tag: "KỸ THUẬT", title: "Mẹo bảo dưỡng và kiểm tra xe định kỳ giúp vận hành an toàn mượt mà", date: "19/08/2026 - 14:00", url: "https://dantri.com.vn/o-to-xe-may.htm" }
-            ]
-        },
-        {
-            id: "the-gioi",
-            title: "🌍 THẾ<br>GIỚI",
-            subTitle: "🌐 TIN THẾ GIỚI - QUÂN SỰ - PHÂN TÍCH - KIỀU BÀO",
-            news: [
-                { tag: "QUÂN SỰ", title: "Cập nhật diễn biến thời sự quốc tế và tình hình an ninh thế giới mới nhất", date: "22/08/2026 - 09:10", url: "https://dantri.com.vn/the-gioi.htm" },
-                { tag: "PHÂN TÍCH", title: "Bình luận chuyên sâu về xu hướng phát triển công nghệ giáo dục toàn cầu", date: "21/08/2026 - 16:40", url: "https://dantri.com.vn/the-gioi.htm" },
-                { tag: "KIỀU BÀO", title: "Học sinh Việt Nam giành nhiều huy chương vàng tại Olympic Toán Quốc tế", date: "19/08/2026 - 11:20", url: "https://dantri.com.vn/the-gioi.htm" }
-            ]
-        },
-        {
-            id: "suc-khoe",
-            title: "🩺 SỨC<br>KHỎE",
-            subTitle: "💊 BẢN TIN SỨC KHỎE & ĐỜI SỐNG HỌC ĐƯỜNG",
-            news: [
-                { tag: "TƯ VẤN", title: "Bí quyết giữ gìn sức khỏe và cột sống cho học sinh - giáo viên mùa thi", date: "22/08/2026 - 09:00", url: "https://dantri.com.vn/suc-khoe.htm" },
-                { tag: "DINH DƯỠNG", title: "Thực đơn dinh dưỡng khoa học giúp cải thiện trí nhớ và tập trung tối đa", date: "21/08/2026 - 11:30", url: "https://dantri.com.vn/suc-khoe.htm" }
-            ]
-        },
-        {
-            id: "du-lich",
-            title: "✈️ DU<br>LỊCH",
-            subTitle: "🏔️ KHÁM PHÁ & TRẢI NGHIỆM DU LỊCH",
-            news: [
-                { tag: "KHÁM PHÁ", title: "Gợi ý các điểm du lịch trải nghiệm học tập và ngoại khóa hấp dẫn", date: "22/08/2026 - 08:00", url: "https://dantri.com.vn/du-lich.htm" },
-                { tag: "CẨM NANG", title: "Kinh nghiệm chuẩn bị cho chuyến dã ngoại và du lịch ngắn ngày", date: "20/08/2026 - 15:10", url: "https://dantri.com.vn/du-lich.htm" }
-            ]
-        },
-        {
-            id: "anh-cho",
-            title: "⏳ ANH CHỜ...<br>GÌ ĐÓ",
-            subTitle: "⏳ MỤC ĐANG CHỜ CẬP NHẬT NỘI DUNG",
-            news: [
-                { tag: "CHỜ DỮ LIỆU", title: "Mục này đang chờ bổ sung thêm thông tin mới...", date: "Đang cập nhật", url: "#" }
-            ]
+        { id: "vui-vui", title: "🤣 VUI<br>VUI", subTitle: "🎉 THƯ GIÃN & BẢN TIN VUI VẺ HỌC ĐƯỜNG", news: [ { tag: "GIẢI TRÍ", title: "Góc thư giãn: Những câu nói bất hủ của học sinh trong giờ kiểm tra Toán", date: "22/08/2026 - 10:00", url: "https://dantri.com.vn" }, { tag: "CƯỜI MẮT", title: "Chuyện lạ lớp học: Khi thầy giáo ra đề toán bằng thơ lục bát cực chất", date: "21/08/2026 - 18:20", url: "https://dantri.com.vn" }, { tag: "MEME MATH", title: "Tổng hợp Meme Toán học giúp xả stress cực hiệu quả cho các sĩ tử 2026", date: "20/08/2026 - 15:30", url: "https://dantri.com.vn" } ] },
+        { id: "thoi-su", title: "🔴 THỜI<br>SỰ", subTitle: "📢 THỜI SỰ & SỰ KIỆN GIÁO DỤC NỔI BẬT", news: [ { tag: "MỚI NHẤT", title: "Bộ GD&ĐT ban hành hướng dẫn cấu trúc đề thi Tốt nghiệp THPT 2026", date: "22/08/2026 - 08:30", url: "https://dantri.com.vn" }, { tag: "THỜI SỰ", title: "Lịch kiểm tra đánh giá năng lực định kỳ học kỳ 1 trên toàn tỉnh", date: "21/08/2026 - 14:15", url: "https://dantri.com.vn" }, { tag: "SỰ KIỆN", title: "Tăng cường ứng dụng công nghệ thông tin và AI trong tự học Toán", date: "20/08/2026 - 10:00", url: "https://dantri.com.vn" } ] },
+        { id: "giao-duc", title: "🏫 GIÁO<br>DỤC", subTitle: "📚 BẢN TIN GIÁO DỤC & TRƯỜNG HỌC", news: [ { tag: "TIÊU ĐIỂM", title: "Phụ huynh chuẩn bị SGK và tài liệu ôn thi đầu năm học", date: "22/08/2026 - 07:45", url: "https://dantri.com.vn/giao-duc.htm" } ] },
+        { id: "the-thao", title: "⚽ THỂ<br>THAO", subTitle: "🏆 THỂ THAO TRONG NƯỚC & QUỐC TẾ", news: [ { tag: "BÓNG ĐÁ", title: "Tổng hợp các giải thể thao học sinh, sinh viên toàn quốc", date: "22/08/2026 - 10:15", url: "https://dantri.com.vn/the-thao.htm" } ] },
+        { id: "me-xe", title: "🚗 MÊ<br>XE", subTitle: "🚘 THẾ GIỚI XE & CÔNG NGHỆ BỐN BÁNH", news: [ { tag: "ĐÁNH GIÁ", title: "Phân tích các dòng xe gia đình 5 chỗ", date: "22/08/2026 - 08:20", url: "https://dantri.com.vn/o-to-xe-may.htm" } ] },
+        { id: "the-gioi", title: "🌍 THẾ<br>GIỚI", subTitle: "🌐 TIN THẾ GIỚI - QUÂN SỰ - PHÂN TÍCH", news: [ { tag: "QUÂN SỰ", title: "Cập nhật diễn biến thời sự quốc tế", date: "22/08/2026 - 09:10", url: "https://dantri.com.vn/the-gioi.htm" } ] },
+        { id: "suc-khoe", title: "🩺 SỨC<br>KHỎE", subTitle: "💊 BẢN TIN SỨC KHỎE", news: [ { tag: "TƯ VẤN", title: "Bí quyết giữ gìn sức khỏe mùa thi", date: "22/08/2026 - 09:00", url: "https://dantri.com.vn/suc-khoe.htm" } ] },
+        { id: "du-lich", title: "✈️ DU<br>LỊCH", subTitle: "🏔️ KHÁM PHÁ & TRẢI NGHIỆM DU LỊCH", news: [ { tag: "KHÁM PHÁ", title: "Gợi ý các điểm du lịch ngoại khóa", date: "22/08/2026 - 08:00", url: "https://dantri.com.vn/du-lich.htm" } ] }
+    ];
+
+    let DAY_THEM_CATEGORIES = [
+        { id: "them-10", title: "📐 THÊM 10", links: [ { title: "so18toan10chuong1taphop150926", date: "15/09/2026 - 13:00", url: "https://so18toan10chuong1taphop150926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" }, { title: "so17toan10taphop-onhk1-120926", date: "12/09/2026 - 13:00", url: "https://so17toan10taphop-onhk1-120926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
+        { id: "them-11", title: "✍️ THÊM 11", links: [ { title: "so98toan11c1luonggiac160926", date: "16/09/2026 - 15:35", url: "https://so98toan11c1luonggiac160926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" }, { title: "so97toan11c1luonggiac-lim13092", date: "13/09/2026 - 15:35", url: "https://so97toan11c1luonggiac-lim130926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
+        { id: "them-12", title: "🎓 THÊM 12", links: [ { title: "so170toan12onthihk1180926", date: "18/09/2026 - 17:00", url: "https://so170toan12onthihk1180926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" }, { title: "so169toan12chuong1hamso140926", date: "14/09/2026 - 17:00", url: "https://so169toan12chuong1hamso140926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] }
+    ];
+
+    let CHINH_KHOA_CATEGORIES = [
+        { id: "lop-11a", title: "🏫 LỚP 11A", links: [ { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, platform: "", avatar: "https://files.catbox.moe/ge1of8.png" } ] },
+        { id: "lop-11c", title: "🏫 LỚP 11C", links: [ { title: "Bài tập Đại số 11 (OneDrive)", date: "01/08/2026 - 16:45", url: "https://onedrive.live.com/...", isHot: false, platform: "onedrive", avatar: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200" } ] },
+        { id: "lop-10p", title: "🏫 LỚP 10P", links: [ { title: "so01toan10p-so18-190926", date: "19/09/2026 - 10:00", url: "https://so01toan10p-so18-190926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
+        { id: "tu-luan-padlet", title: "🟧 TỰ LUẬN PADLET", isOrange: true, visibleCount: 3, links: [ { title: "Bảng nộp bài Tự luận Padlet - Trang 1", date: "16/09/2026 - 10:00", url: "#", isHot: true, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }, { title: "Bảng tổng hợp bài làm Tự luận Padlet - Trang 2", date: "16/09/2026 - 10:00", url: "#", isHot: false, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" } ] }
+    ];
+
+    const KHO_TAI_LIEU_FOLDER = { folderName: "KHO TÀI LIỆU PDF, WORD, ẢNH...", folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", links: [ { title: "so 140-de-cuoi-hoc-ky-2-toan-11.pdf", date: "06/08/2026 - 02:30", url: "https://drive.google.com/file/...", isHot: false, platform: "gdrive", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" }, { title: "số 141-thi thu hk2.doc", date: "06/08/2026 - 02:30", url: "https://docs.google.com/...", isHot: false, platform: "gdrive", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" } ] };
+    const TOP_REMINDER_DATA = [ { title: "Lưu ý quan trọng: Các em kiểm tra lại tài khoản và nộp bài tập đúng hạn.", date: "05/08/2026 - 15:00", image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300", url: "#" } ];
+    const NEWS_DATA = [ { title: "Lịch kiểm tra định kỳ môn Toán tuần tới các em chú ý ôn tập kỹ.", date: "04/08/2026 - 08:00", image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300", url: "#" }, { title: "Xem đáp án và điểm bài kiểm tra của em", date: "03/08/2026 - 12:00", image: "https://files.catbox.moe/jum4by.png", url: "#" } ];
+
+
+    // ==========================================
+    // 2. LOGIC QUẢN TRỊ VIÊN & FIREBASE
+    // ==========================================
+    
+    // Khởi tạo lưới 30 Avatar
+    function initAvatarGrid() {
+        const grid = document.getElementById("avatar-grid");
+        grid.innerHTML = "";
+        selectedAvatarUrl = PRESET_AVATARS[0];
+        
+        PRESET_AVATARS.forEach((url, index) => {
+            let img = document.createElement("img");
+            img.src = url;
+            img.className = "avatar-option " + (index === 0 ? "selected" : "");
+            img.onclick = () => {
+                document.querySelectorAll(".avatar-option").forEach(el => el.classList.remove("selected"));
+                img.classList.add("selected");
+                selectedAvatarUrl = url;
+            };
+            grid.appendChild(img);
+        });
+    }
+
+    function toggleAdminPanel() {
+        const authContainer = document.getElementById("auth-container");
+        const panel = document.getElementById("admin-popover-panel");
+        const gear = document.getElementById("gear-btn");
+
+        if (isAdminLoggedIn) {
+            if (panel.classList.contains("show")) { closeAdminPanel(); } 
+            else { panel.classList.add("show"); gear.classList.add("active-gear"); }
+        } else {
+            authContainer.classList.toggle("show");
+            if (authContainer.classList.contains("show")) document.getElementById("admin-pass-input").focus();
         }
-    ];
+    }
 
-    const DAY_THEM_CATEGORIES = [
-        {
-            id: "them-10",
-            title: "📐 THÊM 10",
-            links: [
-                { title: "so18toan10chuong1taphop150926", date: "15/09/2026 - 13:00", url: "https://so18toan10chuong1taphop150926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so17toan10taphop-onhk1-120926", date: "12/09/2026 - 13:00", url: "https://so17toan10taphop-onhk1-120926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so16toanthongke080926", date: "08/09/2026 - 13:00", url: "https://so16toanthongke080926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so15toan10ontaphk1050926", date: "05/09/2026 - 13:00", url: "https://so15toan10ontaphk1050926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so14toan10vectotoado290826", date: "29/08/2026 - 13:00", url: "https://so14toan10vectotoado290826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so13toan10chuong4vectotoado220826", date: "22/08/2026 - 14:00", url: "https://so13toan10chuong4vectotoado220826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so10toan10cccc444444", date: "01/08/2026 - 17:00", url: "https://so10toan10cccc444444.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
-                { title: "so9toan10chuong12tronma080826", date: "08/08/2026 - 00:35", url: "https://so9toan10chuong12tronma080826.vercel.app/", isHot: true, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
-                { title: "so9toan10c123ontap080826", date: "08/08/2026 - 23:24", url: "https://so9toan10c123ontap080826.vercel.app/", isHot: true, platform: "", avatar: "https://files.catbox.moe/ge1of8.png" },
-                { title: "2 so87toan11c4hinhkhonggian050826", date: "05/08/2026 - 22:00", url: "https://so87toan11c4hinhkhonggian050826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" },
-                { title: "3 Bài tập tự luyện phương pháp tọa độ trong mặt phẳng Ôn thi", date: "06/08/2026 - 00:02", url: "https://hoan030826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" }
-            ]
-        },
-        {
-            id: "them-11",
-            title: "✍️ THÊM 11",
-            links: [
-                 { title: "so98toan11c1luonggiac160926", date: "16/09/2026 - 15:35", url: "https://so98toan11c1luonggiac160926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so97toan11c1luonggiac-lim13092", date: "13/09/2026 - 15:35", url: "https://so97toan11c1luonggiac-lim130926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so96toan11ontapc1luonggiac090926", date: "09/09/2026 - 15:35", url: "https://so96toan11ontapc1luonggiac090926.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so94toan11gioihandaysohamso300826", date: "23/08/2026 - 15:35", url: "https://so94toan11gioihandaysohamso300826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so93toan11ontaphk12608.vercel.app/", date: "23/08/2026 - 15:35", url: "https://so93toan11ontaphk12608.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so89toan11chuong4khonggiansongsong", date: "12/08/2026 - 00:35", url: "https://so89toan11chuong4khonggiansongsong.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
-                { title: "so88toan11c123luoggiac-cscn-kg", date: "09/08/2026 - 18:35", url: "https://so88toan11c123luoggiac-cscn-kg.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
-                { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, platform: "", avatar: "https://files.catbox.moe/ge1of8.png" },
-                { title: "2 so87toan11c4hinhkhonggian050826", date: "05/08/2026 - 22:00", url: "https://so87toan11c4hinhkhonggian050826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" },
-                { title: "3 Bài tập tự luyện phương pháp tọa độ trong mặt phẳng Ôn thi", date: "06/08/2026 - 00:02", url: "https://hoan030826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" }
-            ]
-        },
-        {
-            id: "them-12",
-            title: "🎓 THÊM 12",
-            links: [
-                                { title: "so170toan12onthihk1180926", date: "18/09/2026 - 17:00", url: "https://so170toan12onthihk1180926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so169toan12chuong1hamso140926", date: "14/09/2026 - 17:00", url: "https://so169toan12chuong1hamso140926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so168toan12ontapchuon1-110926", date: "11/09/2026 - 17:00", url: "https://so168toan12ontapchuon1-110926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so167toan12ontaphk1070926", date: "07/09/2026 - 14:00", url: "https://so167toan12ontaphk1070926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so165toan12nguyenhamtichphan310826", date: "31/08/2026 - 17:00", url: "https://so165toan12nguyenhamtichphan310826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so165toan12chuong4tichphanungdung280826", date: "28/08/2026 - 14:00", url: "https://so165toan12chuong4tichphanungdung28.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so164toan12c4nuyenhamtp240826", date: "24/08/2026 - 17:00", url: "https://so164toan12c4nuyenhamtp240826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "so161toan12chuong123onhocki1140826", date: "14/08/2026 - 16:00", url: "https://so161toan12chuong123onhocki1140826.vercel.app/", isHot: true, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
-                { title: "so160toan12chuong123-hamso-oxyz-tho", date: "10/08/2026 - 17:00", url: "https://so160toan12chuong123-hamso-oxyz-tho.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
-                { title: "so159-12c3thongke070826", date: "07/08/2026 - 17:00", url: "https://so159-12c3thongke070826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" },
-                { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: false, platform: "", avatar: "https://files.catbox.moe/ge1of8.png" },
-                { title: "2 so87toan11c4hinhkhonggian050826", date: "05/08/2026 - 22:00", url: "https://so87toan11c4hinhkhonggian050826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" },
-                { title: "de-thi-trac-nghiem-so159-12c3thongke070826 làm lại/", date: "06/08/2026 - 00:35", url: "https://de-thi-trac-nghiem.vercel.app/", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" }
-            ]
+    function handleEnter(e) { if (e.key === 'Enter') checkAdminPassword(); }
+
+    function checkAdminPassword() {
+        const pass = document.getElementById("admin-pass-input").value;
+        if (pass === ADMIN_PASSWORD) {
+            isAdminLoggedIn = true;
+            sessionStorage.setItem("adminLoggedInSession", "true"); // Lưu phiên làm việc
+            document.getElementById("auth-container").classList.remove("show");
+            document.getElementById("admin-popover-panel").classList.add("show");
+            document.getElementById("gear-btn").classList.add("active-gear");
+            document.getElementById("admin-pass-input").value = "";
+            
+            // Render lại để hiện nút Xóa/Chuyển/Sửa trên Card cố định
+            renderDayThemNavBar();
+            renderChinhKhoaNavBar();
+        } else {
+            alert("❌ Sai mật khẩu!");
         }
-    ];
+    }
 
-    const CHINH_KHOA_CATEGORIES = [
-        {
-            id: "lop-11a",
-            title: "🏫 LỚP 11A",
-            links: [
-                { title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", isHot: true, platform: "", avatar: "https://files.catbox.moe/ge1of8.png" },
-                { title: "2 so87toan11c4hinhkhonggian050826", date: "05/08/2026 - 22:00", url: "https://so87toan11c4hinhkhonggian050826.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/WNL1wypR/pngtree-mathematics-arithmetic-ruler-compass-protractor-calculator-pencil-math-symbols-png-image-219.jpg" },
-                { title: "3 Bài tập tự luyện phương pháp tọa độ trong mặt phẳng Ôn thi", date: "06/08/2026 - 00:02", url: "https://hoan030826.vercel.app/", isHot: false, platform: "", avatar: "https://i.ibb.co/dwwVr7hJ/pngtree-back-to-school-school-classroom-and-cute-happy-students-png-image-16006576.png?w=200" },
-                { title: "4 Đề kiểm tra khảo sát chất lượng đầu năm môn Toán 10 nâng cao", date: "06/08/2026 - 00:35", url: "https://example.com", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" }
-            ]
-        },
-        {
-            id: "lop-11c",
-            title: "🏫 LỚP 11C",
-            links: [
-                { title: "Bài tập Đại số 11 (OneDrive)", date: "01/08/2026 - 16:45", url: "https://onedrive.live.com/...", isHot: false, platform: "onedrive", avatar: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200" }
-            ]
-        },
-        {
-            id: "lop-10p",
-            title: "🏫 LỚP 10P",
-            links: [
+    function closeAdminPanel() {
+        document.getElementById("admin-popover-panel").classList.remove("show");
+        document.getElementById("gear-btn").classList.remove("active-gear");
+    }
 
+    async function loadDynamicLinksFromFirebase() {
+        try {
+            const res = await fetch(`${FIREBASE_DB_URL}/custom_links.json`);
+            const data = await res.json();
+            if (!data) return;
 
-                  { title: "so01toan10p-so18-190926", date: "19/09/2026 - 10:00", url: "https://so01toan10p-so18-190926.vercel.app/", isHot: true, platform: "", avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" },
-                { title: "Đề khảo sát Giải tích 12 ôn thi tốt nghiệp THPT", date: "30/07/2026 - 10:00", url: "https://example.com", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=200" }
-            ]
-        },
-        {
-            id: "tu-luan-padlet",
-            title: "🟧 TỰ LUẬN PADLET",
-            isOrange: true,
-            visibleCount: 3, // HIỂN THỊ 3 LINK ĐẦU
-            links: [
-                { title: "Bảng nộp bài Tự luận Padlet - Trang 1 (Đang chờ)", date: "16/09/2026 - 10:00", url: "#", isHot: true, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-                { title: "Bảng tổng hợp bài làm Tự luận Padlet - Trang 2 (Đang chờ)", date: "16/09/2026 - 10:00", url: "#", isHot: false, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-                { title: "Góc trao đổi Tự luận Padlet - Trang 3 (Đang chờ)", date: "16/09/2026 - 10:00", url: "#", isHot: false, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-                { title: "Lưu trữ Tự luận Padlet - Trang 4 (Đang chờ)", date: "16/09/2026 - 10:00", url: "#", isHot: false, platform: "", avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
-            ]
+            for (const categoryId in data) {
+                const linksObj = data[categoryId];
+                let targetCategory = DAY_THEM_CATEGORIES.find(c => c.id === categoryId) || CHINH_KHOA_CATEGORIES.find(c => c.id === categoryId);
+                
+                if (targetCategory) {
+                    for (const linkId in linksObj) {
+                        let item = linksObj[linkId];
+                        item.firebaseId = linkId;
+                        item.categoryId = categoryId;
+                        targetCategory.links.unshift(item);
+                    }
+                }
+            }
+        } catch (e) { console.error("Lỗi tải link Firebase", e); }
+    }
+
+    function processUpload() {
+        const fileInput = document.getElementById("admin-file-upload");
+        const category = document.getElementById("admin-category-select").value;
+        const btn = document.getElementById("btn-create-quiz");
+
+        if (fileInput.files.length === 0) { alert("Vui lòng chọn file questions.js!"); return; }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        btn.innerText = "⏳ Đang xử lý..."; btn.disabled = true;
+
+        reader.onload = async function(e) {
+            let content = e.target.result;
+            content = content.replace(/(const|let|var)\s+examData\s*=\s*/, '').trim();
+            if (content.endsWith(';')) content = content.slice(0, -1);
+
+            try {
+                const parsedData = new Function("return " + content)();
+                if (!parsedData.title || !parsedData.questions) throw new Error("File không đúng cấu trúc.");
+
+                const quizId = "quiz_" + Date.now();
+                await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { method: 'PUT', body: JSON.stringify(parsedData) });
+
+                const now = new Date();
+                const dateStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                
+                const linkData = { title: parsedData.title, date: dateStr, url: `./webthichung.html?id=${quizId}`, isHot: true, avatar: selectedAvatarUrl };
+
+                await fetch(`${FIREBASE_DB_URL}/custom_links/${category}/${quizId}.json`, { method: 'PUT', body: JSON.stringify(linkData) });
+
+                alert("✨ Tạo đề thi thành công!");
+                window.location.reload(); 
+            } catch (err) { alert("❌ Lỗi: " + err.message); } 
+            finally { btn.innerText = "✨ Đăng Đề"; btn.disabled = false; }
+        };
+        reader.readAsText(file);
+    }
+
+    async function deleteQuiz(categoryId, quizId, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if(!confirm("⚠️ Bạn có chắc chắn muốn XÓA vĩnh viễn đề này không?")) return;
+        try {
+            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${quizId}.json`, { method: 'DELETE' });
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { method: 'DELETE' });
+            window.location.reload();
+        } catch(e) { alert("Lỗi khi xóa!"); }
+    }
+
+    async function renameQuiz(categoryId, quizId, currentTitle, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        let newTitle = prompt("✏️ Nhập tên mới cho đề thi:", currentTitle);
+        if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== currentTitle) {
+            try {
+                // Cập nhật tên ở menu link
+                await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${quizId}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ title: newTitle.trim() })
+                });
+                // Cập nhật tên bên trong nội dung đề thi gốc (Để khi học sinh mở ra thấy tên mới)
+                await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ title: newTitle.trim() })
+                });
+                window.location.reload();
+            } catch(e) { alert("Lỗi khi sửa tên!"); }
         }
-    ];
+    }
 
-    const KHO_TAI_LIEU_FOLDER = {
-        folderName: "KHO TÀI LIỆU PDF, WORD, ẢNH...",
-        folderAvatar: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
-        links: [
-            { title: "so 140-de-cuoi-hoc-ky-2-toan-11-nam-2025-2026-so-gddt-hung-yen.pdf", date: "06/08/2026 - 02:30", url: "https://drive.google.com/file/d/1VvgbHMiK5c6nn-7o-qwYJdAMu1aeLxQl/view?usp=sharing", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
-            { title: "số 141-thi thu hk2.doc", date: "06/08/2026 - 02:30", url: "https://docs.google.com/document/d/1u1Qs-Qp6Q9dSyEiJFsd5AsoDeMDsgE4f/edit?usp=sharing&ouid=101409328359522462677&rtpof=true&sd=true", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" },
-            { title: "ảnh chụp bài làm tay", date: "06/08/2026 - 02:30", url: "https://files.catbox.moe/4i2fgq.jpg", isHot: false, platform: "", avatar: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" }
-        ]
-    };
+    function openMoveModal(oldCategory, quizId, stringifiedData, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        currentMoveData = { oldCategory, quizId, quizData: JSON.parse(decodeURIComponent(stringifiedData)) };
+        document.getElementById("move-category-select").value = oldCategory;
+        document.getElementById("move-modal").style.display = "flex";
+    }
 
-    const TOP_REMINDER_DATA = [
-        { title: "Lưu ý quan trọng: Các em kiểm tra lại tài khoản và nộp bài tập đúng hạn trước buổi học tiếp theo.", date: "05/08/2026 - 15:00", image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300", url: "https://www.youtube.com/watch?v=CrH3WLrF_EA" }
-    ];
+    function closeMoveModal() { document.getElementById("move-modal").style.display = "none"; }
 
-    const NEWS_DATA = [
-        { title: "Lịch kiểm tra định kỳ môn Toán tuần tới các em chú ý ôn tập kỹ chương hệ thức lượng trong tam giác.", date: "04/08/2026 - 08:00", image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300", url: "https://dantri.com.vn" },
-        { title: "Xem đáp án và điểm bài kiểm tra của em", date: "03/08/2026 - 12:00", image: "https://files.catbox.moe/jum4by.png", url: "https://docs.google.com/spreadsheets/d/17ChADrWRK1lfNuFVYdXJR0KPkXjqr_s-TdAVlCkfocs/edit?usp=sharing" },
-        { title: "Bài viết thông báo số 3 (Đang để chờ - Thầy có thể thay đổi tiêu đề, link ảnh và đường dẫn tại đây)", date: "Đang cập nhật", image: "", url: "#", isEmpty: true }
-    ];
+    async function confirmMoveQuiz() {
+        const newCategory = document.getElementById("move-category-select").value;
+        if(newCategory === currentMoveData.oldCategory) { alert("Đề đã nằm ở lớp này rồi!"); return; }
 
+        try {
+            await fetch(`${FIREBASE_DB_URL}/custom_links/${newCategory}/${currentMoveData.quizId}.json`, { method: 'PUT', body: JSON.stringify(currentMoveData.quizData) });
+            await fetch(`${FIREBASE_DB_URL}/custom_links/${currentMoveData.oldCategory}/${currentMoveData.quizId}.json`, { method: 'DELETE' });
+            window.location.reload();
+        } catch(e) { alert("Lỗi khi chuyển!"); }
+    }
+
+
+    // ==========================================
+    // 3. RENDER UI (TÍCH HỢP QUẢN TRỊ CỐ ĐỊNH)
+    // ==========================================
+    
     function createExamCard(item) {
-        let card = document.createElement("a");
-        card.href = item.url;
-        card.className = "exam-card";
-        card.target = "_blank";
-
+        let card = document.createElement("a"); card.href = item.url; card.className = "exam-card"; card.target = "_blank";
+        
         let hotBadge = item.isHot ? `<span class="badge-hot">HOT</span>` : '';
         let platformBadge = '';
-        if (item.platform === 'gdrive') {
-            platformBadge = `<span class="badge-gdrive">Drive</span>`;
-        } else if (item.platform === 'onedrive') {
-            platformBadge = `<span class="badge-onedrive">OneDrive</span>`;
-        }
+        if (item.platform === 'gdrive') platformBadge = `<span class="badge-gdrive">Drive</span>`;
+        else if (item.platform === 'onedrive') platformBadge = `<span class="badge-onedrive">OneDrive</span>`;
 
-        let thumbHtml = item.avatar ? `<div class="exam-thumb-box"><img src="${item.avatar}" class="exam-thumb" alt="Thumbnail"></div>` : '';
+        let thumbHtml = item.avatar ? `<div class="exam-thumb-box"><img src="${item.avatar}" class="exam-thumb"></div>` : '';
+
+        // CHỨC NĂNG ADMIN (CỐ ĐỊNH PHÍA BÊN PHẢI)
+        let adminTools = ""; 
+        let arrowHtml = `<div class="arrow">&#8250;</div>`;
+        
+        if (isAdminLoggedIn && item.firebaseId) {
+            arrowHtml = ""; // Ẩn mũi tên để nhường chỗ cho cụm nút Admin
+            let cleanData = { title: item.title, date: item.date, url: item.url, isHot: item.isHot, avatar: item.avatar };
+            let strData = encodeURIComponent(JSON.stringify(cleanData));
+            let escapedTitle = item.title.replace(/'/g, "\\'"); // Xử lý dấu nháy đơn
+            
+            adminTools = `
+            <div class="admin-link-tools" onclick="event.preventDefault();">
+                <button class="tool-btn tool-btn-edit" onclick="renameQuiz('${item.categoryId}', '${item.firebaseId}', '${escapedTitle}', event)" title="Sửa tên">✏️</button>
+                <button class="tool-btn tool-btn-move" onclick="openMoveModal('${item.categoryId}', '${item.firebaseId}', '${strData}', event)" title="Chuyển lớp">🔄</button>
+                <button class="tool-btn tool-btn-delete" onclick="deleteQuiz('${item.categoryId}', '${item.firebaseId}', event)" title="Xóa đề">🗑️</button>
+            </div>`;
+        }
 
         card.innerHTML = `
             ${thumbHtml}
@@ -1023,7 +629,8 @@
                 <div class="exam-title" title="${item.title}">${hotBadge}${platformBadge}${item.title}</div>
                 <div class="exam-date">🕒 ${item.date}</div>
             </div>
-            <div class="arrow">&#8250;</div>
+            ${adminTools}
+            ${arrowHtml}
         `;
         return card;
     }
@@ -1031,97 +638,55 @@
     function renderLinkListToContainer(linksArray, containerElement, customVisibleCount = 2) {
         containerElement.innerHTML = "";
         if (!linksArray || linksArray.length === 0) {
-            containerElement.innerHTML = `<div class="empty-folder">Chưa có bài tập nào trong mục này...</div>`;
-            return;
+            containerElement.innerHTML = `<div class="empty-folder">Chưa có bài tập nào trong mục này...</div>`; return;
         }
 
         const maxVisible = customVisibleCount;
         const visibleLinks = linksArray.slice(0, maxVisible);
         const hiddenLinks = linksArray.slice(maxVisible);
 
-        visibleLinks.forEach(item => {
-            containerElement.appendChild(createExamCard(item));
-        });
+        visibleLinks.forEach(item => containerElement.appendChild(createExamCard(item)));
 
         if (hiddenLinks.length > 0) {
             let hiddenContainer = document.createElement("div");
-            hiddenContainer.className = "hidden-links-container";
-            hiddenContainer.style.display = "none";
-
-            hiddenLinks.forEach(item => {
-                hiddenContainer.appendChild(createExamCard(item));
-            });
+            hiddenContainer.className = "hidden-links-container"; hiddenContainer.style.display = "none";
+            hiddenLinks.forEach(item => hiddenContainer.appendChild(createExamCard(item)));
 
             let toggleBtn = document.createElement("button");
             toggleBtn.className = "load-more-btn";
             toggleBtn.innerHTML = `⬇ Xem thêm ${hiddenLinks.length} bài cũ hơn...`;
-            
             toggleBtn.onclick = function(e) {
                 e.stopPropagation(); 
-                if (hiddenContainer.style.display === "none") {
-                    hiddenContainer.style.display = "flex";
-                    toggleBtn.innerHTML = `⬆ Thu gọn bớt`;
-                } else {
-                    hiddenContainer.style.display = "none";
-                    toggleBtn.innerHTML = `⬇ Xem thêm ${hiddenLinks.length} bài cũ hơn...`;
-                }
+                if (hiddenContainer.style.display === "none") { hiddenContainer.style.display = "flex"; toggleBtn.innerHTML = `⬆ Thu gọn bớt`; } 
+                else { hiddenContainer.style.display = "none"; toggleBtn.innerHTML = `⬇ Xem thêm ${hiddenLinks.length} bài cũ hơn...`; }
             };
-
-            containerElement.appendChild(toggleBtn);
-            containerElement.appendChild(hiddenContainer);
+            containerElement.appendChild(toggleBtn); containerElement.appendChild(hiddenContainer);
         }
     }
 
-    let activeDanTriId = null;
-    let activeDayThemId = null;
-    let activeChinhKhoaId = null;
+    let activeDanTriId = null; let activeDayThemId = null; let activeChinhKhoaId = null;
 
     function renderDanTriNavBar() {
-        const navBar = document.getElementById("dantri-nav-bar");
-        navBar.innerHTML = "";
-
+        const navBar = document.getElementById("dantri-nav-bar"); navBar.innerHTML = "";
         DANTRI_NAV_CATEGORIES.forEach(cat => {
-            let btn = document.createElement("button");
-            btn.className = "dantri-nav-btn";
+            let btn = document.createElement("button"); btn.className = "dantri-nav-btn";
             btn.innerHTML = `<div style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">${cat.title}</div><span class="caret-icon">&#9660;</span>`;
             
             btn.onclick = function() {
-                const panel = document.getElementById("dantri-dropdown-panel");
-                const subTitle = document.getElementById("dantri-sub-title");
-                const newsList = document.getElementById("dantri-news-list");
-
+                const panel = document.getElementById("dantri-dropdown-panel"); const subTitle = document.getElementById("dantri-sub-title"); const newsList = document.getElementById("dantri-news-list");
                 navBar.querySelectorAll(".dantri-nav-btn").forEach(b => b.classList.remove("active"));
 
-                if (activeDanTriId === cat.id) {
-                    panel.classList.remove("show");
-                    activeDanTriId = null;
-                } else {
-                    activeDanTriId = cat.id;
-                    btn.classList.add("active");
-                    subTitle.innerHTML = cat.subTitle;
-                    newsList.innerHTML = "";
-
+                if (activeDanTriId === cat.id) { panel.classList.remove("show"); activeDanTriId = null; } 
+                else {
+                    activeDanTriId = cat.id; btn.classList.add("active"); subTitle.innerHTML = cat.subTitle; newsList.innerHTML = "";
                     cat.news.forEach(item => {
-                        let card = document.createElement("a");
-                        card.href = item.url;
-                        card.className = "dantri-news-card";
-                        card.target = "_blank";
+                        let card = document.createElement("a"); card.href = item.url; card.target = "_blank";
                         card.style.cssText = "display:flex; align-items:flex-start; gap:10px; padding:8px 12px; background:#fff; border-radius:8px; border:1px solid #cbd5e1; text-decoration:none; color:inherit; box-shadow:0 2px 5px rgba(0,0,0,0.03); transition:all 0.2s;";
-                        
                         let tagBg = item.tag === "GIẢI TRÍ" || item.tag === "CƯỜI MẮT" || item.tag === "MEME MATH" ? "background:#fef3c7; color:#b45309;" : "background:#dcfce7; color:#15803d;";
-
-                        card.innerHTML = `
-                            <span style="font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; ${tagBg} white-space:nowrap; margin-top:2px;">${item.tag}</span>
-                            <div style="flex:1; min-width:0;">
-                                <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.4; margin-bottom:2px;">${item.title}</div>
-                                <div style="font-size:11px; color:#64748b; font-weight:500;">🕒 ${item.date}</div>
-                            </div>
-                        `;
+                        card.innerHTML = `<span style="font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; ${tagBg} white-space:nowrap; margin-top:2px;">${item.tag}</span><div style="flex:1; min-width:0;"><div style="font-size:14px; font-weight:700; color:#0f172a; line-height:1.4; margin-bottom:2px;">${item.title}</div><div style="font-size:12px; color:#64748b; font-weight:500;">🕒 ${item.date}</div></div>`;
                         newsList.appendChild(card);
                     });
-
-                    panel.classList.add("show");
-                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    panel.classList.add("show"); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                 }
             };
             navBar.appendChild(btn);
@@ -1129,144 +694,79 @@
     }
 
     function renderDayThemNavBar() {
-        const navBar = document.getElementById("daythem-nav-bar");
-        const panel = document.getElementById("daythem-dropdown-panel");
-        const container = document.getElementById("daythem-links-container");
-        navBar.innerHTML = "";
-
+        const navBar = document.getElementById("daythem-nav-bar"); const panel = document.getElementById("daythem-dropdown-panel"); const container = document.getElementById("daythem-links-container"); navBar.innerHTML = "";
         DAY_THEM_CATEGORIES.forEach(cat => {
-            let btn = document.createElement("button");
-            btn.className = "dantri-nav-btn";
-            btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
-
+            let btn = document.createElement("button"); btn.className = "dantri-nav-btn"; btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
+            if(activeDayThemId === cat.id) btn.classList.add("active");
             btn.onclick = function() {
                 navBar.querySelectorAll(".dantri-nav-btn").forEach(b => b.classList.remove("active"));
-
-                if (activeDayThemId === cat.id) {
-                    panel.classList.remove("show");
-                    activeDayThemId = null;
-                } else {
-                    activeDayThemId = cat.id;
-                    btn.classList.add("active");
-                    renderLinkListToContainer(cat.links, container, cat.visibleCount || 2);
-                    panel.classList.add("show");
-                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                }
+                if (activeDayThemId === cat.id) { panel.classList.remove("show"); activeDayThemId = null; } 
+                else { activeDayThemId = cat.id; btn.classList.add("active"); renderLinkListToContainer(cat.links, container, cat.visibleCount || 2); panel.classList.add("show"); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
             };
             navBar.appendChild(btn);
         });
+        if(activeDayThemId) { let activeCat = DAY_THEM_CATEGORIES.find(c=>c.id===activeDayThemId); if(activeCat) renderLinkListToContainer(activeCat.links, container, activeCat.visibleCount || 2); }
     }
 
     function renderChinhKhoaNavBar() {
-        const navBar = document.getElementById("chinhkhoa-nav-bar");
-        const panel = document.getElementById("chinhkhoa-dropdown-panel");
-        const container = document.getElementById("chinhkhoa-links-container");
-        navBar.innerHTML = "";
-
+        const navBar = document.getElementById("chinhkhoa-nav-bar"); const panel = document.getElementById("chinhkhoa-dropdown-panel"); const container = document.getElementById("chinhkhoa-links-container"); navBar.innerHTML = "";
         CHINH_KHOA_CATEGORIES.forEach(cat => {
-            let btn = document.createElement("button");
-            btn.className = cat.isOrange ? "dantri-nav-btn padlet-orange-btn" : "dantri-nav-btn";
-            btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
-
+            let btn = document.createElement("button"); btn.className = cat.isOrange ? "dantri-nav-btn padlet-orange-btn" : "dantri-nav-btn"; btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
+            if(activeChinhKhoaId === cat.id) btn.classList.add("active");
             btn.onclick = function() {
                 navBar.querySelectorAll(".dantri-nav-btn").forEach(b => b.classList.remove("active"));
-
-                if (activeChinhKhoaId === cat.id) {
-                    panel.classList.remove("show");
-                    activeChinhKhoaId = null;
-                } else {
-                    activeChinhKhoaId = cat.id;
-                    btn.classList.add("active");
-                    renderLinkListToContainer(cat.links, container, cat.visibleCount || 2);
-                    panel.classList.add("show");
-                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                }
+                if (activeChinhKhoaId === cat.id) { panel.classList.remove("show"); activeChinhKhoaId = null; } 
+                else { activeChinhKhoaId = cat.id; btn.classList.add("active"); renderLinkListToContainer(cat.links, container, cat.visibleCount || 2); panel.classList.add("show"); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
             };
             navBar.appendChild(btn);
         });
+        if(activeChinhKhoaId) { let activeCat = CHINH_KHOA_CATEGORIES.find(c=>c.id===activeChinhKhoaId); if(activeCat) renderLinkListToContainer(activeCat.links, container, activeCat.visibleCount || 2); }
     }
 
     function renderKhoTaiLieu() {
-        const container = document.getElementById("kho-tai-lieu-container");
-        container.innerHTML = "";
-
-        let details = document.createElement("details");
-        details.className = "folder-section";
-
-        let summary = document.createElement("summary");
-        summary.className = "folder-header";
-        summary.innerHTML = `
-            <img src="${KHO_TAI_LIEU_FOLDER.folderAvatar}" class="folder-avatar" alt="Folder Icon">
-            <h2 class="folder-title">${KHO_TAI_LIEU_FOLDER.folderName}</h2>
-            <span class="folder-arrow">&#9658;</span>
-        `;
+        const container = document.getElementById("kho-tai-lieu-container"); container.innerHTML = "";
+        let details = document.createElement("details"); details.className = "folder-section";
+        let summary = document.createElement("summary"); summary.className = "folder-header";
+        summary.innerHTML = `<img src="${KHO_TAI_LIEU_FOLDER.folderAvatar}" class="folder-avatar" alt="Folder Icon"><h2 class="folder-title">${KHO_TAI_LIEU_FOLDER.folderName}</h2><span class="folder-arrow">&#9658;</span>`;
         details.appendChild(summary);
-
-        let listDiv = document.createElement("div");
-        listDiv.className = "link-list";
-        renderLinkListToContainer(KHO_TAI_LIEU_FOLDER.links, listDiv, 2);
-
-        details.appendChild(listDiv);
-        container.appendChild(details);
+        let listDiv = document.createElement("div"); listDiv.className = "link-list"; renderLinkListToContainer(KHO_TAI_LIEU_FOLDER.links, listDiv, 2);
+        details.appendChild(listDiv); container.appendChild(details);
     }
 
     function renderReminderSection() {
-        const container = document.getElementById("reminder-container");
-        container.innerHTML = "";
-
+        const container = document.getElementById("reminder-container"); container.innerHTML = "";
         TOP_REMINDER_DATA.forEach(item => {
-            let reminderCard = document.createElement("a");
-            reminderCard.href = item.url;
-            reminderCard.className = "news-item";
-            reminderCard.target = "_blank";
-
+            let reminderCard = document.createElement("a"); reminderCard.href = item.url; reminderCard.className = "news-item"; reminderCard.target = "_blank";
             let imgHtml = item.image ? `<div class="news-img-box"><img src="${item.image}" class="news-img" alt="Illustration"></div>` : '';
-
-            reminderCard.innerHTML = `
-                <div class="news-content">
-                    <div class="news-title">${item.title}</div>
-                    <div class="news-date">🕒 ${item.date}</div>
-                </div>
-                ${imgHtml}
-            `;
+            reminderCard.innerHTML = `<div class="news-content"><div class="news-title">${item.title}</div><div class="news-date">🕒 ${item.date}</div></div>${imgHtml}`;
             container.appendChild(reminderCard);
         });
     }
 
     function renderNewsSection() {
-        const container = document.getElementById("news-container");
-        container.innerHTML = "";
-
+        const container = document.getElementById("news-container"); container.innerHTML = "";
         NEWS_DATA.forEach(item => {
-            if (item.isEmpty) {
-                let emptyDiv = document.createElement("div");
-                emptyDiv.className = "news-empty";
-                emptyDiv.innerHTML = `📝 ${item.title}`;
-                container.appendChild(emptyDiv);
-            } else {
-                let newsCard = document.createElement("a");
-                newsCard.href = item.url;
-                newsCard.className = "news-item";
-                newsCard.target = "_blank";
-
-                let imgHtml = item.image ? `<div class="news-img-box"><img src="${item.image}" class="news-img" alt="Illustration"></div>` : '';
-
-                newsCard.innerHTML = `
-                    <div class="news-content">
-                        <div class="news-title">${item.title}</div>
-                        <div class="news-date">🕒 ${item.date}</div>
-                    </div>
-                    ${imgHtml}
-                `;
-                container.appendChild(newsCard);
-            }
+            let newsCard = document.createElement("a"); newsCard.href = item.url; newsCard.className = "news-item"; newsCard.target = "_blank";
+            let imgHtml = item.image ? `<div class="news-img-box"><img src="${item.image}" class="news-img" alt="Illustration"></div>` : '';
+            newsCard.innerHTML = `<div class="news-content"><div class="news-title">${item.title}</div><div class="news-date">🕒 ${item.date}</div></div>${imgHtml}`;
+            container.appendChild(newsCard);
         });
     }
 
-    window.onload = function() {
+    window.onload = async function() {
+        // Kiểm tra xem trong phiên làm việc hiện tại đã đăng nhập Admin chưa
+        if (sessionStorage.getItem("adminLoggedInSession") === "true") {
+            isAdminLoggedIn = true;
+        }
+
         document.getElementById("top-banner-img").src = TOP_BANNER_URL;
         document.getElementById("web-avatar-img").src = WEB_AVATAR_URL;
         document.getElementById("bottom-banner-img").src = BOTTOM_BANNER_URL;
+        
+        initAvatarGrid();
+
+        // Load Link Firebase TRƯỚC khi Render
+        await loadDynamicLinksFromFirebase();
 
         renderDanTriNavBar();
         renderReminderSection();
