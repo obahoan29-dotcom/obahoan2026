@@ -1,5 +1,3 @@
---- START OF FILE tkthem11.js ---
-
 /**
  * DANH SÁCH TÀI KHOẢN HỌC SINH LỚP THÊM 11
  * Để thêm học sinh: copy 1 dòng, đổi STT, pass, sbd, username, name, className
