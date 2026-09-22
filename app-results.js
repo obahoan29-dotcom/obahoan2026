@@ -14,6 +14,31 @@ let tableDisplaySettings = {
     rowPadding: 9
 };
 
+// Hàm sắp xếp chuỗi chi tiết bài làm theo thứ tự Câu 1, Câu 2,... đến hết
+function sortDataString(str) {
+    if (!str) return "";
+    let parts = str.split(/\s*\|\s*/);
+    parts.sort((a, b) => {
+        let isTabA = a.toLowerCase().includes("tab switch");
+        let isTabB = b.toLowerCase().includes("tab switch");
+        if (isTabA && !isTabB) return 1;
+        if (!isTabA && isTabB) return -1;
+
+        let mA = a.match(/^(?:câu\s*|q)?(\d+)([a-zA-Z]?)/i);
+        let mB = b.match(/^(?:câu\s*|q)?(\d+)([a-zA-Z]?)/i);
+        if (mA && mB) {
+            let numA = parseInt(mA[1], 10);
+            let numB = parseInt(mB[1], 10);
+            if (numA !== numB) return numA - numB;
+            return (mA[2] || "").localeCompare(mB[2] || "");
+        }
+        if (mA) return -1;
+        if (mB) return 1;
+        return a.localeCompare(b);
+    });
+    return parts.join(" | ");
+}
+
 function initTableSettings() {
     try {
         const saved = localStorage.getItem("admin_table_display_settings");
@@ -335,6 +360,9 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let sub = submissionsMap[k];
         if (sub && typeof sub === 'object') {
             sub._keyId = k;
+            if (sub.dataString) {
+                sub.dataString = sortDataString(sub.dataString);
+            }
             submissionsList.push(sub);
         }
     }
