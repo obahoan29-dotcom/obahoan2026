@@ -14,6 +14,10 @@ let tableDisplaySettings = {
     rowPadding: 9
 };
 
+// Quản lý tự động cập nhật dữ liệu thời gian thực
+let autoRefreshTimer = null;
+let isAutoRefreshEnabled = true;
+
 // Hàm sắp xếp chuỗi chi tiết bài làm theo thứ tự Câu 1, Câu 2,... đến hết
 function sortDataString(str) {
     if (!str) return "";
@@ -232,17 +236,23 @@ async function openExamResultModal(item, event) {
     renderExamPickerDropdown();
     setTimeout(initTableResizable, 50);
 
-    await fetchAndRenderExamResults(item);
+    await fetchAndRenderExamResults(item, false);
+
+    // Kích hoạt cập nhật tự động ngầm định kỳ
+    startAutoRefreshResult();
 }
 
 async function refreshCurrentExamResults() {
     if (!currentExamResultData.item) return;
     const tbody = document.getElementById("result-table-tbody");
     tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">🔄 Đang làm mới dữ liệu...</td></tr>`;
-    await fetchAndRenderExamResults(currentExamResultData.item);
+    await fetchAndRenderExamResults(currentExamResultData.item, false);
+    startAutoRefreshResult();
 }
 
-async function fetchAndRenderExamResults(item) {
+async function fetchAndRenderExamResults(item, isSilent = false) {
+    if (!item) return;
+
     let quizId = "";
     if (item.url && item.url.includes("?id=")) {
         try {
@@ -319,6 +329,12 @@ async function fetchAndRenderExamResults(item) {
 
     const targetCatId = item.categoryId || currentExamResultData.categoryId || "them-11";
     renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData);
+
+    // Giữ nguyên bộ lọc nếu quản trị viên đang nhập tìm kiếm
+    const searchInput = document.getElementById("result-search-input");
+    if (searchInput && searchInput.value.trim() !== "") {
+        filterResultTable();
+    }
 }
 
 function getSubmissionTimestamp(sub) {
@@ -380,6 +396,15 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     const finalRows = [];
     const usedSubmissionKeys = new Set();
 
+    // Lưu lại lựa chọn lần thi học sinh đang xem để khi auto-refresh không bị nhảy về lần cuối
+    const previousSelectionMap = {};
+    if (currentExamResultData.rawRows && currentExamResultData.rawRows.length > 0) {
+        currentExamResultData.rawRows.forEach(r => {
+            let key = (r.account && r.account.sbd) ? String(r.account.sbd).toLowerCase() : normalizeName(r.account.name);
+            if (key) previousSelectionMap[key] = r.selectedAttemptIndex;
+        });
+    }
+
     // DUYỆT TỪ DANH SÁCH HỌC SINH CỦA LỚP
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
@@ -418,7 +443,11 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         else if (accNameNorm && cheatHistoryBySbd[accNameNorm]) cheatDurations = cheatHistoryBySbd[accNameNorm];
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
 
+        let studentKey = accSbdLower || accNameNorm;
         let selectedAttemptIndex = matchedSubs.length > 0 ? (matchedSubs.length - 1) : 0;
+        if (previousSelectionMap[studentKey] !== undefined && previousSelectionMap[studentKey] < matchedSubs.length) {
+            selectedAttemptIndex = previousSelectionMap[studentKey];
+        }
 
         finalRows.push({
             stt: acc.stt || (idx + 1),
@@ -465,12 +494,18 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         else if (subNameNorm && cheatHistoryBySbd[subNameNorm]) cheatDurations = cheatHistoryBySbd[subNameNorm];
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
 
+        let studentKey = subSbd || subNameNorm;
+        let selectedAttemptIndex = atts.length - 1;
+        if (previousSelectionMap[studentKey] !== undefined && previousSelectionMap[studentKey] < atts.length) {
+            selectedAttemptIndex = previousSelectionMap[studentKey];
+        }
+
         finalRows.push({
             stt: freeCounter++,
             isClassStudent: false,
             account: group.account,
             allAttempts: atts,
-            selectedAttemptIndex: atts.length - 1,
+            selectedAttemptIndex: selectedAttemptIndex,
             isDoing: false,
             cheatTimeString: cheatTimeString
         });
@@ -662,6 +697,7 @@ function filterResultTable() {
 }
 
 function closeResultModal() {
+    stopAutoRefreshResult(); // Dừng chạy ngầm ngay khi đóng bảng
     document.getElementById("result-fullscreen-modal").style.display = "none";
 }
 
@@ -722,5 +758,49 @@ function exportResultsToExcel() {
         XLSX.writeFile(wb, `${safeTitle}_${Date.now()}.xlsx`);
     } else {
         alert("❌ Không thể tải thư viện XLSX. Vui lòng kiểm tra kết nối mạng!");
+    }
+}
+
+// =========================================================
+// HÀM ĐIỀU KHIỂN TỰ ĐỘNG CẬP NHẬT THỜI GIAN THỰC (REALTIME)
+// =========================================================
+function startAutoRefreshResult() {
+    stopAutoRefreshResult();
+    if (!isAutoRefreshEnabled) return;
+
+    // Cứ 3.5 giây tự động cập nhật ngầm mà không làm giật giao diện
+    autoRefreshTimer = setInterval(async () => {
+        const modal = document.getElementById("result-fullscreen-modal");
+        if (modal && modal.style.display === "flex" && currentExamResultData.item) {
+            await fetchAndRenderExamResults(currentExamResultData.item, true);
+        }
+    }, 3500);
+}
+
+function stopAutoRefreshResult() {
+    if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+    }
+}
+
+function toggleAutoRefresh(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    isAutoRefreshEnabled = !isAutoRefreshEnabled;
+    const btn = document.getElementById("btn-toggle-autorefresh");
+    if (isAutoRefreshEnabled) {
+        if (btn) {
+            btn.innerHTML = "🟢 Tự động: BẬT";
+            btn.style.color = "#38bdf8";
+            btn.style.borderColor = "#38bdf8";
+        }
+        startAutoRefreshResult();
+    } else {
+        if (btn) {
+            btn.innerHTML = "⚪ Tự động: TẮT";
+            btn.style.color = "#94a3b8";
+            btn.style.borderColor = "#64748b";
+        }
+        stopAutoRefreshResult();
     }
 }
