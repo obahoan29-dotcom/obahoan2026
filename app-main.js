@@ -327,7 +327,7 @@ async function confirmCopyItem() {
 }
 
 // =========================================================
-// LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP
+// LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP (ĐÃ CẬP NHẬT CHÍNH XÁC)
 // =========================================================
 function switchStudentLoginMode(mode) {
     activeStudentLogin.currentMode = mode;
@@ -363,7 +363,13 @@ function switchStudentLoginMode(mode) {
 }
 
 function openStudentLoginModal(targetUrl, examTitle, categoryId) {
-    activeStudentLogin = { targetUrl, examTitle, categoryId: categoryId || "them-11", currentMode: "class" };
+    activeStudentLogin = { 
+        targetUrl: targetUrl, 
+        examTitle: examTitle, 
+        categoryId: categoryId || "them-10", 
+        currentMode: "class" 
+    };
+    
     document.getElementById("st-modal-exam-name").innerText = examTitle || "Bài kiểm tra trực tuyến";
     document.getElementById("st-username-input").value = "";
     document.getElementById("st-password-input").value = "";
@@ -412,8 +418,12 @@ function submitStudentLogin() {
 
         errBox.style.display = "none";
         const freePayload = {
-            sbd: freeSbd, name: freeName, className: freeClass,
-            username: "free_" + freeSbd, isFreeStudent: true
+            sbd: freeSbd, 
+            name: freeName, 
+            className: freeClass,
+            username: "free_" + freeSbd, 
+            isFreeStudent: true,
+            categoryId: activeStudentLogin.categoryId
         };
 
         try {
@@ -433,10 +443,10 @@ function submitStudentLogin() {
 
         setTimeout(() => {
             closeStudentLoginModal();
-            window.open(finalRedirectUrl, "_blank");
+            window.location.href = finalRedirectUrl;
             btn.innerHTML = "Vào thi 🚀";
             btn.style.background = "";
-        }, 500);
+        }, 400);
         return;
     }
 
@@ -450,16 +460,17 @@ function submitStudentLogin() {
     }
 
     const catId = activeStudentLogin.categoryId;
-    // LẤY ĐÚNG TÀI KHOẢN TỪ FILE LỚP ĐƯỢC CHỌN (VD: TKTHEM11.JS)
+    
+    // NẠP ĐÚNG DANH SÁCH TÀI KHOẢN TỪNG LỚP (tkthem10.js, tkthem11.js, tkthem12.js, tklop10p.js, tklop11a.js, tklop11c.js)
     const accounts = getAccountsForCategory(catId);
 
     if (!accounts || accounts.length === 0) {
-        errBox.innerText = `⚠️ Chưa tìm thấy file danh sách học sinh của mục "${getCategoryDisplayName(catId)}"!`;
+        errBox.innerText = `⚠️ Không tìm thấy cơ sở dữ liệu của lớp "${getCategoryDisplayName(catId)}"!`;
         errBox.style.display = "block";
         return;
     }
 
-    // So khớp linh hoạt theo Username, SBD hoặc Họ tên học sinh
+    // So khớp theo SBD, Username hoặc Họ tên cùng Mật khẩu tương ứng
     const matched = accounts.find(acc => 
         ((acc.username && acc.username.trim().toLowerCase() === uVal.toLowerCase()) ||
          (acc.sbd && String(acc.sbd).trim().toLowerCase() === uVal.toLowerCase()) ||
@@ -470,31 +481,35 @@ function submitStudentLogin() {
     if (matched) {
         errBox.style.display = "none";
         const studentPayload = {
-            sbd: matched.sbd, name: matched.name, className: matched.className,
-            username: matched.username, stt: matched.stt
+            sbd: matched.sbd, 
+            name: matched.name || matched.username, 
+            className: matched.className,
+            username: matched.username, 
+            stt: matched.stt,
+            categoryId: catId
         };
         
         try {
             localStorage.setItem("current_exam_student", JSON.stringify(studentPayload));
             sessionStorage.setItem("current_exam_student", JSON.stringify(studentPayload));
             localStorage.setItem("saved_student_sbd", matched.sbd);
-            localStorage.setItem("saved_student_name", matched.name);
+            localStorage.setItem("saved_student_name", matched.name || matched.username);
             localStorage.setItem("saved_student_class", matched.className);
         } catch(e) {}
 
         let targetUrl = activeStudentLogin.targetUrl;
         let joinChar = targetUrl.includes('?') ? '&' : '?';
-        const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(matched.sbd)}&name=${encodeURIComponent(matched.name)}&class=${encodeURIComponent(matched.className)}&cat=${encodeURIComponent(catId)}&autostart=1`;
+        const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(matched.sbd)}&name=${encodeURIComponent(matched.name || matched.username)}&class=${encodeURIComponent(matched.className)}&cat=${encodeURIComponent(catId)}&autostart=1`;
 
         btn.innerHTML = "🎉 Đăng nhập thành công! Đang vào...";
         btn.style.background = "#10b981";
 
         setTimeout(() => {
             closeStudentLoginModal();
-            window.open(finalRedirectUrl, "_blank");
+            window.location.href = finalRedirectUrl;
             btn.innerHTML = "Vào thi 🚀";
             btn.style.background = "";
-        }, 500);
+        }, 400);
     } else {
         errBox.innerText = "❌ Sai Tên đăng nhập (hoặc SBD) hoặc Mật khẩu! Vui lòng thử lại.";
         errBox.style.display = "block";
@@ -573,7 +588,7 @@ function createExamCard(item) {
     let card = document.createElement("a"); 
     card.className = "exam-card"; 
     
-    let catId = item.categoryId || "them-11";
+    let catId = item.categoryId || "them-10";
     item.categoryId = catId;
     let itemId = item.firebaseId || item.id || ("item_" + Date.now());
 
@@ -713,7 +728,7 @@ function renderLinkListToContainer(linksArray, containerElement, customVisibleCo
 }
 
 let activeDanTriId = null; 
-let activeDayThemId = "them-11"; // Mặc định mở lớp Thêm 11 như hình chụp
+let activeDayThemId = "them-10"; // Mặc định mở lớp Thêm 10
 let activeChinhKhoaRow1Id = null; 
 let activeChinhKhoaRow2Id = null;
 
