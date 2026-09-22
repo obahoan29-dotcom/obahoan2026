@@ -190,6 +190,14 @@
         </div>
         <div class="result-modal-tools">
             <input type="text" id="result-search-input" class="result-search-input" placeholder="🔍 Tìm tên, SBD..." oninput="filterResultTable()">
+            
+            <!-- NÚT BẬT / TẮT TỰ ĐỘNG CẬP NHẬT THEO THỜI GIAN THỰC -->
+            <button type="button" id="btn-toggle-autorefresh" onclick="toggleAutoRefresh(event)" 
+                style="background: #1e293b; color: #38bdf8; border: 1.5px solid #38bdf8; border-radius: 20px; padding: 7px 12px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;" 
+                title="Bấm để Tạm dừng hoặc Bật lại tự động cập nhật">
+                🟢 Tự động: BẬT
+            </button>
+
             <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
             <button class="btn-export-excel" onclick="exportResultsToExcel()" title="Tải file Excel (.xlsx)">📥 Tải Excel (.xlsx)</button>
             
