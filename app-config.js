@@ -12,7 +12,7 @@ let currentCopyData = { sourceCategory: null, itemId: null, itemData: null };
 let activeStudentLogin = {
     targetUrl: "",
     examTitle: "",
-    categoryId: "",
+    categoryId: "them-11",
     currentMode: "class"
 };
 
@@ -62,8 +62,8 @@ let REMINDER_CATEGORY = {
 };
 
 let DAY_THEM_CATEGORIES = [
-    { id: "them-10", title: "📐 Thêm 10", links: [ { id: "them10_1", firebaseId: "them10_1", categoryId: "them-10", title: "so18toan10chuong1taphop150926", date: "15/09/2026 - 13:00", url: "https://so18toan10chuong1taphop150926.vercel.app/", badgeText: "HOT", isDoc: false, avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
-    { id: "them-11", title: "✍️ Thêm 11", links: [ { id: "them11_1", firebaseId: "them11_1", categoryId: "them-11", title: "so98toan11c1luonggiac160926", date: "16/09/2026 - 15:35", url: "https://so98toan11c1luonggiac160926.vercel.app/", badgeText: "NONE", isDoc: false, avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] },
+    { id: "them-10", title: "📐 Thêm 10", links: [ { id: "them10_1", firebaseId: "them10_1", categoryId: "them-10", title: "ĐỀ SỐ 20 - TOÁN 10: BẤT PHƯƠNG TRÌNH VÀ HỆ BẤT PHƯƠNG TRÌNH BẬC NHẤT HAI ẨN", date: "23/09/2026 - 02:58", url: "https://so18toan10chuong1taphop150926.vercel.app/", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3135/3135768.png" } ] },
+    { id: "them-11", title: "✍️ Thêm 11", links: [ { id: "them11_1", firebaseId: "them11_1", categoryId: "them-11", title: "ĐỀ 150 - TOÁN 14: BẤT PHƯƠNG TRÌNH VÀ HỆ BẤT PHƯƠNG TRÌNH BẬC NHẤT HAI ẨN", date: "23/09/2026 - 03:00", url: "https://so98toan11c1luonggiac160926.vercel.app/", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3062/3062279.png" } ] },
     { id: "them-12", title: "🎓 Thêm 12", links: [ { id: "them12_1", firebaseId: "them12_1", categoryId: "them-12", title: "so170toan12onthihk1180926", date: "18/09/2026 - 17:00", url: "https://so170toan12onthihk1180926.vercel.app/", badgeText: "HOT", isDoc: false, avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg" } ] }
 ];
 
@@ -74,17 +74,13 @@ let CHINH_KHOA_CATEGORIES = [
     { 
         id: "hsg-toan-11", title: "🏆 HSG Toán 11", isGold: true, row: 2, visibleCount: 2, 
         links: [
-            { id: "hsg11_1", firebaseId: "hsg11_1", categoryId: "hsg-toan-11", title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 01", date: "20/09/2026 - 08:30", url: "https://hethongthitracnghiem-518c5.web.app/", badgeText: "HOT", isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" },
-            { id: "hsg11_2", firebaseId: "hsg11_2", categoryId: "hsg-toan-11", title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 02", date: "19/09/2026 - 15:00", url: "https://hethongthitracnghiem-518c5.web.app/", badgeText: "NONE", isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" },
-            { id: "hsg11_3", firebaseId: "hsg11_3", categoryId: "hsg-toan-11", title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 03 (Đề rèn luyện)", date: "18/09/2026 - 19:30", url: "https://hethongthitracnghiem-518c5.web.app/", badgeText: "NONE", isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" }
+            { id: "hsg11_1", firebaseId: "hsg11_1", categoryId: "hsg-toan-11", title: "Chuyên đề Bồi dưỡng HSG Toán 11 - Bài toán 01", date: "20/09/2026 - 08:30", url: "https://hethongthitracnghiem-518c5.web.app/", badgeText: "HOT", isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3358/3358327.png" }
         ] 
     },
     { 
         id: "tu-luan-padlet", title: "💜 Nộp tự luận Padlet", isPurple: true, row: 2, visibleCount: 5, 
         links: [ 
-            { id: "padlet_1", firebaseId: "padlet_1", categoryId: "tu-luan-padlet", title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-            { id: "padlet_2", firebaseId: "padlet_2", categoryId: "tu-luan-padlet", title: "11C chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-            { id: "padlet_3", firebaseId: "padlet_3", categoryId: "tu-luan-padlet", title: "10P chụp tự luận Padlet", date: "05/09/2026 - 08:00", url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
+            { id: "padlet_1", firebaseId: "padlet_1", categoryId: "tu-luan-padlet", title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
         ] 
     }
 ];
@@ -101,6 +97,47 @@ const NEWS_DATA = [
     { title: "Xem đáp án và điểm bài kiểm tra của em", date: "03/08/2026 - 12:00", image: "https://files.catbox.moe/jum4by.png", url: "#" }
 ];
 
+// =========================================================
+// HÀM TIỆN ÍCH TRÍCH XUẤT TÀI KHOẢN VÀ MÃ ĐỀ FIREBASE
+// =========================================================
+
+/**
+ * Lấy danh sách tài khoản chính xác theo danh mục lớp
+ */
+function getAccountsForCategory(categoryId) {
+    if (!window.STUDENT_ACCOUNTS) return [];
+    const cat = (categoryId || "").toLowerCase();
+
+    if (cat.includes("11") && (cat.includes("them") || cat === "them-11")) return window.STUDENT_ACCOUNTS["them-11"] || [];
+    if (cat.includes("10") && (cat.includes("them") || cat === "them-10")) return window.STUDENT_ACCOUNTS["them-10"] || [];
+    if (cat.includes("12") && (cat.includes("them") || cat === "them-12")) return window.STUDENT_ACCOUNTS["them-12"] || [];
+    if (cat.includes("11a") || cat === "lop-11a") return window.STUDENT_ACCOUNTS["lop-11a"] || [];
+    if (cat.includes("11c") || cat === "lop-11c") return window.STUDENT_ACCOUNTS["lop-11c"] || [];
+    if (cat.includes("10p") || cat === "lop-10p") return window.STUDENT_ACCOUNTS["lop-10p"] || [];
+
+    // Tìm kiếm trực tiếp qua key
+    if (window.STUDENT_ACCOUNTS[categoryId]) return window.STUDENT_ACCOUNTS[categoryId];
+
+    return window.STUDENT_ACCOUNTS["them-11"] || window.STUDENT_ACCOUNTS["them-10"] || [];
+}
+
+/**
+ * Trả về tên hiển thị chuẩn tiếng Việt của lớp
+ */
+function getCategoryDisplayName(catId) {
+    const map = {
+        "them-10": "Thêm 10",
+        "them-11": "Thêm 11",
+        "them-12": "Thêm 12",
+        "lop-11a": "Lớp 11A",
+        "lop-11c": "Lớp 11C",
+        "lop-10p": "Lớp 10P",
+        "hsg-toan-11": "HSG Toán 11",
+        "tu-luan-padlet": "Tự luận Padlet"
+    };
+    return map[catId] || catId;
+}
+
 function parseDateString(dateStr) {
     if (!dateStr) return 0;
     try {
@@ -113,6 +150,28 @@ function parseDateString(dateStr) {
 
 function cleanExamCodeKey(code) {
     return String(code || "").trim().replace(/\s+/g, '_').replace(/[.#$\[\]\/]/g, '_');
+}
+
+/**
+ * Chuẩn hoá tên đề về dạng không dấu, viết hoa:
+ * Ví dụ: "ĐỀ 150 - TOÁN 14: BẤT PHƯƠNG TRÌNH..." -> "DE150TOAN14"
+ */
+function extractNormalizedExamCode(title) {
+    if (!title) return "";
+    let clean = String(title)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/Đ/g, "D").replace(/đ/g, "d")
+        .toUpperCase();
+
+    // Khớp mẫu "DE 150 - TOAN 14" hoặc "DE SO 20 - TOAN 10"
+    let m = clean.match(/(DE\s*(?:SO)?\s*\d+)\s*[-:]*\s*(TOAN\s*\d+)/i);
+    if (m) {
+        let p1 = m[1].replace(/\s+/g, "").replace("SO", "");
+        let p2 = m[2].replace(/\s+/g, "");
+        return p1 + p2; // Ra DE150TOAN14, DE20TOAN10
+    }
+    return clean.replace(/[^A-Z0-9]/g, "");
 }
 
 function normalizeName(str) {
