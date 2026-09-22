@@ -135,15 +135,14 @@ function renderExamPickerDropdown() {
     if (!menu) return;
     menu.innerHTML = "";
 
-    // Nhận diện linh hoạt chuyên mục lớp của đề thi hiện tại
-    const currentCatId = currentExamResultData.categoryId || (currentExamResultData.item && currentExamResultData.item.categoryId) || "them-11";
+    const currentCatId = currentExamResultData.categoryId || "them-11";
     let targetCat = DAY_THEM_CATEGORIES.find(c => c.id === currentCatId) || 
                     CHINH_KHOA_CATEGORIES.find(c => c.id === currentCatId);
     
     const examList = targetCat ? targetCat.links.filter(l => !l.isDoc) : [];
 
     if (examList.length === 0) {
-        menu.innerHTML = `<div style="padding:8px; color:#64748b; font-size:12px; font-style:italic;">Chưa có đề thi nào trong mục này</div>`;
+        menu.innerHTML = `<div style="padding:8px; color:#64748b; font-size:12px; font-style:italic;">Chưa có đề thi nào trong mục ${getCategoryDisplayName(currentCatId)}</div>`;
         return;
     }
 
@@ -171,9 +170,7 @@ async function switchExamResult(examItem) {
     const headSub = document.getElementById("result-modal-subheading");
     const currentExamBtnText = document.getElementById("current-selected-exam-name");
 
-    let catName = currentExamResultData.categoryId;
-    let foundCat = DAY_THEM_CATEGORIES.find(c => c.id === catName) || CHINH_KHOA_CATEGORIES.find(c => c.id === catName);
-    let displayCatName = foundCat ? foundCat.title : catName;
+    const displayCatName = getCategoryDisplayName(currentExamResultData.categoryId);
 
     if (headTitle) headTitle.innerText = `📊 Kết quả: ${examItem.title || "Bài thi"}`;
     if (headSub) headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${examItem.date || "---"}`;
@@ -198,15 +195,13 @@ async function openExamResultModal(item, event) {
     const headSub = document.getElementById("result-modal-subheading");
     const currentExamBtnText = document.getElementById("current-selected-exam-name");
 
-    let catName = currentExamResultData.categoryId;
-    let foundCat = DAY_THEM_CATEGORIES.find(c => c.id === catName) || CHINH_KHOA_CATEGORIES.find(c => c.id === catName);
-    let displayCatName = foundCat ? foundCat.title : catName;
+    const displayCatName = getCategoryDisplayName(currentExamResultData.categoryId);
 
     modal.style.display = "flex";
     headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
     headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${item.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${item.title}`;
-    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">⏳ Đang kết nối Firebase và nạp dữ liệu thí sinh...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">⏳ Đang kết nối Firebase và nạp dữ liệu ${displayCatName}...</td></tr>`;
 
     applyTableSettings();
     renderExamPickerDropdown();
@@ -248,10 +243,17 @@ async function fetchAndRenderExamResults(item) {
         } catch(e) {}
     }
 
+    // TỔNG HỢP TOÀN BỘ CÁC MÃ ĐỀ KHẢ DĨ (BAO GỒM CẢ DE150TOAN14, DE20TOAN10,...)
     let candidateCodes = new Set();
+    
+    let normCode = extractNormalizedExamCode(examTitle || item.title);
+    if (normCode) candidateCodes.add(normCode);
+    
     if (maDe) candidateCodes.add(cleanExamCodeKey(maDe));
     if (examTitle) candidateCodes.add(cleanExamCodeKey(examTitle));
     if (item.title) candidateCodes.add(cleanExamCodeKey(item.title));
+    
+    candidateCodes.add("DE150TOAN14");
     candidateCodes.add("DE20TOAN10");
     candidateCodes.add("101");
 
@@ -261,27 +263,37 @@ async function fetchAndRenderExamResults(item) {
 
     try {
         for (let code of candidateCodes) {
-            let sRes = await fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`);
-            let sJson = await sRes.json();
-            if (sJson && typeof sJson === 'object') {
-                for (let subId in sJson) submissionsMap[subId] = sJson[subId];
+            let [sRes, cRes, aRes] = await Promise.all([
+                fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
+                fetch(`${FIREBASE_DB_URL}/exams/${code}/cheating_logs.json`).catch(() => null),
+                fetch(`${FIREBASE_DB_URL}/active_sessions/${code}.json`).catch(() => null)
+            ]);
+
+            if (sRes && sRes.ok) {
+                let sJson = await sRes.json();
+                if (sJson && typeof sJson === 'object') {
+                    for (let subId in sJson) submissionsMap[subId] = sJson[subId];
+                }
             }
 
-            let cRes = await fetch(`${FIREBASE_DB_URL}/exams/${code}/cheating_logs.json`);
-            let cJson = await cRes.json();
-            if (cJson && typeof cJson === 'object') {
-                for (let cId in cJson) cheatingLogsData[cId] = cJson[cId];
+            if (cRes && cRes.ok) {
+                let cJson = await cRes.json();
+                if (cJson && typeof cJson === 'object') {
+                    for (let cId in cJson) cheatingLogsData[cId] = cJson[cId];
+                }
             }
 
-            let aRes = await fetch(`${FIREBASE_DB_URL}/active_sessions/${code}.json`);
-            let aJson = await aRes.json();
-            if (aJson && typeof aJson === 'object') {
-                for (let aId in aJson) activeSessionsData[aId] = aJson[aId];
+            if (aRes && aRes.ok) {
+                let aJson = await aRes.json();
+                if (aJson && typeof aJson === 'object') {
+                    for (let aId in aJson) activeSessionsData[aId] = aJson[aId];
+                }
             }
         }
     } catch(e) { console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); }
 
-    renderExamResultTable(item.categoryId || currentExamResultData.categoryId, submissionsMap, cheatingLogsData, activeSessionsData);
+    const targetCatId = item.categoryId || currentExamResultData.categoryId || "them-11";
+    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData);
 }
 
 function getSubmissionTimestamp(sub) {
@@ -295,16 +307,8 @@ function getSubmissionTimestamp(sub) {
 }
 
 function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap) {
-    let classAccounts = [];
-    
-    // Nạp chính xác danh sách học sinh theo từng lớp tương ứng
-    if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS[categoryId] && window.STUDENT_ACCOUNTS[categoryId].length > 0) {
-        classAccounts = window.STUDENT_ACCOUNTS[categoryId];
-    } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-11"] && categoryId === "them-11") {
-        classAccounts = window.STUDENT_ACCOUNTS["them-11"];
-    } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-10"]) {
-        classAccounts = window.STUDENT_ACCOUNTS["them-10"];
-    }
+    // 1. LẤY DANH SÁCH HỌC SINH TỪ FILE CHÍNH XÁC CỦA LỚP ĐÓ (VÍ DỤ TKTHEM11.JS)
+    const classAccounts = getAccountsForCategory(categoryId);
 
     const cheatHistoryBySbd = {};
     for (let k in cheatingMap) {
@@ -348,6 +352,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     const finalRows = [];
     const usedSubmissionKeys = new Set();
 
+    // DUYỆT TỪ DANH SÁCH HỌC SINH CỦA LỚP
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -398,6 +403,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     });
 
+    // DUYỆT CÁC BÀI THI CỦA THÍ SINH TỰ DO (NẾU CÓ)
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
