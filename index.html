@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>Kho đề thi & tài liệu trực tuyến</title>
+    
+    <!-- Font chữ chuẩn -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- CSS Giao diện -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Thư viện SheetJS xuất Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- NẠP TẤT CẢ TÀI KHOẢN HỌC SINH CÁC LỚP -->
+    <script src="tkthem10.js"></script>
+    <script src="tkthem11.js"></script>
+    <script src="tkthem12.js"></script>
+    <script src="tklop10p.js"></script>
+    <script src="tklop11a.js"></script>
+    <script src="tklop11c.js"></script>
+
+    <!-- CÁC MODULE JAVASCRIPT HỆ THỐNG -->
+    <script src="app-config.js"></script>
+    <script src="app-results.js"></script>
+    <script src="app-main.js"></script>
+</head>
+<body>
+
+<div class="container" id="app">
+    <!-- BANNER ĐẦU TRANG -->
+    <div class="top-banner-box">
+        <div class="top-banner-img-wrap">
+            <img id="top-banner-img" class="top-banner-img" src="" alt="Banner Top">
+            <div class="banner-overlay"></div>
+        </div>
+        <img id="web-avatar-img" class="banner-avatar" src="" alt="Avatar Web">
+        <div class="banner-title">Kho đề thi & tài liệu trực tuyến</div>
+        <div class="banner-rocket">🚀</div>
+        <div class="banner-watermark">DonaldHoan</div>
+        
+        <!-- KHU VỰC ĐIỀU KHIỂN QUẢN TRỊ -->
+        <div class="admin-controls-wrapper">
+            <div class="auth-container" id="auth-container">
+                <div class="auth-input-wrapper">
+                    <input type="password" id="admin-pass-input" class="auth-input" placeholder="Mật khẩu..." onkeypress="handleEnter(event)">
+                    <button type="button" class="eye-toggle-btn" id="eye-toggle-btn" onclick="togglePasswordVisibility()" title="Hiện/Ẩn">👁️</button>
+                </div>
+                <button class="auth-btn" onclick="checkAdminPassword()">VÀO</button>
+            </div>
+            
+            <div class="admin-gear-btn" id="gear-btn" onclick="toggleAdminPanel(event)" title="Quản trị viên">⚙️</div>
+
+            <!-- BẢNG QUẢN TRỊ XÒE RA -->
+            <div class="admin-popover-panel" id="admin-popover-panel">
+                <div class="admin-popover-title">🚀 Đăng đề thi và tài liệu - videos</div>
+                
+                <div class="admin-tabs">
+                    <button class="admin-tab-btn active" id="tab-btn-quiz" onclick="switchAdminTab('quiz')">📝 Đăng đề thi (JS)</button>
+                    <button class="admin-tab-btn" id="tab-btn-doc" onclick="switchAdminTab('doc')">📁 Đăng link tài liệu</button>
+                </div>
+
+                <div class="admin-input-group">
+                    <label>Lớp / Chuyên mục đăng vào:</label>
+                    <select id="admin-category-select">
+                        <option value="kho-tai-lieu">📚 Kho tài liệu PDF, Word, Ảnh...</option>
+                        <option value="nhac-nho">📌 Nhắc nhở quan trọng</option>
+                        <option value="them-10">📐 Thêm 10</option>
+                        <option value="them-11">✍️ Thêm 11</option>
+                        <option value="them-12">🎓 Thêm 12</option>
+                        <option value="lop-11a">🏫 Lớp 11A</option>
+                        <option value="lop-11c">🏫 Lớp 11C</option>
+                        <option value="lop-10p">🏫 Lớp 10P</option>
+                        <option value="hsg-toan-11">🏆 HSG Toán 11</option>
+                        <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
+                    </select>
+                </div>
+
+                <div class="admin-input-group">
+                    <label>Chọn icon đại diện:</label>
+                    <div class="avatar-picker-grid" id="avatar-grid"></div>
+                </div>
+
+                <!-- TAB 1: ĐĂNG ĐỀ THI -->
+                <div id="admin-tab-quiz">
+                    <div class="admin-input-group">
+                        <label>Tải lên file đề thi (questions.js):</label>
+                        <input type="file" id="admin-file-upload" accept=".js, .txt">
+                    </div>
+                    <div class="admin-btn-row">
+                        <button class="btn-admin btn-cancel" onclick="closeAdminPanel()">Thoát</button>
+                        <button class="btn-admin btn-submit" id="btn-create-quiz" onclick="processUpload()">✨ Đăng đề thi</button>
+                    </div>
+                </div>
+
+                <!-- TAB 2: ĐĂNG LINK TÀI LIỆU -->
+                <div id="admin-tab-doc" style="display: none;">
+                    <div class="admin-input-group">
+                        <label>Tên tài liệu / Video:</label>
+                        <input type="text" id="admin-doc-title" placeholder="VD: File ôn tập, Video bài giảng...">
+                    </div>
+                    <div class="admin-input-group">
+                        <label>Link gốc (Google Drive, Youtube...):</label>
+                        <input type="text" id="admin-doc-url" placeholder="Dán đường link vào đây...">
+                    </div>
+                    <div class="admin-btn-row">
+                        <button class="btn-admin btn-cancel" onclick="closeAdminPanel()">Thoát</button>
+                        <button class="btn-admin btn-submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" id="btn-create-doc" onclick="processAddDocument()">📤 Đăng tài liệu</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- THANH MENU BẢN TIN / THỜI SỰ -->
+    <div class="dantri-nav-container">
+        <div class="dantri-scroll-bar" id="dantri-nav-bar"></div>
+        <div class="dantri-dropdown-panel" id="dantri-dropdown-panel">
+            <div class="dantri-sub-header" id="dantri-sub-title">📌 Tin tức nổi bật</div>
+            <div id="dantri-news-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <!-- KHỐI NHẮC NHỞ QUAN TRỌNG -->
+    <div class="reminder-section">
+        <h3 class="reminder-header-title">📌 Nhắc nhở quan trọng</h3>
+        <div class="link-list" style="padding:0; background:transparent;" id="reminder-container"></div>
+    </div>
+
+    <!-- DẠY THÊM -->
+    <div class="section-header-title red-title">🔴 Các lớp dạy thêm</div>
+    <div class="dantri-nav-container">
+        <div class="full-width-nav-row" id="daythem-nav-bar"></div>
+        <div class="dantri-dropdown-panel" id="daythem-dropdown-panel">
+            <div class="link-list" id="daythem-links-container"></div>
+        </div>
+    </div>
+
+    <!-- CHÍNH KHÓA -->
+    <div class="section-header-title blue-title">🔵 Các lớp chính khóa</div>
+    <div class="dantri-nav-container">
+        <div class="full-width-nav-row" id="chinhkhoa-row1-bar"></div>
+        <div class="dantri-dropdown-panel" id="chinhkhoa-row1-dropdown">
+            <div class="link-list" id="chinhkhoa-row1-links"></div>
+        </div>
+
+        <div class="full-width-nav-row" id="chinhkhoa-row2-bar"></div>
+        <div class="dantri-dropdown-panel" id="chinhkhoa-row2-dropdown">
+            <div class="link-list" id="chinhkhoa-row2-links"></div>
+        </div>
+    </div>
+
+    <!-- KHO TÀI LIỆU -->
+    <div id="kho-tai-lieu-container"></div>
+
+    <!-- BẢNG TIN VÀ DẶN DÒ -->
+    <div class="news-section">
+        <h3 class="news-header-title">📋 Bảng tin & dặn dò từ thầy giáo</h3>
+        <div id="news-container"></div>
+    </div>
+
+    <!-- BANNER CHÂN TRANG & FOOTER -->
+    <div class="bottom-banner-box">
+        <img id="bottom-banner-img" class="bottom-banner-img" src="" alt="Banner Bottom">
+    </div>
+
+    <footer>Copyright &copy; 2026 Phạm Công Hoan</footer>
+</div>
+
+<!-- MODAL TOÀN MÀN HÌNH: XEM BẢNG KẾT QUẢ THI ĐẦY ĐỦ CHO ADMIN -->
+<div class="result-fullscreen-modal" id="result-fullscreen-modal">
+    <div class="result-modal-header">
+        <div class="result-modal-title-box">
+            <div class="result-modal-icon">📊</div>
+            <div>
+                <div class="result-modal-heading" id="result-modal-heading">Bảng Kết Quả Bài Thi</div>
+                <div class="result-modal-subheading" id="result-modal-subheading">Chi tiết kết quả làm bài & nhật ký thi trực tuyến</div>
+            </div>
+        </div>
+        <div class="result-modal-tools">
+            <input type="text" id="result-search-input" class="result-search-input" placeholder="🔍 Tìm tên, SBD..." oninput="filterResultTable()">
+            <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
+            <button class="btn-export-excel" onclick="exportResultsToExcel()" title="Tải file Excel (.xlsx)">📥 Tải Excel (.xlsx)</button>
+            
+            <!-- NÚT BÁNH RĂNG CÀI ĐẶT CỠ CHỮ & KHOẢNG CÁCH DÒNG -->
+            <div class="table-settings-wrapper" id="table-settings-wrapper">
+                <button type="button" class="btn-table-settings" id="btn-table-settings" onclick="toggleTableSettingsPopover(event)" title="Tùy chỉnh cỡ chữ & khoảng cách giữa các dòng">
+                    ⚙️
+                </button>
+                <div class="table-settings-popover" id="table-settings-popover">
+                    <div class="settings-popover-header">
+                        <span>⚙️ Tùy chỉnh hiển thị bảng</span>
+                        <button type="button" class="btn-close-settings" onclick="closeTableSettingsPopover(event)">✕</button>
+                    </div>
+
+                    <!-- 1. CỠ CHỮ -->
+                    <div class="setting-item">
+                        <div class="setting-label-row">
+                            <span>🔤 Cỡ chữ hiển thị:</span>
+                            <span class="setting-val-badge" id="val-font-size">13px</span>
+                        </div>
+                        <div class="slider-control-row">
+                            <button type="button" class="btn-step" onclick="adjustSetting('fontSize', -1)" title="Giảm cỡ chữ">−</button>
+                            <input type="range" id="slider-font-size" min="10" max="20" value="13" step="1" oninput="onFontSizeChange(this.value)">
+                            <button type="button" class="btn-step" onclick="adjustSetting('fontSize', 1)" title="Tăng cỡ chữ">+</button>
+                        </div>
+                        <div class="preset-pills">
+                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(11)">Nhỏ (11)</button>
+                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(13)">Chuẩn (13)</button>
+                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(15)">Lớn (15)</button>
+                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(17)">Rất lớn (17)</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. KHOẢNG CÁCH DÒNG -->
+                    <div class="setting-item">
+                        <div class="setting-label-row">
+                            <span>↕️ Khoảng cách giữa các dòng:</span>
+                            <span class="setting-val-badge" id="val-row-padding">9px</span>
+                        </div>
+                        <div class="slider-control-row">
+                            <button type="button" class="btn-step" onclick="adjustSetting('rowPadding', -1)" title="Thu gọn dòng">−</button>
+                            <input type="range" id="slider-row-padding" min="2" max="24" value="9" step="1" oninput="onRowPaddingChange(this.value)">
+                            <button type="button" class="btn-step" onclick="adjustSetting('rowPadding', 1)" title="Nới rộng dòng">+</button>
+                        </div>
+                        <div class="preset-pills">
+                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(4)">Gọn (4px)</button>
+                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(9)">Chuẩn (9px)</button>
+                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(14)">Rộng (14px)</button>
+                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(18)">Rất rộng (18px)</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-footer">
+                        <button type="button" class="btn-reset-settings" onclick="resetTableSettings()">↺ Mặc định</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-close-result-modal" onclick="closeResultModal()" title="Đóng bảng">✕</button>
+        </div>
+    </div>
+
+    <div class="result-modal-stats-bar" id="result-modal-stats-bar">
+        <div class="stat-badge-item">👥 Tổng thí sinh: <b id="stat-total-students">0</b></div>
+        <div class="stat-badge-item">✅ Đã nộp bài: <b id="stat-submitted-students" style="color:#10b981;">0</b></div>
+        <div class="stat-badge-item">⚡ Đang làm bài: <b id="stat-doing-students" style="color:#f59e0b;">0</b></div>
+        <div class="stat-badge-item">⏳ Chưa thi: <b id="stat-unsubmitted-students" style="color:#ef4444;">0</b></div>
+        <div class="stat-badge-item">🎯 Điểm TB: <b id="stat-avg-score" style="color:#8b5cf6;">0.0</b></div>
+    </div>
+
+    <div class="result-modal-body">
+        <div class="result-table-card">
+            <div class="result-table-scroll-wrap">
+                <table class="result-table" id="admin-result-table">
+                    <thead>
+                        <tr>
+                            <th class="td-stt" style="width: 50px;">STT</th>
+                            <th style="width: 175px;">
+                                <div class="exam-picker-wrapper">
+                                    <button type="button" class="btn-exam-picker" onclick="toggleExamPickerMenu(event)" title="Bấm vào để chuyển đổi đề thi">
+                                        <span class="btn-exam-picker-text" id="current-selected-exam-name">📑 Số đề thi ▾</span>
+                                    </button>
+                                    <div class="exam-picker-menu" id="exam-picker-dropdown-list"></div>
+                                </div>
+                            </th>
+                            <th style="width: 105px; text-align:center;">Số lần thi</th>
+                            <th style="width: 155px;">Thời gian vào thi</th>
+                            <th style="width: 125px;">Thời gian thi</th>
+                            <th style="width: 175px;">Họ và tên</th>
+                            <th style="width: 90px; text-align:center;">Lớp</th>
+                            <th style="width: 85px;">SBD</th>
+                            <th style="width: 125px; text-align:center;">Tình trạng</th>
+                            <th style="width: 110px; text-align:center;">Số câu đúng</th>
+                            <th style="width: 120px; text-align:center;">Điểm thang 10</th>
+                            <th style="width: 145px; text-align:center;">Số lần chuyển tab</th>
+                            <th style="width: 175px;">Thời gian chuyển tab</th>
+                            <th style="width: 250px;">Chi tiết bài làm</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result-table-tbody">
+                        <tr><td colspan="14" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">⏳ Đang tải dữ liệu kết quả thi...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ĐĂNG NHẬP THI HỌC SINH -->
+<div class="move-modal-overlay" id="student-login-modal">
+    <div class="student-login-box">
+        <div class="student-login-header">
+            <div class="student-login-icon" id="st-modal-icon">🔐</div>
+            <div class="student-login-title" id="st-modal-main-title">Đăng Nhập Làm Bài Thi</div>
+            <div class="student-login-sub" id="st-modal-exam-name">Hệ thống bài thi trắc nghiệm</div>
+        </div>
+
+        <div class="student-type-tabs">
+            <button type="button" class="st-tab-btn active" id="tab-st-class" onclick="switchStudentLoginMode('class')">🏫 Học sinh theo lớp</button>
+            <button type="button" class="st-tab-btn" id="tab-st-free" onclick="switchStudentLoginMode('free')">🎯 Thí sinh tự do</button>
+        </div>
+
+        <div class="st-error-box" id="st-login-error"></div>
+
+        <div id="st-login-mode-class">
+            <div class="st-input-group">
+                <label>Tên đăng nhập:</label>
+                <div class="st-input-wrapper">
+                    <span class="st-input-icon">👤</span>
+                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập tên đăng nhập..." autocomplete="username">
+                </div>
+            </div>
+
+            <div class="st-input-group">
+                <label>Mật khẩu:</label>
+                <div class="st-input-wrapper">
+                    <span class="st-input-icon">🔑</span>
+                    <input type="password" id="st-password-input" class="st-input-field" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+                    <button type="button" class="st-eye-btn" id="st-eye-btn" onclick="toggleStudentPassVisibility()">👁️</button>
+                </div>
+            </div>
+
+            <div class="switch-mode-hint">
+                Không có tài khoản? <a class="switch-mode-link" onclick="switchStudentLoginMode('free')">Vào thi tự do tại đây</a>
+            </div>
+        </div>
+
+        <div id="st-login-mode-free" style="display: none;">
+            <div class="st-input-group">
+                <label>Họ và tên thí sinh:</label>
+                <div class="st-input-wrapper">
+                    <span class="st-input-icon">📝</span>
+                    <input type="text" id="st-free-name-input" class="st-input-field" placeholder="VD: Nguyễn Văn An...">
+                </div>
+            </div>
+
+            <div class="st-input-group">
+                <label>Lớp học:</label>
+                <div class="st-input-wrapper">
+                    <span class="st-input-icon">🏫</span>
+                    <input type="text" id="st-free-class-input" class="st-input-field" placeholder="VD: 10A1, Tự do...">
+                </div>
+            </div>
+
+            <div class="st-input-group">
+                <label>Số báo danh (SBD):</label>
+                <div class="st-input-wrapper">
+                    <span class="st-input-icon">🔢</span>
+                    <input type="text" id="st-free-sbd-input" class="st-input-field" placeholder="VD: SBD01, 1001...">
+                </div>
+            </div>
+
+            <div class="switch-mode-hint">
+                Đã có tài khoản lớp? <a class="switch-mode-link" onclick="switchStudentLoginMode('class')">Đăng nhập tài khoản</a>
+            </div>
+        </div>
+
+        <div class="st-btn-row">
+            <button type="button" class="st-btn st-btn-cancel" onclick="closeStudentLoginModal()">Hủy bỏ</button>
+            <button type="button" class="st-btn st-btn-submit" id="st-submit-btn" onclick="submitStudentLogin()">Vào thi 🚀</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chuyển Lớp -->
+<div class="move-modal-overlay" id="move-modal">
+    <div class="move-modal-box">
+        <h4>🔄 Chuyển sang lớp:</h4>
+        <select id="move-category-select">
+            <option value="kho-tai-lieu">📚 Kho tài liệu PDF, Word, Ảnh...</option>
+            <option value="nhac-nho">📌 Nhắc nhở quan trọng</option>
+            <option value="them-10">📐 Thêm 10</option>
+            <option value="them-11">✍️ Thêm 11</option>
+            <option value="them-12">🎓 Thêm 12</option>
+            <option value="lop-11a">🏫 Lớp 11A</option>
+            <option value="lop-11c">🏫 Lớp 11C</option>
+            <option value="lop-10p">🏫 Lớp 10P</option>
+            <option value="hsg-toan-11">🏆 HSG Toán 11</option>
+            <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
+        </select>
+        <div class="move-btn-row">
+            <button class="move-btn-cancel" onclick="closeMoveModal()">Hủy</button>
+            <button class="move-btn-submit" onclick="confirmMoveQuiz()">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sao Chép Sang Mục Khác -->
+<div class="move-modal-overlay" id="copy-modal">
+    <div class="move-modal-box">
+        <h4>📋 Sao chép sang mục:</h4>
+        <select id="copy-category-select">
+            <option value="kho-tai-lieu">📚 Kho tài liệu PDF, Word, Ảnh...</option>
+            <option value="nhac-nho">📌 Nhắc nhở quan trọng</option>
+            <option value="them-10">📐 Thêm 10</option>
+            <option value="them-11">✍️ Thêm 11</option>
+            <option value="them-12">🎓 Thêm 12</option>
+            <option value="lop-11a">🏫 Lớp 11A</option>
+            <option value="lop-11c">🏫 Lớp 11C</option>
+            <option value="lop-10p">🏫 Lớp 10P</option>
+            <option value="hsg-toan-11">🏆 HSG Toán 11</option>
+            <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
+        </select>
+        <div class="move-btn-row">
+            <button class="move-btn-cancel" onclick="closeCopyModal()">Hủy</button>
+            <button class="move-btn-submit" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);" onclick="confirmCopyItem()">Sao chép</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
