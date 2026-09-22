@@ -9,8 +9,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- FILE TÀI KHOẢN HỌC SINH -->
+    <!-- FILE TÀI KHOẢN HỌC SINH TẤT CẢ CÁC LỚP -->
     <script src="tkthem10.js"></script>
+    <script src="tkthem11.js"></script>
+    <script src="tkthem12.js"></script>
+    <script src="tklop10p.js"></script>
+    <script src="tklop11a.js"></script>
+    <script src="tklop11c.js"></script>
 
     <script>
         window.MathJax = { 
@@ -191,7 +196,6 @@
             <div class="navbar-container nav-bottom-row">
                 <div class="exam-code-pill"><span style="font-size: 0.9rem;">📑</span> <span id="nav-exam-code-text">Đề: ---</span></div>
                 
-                <!-- BỔ SUNG ĐẾM SỐ HỌC SINH ONLINE -->
                 <div style="display: flex; gap: 8px;">
                     <div class="progress-pill" id="nav-online-box" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-color: #1d4ed8; pointer-events: none;" title="Số học sinh đang làm bài">
                         <span class="progress-icon">👥</span>
@@ -223,9 +227,9 @@
                 <div id="exam-time-notice" style="color: #ea580c; font-size: 0.9rem; font-weight: 700; margin-top: 8px; display: none; background: #ffedd5; padding: 6px; border-radius: 8px; display: inline-block;"></div>
             </div>
             <h3 style="font-size: 1.05rem; font-weight: 800; color: #334155; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">👤 Thông Tin Học Sinh</h3>
-            <div class="input-group"><label>Số báo danh (*):</label><input type="text" id="student-id" placeholder="Ví dụ: 1001, 1016"></div>
-            <div class="input-group"><label>Họ và tên học sinh (*):</label><input type="text" id="student-name" placeholder="Ví dụ: Nguyễn Văn Nam"></div>
-            <div class="input-group"><label>Lớp (*):</label><input type="text" id="student-class" placeholder="Ví dụ: 10B, 11A1"></div>
+            <div class="input-group"><label>Số báo danh (*):</label><input type="text" id="student-id" placeholder="Ví dụ: 1101, 1001"></div>
+            <div class="input-group"><label>Họ và tên học sinh (*):</label><input type="text" id="student-name" placeholder="Ví dụ: Thảo My, Hải Đăng"></div>
+            <div class="input-group"><label>Lớp (*):</label><input type="text" id="student-class" placeholder="Ví dụ: 11g, 10B"></div>
             <button class="btn-action-main" id="btn-start-exam" onclick="startExamAction()" style="margin-top: 20px; font-size: 1.1rem;">Vào Làm Bài</button>
         </div>
         <div id="waiting-room-card" class="card-panel" style="display: none; text-align: center; padding: 40px 16px;">
@@ -316,7 +320,7 @@
         let presenceInterval = null;
         let onlineCountInterval = null;
 
-        // ================= HỆ THỐNG TRÍCH XUẤT HỌC SINH TỪ TKTHEM10.JS =================
+        // ================= HỆ THỐNG TRÍCH XUẤT HỌC SINH TỰ ĐỘNG TỪ CÁC FILE TK =================
         function findStudentFromDatabase(query) {
             if (!query || !window.STUDENT_ACCOUNTS) return null;
             const q = String(query).trim().toLowerCase();
@@ -326,7 +330,8 @@
                     const matched = list.find(acc => 
                         (String(acc.pass).trim().toLowerCase() === q) ||
                         (String(acc.sbd).trim().toLowerCase() === q) ||
-                        (acc.username && acc.username.trim().toLowerCase() === q)
+                        (acc.username && acc.username.trim().toLowerCase() === q) ||
+                        (acc.name && acc.name.trim().toLowerCase() === q)
                     );
                     if (matched) return matched;
                 }
@@ -466,7 +471,6 @@
                 checkPendingSubmissionOnLoad();
                 checkSessionStatus();
 
-                // Lắng nghe nhập SBD để tự động trích xuất Họ tên và Lớp từ tkthem10.js
                 const sbdInput = document.getElementById("student-id");
                 if (sbdInput) {
                     sbdInput.addEventListener("input", function() {
@@ -632,7 +636,6 @@
                 return;
             }
 
-            // 1. Kiểm tra tài khoản trong tkthem10.js theo pass / sbd / username
             const matchedStudent = findStudentFromDatabase(val);
             if (matchedStudent) {
                 applyStudentToUI(matchedStudent);
@@ -641,7 +644,6 @@
                 return;
             }
 
-            // 2. Kiểm tra mật khẩu chung của đề thi (nếu có cấu hình)
             if (EXAM_PASSWORD !== "" && val === EXAM_PASSWORD) { 
                 document.getElementById("login-box").style.display = "none"; 
                 document.getElementById("student-card").style.display = "block"; 
@@ -667,7 +669,6 @@
             let sName = document.getElementById("student-name").value.trim(); 
             let sClass = document.getElementById("student-class").value.trim(); 
             
-            // Nếu chưa có đủ họ tên, thử tìm lại từ tkthem10.js theo SBD
             if (!sName && sId) {
                 const found = findStudentFromDatabase(sId);
                 if (found) {
