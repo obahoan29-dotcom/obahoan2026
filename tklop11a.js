@@ -1,5 +1,3 @@
---- START OF FILE tklop11a.js ---
-
 /**
  * DANH SÁCH TÀI KHOẢN HỌC SINH LỚP 11A
  * Để thêm học sinh: copy 1 dòng, đổi STT, pass, sbd, username, name, className
