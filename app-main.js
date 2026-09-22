@@ -326,7 +326,9 @@ async function confirmCopyItem() {
     } catch(e) { alert("Lỗi khi sao chép!"); }
 }
 
-// LOGIC ĐĂNG NHẬP THI HỌC SINH (HỖ TRỢ MỌI LỚP)
+// =========================================================
+// LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP
+// =========================================================
 function switchStudentLoginMode(mode) {
     activeStudentLogin.currentMode = mode;
     const tabClass = document.getElementById("tab-st-class");
@@ -354,15 +356,7 @@ function switchStudentLoginMode(mode) {
         boxClass.style.display = "block";
         iconEl.innerText = "🔐";
         
-        const catMap = {
-            "them-10": "Thêm 10",
-            "them-11": "Thêm 11",
-            "them-12": "Thêm 12",
-            "lop-11a": "Lớp 11A",
-            "lop-11c": "Lớp 11C",
-            "lop-10p": "Lớp 10P"
-        };
-        const cTitle = catMap[activeStudentLogin.categoryId] || activeStudentLogin.categoryId;
+        const cTitle = getCategoryDisplayName(activeStudentLogin.categoryId);
         document.getElementById("st-modal-main-title").innerText = `Đăng Nhập Làm Bài - ${cTitle}`;
         setTimeout(() => { document.getElementById("st-username-input").focus(); }, 100);
     }
@@ -456,22 +450,16 @@ function submitStudentLogin() {
     }
 
     const catId = activeStudentLogin.categoryId;
-    let accounts = [];
-    if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS[catId] && window.STUDENT_ACCOUNTS[catId].length > 0) {
-        accounts = window.STUDENT_ACCOUNTS[catId];
-    } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-11"] && catId === "them-11") {
-        accounts = window.STUDENT_ACCOUNTS["them-11"];
-    } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-10"] && catId === "them-10") {
-        accounts = window.STUDENT_ACCOUNTS["them-10"];
-    }
+    // LẤY ĐÚNG TÀI KHOẢN TỪ FILE LỚP ĐƯỢC CHỌN (VD: TKTHEM11.JS)
+    const accounts = getAccountsForCategory(catId);
 
     if (!accounts || accounts.length === 0) {
-        errBox.innerText = `⚠️ Chưa tìm thấy dữ liệu danh sách học sinh của mục "${catId}"!`;
+        errBox.innerText = `⚠️ Chưa tìm thấy file danh sách học sinh của mục "${getCategoryDisplayName(catId)}"!`;
         errBox.style.display = "block";
         return;
     }
 
-    // Học sinh có thể nhập Username, Tên đầy đủ, hoặc SBD + mật khẩu để vào thi
+    // So khớp linh hoạt theo Username, SBD hoặc Họ tên học sinh
     const matched = accounts.find(acc => 
         ((acc.username && acc.username.trim().toLowerCase() === uVal.toLowerCase()) ||
          (acc.sbd && String(acc.sbd).trim().toLowerCase() === uVal.toLowerCase()) ||
@@ -498,7 +486,7 @@ function submitStudentLogin() {
         let joinChar = targetUrl.includes('?') ? '&' : '?';
         const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(matched.sbd)}&name=${encodeURIComponent(matched.name)}&class=${encodeURIComponent(matched.className)}&cat=${encodeURIComponent(catId)}&autostart=1`;
 
-        btn.innerHTML = "🎉 Thành công! Đang vào...";
+        btn.innerHTML = "🎉 Đăng nhập thành công! Đang vào...";
         btn.style.background = "#10b981";
 
         setTimeout(() => {
@@ -506,14 +494,16 @@ function submitStudentLogin() {
             window.open(finalRedirectUrl, "_blank");
             btn.innerHTML = "Vào thi 🚀";
             btn.style.background = "";
-        }, 600);
+        }, 500);
     } else {
         errBox.innerText = "❌ Sai Tên đăng nhập (hoặc SBD) hoặc Mật khẩu! Vui lòng thử lại.";
         errBox.style.display = "block";
     }
 }
 
-// GIAO DIỆN THẺ & BADGES
+// =========================================================
+// RENDER GIAO DIỆN THẺ ĐỀ THI & NHÃN BADGE
+// =========================================================
 function getBadgeClass(type) {
     switch(type) {
         case 'HOT': return 'b-hot';
@@ -587,9 +577,8 @@ function createExamCard(item) {
     item.categoryId = catId;
     let itemId = item.firebaseId || item.id || ("item_" + Date.now());
 
-    // Tự động yêu cầu đăng nhập nếu là bài thi thuộc bất kỳ lớp nào có file tài khoản
-    const hasAccounts = Boolean(window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS[catId] && window.STUDENT_ACCOUNTS[catId].length > 0);
-    const requiresLogin = !item.isDoc && (catId === 'them-10' || catId === 'them-11' || catId === 'them-12' || catId === 'lop-11a' || catId === 'lop-11c' || catId === 'lop-10p' || hasAccounts);
+    // Yêu cầu popup đăng nhập cho tất cả các đề trắc nghiệm của các lớp
+    const requiresLogin = !item.isDoc;
 
     if (requiresLogin) {
         card.href = "javascript:void(0);";
@@ -605,7 +594,7 @@ function createExamCard(item) {
     let leftResultBtnHtml = "";
     if (isAdminLoggedIn && !item.isDoc) {
         leftResultBtnHtml = `
-        <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, event)" title="Xem toàn bộ điểm và chi tiết bài thi của học sinh">
+        <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
             📊 Kết quả thi
         </button>`;
     }
@@ -724,18 +713,22 @@ function renderLinkListToContainer(linksArray, containerElement, customVisibleCo
 }
 
 let activeDanTriId = null; 
-let activeDayThemId = null; 
+let activeDayThemId = "them-11"; // Mặc định mở lớp Thêm 11 như hình chụp
 let activeChinhKhoaRow1Id = null; 
 let activeChinhKhoaRow2Id = null;
 
 function renderDanTriNavBar() {
-    const navBar = document.getElementById("dantri-nav-bar"); navBar.innerHTML = "";
+    const navBar = document.getElementById("dantri-nav-bar"); 
+    if (!navBar) return;
+    navBar.innerHTML = "";
     DANTRI_NAV_CATEGORIES.forEach(cat => {
         let btn = document.createElement("button"); btn.className = "dantri-nav-btn";
         btn.innerHTML = `<div style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">${cat.title}</div><span class="caret-icon">&#9660;</span>`;
         
         btn.onclick = function() {
-            const panel = document.getElementById("dantri-dropdown-panel"); const subTitle = document.getElementById("dantri-sub-title"); const newsList = document.getElementById("dantri-news-list");
+            const panel = document.getElementById("dantri-dropdown-panel"); 
+            const subTitle = document.getElementById("dantri-sub-title"); 
+            const newsList = document.getElementById("dantri-news-list");
             navBar.querySelectorAll(".dantri-nav-btn").forEach(b => b.classList.remove("active"));
 
             if (activeDanTriId === cat.id) { panel.classList.remove("show"); activeDanTriId = null; } 
@@ -759,13 +752,14 @@ function renderDayThemNavBar() {
     const navBar = document.getElementById("daythem-nav-bar"); 
     const panel = document.getElementById("daythem-dropdown-panel"); 
     const container = document.getElementById("daythem-links-container"); 
+    if (!navBar) return;
     navBar.innerHTML = "";
     
     DAY_THEM_CATEGORIES.forEach(cat => {
         let btn = document.createElement("button"); 
         btn.className = "dantri-nav-btn"; 
         btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;
-        if(activeDayThemId === cat.id) btn.classList.add("active");
+        if (activeDayThemId === cat.id) btn.classList.add("active");
         
         btn.onclick = function() {
             navBar.querySelectorAll(".dantri-nav-btn").forEach(b => b.classList.remove("active"));
@@ -782,9 +776,12 @@ function renderDayThemNavBar() {
         navBar.appendChild(btn);
     });
 
-    if(activeDayThemId) { 
+    if (activeDayThemId) { 
         let activeCat = DAY_THEM_CATEGORIES.find(c => c.id === activeDayThemId); 
-        if(activeCat) renderLinkListToContainer(activeCat.links, container, activeCat.visibleCount || 2); 
+        if (activeCat) {
+            renderLinkListToContainer(activeCat.links, container, activeCat.visibleCount || 2);
+            panel.classList.add("show");
+        }
     }
 }
 
@@ -796,6 +793,8 @@ function renderChinhKhoaNavBar() {
     const row2Bar = document.getElementById("chinhkhoa-row2-bar");
     const row2Panel = document.getElementById("chinhkhoa-row2-dropdown");
     const row2Links = document.getElementById("chinhkhoa-row2-links");
+
+    if (!row1Bar || !row2Bar) return;
 
     row1Bar.innerHTML = "";
     row2Bar.innerHTML = "";
@@ -858,7 +857,9 @@ function renderChinhKhoaNavBar() {
 }
 
 function renderKhoTaiLieu() {
-    const container = document.getElementById("kho-tai-lieu-container"); container.innerHTML = "";
+    const container = document.getElementById("kho-tai-lieu-container"); 
+    if (!container) return;
+    container.innerHTML = "";
     let details = document.createElement("details"); details.className = "folder-section";
     let summary = document.createElement("summary"); summary.className = "folder-header";
     summary.innerHTML = `<img src="${KHO_TAI_LIEU_FOLDER.folderAvatar}" class="folder-avatar" alt="Folder Icon"><h2 class="folder-title">${KHO_TAI_LIEU_FOLDER.folderName}</h2><span class="folder-arrow">&#9658;</span>`;
@@ -869,12 +870,15 @@ function renderKhoTaiLieu() {
 
 function renderReminderSection() {
     const container = document.getElementById("reminder-container"); 
+    if (!container) return;
     container.innerHTML = "";
     renderLinkListToContainer(REMINDER_CATEGORY.links, container, 5);
 }
 
 function renderNewsSection() {
-    const container = document.getElementById("news-container"); container.innerHTML = "";
+    const container = document.getElementById("news-container"); 
+    if (!container) return;
+    container.innerHTML = "";
     NEWS_DATA.forEach(item => {
         let newsCard = document.createElement("a"); newsCard.href = item.url; newsCard.className = "news-item"; newsCard.target = "_blank";
         let imgHtml = item.image ? `<div class="news-img-box"><img src="${item.image}" class="news-img" alt="Illustration"></div>` : '';
@@ -883,7 +887,6 @@ function renderNewsSection() {
     });
 }
 
-// BẮT SỰ KIỆN CLICK TOÀN CỤC ĐÓNG MENU
 document.addEventListener("click", function(e) {
     const panel = document.getElementById("admin-popover-panel");
     const gear = document.getElementById("gear-btn");
@@ -925,7 +928,7 @@ document.addEventListener("click", function(e) {
     }
 });
 
-// KHỞI CHẠY HỆ THỐNG VÀ GẮN SỰ KIỆN PHÍM ENTER
+// KHỞI CHẠY TRANG CHỦ VÀ GẮN SỰ KIỆN PHÍM ENTER
 window.onload = async function() {
     if (sessionStorage.getItem("adminLoggedInSession") === "true") { 
         isAdminLoggedIn = true; 
