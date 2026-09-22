@@ -1,0 +1,55 @@
+--- START OF FILE tklop11a.js ---
+
+/**
+ * DANH SÁCH TÀI KHOẢN HỌC SINH LỚP 11A
+ * Để thêm học sinh: copy 1 dòng, đổi STT, pass, sbd, username, name, className
+ */
+window.STUDENT_ACCOUNTS = window.STUDENT_ACCOUNTS || {};
+
+window.STUDENT_ACCOUNTS["lop-11a"] = [
+    { stt: 1, pass: "1", sbd: "11A01", username: "LƯỜNG HẢI AN", name: "LƯỜNG HẢI AN", className: "11A" },
+    { stt: 2, pass: "2", sbd: "11A02", username: "NGUYỄN TÙNG ANH", name: "NGUYỄN TÙNG ANH", className: "11A" },
+    { stt: 3, pass: "3", sbd: "11A03", username: "PHAN VŨ QUỲNH ANH", name: "PHAN VŨ QUỲNH ANH", className: "11A" },
+    { stt: 4, pass: "4", sbd: "11A04", username: "DOÃN THỊ HUYỀN CHÂM", name: "DOÃN THỊ HUYỀN CHÂM", className: "11A" },
+    { stt: 5, pass: "5", sbd: "11A05", username: "PHAN VIỆT DŨNG", name: "PHAN VIỆT DŨNG", className: "11A" },
+    { stt: 6, pass: "6", sbd: "11A06", username: "BÙI TIẾN ĐẠT", name: "BÙI TIẾN ĐẠT", className: "11A" },
+    { stt: 7, pass: "7", sbd: "11A07", username: "ĐỊNH TRỌNG ĐẠT", name: "ĐỊNH TRỌNG ĐẠT", className: "11A" },
+    { stt: 8, pass: "8", sbd: "11A08", username: "PHẠM NGỌC HÀ", name: "PHẠM NGỌC HÀ", className: "11A" },
+    { stt: 9, pass: "9", sbd: "11A09", username: "TRỊNH THỊ THU HÀ", name: "TRỊNH THỊ THU HÀ", className: "11A" },
+    { stt: 10, pass: "10", sbd: "11A10", username: "VŨ NGÂN HÀ", name: "VŨ NGÂN HÀ", className: "11A" },
+    { stt: 11, pass: "11", sbd: "11A11", username: "VŨ HOÀNG HẢI", name: "VŨ HOÀNG HẢI", className: "11A" },
+    { stt: 12, pass: "12", sbd: "11A12", username: "ĐINH ĐỨC HIẾU", name: "ĐINH ĐỨC HIẾU", className: "11A" },
+    { stt: 13, pass: "13", sbd: "11A13", username: "ĐỖ MINH HIẾU", name: "ĐỖ MINH HIẾU", className: "11A" },
+    { stt: 14, pass: "14", sbd: "11A14", username: "PHAN THỊ MAI HOA", name: "PHAN THỊ MAI HOA", className: "11A" },
+    { stt: 15, pass: "15", sbd: "11A15", username: "ĐINH BẢO HUY", name: "ĐINH BẢO HUY", className: "11A" },
+    { stt: 16, pass: "16", sbd: "11A16", username: "PHẠM NHẬT HUY", name: "PHẠM NHẬT HUY", className: "11A" },
+    { stt: 17, pass: "17", sbd: "11A17", username: "NGUYỄN VIỆT HƯNG", name: "NGUYỄN VIỆT HƯNG", className: "11A" },
+    { stt: 18, pass: "18", sbd: "11A18", username: "NGUYỄN ĐÌNH KHIÊM", name: "NGUYỄN ĐÌNH KHIÊM", className: "11A" },
+    { stt: 19, pass: "19", sbd: "11A19", username: "DƯƠNG ĐỨC KIÊN", name: "DƯƠNG ĐỨC KIÊN", className: "11A" },
+    { stt: 20, pass: "20", sbd: "11A20", username: "PHAN TRỌNG KIÊN", name: "PHAN TRỌNG KIÊN", className: "11A" },
+    { stt: 21, pass: "21", sbd: "11A21", username: "ĐINH THỊ THANH LAN", name: "ĐINH THỊ THANH LAN", className: "11A" },
+    { stt: 22, pass: "22", sbd: "11A22", username: "ĐINH HỮU SƠN LÂM", name: "ĐINH HỮU SƠN LÂM", className: "11A" },
+    { stt: 23, pass: "23", sbd: "11A23", username: "PHẠM NGUYỄN TÙNG LÂM", name: "PHẠM NGUYỄN TÙNG LÂM", className: "11A" },
+    { stt: 24, pass: "24", sbd: "11A24", username: "PHAN TRỌNG LÊ", name: "PHAN TRỌNG LÊ", className: "11A" },
+    { stt: 25, pass: "25", sbd: "11A25", username: "PHAN XUÂN LỘC", name: "PHAN XUÂN LỘC", className: "11A" },
+    { stt: 26, pass: "26", sbd: "11A26", username: "PHẠM NGỌC MAI", name: "PHẠM NGỌC MAI", className: "11A" },
+    { stt: 27, pass: "27", sbd: "11A27", username: "PHẠM THÀNH NAM", name: "PHẠM THÀNH NAM", className: "11A" },
+    { stt: 28, pass: "28", sbd: "11A28", username: "VŨ QUỐC NAM", name: "VŨ QUỐC NAM", className: "11A" },
+    { stt: 29, pass: "29", sbd: "11A29", username: "PHẠM BẢO NGỌC", name: "PHẠM BẢO NGỌC", className: "11A" },
+    { stt: 30, pass: "30", sbd: "11A30", username: "THẠCH BẢO NGỌC", name: "THẠCH BẢO NGỌC", className: "11A" },
+    { stt: 31, pass: "31", sbd: "11A31", username: "LÊ THỊ THANH NHÀN", name: "LÊ THỊ THANH NHÀN", className: "11A" },
+    { stt: 32, pass: "32", sbd: "11A32", username: "NGUYỄN TẤN PHÁT", name: "NGUYỄN TẤN PHÁT", className: "11A" },
+    { stt: 33, pass: "33", sbd: "11A33", username: "DƯƠNG XUÂN QUANG", name: "DƯƠNG XUÂN QUANG", className: "11A" },
+    { stt: 34, pass: "34", sbd: "11A34", username: "ĐINH MINH QUÂN", name: "ĐINH MINH QUÂN", className: "11A" },
+    { stt: 35, pass: "35", sbd: "11A35", username: "PHẠM NHƯ QUỲNH", name: "PHẠM NHƯ QUỲNH", className: "11A" },
+    { stt: 36, pass: "36", sbd: "11A36", username: "TRẦN VŨ TẤN TÀI", name: "TRẦN VŨ TẤN TÀI", className: "11A" },
+    { stt: 37, pass: "37", sbd: "11A37", username: "TRẦN THANH THẢO", name: "TRẦN THANH THẢO", className: "11A" },
+    { stt: 38, pass: "38", sbd: "11A38", username: "LÊ PHẠM ANH THƯ", name: "LÊ PHẠM ANH THƯ", className: "11A" },
+    { stt: 39, pass: "39", sbd: "11A39", username: "VŨ HUY THỨC", name: "VŨ HUY THỨC", className: "11A" },
+    { stt: 40, pass: "40", sbd: "11A40", username: "PHẠM THU TRANG", name: "PHẠM THU TRANG", className: "11A" },
+    { stt: 41, pass: "41", sbd: "11A41", username: "LÊ BÁ TRÌNH", name: "LÊ BÁ TRÌNH", className: "11A" },
+    { stt: 42, pass: "42", sbd: "11A42", username: "PHẠM THÀNH TRUNG", name: "PHẠM THÀNH TRUNG", className: "11A" },
+    { stt: 43, pass: "43", sbd: "11A43", username: "LƯƠNG KHÁNH TÙNG", name: "LƯƠNG KHÁNH TÙNG", className: "11A" },
+    { stt: 44, pass: "44", sbd: "11A44", username: "VŨ THỊ SÔNG VÂN", name: "VŨ THỊ SÔNG VÂN", className: "11A" },
+    { stt: 45, pass: "45", sbd: "11A45", username: "NGUYỄN THỊ PHƯƠNG VY", name: "NGUYỄN THỊ PHƯƠNG VY", className: "11A" }
+];
