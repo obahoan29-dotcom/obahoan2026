@@ -1,6 +1,6 @@
 /**
  * DANH SÁCH TÀI KHOẢN HỌC SINH LỚP THÊM 10
- * Dữ liệu trích xuất chuẩn xác từ danh sách hình ảnh
+ * Để thêm học sinh: copy 1 dòng, đổi STT, pass, sbd, username, name, className
  */
 window.STUDENT_ACCOUNTS = window.STUDENT_ACCOUNTS || {};
 
@@ -46,8 +46,8 @@ window.STUDENT_ACCOUNTS["them-10"] = [
     { stt: 39, pass: "39", sbd: "1039", username: "Nguyễn Thiện Nhân", name: "Nguyễn Thiện Nhân", className: "10C" },
     { stt: 40, pass: "40", sbd: "1040", username: "Trần Trung Anh", name: "Trần Trung Anh", className: "10D" },
     { stt: 41, pass: "41", sbd: "1041", username: "Tạ Hương Giang", name: "Tạ Hương Giang", className: "10A" },
-    { stt: 42, pass: "42", sbd: "1042", username: "Tạ Minh Thư", name: "Tạ Minh Thư", className: "10e" },
-    { stt: 43, pass: "43", sbd: "1043", username: "Hưng Lê", name: "Hưng Lê", className: "10c" },
-    { stt: 44, pass: "44", sbd: "1044", username: "Tuấn Zũ", name: "Tuấn Zũ", className: "10e" },
+    { stt: 42, pass: "42", sbd: "1042", username: "Tạ Minh Thư", name: "Tạ Minh Thư", className: "10E" },
+    { stt: 43, pass: "43", sbd: "1043", username: "Hưng Lê", name: "Hưng Lê", className: "10C" },
+    { stt: 44, pass: "44", sbd: "1044", username: "Tuấn Zũ", name: "Tuấn Zũ", className: "10E" },
     { stt: 45, pass: "45", sbd: "1045", username: "Nguyễn Doanh", name: "Nguyễn Doanh", className: "10C" }
 ];
