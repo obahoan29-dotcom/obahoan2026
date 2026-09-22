@@ -5,7 +5,7 @@ let currentExamResultData = {
     item: null,
     title: "",
     examCode: "",
-    categoryId: "",
+    categoryId: "them-11",
     rawRows: []
 };
 
@@ -135,11 +135,15 @@ function renderExamPickerDropdown() {
     if (!menu) return;
     menu.innerHTML = "";
 
-    const catThem10 = DAY_THEM_CATEGORIES.find(c => c.id === "them-10");
-    const examList = catThem10 ? catThem10.links.filter(l => !l.isDoc) : [];
+    // Nhận diện linh hoạt chuyên mục lớp của đề thi hiện tại
+    const currentCatId = currentExamResultData.categoryId || (currentExamResultData.item && currentExamResultData.item.categoryId) || "them-11";
+    let targetCat = DAY_THEM_CATEGORIES.find(c => c.id === currentCatId) || 
+                    CHINH_KHOA_CATEGORIES.find(c => c.id === currentCatId);
+    
+    const examList = targetCat ? targetCat.links.filter(l => !l.isDoc) : [];
 
     if (examList.length === 0) {
-        menu.innerHTML = `<div style="padding:8px; color:#64748b; font-size:12px; font-style:italic;">Chưa có đề thi nào trong Thêm 10</div>`;
+        menu.innerHTML = `<div style="padding:8px; color:#64748b; font-size:12px; font-style:italic;">Chưa có đề thi nào trong mục này</div>`;
         return;
     }
 
@@ -161,14 +165,18 @@ function renderExamPickerDropdown() {
 
 async function switchExamResult(examItem) {
     currentExamResultData.item = examItem;
-    currentExamResultData.categoryId = "them-10";
+    currentExamResultData.categoryId = examItem.categoryId || currentExamResultData.categoryId || "them-11";
 
     const headTitle = document.getElementById("result-modal-heading");
     const headSub = document.getElementById("result-modal-subheading");
     const currentExamBtnText = document.getElementById("current-selected-exam-name");
 
+    let catName = currentExamResultData.categoryId;
+    let foundCat = DAY_THEM_CATEGORIES.find(c => c.id === catName) || CHINH_KHOA_CATEGORIES.find(c => c.id === catName);
+    let displayCatName = foundCat ? foundCat.title : catName;
+
     if (headTitle) headTitle.innerText = `📊 Kết quả: ${examItem.title || "Bài thi"}`;
-    if (headSub) headSub.innerText = `Chuyên mục: Thêm 10 | Ngày cập nhật: ${examItem.date || "---"}`;
+    if (headSub) headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${examItem.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${examItem.title}`;
 
     renderExamPickerDropdown();
@@ -179,7 +187,7 @@ async function openExamResultModal(item, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
     currentExamResultData.item = item;
-    currentExamResultData.categoryId = item.categoryId || "them-10";
+    currentExamResultData.categoryId = item.categoryId || "them-11";
 
     const searchInput = document.getElementById("result-search-input");
     if (searchInput) searchInput.value = "";
@@ -190,9 +198,13 @@ async function openExamResultModal(item, event) {
     const headSub = document.getElementById("result-modal-subheading");
     const currentExamBtnText = document.getElementById("current-selected-exam-name");
 
+    let catName = currentExamResultData.categoryId;
+    let foundCat = DAY_THEM_CATEGORIES.find(c => c.id === catName) || CHINH_KHOA_CATEGORIES.find(c => c.id === catName);
+    let displayCatName = foundCat ? foundCat.title : catName;
+
     modal.style.display = "flex";
     headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
-    headSub.innerText = `Chuyên mục: ${item.categoryId} | Ngày cập nhật: ${item.date || "---"}`;
+    headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${item.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${item.title}`;
     tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">⏳ Đang kết nối Firebase và nạp dữ liệu thí sinh...</td></tr>`;
 
@@ -269,7 +281,7 @@ async function fetchAndRenderExamResults(item) {
         }
     } catch(e) { console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); }
 
-    renderExamResultTable(item.categoryId, submissionsMap, cheatingLogsData, activeSessionsData);
+    renderExamResultTable(item.categoryId || currentExamResultData.categoryId, submissionsMap, cheatingLogsData, activeSessionsData);
 }
 
 function getSubmissionTimestamp(sub) {
@@ -284,8 +296,12 @@ function getSubmissionTimestamp(sub) {
 
 function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap) {
     let classAccounts = [];
+    
+    // Nạp chính xác danh sách học sinh theo từng lớp tương ứng
     if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS[categoryId] && window.STUDENT_ACCOUNTS[categoryId].length > 0) {
         classAccounts = window.STUDENT_ACCOUNTS[categoryId];
+    } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-11"] && categoryId === "them-11") {
+        classAccounts = window.STUDENT_ACCOUNTS["them-11"];
     } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-10"]) {
         classAccounts = window.STUDENT_ACCOUNTS["them-10"];
     }
