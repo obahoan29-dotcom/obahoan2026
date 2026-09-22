@@ -172,7 +172,8 @@ function processUpload() {
                 isDoc: false, 
                 avatar: selectedAvatarUrl, 
                 timestamp: Date.now(), 
-                isShuffled: true 
+                isShuffled: true,
+                categoryId: category 
             };
 
             await fetch(`${FIREBASE_DB_URL}/custom_links/${category}/${quizId}.json`, { method: 'PUT', body: JSON.stringify(linkData) });
@@ -203,7 +204,8 @@ async function processAddDocument() {
         const linkData = { 
             title: titleInput, date: dateStr, url: urlInput, 
             badgeText: "NONE", isHot: false, isDoc: true, 
-            avatar: selectedAvatarUrl, timestamp: Date.now() 
+            avatar: selectedAvatarUrl, timestamp: Date.now(),
+            categoryId: category
         };
 
         await fetch(`${FIREBASE_DB_URL}/custom_links/${category}/${docId}.json`, { method: 'PUT', body: JSON.stringify(linkData) });
@@ -296,7 +298,8 @@ async function confirmMoveQuiz() {
     const newCategory = document.getElementById("move-category-select").value;
     if(newCategory === currentMoveData.oldCategory) { alert("Đã nằm ở mục này rồi!"); return; }
     try {
-        await fetch(`${FIREBASE_DB_URL}/custom_links/${newCategory}/${currentMoveData.quizId}.json`, { method: 'PUT', body: JSON.stringify(currentMoveData.quizData) });
+        let updatedData = { ...currentMoveData.quizData, categoryId: newCategory };
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${newCategory}/${currentMoveData.quizId}.json`, { method: 'PUT', body: JSON.stringify(updatedData) });
         await fetch(`${FIREBASE_DB_URL}/custom_links/${currentMoveData.oldCategory}/${currentMoveData.quizId}.json`, { method: 'DELETE' });
         window.location.reload();
     } catch(e) { alert("Lỗi khi chuyển!"); }
@@ -314,7 +317,7 @@ async function confirmCopyItem() {
     const destCategory = document.getElementById("copy-category-select").value;
     try {
         const newItemId = (currentCopyData.itemData.isDoc ? "doc_" : "quiz_") + Date.now();
-        const copyData = { ...currentCopyData.itemData, timestamp: Date.now() }; 
+        const copyData = { ...currentCopyData.itemData, categoryId: destCategory, timestamp: Date.now() }; 
         await fetch(`${FIREBASE_DB_URL}/custom_links/${destCategory}/${newItemId}.json`, { 
             method: 'PUT', body: JSON.stringify(copyData) 
         });
@@ -323,7 +326,7 @@ async function confirmCopyItem() {
     } catch(e) { alert("Lỗi khi sao chép!"); }
 }
 
-// LOGIC ĐĂNG NHẬP THI
+// LOGIC ĐĂNG NHẬP THI HỌC SINH (HỖ TRỢ MỌI LỚP)
 function switchStudentLoginMode(mode) {
     activeStudentLogin.currentMode = mode;
     const tabClass = document.getElementById("tab-st-class");
@@ -350,13 +353,23 @@ function switchStudentLoginMode(mode) {
         boxFree.style.display = "none";
         boxClass.style.display = "block";
         iconEl.innerText = "🔐";
-        document.getElementById("st-modal-main-title").innerText = "Đăng Nhập Làm Bài Thi";
+        
+        const catMap = {
+            "them-10": "Thêm 10",
+            "them-11": "Thêm 11",
+            "them-12": "Thêm 12",
+            "lop-11a": "Lớp 11A",
+            "lop-11c": "Lớp 11C",
+            "lop-10p": "Lớp 10P"
+        };
+        const cTitle = catMap[activeStudentLogin.categoryId] || activeStudentLogin.categoryId;
+        document.getElementById("st-modal-main-title").innerText = `Đăng Nhập Làm Bài - ${cTitle}`;
         setTimeout(() => { document.getElementById("st-username-input").focus(); }, 100);
     }
 }
 
 function openStudentLoginModal(targetUrl, examTitle, categoryId) {
-    activeStudentLogin = { targetUrl, examTitle, categoryId, currentMode: "class" };
+    activeStudentLogin = { targetUrl, examTitle, categoryId: categoryId || "them-11", currentMode: "class" };
     document.getElementById("st-modal-exam-name").innerText = examTitle || "Bài kiểm tra trực tuyến";
     document.getElementById("st-username-input").value = "";
     document.getElementById("st-password-input").value = "";
@@ -419,7 +432,7 @@ function submitStudentLogin() {
 
         let targetUrl = activeStudentLogin.targetUrl;
         let joinChar = targetUrl.includes('?') ? '&' : '?';
-        const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(freeSbd)}&name=${encodeURIComponent(freeName)}&class=${encodeURIComponent(freeClass)}&autostart=1`;
+        const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(freeSbd)}&name=${encodeURIComponent(freeName)}&class=${encodeURIComponent(freeClass)}&cat=${encodeURIComponent(activeStudentLogin.categoryId)}&autostart=1`;
 
         btn.innerHTML = "🎉 Thí sinh tự do vào thi...";
         btn.style.background = "#10b981";
@@ -437,26 +450,32 @@ function submitStudentLogin() {
     const pVal = document.getElementById("st-password-input").value.trim();
 
     if (!uVal || !pVal) {
-        errBox.innerText = "⚠️ Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!";
+        errBox.innerText = "⚠️ Vui lòng nhập đầy đủ Tên đăng nhập (hoặc SBD) và Mật khẩu!";
         errBox.style.display = "block";
         return;
     }
 
+    const catId = activeStudentLogin.categoryId;
     let accounts = [];
-    if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS[activeStudentLogin.categoryId]) {
-        accounts = window.STUDENT_ACCOUNTS[activeStudentLogin.categoryId];
-    } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-10"]) {
+    if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS[catId] && window.STUDENT_ACCOUNTS[catId].length > 0) {
+        accounts = window.STUDENT_ACCOUNTS[catId];
+    } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-11"] && catId === "them-11") {
+        accounts = window.STUDENT_ACCOUNTS["them-11"];
+    } else if (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS["them-10"] && catId === "them-10") {
         accounts = window.STUDENT_ACCOUNTS["them-10"];
     }
 
     if (!accounts || accounts.length === 0) {
-        errBox.innerText = "⚠️ Chưa tìm thấy dữ liệu danh sách lớp này!";
+        errBox.innerText = `⚠️ Chưa tìm thấy dữ liệu danh sách học sinh của mục "${catId}"!`;
         errBox.style.display = "block";
         return;
     }
 
+    // Học sinh có thể nhập Username, Tên đầy đủ, hoặc SBD + mật khẩu để vào thi
     const matched = accounts.find(acc => 
-        (acc.username && acc.username.trim().toLowerCase() === uVal.toLowerCase()) &&
+        ((acc.username && acc.username.trim().toLowerCase() === uVal.toLowerCase()) ||
+         (acc.sbd && String(acc.sbd).trim().toLowerCase() === uVal.toLowerCase()) ||
+         (acc.name && acc.name.trim().toLowerCase() === uVal.toLowerCase())) &&
         (String(acc.pass).trim() === pVal)
     );
 
@@ -477,7 +496,7 @@ function submitStudentLogin() {
 
         let targetUrl = activeStudentLogin.targetUrl;
         let joinChar = targetUrl.includes('?') ? '&' : '?';
-        const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(matched.sbd)}&name=${encodeURIComponent(matched.name)}&class=${encodeURIComponent(matched.className)}&autostart=1`;
+        const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(matched.sbd)}&name=${encodeURIComponent(matched.name)}&class=${encodeURIComponent(matched.className)}&cat=${encodeURIComponent(catId)}&autostart=1`;
 
         btn.innerHTML = "🎉 Thành công! Đang vào...";
         btn.style.background = "#10b981";
@@ -489,7 +508,7 @@ function submitStudentLogin() {
             btn.style.background = "";
         }, 600);
     } else {
-        errBox.innerText = "❌ Sai Tên đăng nhập hoặc Mật khẩu! Vui lòng thử lại.";
+        errBox.innerText = "❌ Sai Tên đăng nhập (hoặc SBD) hoặc Mật khẩu! Vui lòng thử lại.";
         errBox.style.display = "block";
     }
 }
@@ -564,11 +583,13 @@ function createExamCard(item) {
     let card = document.createElement("a"); 
     card.className = "exam-card"; 
     
-    let catId = item.categoryId || "nhac-nho";
+    let catId = item.categoryId || "them-11";
+    item.categoryId = catId;
     let itemId = item.firebaseId || item.id || ("item_" + Date.now());
 
-    const hasAccounts = (window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS[catId]);
-    const requiresLogin = !item.isDoc && (catId === 'them-10' || hasAccounts);
+    // Tự động yêu cầu đăng nhập nếu là bài thi thuộc bất kỳ lớp nào có file tài khoản
+    const hasAccounts = Boolean(window.STUDENT_ACCOUNTS && window.STUDENT_ACCOUNTS[catId] && window.STUDENT_ACCOUNTS[catId].length > 0);
+    const requiresLogin = !item.isDoc && (catId === 'them-10' || catId === 'them-11' || catId === 'them-12' || catId === 'lop-11a' || catId === 'lop-11c' || catId === 'lop-10p' || hasAccounts);
 
     if (requiresLogin) {
         card.href = "javascript:void(0);";
@@ -616,7 +637,7 @@ function createExamCard(item) {
     
     if (isAdminLoggedIn && item.firebaseId) {
         arrowHtml = "";
-        let cleanData = { title: item.title, date: item.date, url: item.url, badgeText: currentBadge, isHot: (currentBadge==='HOT'), isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp, isShuffled: item.isShuffled };
+        let cleanData = { title: item.title, date: item.date, url: item.url, badgeText: currentBadge, isHot: (currentBadge==='HOT'), isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp, isShuffled: item.isShuffled, categoryId: catId };
         let strData = encodeURIComponent(JSON.stringify(cleanData));
         let escapedTitle = (item.title || "").replace(/'/g, "\\'"); 
         let isDocFlag = item.isDoc ? 'true' : 'false';
@@ -820,7 +841,7 @@ function renderChinhKhoaNavBar() {
                 activeChinhKhoaRow2Id = cat.id;
                 btn.classList.add("active");
                 renderLinkListToContainer(cat.links, row2Links, cat.visibleCount || 2);
-                row2Panel.classList.add("show");
+                row2Panel.classList.add("show"); 
             }
         };
         row2Bar.appendChild(btn);
@@ -904,7 +925,7 @@ document.addEventListener("click", function(e) {
     }
 });
 
-// KHỞI CHẠY HỆ THỐNG
+// KHỞI CHẠY HỆ THỐNG VÀ GẮN SỰ KIỆN PHÍM ENTER
 window.onload = async function() {
     if (sessionStorage.getItem("adminLoggedInSession") === "true") { 
         isAdminLoggedIn = true; 
@@ -917,6 +938,18 @@ window.onload = async function() {
     
     initAvatarGrid();
     initTableSettings();
+
+    const uInput = document.getElementById("st-username-input");
+    const pInput = document.getElementById("st-password-input");
+    const fName = document.getElementById("st-free-name-input");
+    const fClass = document.getElementById("st-free-class-input");
+    const fSbd = document.getElementById("st-free-sbd-input");
+
+    if (uInput) uInput.addEventListener("keypress", function(e) { if(e.key === 'Enter') pInput.focus(); });
+    if (pInput) pInput.addEventListener("keypress", function(e) { if(e.key === 'Enter') submitStudentLogin(); });
+    if (fName) fName.addEventListener("keypress", function(e) { if(e.key === 'Enter') fClass.focus(); });
+    if (fClass) fClass.addEventListener("keypress", function(e) { if(e.key === 'Enter') fSbd.focus(); });
+    if (fSbd) fSbd.addEventListener("keypress", function(e) { if(e.key === 'Enter') submitStudentLogin(); });
 
     await loadDynamicLinksFromFirebase();
 
