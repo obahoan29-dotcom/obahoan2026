@@ -408,24 +408,28 @@
         .stat-badge-item { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0; white-space: nowrap;}
         .stat-badge-item b { color: #0284c7; }
 
+        /* VÙNG BODY CHỨA BẢNG - GIỮ NGUYÊN CHIỀU CAO VÀ CUỘN BẢNG */
         .result-modal-body {
-            flex: 1; padding: 14px; overflow: auto; background: #f1f5f9;
+            flex: 1; padding: 14px; overflow: hidden; background: #f1f5f9; display: flex; flex-direction: column;
         }
         .result-table-card {
             background: #ffffff; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            overflow: visible; border: 1px solid #e2e8f0; width: 100%;
+            border: 1px solid #e2e8f0; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .result-table-scroll-wrap {
+            overflow: auto; width: 100%; height: 100%; flex: 1;
         }
         
-        /* BẢNG KẾT QUẢ KÈM TÍNH NĂNG RESIZE CỘT CHUẨN */
+        /* BẢNG KẾT QUẢ KÈM TIÊU ĐỀ CỐ ĐỊNH (STICKY HEADER) */
         .result-table {
-            width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;
+            width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 13px;
             white-space: nowrap; table-layout: fixed;
         }
         .result-table thead th {
-            position: sticky; top: 0; z-index: 10;
+            position: sticky; top: 0; z-index: 30;
             background: #1e293b; color: #ffffff; font-weight: 800; font-size: 12px;
             padding: 11px 12px; text-transform: uppercase; letter-spacing: 0.3px; border-right: 1px solid #334155;
-            user-select: none; position: relative; overflow: visible;
+            border-bottom: 2px solid #0f172a; user-select: none; box-sizing: border-box;
         }
         
         /* NÚT VÀ MENU CHỌN SỐ ĐỀ THI */
@@ -515,7 +519,7 @@
             cursor: col-resize;
             user-select: none;
             height: 100%;
-            z-index: 20;
+            z-index: 40;
             touch-action: none;
         }
         .resizer:hover, .resizer.resizing {
@@ -529,11 +533,13 @@
         .result-table tbody tr:hover { background: #f8fafc; }
         .result-table tbody td {
             padding: 9px 10px; color: #1e293b; font-weight: 600; vertical-align: middle;
-            border-right: 1px solid #f1f5f9; overflow: hidden; text-overflow: ellipsis;
+            border-right: 1px solid #f1f5f9; border-bottom: 1px solid #e2e8f0; overflow: hidden; text-overflow: ellipsis;
+            background: #ffffff;
         }
         
         .td-stt { text-align: center; font-weight: 800; color: #475569; width: 55px;}
         .td-name { font-weight: 800; color: #0f172a;}
+        .td-class { text-align: center; font-weight: 800; color: #334155; }
         .td-sbd { font-weight: 800; color: #0284c7;}
         
         /* CỘT TÌNH TRẠNG LÀM BÀI */
@@ -877,7 +883,8 @@
 
     <div class="result-modal-body">
         <div class="result-table-card">
-            <div style="overflow-x: auto; width: 100%;">
+            <!-- WRAPPER CUỘN BẢNG CẢ DỌC VÀ NGANG, GIỮ TIÊU ĐỀ THEAD CỐ ĐỊNH -->
+            <div class="result-table-scroll-wrap">
                 <table class="result-table" id="admin-result-table">
                     <thead>
                         <tr>
@@ -895,6 +902,7 @@
                             <th style="width: 155px;">Thời gian vào thi</th>
                             <th style="width: 125px;">Thời gian thi</th>
                             <th style="width: 175px;">Họ và tên</th>
+                            <th style="width: 90px; text-align:center;">Lớp</th>
                             <th style="width: 85px;">SBD</th>
                             <th style="width: 125px; text-align:center;">Tình trạng</th>
                             <th style="width: 110px; text-align:center;">Số câu đúng</th>
@@ -905,7 +913,7 @@
                         </tr>
                     </thead>
                     <tbody id="result-table-tbody">
-                        <tr><td colspan="12" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">⏳ Đang tải dữ liệu kết quả thi...</td></tr>
+                        <tr><td colspan="13" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">⏳ Đang tải dữ liệu kết quả thi...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1206,7 +1214,7 @@
     function parseDateString(dateStr) {
         if (!dateStr) return 0;
         try {
-            let parts = dateStr.split(' - ');
+            let parts = String(dateStr).split(' - ');
             let dParts = parts[0].split('/');
             let tParts = parts[1] ? parts[1].split(':') : ['00', '00'];
             return new Date(dParts[2], dParts[1] - 1, dParts[0], tParts[0], tParts[1]).getTime();
@@ -1598,7 +1606,6 @@
         if (!menu) return;
         menu.innerHTML = "";
 
-        // Lấy tất cả các đề thi trong Thêm 10 theo đúng thứ tự
         const catThem10 = DAY_THEM_CATEGORIES.find(c => c.id === "them-10");
         const examList = catThem10 ? catThem10.links.filter(l => !l.isDoc) : [];
 
@@ -1661,7 +1668,7 @@
         headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
         headSub.innerText = `Chuyên mục: ${item.categoryId} | Ngày cập nhật: ${item.date || "---"}`;
         if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${item.title}`;
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">⏳ Đang kết nối Firebase và nạp dữ liệu thí sinh...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">⏳ Đang kết nối Firebase và nạp dữ liệu thí sinh...</td></tr>`;
 
         renderExamPickerDropdown();
         setTimeout(initTableResizable, 50);
@@ -1672,7 +1679,7 @@
     async function refreshCurrentExamResults() {
         if (!currentExamResultData.item) return;
         const tbody = document.getElementById("result-table-tbody");
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">🔄 Đang làm mới dữ liệu...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">🔄 Đang làm mới dữ liệu...</td></tr>`;
         await fetchAndRenderExamResults(currentExamResultData.item);
     }
 
@@ -1740,6 +1747,17 @@
         renderExamResultTable(item.categoryId, submissionsData, cheatingLogsData, activeSessionsData);
     }
 
+    // Hàm lấy mốc thời gian của một submission
+    function getSubmissionTimestamp(sub) {
+        if (!sub) return 0;
+        if (typeof sub.createdAt === 'number') return sub.createdAt;
+        if (sub.createdAt) {
+            let n = Number(sub.createdAt);
+            if (!isNaN(n) && n > 0) return n;
+        }
+        return parseDateString(sub.timestamp) || 0;
+    }
+
     function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap) {
         const tbody = document.getElementById("result-table-tbody");
         tbody.innerHTML = "";
@@ -1774,10 +1792,16 @@
         }
 
         // Gom danh sách bài nộp từ submissionsMap
-        const submissionsList = [];
+        let submissionsList = [];
         for (let k in submissionsMap) {
-            submissionsList.push(submissionsMap[k]);
+            let sub = submissionsMap[k];
+            if (sub && typeof sub === 'object') {
+                submissionsList.push(sub);
+            }
         }
+
+        // YÊU CẦU 3: SẮP XẾP BÀI NỘP GIẢM DẦN THEO THỜI GIAN (LẦN THI CUỐI CÙNG LÊN ĐẦU TIÊN)
+        submissionsList.sort((a, b) => getSubmissionTimestamp(b) - getSubmissionTimestamp(a));
 
         // Gom danh sách active session (đang online thi)
         const activeUsersSet = new Set();
@@ -1798,23 +1822,30 @@
             const nameVal = String(acc.name || acc.username || "").trim().toLowerCase();
 
             let foundSub = null;
-            let foundIdx = -1;
 
+            // Vì submissionsList đã xếp giảm dần theo thời gian, phần tử đầu tiên thỏa mãn chính là LẦN THI CUỐI CÙNG
             for (let i = 0; i < submissionsList.length; i++) {
                 if (usedSubmissionIndexes.has(i)) continue;
                 let sub = submissionsList[i];
                 let subSbd = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
                 let subName = String(sub.studentName || "").trim().toLowerCase();
 
-                if ((subSbd && subSbd === sbdVal) || (subName && subName === nameVal)) {
+                if ((subSbd && subSbd === sbdVal) || (nameVal && subName && (subName === nameVal || subName.includes(nameVal) || nameVal.includes(subName)))) {
                     foundSub = sub;
-                    foundIdx = i;
                     break;
                 }
             }
 
-            if (foundIdx !== -1) {
-                usedSubmissionIndexes.add(foundIdx);
+            // Đánh dấu TẤT CẢ các bài nộp của học sinh này (cả bài thi cũ hơn) là đã dùng để không bị lặp lại ở thí sinh tự do
+            if (foundSub) {
+                for (let i = 0; i < submissionsList.length; i++) {
+                    let sub = submissionsList[i];
+                    let subSbd = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
+                    let subName = String(sub.studentName || "").trim().toLowerCase();
+                    if ((subSbd && subSbd === sbdVal) || (nameVal && subName && (subName === nameVal || subName.includes(nameVal) || nameVal.includes(subName)))) {
+                        usedSubmissionIndexes.add(i);
+                    }
+                }
             }
 
             let isDoing = false;
@@ -1845,13 +1876,19 @@
             });
         });
 
-        // 2. Chỉ bổ sung các thí sinh tự do nộp bài (không trùng với danh sách tkthem10.js)
+        // 2. Bổ sung các thí sinh tự do nộp bài (lấy lần thi cuối cùng, bỏ qua bài thi cũ)
         let freeCounter = classAccounts.length + 1;
+        const seenFreeKeys = new Set();
+
         for (let i = 0; i < submissionsList.length; i++) {
             if (usedSubmissionIndexes.has(i)) continue;
             let sub = submissionsList[i];
             let subSbd = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
             let subName = String(sub.studentName || "").trim().toLowerCase();
+            let freeKey = subSbd ? `sbd_${subSbd}` : `name_${subName}`;
+
+            if (seenFreeKeys.has(freeKey)) continue; // Đã lấy bài thi cuối cùng của thí sinh tự do này
+            seenFreeKeys.add(freeKey);
 
             let cheatDurations = [];
             if (subSbd && cheatHistoryBySbd[subSbd]) cheatDurations = cheatHistoryBySbd[subSbd];
@@ -1864,7 +1901,7 @@
                 account: {
                     sbd: sub.sbd || sub.studentId || "---",
                     name: sub.studentName || "Thí sinh tự do",
-                    className: sub.studentClass || "Tự do"
+                    className: sub.studentClass || sub.className || "Tự do"
                 },
                 submission: sub,
                 status: { code: 'done', text: 'Đã nộp bài', cssClass: 'status-done' },
@@ -1904,7 +1941,7 @@
         tbody.innerHTML = "";
 
         if (!rows || rows.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">Không tìm thấy dữ liệu học sinh nào!</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">Không tìm thấy dữ liệu học sinh nào!</td></tr>`;
             return;
         }
 
@@ -1920,6 +1957,10 @@
             let col2_inTime = sub ? (sub.timestamp || (sub.createdAt ? new Date(sub.createdAt).toLocaleTimeString("vi-VN") : "---")) : (row.status.code === 'doing' ? '<span style="color:#eab308; font-weight:800;">Vừa vào thi</span>' : `<span class="status-not-submitted">---</span>`);
             let col3_spentTime = sub ? (sub.completionTime || (sub.calcMetrics && sub.calcMetrics.completionTimeStr) || `${sub.spentMins||0} phút`) : (row.status.code === 'doing' ? '<span style="color:#eab308; font-weight:800;">Đang tính...</span>' : `<span class="status-not-submitted">---</span>`);
             let col4_name = acc.name || (sub ? sub.studentName : "---");
+            
+            // YÊU CẦU 1: CỘT LỚP HIỂN THỊ SAU CỘT HỌ VÀ TÊN
+            let col_class = acc.className || (sub ? (sub.studentClass || sub.className) : "") || "---";
+
             let col5_sbd = acc.sbd || (sub ? (sub.sbd || sub.studentId) : "---");
             
             let col6_status = `<span class="status-pill ${row.status.cssClass}">${row.status.text}</span>`;
@@ -1962,6 +2003,7 @@
                 <td>${col2_inTime}</td>
                 <td>${col3_spentTime}</td>
                 <td class="td-name">${col4_name}</td>
+                <td class="td-class">${col_class}</td>
                 <td class="td-sbd">${col5_sbd}</td>
                 <td style="text-align:center;">${col6_status}</td>
                 <td style="text-align:center;">${col7_correct}</td>
@@ -1998,7 +2040,7 @@
     }
 
     // =========================================================
-    // 5. XUẤT FILE EXCEL CHUẨN ĐỊNH DẠNG .XLSX
+    // 5. XUẤT FILE EXCEL CHUẨN ĐỊNH DẠNG .XLSX (KÈM CỘT LỚP)
     // =========================================================
     function exportResultsToExcel() {
         if (!currentExamResultData.rawRows || currentExamResultData.rawRows.length === 0) {
@@ -2015,9 +2057,9 @@
                 "Thời gian vào thi", 
                 "Thời gian thi", 
                 "Họ và tên", 
+                "Lớp",
                 "SBD", 
                 "Tình trạng", 
-                "Lớp", 
                 "Số câu đúng", 
                 "Điểm thang 10", 
                 "Số lần chuyển tab", 
@@ -2034,9 +2076,9 @@
             let inTime = sub ? (sub.timestamp || "") : (r.status.code === 'doing' ? "Đang thi" : "Chưa thi");
             let spent = sub ? (sub.completionTime || "") : "";
             let name = acc.name || "";
+            let lop = acc.className || (sub ? (sub.studentClass || sub.className) : "") || "";
             let sbd = acc.sbd || "";
             let tinhTrang = r.status.text || "";
-            let lop = acc.className || "";
             let correct = sub ? (sub.calcMetrics ? sub.calcMetrics.correctCount : (sub.correctCount !== undefined ? sub.correctCount : 0)) : "";
             let score = sub ? (sub.score10 !== undefined ? sub.score10 : (sub.calcMetrics ? sub.calcMetrics.score10Scale : "")) : "";
             let tabs = sub ? (parseInt(sub.tabSwitchCount) || 0) : "";
@@ -2049,9 +2091,9 @@
                 inTime, 
                 spent, 
                 name, 
+                lop,
                 sbd, 
                 tinhTrang, 
-                lop, 
                 correct, 
                 score, 
                 tabs, 
@@ -2069,9 +2111,9 @@
                 { wch: 22 },  // Thời gian vào thi
                 { wch: 16 },  // Thời gian thi
                 { wch: 24 },  // Họ và tên
+                { wch: 10 },  // Lớp
                 { wch: 10 },  // SBD
                 { wch: 15 },  // Tình trạng
-                { wch: 10 },  // Lớp
                 { wch: 13 },  // Số câu đúng
                 { wch: 14 },  // Điểm thang 10
                 { wch: 18 },  // Số lần chuyển tab
