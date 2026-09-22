@@ -1,5 +1,3 @@
---- START OF FILE tkthem12.js ---
-
 /**
  * DANH SÁCH TÀI KHOẢN HỌC SINH LỚP THÊM 12
  * Để thêm học sinh: copy 1 dòng, đổi STT, pass, sbd, username, name, className
