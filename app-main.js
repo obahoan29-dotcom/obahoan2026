@@ -728,7 +728,7 @@ function renderLinkListToContainer(linksArray, containerElement, customVisibleCo
 }
 
 let activeDanTriId = null; 
-let activeDayThemId = "them-10"; // Mặc định mở lớp Thêm 10
+let activeDayThemId = null;
 let activeChinhKhoaRow1Id = null; 
 let activeChinhKhoaRow2Id = null;
 
