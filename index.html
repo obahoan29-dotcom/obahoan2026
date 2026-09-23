@@ -182,8 +182,20 @@
 <div class="result-fullscreen-modal" id="result-fullscreen-modal">
     <div class="result-modal-header">
         <div class="result-modal-title-box">
+            <!-- NÚT QUAY LẠI RÕ RÀNG -->
+            <button type="button" onclick="closeResultModal()" style="background:#e0f2fe; color:#0284c7; border:1.5px solid #7dd3fc; border-radius:10px; padding:7px 12px; font-weight:800; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:5px; flex-shrink:0;">
+                ← Quay lại
+            </button>
             <div class="result-modal-icon">📊</div>
-            <div>
+            <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
+                <!-- SƠ ĐỒ CÂY (BREADCRUMBS) -->
+                <div style="font-size: 12px; color: #64748b; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <a href="javascript:void(0)" onclick="closeResultModal()" style="color:#0284c7; text-decoration:none;">🏠 Trang chủ</a>
+                    <span>/</span>
+                    <span id="breadcrumb-category" style="color:#475569;">Lớp học</span>
+                    <span>/</span>
+                    <span style="color:#0f172a; font-weight:800;">📊 Bảng kết quả</span>
+                </div>
                 <div class="result-modal-heading" id="result-modal-heading">Bảng Kết Quả Bài Thi</div>
                 <div class="result-modal-subheading" id="result-modal-subheading">Chi tiết kết quả làm bài & nhật ký thi trực tuyến</div>
             </div>
