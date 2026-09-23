@@ -100,18 +100,113 @@
         .tf-table th:first-child { min-width: 140px; text-align: left;}
         .tf-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; line-height: 1.5; color: #334155;}
         .tf-table input[type="radio"] { width: 20px; height: 20px; accent-color: #0d9488; cursor: pointer; }
-        .short-input-box { width: 100%; padding: 13px 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 1.05rem; font-weight: 600; outline: none; transition: 0.2s; margin-top: 12px; color: #0f172a;}
-        .short-input-box:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
-        
-        /* PHẦN 4 TỰ LUẬN CHUẨN ĐẸP */
-        .part4-row-container { display: flex; gap: 12px; align-items: stretch; margin-top: 14px; flex-wrap: wrap; }
-        .part4-left-col { flex: 1 1 240px; min-width: 0; }
-        .part4-right-col { flex: 1 1 190px; min-width: 0; position: relative; }
-        .btn-photo-trigger { width: 100%; height: 100%; min-height: 50px; background: linear-gradient(135deg, #c084fc, #a855f7); color: #ffffff; border: none; padding: 10px 14px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); transition: all 0.2s ease; text-align: center; }
-        .btn-photo-trigger:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4); }
-        .sub-padlet-dropdown { display: none; flex-direction: column; gap: 8px; margin-top: 10px; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 10px; border-radius: 14px; box-shadow: 0 8px 24px rgba(15,23,42,0.12); width: 100%; }
-        .btn-padlet-opt { display: flex; align-items: center; justify-content: center; gap: 6px; background: #ffffff; color: #0284c7; border: 1.5px solid #0284c7; padding: 10px 12px; border-radius: 8px; font-weight: 800; font-size: 0.9rem; text-decoration: none; transition: all 0.2s ease; }
-        .btn-padlet-opt:hover { background: #0284c7; color: #ffffff; }
+
+        /* KHỐI TỰ LUẬN & ĐIỀN ĐÁP SỐ CHUẨN ĐẸP */
+        .part4-row-container { 
+            display: flex; 
+            gap: 14px; 
+            align-items: flex-start; 
+            margin-top: 14px; 
+            flex-wrap: wrap; 
+        }
+        .part4-left-col { 
+            flex: 1 1 240px; 
+            min-width: 0; 
+        }
+        .part4-right-col { 
+            flex: 1 1 210px; 
+            min-width: 0; 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+        }
+        .short-input-box { 
+            width: 100%; 
+            padding: 13px 15px; 
+            border: 2px solid #cbd5e1; 
+            border-radius: 14px; 
+            font-size: 1.05rem; 
+            font-weight: 600; 
+            outline: none; 
+            transition: 0.2s; 
+            margin-top: 0; 
+            color: #0f172a;
+            background: #ffffff;
+            box-sizing: border-box;
+        }
+        .short-input-box:focus { 
+            border-color: #0284c7; 
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); 
+        }
+
+        /* NÚT TÍM CHỤP ẢNH TỰ LUẬN */
+        .btn-photo-trigger { 
+            width: 100%; 
+            min-height: 48px; 
+            background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); 
+            color: #ffffff; 
+            border: none; 
+            padding: 12px 16px; 
+            border-radius: 14px; 
+            font-weight: 800; 
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px; 
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); 
+            transition: all 0.2s ease; 
+            text-align: center; 
+        }
+        .btn-photo-trigger:hover { 
+            transform: translateY(-1px); 
+            box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4); 
+            filter: brightness(1.05);
+        }
+
+        /* KHUNG DROPDOWN XÒE RA 3 TÊN */
+        .sub-padlet-dropdown { 
+            display: none; 
+            flex-direction: column; 
+            gap: 10px; 
+            margin-top: 10px; 
+            background: #ffffff; 
+            border: 2px solid #cbd5e1; 
+            padding: 12px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); 
+            width: 100%; 
+            box-sizing: border-box;
+            animation: expandDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes expandDropdown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* NÚT PADLET VIỀN XANH DƯƠNG */
+        .btn-padlet-opt { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px; 
+            background: #ffffff; 
+            color: #0284c7; 
+            border: 2px solid #0284c7; 
+            padding: 10px 14px; 
+            border-radius: 12px; 
+            font-weight: 800; 
+            font-size: 0.95rem; 
+            text-decoration: none; 
+            transition: all 0.2s ease; 
+            box-sizing: border-box;
+        }
+        .btn-padlet-opt:hover { 
+            background: #0284c7; 
+            color: #ffffff; 
+            box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3);
+        }
         
         .quiz-img-container { text-align: center; margin: 16px 0; max-width: 100%; overflow: hidden; }
         .quiz-img { max-width: 100%; max-height: 380px; height: auto; object-fit: contain; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.06); background: #ffffff; }
@@ -343,7 +438,6 @@
             if (!query || !window.STUDENT_ACCOUNTS) return null;
             const q = String(query).trim().toLowerCase();
 
-            // Nếu có chỉ định lớp (preferredCat), ưu tiên tìm trong lớp đó trước
             if (preferredCat && window.STUDENT_ACCOUNTS[preferredCat]) {
                 const list = window.STUDENT_ACCOUNTS[preferredCat];
                 const matched = list.find(acc => 
@@ -354,7 +448,6 @@
                 if (matched) return matched;
             }
 
-            // Tìm theo SBD, username, họ tên trên toàn bộ cơ sở dữ liệu
             for (const cat in window.STUDENT_ACCOUNTS) {
                 const list = window.STUDENT_ACCOUNTS[cat];
                 if (Array.isArray(list)) {
@@ -423,13 +516,11 @@
             let className = urlParams.get('class');
             let cat = urlParams.get('cat') || getExamCategory();
 
-            // ƯU TIÊN TUYỆT ĐỐI NẾU CÓ TRUYỀN TỪ URL PARAMETERS
             if (sbd && name) {
                 applyStudentToUI({ sbd: sbd, name: name, className: className || "---" });
                 return;
             }
 
-            // Nếu không có trên URL, mới lấy từ session/localStorage
             if (!sbd || !name) {
                 try {
                     const rawSaved = localStorage.getItem("current_exam_student");
@@ -579,12 +670,14 @@
         }
 
         function trackPadletClick(qId) { padletClickedMap[qId] = true; saveExamStateToStorage(); }
+        
         function toggleSubPadlet(qId) { 
             const el = document.getElementById(`sub-padlet-dropdown-${qId}`); 
             if (el) { 
                 el.style.display = (el.style.display === "none" || el.style.display === "") ? "flex" : "none"; 
             } 
         }
+
         function getMaDe() { const urlParams = new URLSearchParams(window.location.search); const urlMaDe = urlParams.get('made') || urlParams.get('maDe'); if (urlMaDe) return String(urlMaDe).trim(); if (typeof examData !== 'undefined' && examData && examData.maDe) return String(examData.maDe).trim(); return "101"; }
         function getExamCode() { let code = getMaDe() || EXAM_NAME; return String(code).trim().replace(/\s+/g, '_').replace(/[.#$\[\]\/]/g, '_'); }
         async function postToGoogleSheet(url, payload, timeoutMs = 15000) { const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs); try { const res = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: controller.signal }); clearTimeout(timer); return { ok: true, res }; } catch (err) { clearTimeout(timer); if (err.name !== 'AbortError') { try { const controller2 = new AbortController(); const timer2 = setTimeout(() => controller2.abort(), 5000); const res2 = await fetch(url, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: controller2.signal }); clearTimeout(timer2); return { ok: true, res: res2 }; } catch(e2) { throw e2; } } throw err; } }
@@ -600,7 +693,6 @@
                 if (!raw) return false; 
                 const parsed = JSON.parse(raw); 
                 
-                // NẾU CÓ THAM SỐ URL SBD VÀ KHÔNG TRÙNG VỚI SBD CỦA BỘ NHỚ LƯU TRƯỚC -> HỦY BỎ DỮ LIỆU CŨ CỦA NGƯỜI TRƯỚC
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentUrlSbd = urlParams.get('sbd');
                 if (currentUrlSbd && parsed.studentId && currentUrlSbd.toLowerCase() !== String(parsed.studentId).toLowerCase()) {
@@ -760,6 +852,32 @@
                 return `<div class="quiz-img-container"><img src="${imgUrl}" class="quiz-img" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa"></div>`;
             }
 
+            // HÀM TẠO KHỐI NHẬP ĐÁP SỐ + NÚT CHỤP ẢNH TỰ LUẬN
+            function buildPart4RowHtml(qId) {
+                return `
+                <div class="part4-row-container"> 
+                    <div class="part4-left-col"> 
+                        <input type="text" class="short-input-box" id="q${qId}-input" placeholder="Nhập đáp số của bạn..." oninput="onShortInputChange(${qId})"> 
+                    </div> 
+                    <div class="part4-right-col"> 
+                        <button type="button" class="btn-photo-trigger" onclick="toggleSubPadlet(${qId})"> 
+                            📷 Chụp ảnh tự luận ▾ 
+                        </button> 
+                        <div id="sub-padlet-dropdown-${qId}" class="sub-padlet-dropdown"> 
+                            <a href="https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${qId})"> 
+                                📌 11A nộp padlet 
+                            </a> 
+                            <a href="https://padlet.com/obahoan29/11c-nop-tu-luan-padlet-160926-s023me1v17byc9z8qj13" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${qId})"> 
+                                📌 11C nộp Padlet 
+                            </a> 
+                            <a href="https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${qId})"> 
+                                📌 10P nộp Padlet 
+                            </a> 
+                        </div> 
+                    </div> 
+                </div>`;
+            }
+
             if (p1List.length > 0) { 
                 html += `<div class="exam-section-banner"><div class="section-icon">📑</div><div class="section-text"><h3>P.1 TRẮC NGHIỆM NHIỀU LỰA CHỌN</h3></div></div>`; 
                 p1List.forEach(q => { 
@@ -797,7 +915,12 @@
                     ANSWER_KEY[`q${q.id}`] = q.correctAnswer; 
                     const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
                     const imgHTML = buildImgHtml(imgUrl); 
-                    html += `<div class="question-card" id="q-card-${q.id}"> <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${q.question}</div></div> ${imgHTML} <input type="text" class="short-input-box" id="q${q.id}-input" placeholder="Nhập đáp án..." oninput="onShortInputChange(${q.id})"> </div>`; 
+                    html += `
+                    <div class="question-card" id="q-card-${q.id}"> 
+                        <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${q.question}</div></div> 
+                        ${imgHTML} 
+                        ${buildPart4RowHtml(q.id)}
+                    </div>`; 
                     displayIndex++; 
                 }); 
             } 
@@ -822,27 +945,7 @@
                             <div class="q-content-text">${q.question}</div> 
                         </div> 
                         ${imgHTML} 
-                        <div class="part4-row-container"> 
-                            <div class="part4-left-col"> 
-                                <input type="text" class="short-input-box" id="q${q.id}-input" style="margin-top:0;" placeholder="Nhập đáp số của bạn..." oninput="onShortInputChange(${q.id})"> 
-                            </div> 
-                            <div class="part4-right-col"> 
-                                <button type="button" class="btn-photo-trigger" onclick="toggleSubPadlet(${q.id})"> 
-                                    📷 Chụp ảnh tự luận ▾ 
-                                </button> 
-                                <div id="sub-padlet-dropdown-${q.id}" class="sub-padlet-dropdown"> 
-                                    <a href="https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${q.id})"> 
-                                        📌 11A nộp padlet 
-                                    </a> 
-                                    <a href="https://padlet.com/obahoan29/11c-nop-tu-luan-padlet-160926-s023me1v17byc9z8qj13" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${q.id})"> 
-                                        📌 11C nộp Padlet 
-                                    </a> 
-                                    <a href="https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${q.id})"> 
-                                        📌 10P nộp Padlet 
-                                    </a> 
-                                </div> 
-                            </div> 
-                        </div> 
+                        ${buildPart4RowHtml(q.id)}
                     </div>`; 
                     displayIndex++; 
                 }); 
