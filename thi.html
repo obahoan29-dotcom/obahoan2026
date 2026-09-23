@@ -635,7 +635,6 @@
             }
         };
 
-        // ================= CÁC HÀM TIỆN ÍCH VÀ XÁO TRỘN =================
         function shuffleArray(arr) {
             let array = [...arr];
             for (let i = array.length - 1; i > 0; i--) {
@@ -852,7 +851,6 @@
                 return `<div class="quiz-img-container"><img src="${imgUrl}" class="quiz-img" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa"></div>`;
             }
 
-            // HÀM TẠO KHỐI NHẬP ĐÁP SỐ + NÚT CHỤP ẢNH TỰ LUẬN
             function buildPart4RowHtml(qId) {
                 return `
                 <div class="part4-row-container"> 
@@ -1003,7 +1001,11 @@
         
         function executeStartExamAPI(sId, sName, sClass) { 
             const currentCat = getExamCategory();
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentQuizId = urlParams.get('id') || "";
+
             let payload = { 
+                quizId: currentQuizId,
                 maDe: getMaDe(), 
                 examName: EXAM_NAME, 
                 categoryId: currentCat,
@@ -1052,12 +1054,38 @@
         
         function startCountdownTimer() { const timerVal = document.getElementById("nav-timer-val"); const timerBox = document.getElementById("nav-timer-box"); if (timerInterval) clearInterval(timerInterval); let endTimeMs = Infinity; if (typeof examData !== 'undefined' && examData.examEndTimeStr) { endTimeMs = new Date(examData.examEndTimeStr).getTime(); } timerInterval = setInterval(() => { const now = Date.now(); if (now >= endTimeMs) { clearInterval(timerInterval); timerVal.innerText = "00:00:00"; alert("⛔ Đã hết thời gian cho phép của đợt thi! Hệ thống tự động thu bài."); executeSubmitExam(true); return; } const elapsedTimeSec = Math.floor((now - examStartTime) / 1000); remainingSeconds = totalTimeSeconds - elapsedTimeSec; if (remainingSeconds <= 0) { clearInterval(timerInterval); timerVal.innerText = "00:00:00"; alert("⏰ Đã hết thời gian làm bài! Hệ thống tự động thu bài."); executeSubmitExam(true); return; } timerVal.innerText = formatHHMMSS(remainingSeconds); if (remainingSeconds <= 120) timerBox.classList.add("timer-warning"); }, 1000); }
         document.addEventListener("visibilitychange", function() { if (!examStartTime || isSubmitted) return; if (document.hidden) { if (!isTabHidden) { isTabHidden = true; leaveTime = Date.now(); tabSwitchCount++; } } else { if (isTabHidden && leaveTime > 0) { isTabHidden = false; let durationSec = Math.max(1, Math.round((Date.now() - leaveTime) / 1000)); leaveTime = 0; let mins = Math.floor(durationSec / 60); let secs = durationSec % 60; let durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`; sendTabSwitchLog(tabSwitchCount, durationStr, durationSec); setTimeout(() => alert(`⚠️ CẢNH BÁO GIAN LẬN:\nBạn vừa rời bài thi ${durationStr} (Lần ${tabSwitchCount}).`), 100); } } });
+        
         function sendTabSwitchLog(switchCount, durationStr, durationSec = 0) { 
             let sId = document.getElementById("student-id") ? document.getElementById("student-id").value.trim() : ""; 
             let sName = document.getElementById("student-name") ? document.getElementById("student-name").value.trim() : ""; 
             let sClass = document.getElementById("student-class") ? document.getElementById("student-class").value.trim() : ""; 
             const currentCat = getExamCategory();
-            let payload = { maDe: getMaDe(), examName: EXAM_NAME, categoryId: currentCat, cat: currentCat, studentId: sId||"Chưa nhập", sbd: sId||"Chưa nhập", soBaoDanh: sId||"Chưa nhập", studentName: sName||"Chưa nhập", studentClass: sClass||"Chưa nhập", switchCount, tabSwitchCount: switchCount, count: switchCount, lanChuyen: switchCount, durationStr, durationSec, duration: durationStr, time: durationStr, thoiGian: durationStr, timestamp: new Date().toLocaleString("vi-VN"), createdAt: Date.now() }; 
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentQuizId = urlParams.get('id') || "";
+
+            let payload = { 
+                quizId: currentQuizId,
+                maDe: getMaDe(), 
+                examName: EXAM_NAME, 
+                categoryId: currentCat, 
+                cat: currentCat, 
+                studentId: sId||"Chưa nhập", 
+                sbd: sId||"Chưa nhập", 
+                soBaoDanh: sId||"Chưa nhập", 
+                studentName: sName||"Chưa nhập", 
+                studentClass: sClass||"Chưa nhập", 
+                switchCount, 
+                tabSwitchCount: switchCount, 
+                count: switchCount, 
+                lanChuyen: switchCount, 
+                durationStr, 
+                durationSec, 
+                duration: durationStr, 
+                time: durationStr, 
+                thoiGian: durationStr, 
+                timestamp: new Date().toLocaleString("vi-VN"), 
+                createdAt: Date.now() 
+            }; 
             postToGoogleSheet(URL1_TAB_CHEATING, payload, 25000).catch(e=>{}); 
             postToFirebase(`exams/${getExamCode()}/cheating_logs`, payload, 25000).catch(e=>{}); 
         }
@@ -1074,6 +1102,8 @@
             const sName = document.getElementById("student-name").value.trim(); 
             const sClass = document.getElementById("student-class").value.trim(); 
             const currentCat = getExamCategory();
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentQuizId = urlParams.get('id') || "";
 
             const durationSec = examStartTime ? Math.round((Date.now() - examStartTime) / 1000) : 0; 
             const spentMins = Math.floor(durationSec / 60); 
@@ -1139,9 +1169,11 @@
             dataDetails.push(`Tab Switch: ${tabSwitchCount}`); 
 
             const payload = { 
+                quizId: currentQuizId,
                 maDe: getMaDe(), 
                 completionTime: completionTimeStr, 
                 examName: EXAM_NAME, 
+                examTitle: EXAM_NAME,
                 categoryId: currentCat,
                 cat: currentCat,
                 studentId: sId, 
