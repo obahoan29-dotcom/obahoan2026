@@ -205,7 +205,6 @@ async function switchExamResult(examItem) {
 
     const displayCatName = getCategoryDisplayName(currentExamResultData.categoryId);
 
-    // Cập nhật tên lớp trong sơ đồ cây
     const breadcrumbCat = document.getElementById("breadcrumb-category");
     if (breadcrumbCat) breadcrumbCat.innerText = displayCatName;
 
@@ -234,11 +233,9 @@ async function openExamResultModal(item, event) {
 
     const displayCatName = getCategoryDisplayName(currentExamResultData.categoryId);
 
-    // CẬP NHẬT TÊN LỚP TRÊN SƠ ĐỒ CÂY BREADCRUMB
     const breadcrumbCat = document.getElementById("breadcrumb-category");
     if (breadcrumbCat) breadcrumbCat.innerText = displayCatName;
 
-    // LƯU TRẠNG THÁI VÀO LỊCH SỬ DUYỆT ĐỂ BẮT NÚT LÙI
     window.history.pushState({ isViewingResult: true }, "", "#bang-ket-qua");
 
     modal.style.display = "flex";
@@ -261,6 +258,51 @@ async function refreshCurrentExamResults() {
     tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">🔄 Đang làm mới dữ liệu...</td></tr>`;
     await fetchAndRenderExamResults(currentExamResultData.item, false);
     startAutoRefreshResult();
+}
+
+// =========================================================
+// HÀM KIỂM TRA BÀI NỘP CÓ THUỘC ĐÚNG ĐỀ THI ĐANG XEM HAY KHÔNG
+// =========================================================
+function isSubmissionMatchingCurrentExam(sub, examInfo) {
+    if (!sub || typeof sub !== 'object') return false;
+
+    // 1. So khớp theo quizId (Chính xác tuyệt đối)
+    if (sub.quizId && examInfo.quizId) {
+        if (String(sub.quizId).trim() === String(examInfo.quizId).trim()) return true;
+        return false;
+    }
+
+    let subTitle = sub.examName || sub.examTitle || sub.title || "";
+    let subNormTitle = normalizeName(subTitle);
+    let subNormCode = extractNormalizedExamCode(subTitle || sub.maDe || "");
+
+    // 2. So khớp theo tên tiêu đề đề thi (chuẩn hóa không dấu)
+    if (subNormTitle && (examInfo.normTitle || examInfo.normItemTitle)) {
+        if (subNormTitle === examInfo.normTitle || subNormTitle === examInfo.normItemTitle) return true;
+        if (subNormTitle.length >= 8 && examInfo.normTitle.length >= 8) {
+            if (subNormTitle.includes(examInfo.normTitle) || examInfo.normTitle.includes(subNormTitle)) return true;
+        }
+    }
+
+    // 3. So khớp theo mã chuẩn hóa (VD: DE20TOAN10)
+    if (subNormCode && examInfo.normCode) {
+        if (subNormCode === examInfo.normCode) return true;
+    }
+
+    // 4. So khớp theo maDe cụ thể (khác mã mặc định 101)
+    let subMaDe = cleanExamCodeKey(sub.maDe || "");
+    if (subMaDe && examInfo.maDe && subMaDe !== "101" && examInfo.maDe !== "101") {
+        if (subMaDe === examInfo.maDe) return true;
+    }
+
+    // 5. So khớp theo node thư mục Firebase (nếu node đó là mã riêng của đề)
+    if (sub._nodeCode && sub._nodeCode !== "101") {
+        if (sub._nodeCode === examInfo.quizId || sub._nodeCode === examInfo.maDe || sub._nodeCode === examInfo.normCode) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 async function fetchAndRenderExamResults(item, isSilent = false) {
@@ -297,9 +339,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     if (maDe) candidateCodes.add(cleanExamCodeKey(maDe));
     if (examTitle) candidateCodes.add(cleanExamCodeKey(examTitle));
     if (item.title) candidateCodes.add(cleanExamCodeKey(item.title));
-    candidateCodes.add("DE100TOAN14");
-    candidateCodes.add("DE150TOAN14");
-    candidateCodes.add("DE20TOAN10");
+    if (quizId) candidateCodes.add(quizId);
     candidateCodes.add("101");
 
     let submissionsMap = {};
@@ -317,14 +357,26 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             if (sRes && sRes.ok) {
                 let sJson = await sRes.json();
                 if (sJson && typeof sJson === 'object') {
-                    for (let subId in sJson) submissionsMap[subId] = sJson[subId];
+                    for (let subId in sJson) {
+                        let subObj = sJson[subId];
+                        if (subObj && typeof subObj === 'object') {
+                            subObj._nodeCode = code;
+                            submissionsMap[subId] = subObj;
+                        }
+                    }
                 }
             }
 
             if (cRes && cRes.ok) {
                 let cJson = await cRes.json();
                 if (cJson && typeof cJson === 'object') {
-                    for (let cId in cJson) cheatingLogsData[cId] = cJson[cId];
+                    for (let cId in cJson) {
+                        let cObj = cJson[cId];
+                        if (cObj && typeof cObj === 'object') {
+                            cObj._nodeCode = code;
+                            cheatingLogsData[cId] = cObj;
+                        }
+                    }
                 }
             }
 
@@ -338,7 +390,11 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     } catch(e) { console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); }
 
     const targetCatId = item.categoryId || currentExamResultData.categoryId || "them-11";
-    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData, item);
+    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData, item, {
+        quizId,
+        maDe,
+        examTitle
+    });
 
     const searchInput = document.getElementById("result-search-input");
     if (searchInput && searchInput.value.trim() !== "") {
@@ -356,9 +412,20 @@ function getSubmissionTimestamp(sub) {
     return parseDateString(sub.timestamp) || 0;
 }
 
-function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap, examItem) {
+function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap, examItem, examMeta = {}) {
     const classAccounts = getAccountsForCategory(categoryId);
     const targetCatIdLower = (categoryId || "").toLowerCase().trim();
+
+    const currentExamInfo = {
+        quizId: examMeta.quizId || "",
+        maDe: cleanExamCodeKey(examMeta.maDe || ""),
+        title: examMeta.examTitle || (examItem && examItem.title) || "",
+        itemTitle: (examItem && examItem.title) || "",
+        normTitle: normalizeName(examMeta.examTitle || (examItem && examItem.title) || ""),
+        normItemTitle: normalizeName((examItem && examItem.title) || ""),
+        normCode: extractNormalizedExamCode(examMeta.examTitle || (examItem && examItem.title) || ""),
+        categoryId: targetCatIdLower
+    };
 
     const cheatHistoryBySbd = {};
     const maxCheatCountBySbd = {};
@@ -366,6 +433,11 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     for (let k in cheatingMap) {
         let log = cheatingMap[k];
         if (!log || typeof log !== 'object') continue;
+
+        // Bỏ qua log gian lận nếu thuộc về đề thi khác
+        if ((log.examName || log.quizId) && !isSubmissionMatchingCurrentExam(log, currentExamInfo)) {
+            continue;
+        }
 
         let sbdKey = String(log.sbd || log.studentId || log.soBaoDanh || "").trim().toLowerCase();
         let nameKey = normalizeName(log.studentName);
@@ -431,6 +503,9 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
 
         let matchedSubs = [];
         for (let sub of submissionsList) {
+            // Chỉ nhận bài nộp nếu đúng là đề thi hiện tại đang xem
+            if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
+
             let subSbd = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
             let subNameNorm = normalizeName(sub.studentName);
             let subClassNorm = normalizeName(sub.studentClass || sub.className);
@@ -484,14 +559,17 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     });
 
-    // 2. DUYỆT THÍ SINH TỰ DO (CHỈ LẤY CÁC EM THI ĐÚNG LỚP NÀY)
+    // 2. DUYỆT THÍ SINH TỰ DO (CHỈ LẤY CÁC EM THI ĐÚNG ĐỀ HIỆN TẠI VÀ ĐÚNG LỚP NÀY)
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
     for (let sub of submissionsList) {
         if (usedSubmissionKeys.has(sub._keyId)) continue;
 
-        // KIỂM TRA CHÍNH XÁC XEM BÀI NỘP CỦA THÍ SINH TỰ DO CÓ THUỘC LỚP ĐANG XEM KHÔNG
+        // BẮT BUỘC: Thí sinh tự do phải thi đúng đề thi hiện tại đang xem!
+        if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
+
+        // KIỂM TRA XEM BÀI NỘP CÓ THUỘC LỚP ĐANG XEM HAY KHÔNG
         let subCat = String(sub.categoryId || sub.cat || "").trim().toLowerCase();
         let subClass = normalizeName(sub.studentClass || sub.className || "");
 
@@ -499,13 +577,11 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         if (subCat) {
             isBelongToCurrentClass = (subCat === targetCatIdLower);
         } else {
-            // Nếu không có categoryId, so sánh theo lớp học
             if (targetCatIdLower.includes("10") && subClass.includes("10")) isBelongToCurrentClass = true;
             else if (targetCatIdLower.includes("11") && subClass.includes("11")) isBelongToCurrentClass = true;
             else if (targetCatIdLower.includes("12") && subClass.includes("12")) isBelongToCurrentClass = true;
         }
 
-        // Bỏ qua nếu không thuộc lớp này -> KHÔNG bị hiện tràn lan sang tất cả các lớp khác!
         if (!isBelongToCurrentClass) continue;
 
         let subSbd = String(sub.sbd || sub.studentId || "free").trim().toLowerCase();
@@ -754,13 +830,11 @@ function filterResultTable() {
     renderFilteredResultTable(filtered);
 }
 
-// ĐÓNG BẢNG KẾT QUẢ VÀ ĐỒNG BỘ NÚT BACK CỦA TRÌNH DUYỆT
 function closeResultModal(triggerHistoryBack = true) {
     stopAutoRefreshResult();
     const modal = document.getElementById("result-fullscreen-modal");
     if (modal) modal.style.display = "none";
 
-    // Nếu người dùng bấm nút Đóng/Quay lại trên màn hình thì tự lùi hash URL
     if (triggerHistoryBack && window.location.hash === "#bang-ket-qua") {
         window.history.back();
     }
@@ -872,7 +946,6 @@ function toggleAutoRefresh(event) {
     }
 }
 
-// BẮT SỰ KIỆN NÚT LÙI (BACK) CỦA ĐIỆN THOẠI HOẶC TRÌNH DUYỆT ĐỂ THU GỌN BẢNG KẾT QUẢ VỀ TRANG CHỦ
 window.addEventListener("popstate", function(event) {
     const resModal = document.getElementById("result-fullscreen-modal");
     if (resModal && resModal.style.display === "flex") {
