@@ -43,6 +43,15 @@ function sortDataString(str) {
     return parts.join(" | ");
 }
 
+/**
+ * Trích xuất số lần chuyển tab từ chuỗi dataString (ví dụ "Tab Switch: 5 lần" -> 5)
+ */
+function extractTabCountFromDataString(dataStr) {
+    if (!dataStr) return 0;
+    let m = dataStr.match(/tab\s*switch\s*:\s*(\d+)/i);
+    return m ? (parseInt(m[1], 10) || 0) : 0;
+}
+
 function initTableSettings() {
     try {
         const saved = localStorage.getItem("admin_table_display_settings");
@@ -278,7 +287,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
         } catch(e) {}
     }
 
-    // TỔNG HỢP TOÀN BỘ CÁC MÃ ĐỀ KHẢ DĨ (BAO GỒM CẢ DE150TOAN14, DE20TOAN10,...)
+    // TỔNG HỢP TOÀN BỘ CÁC MÃ ĐỀ KHẢ DĨ ĐỂ RÀ SOÁT TỪ ĐẦU ĐẾN CUỐI
     let candidateCodes = new Set();
     
     let normCode = extractNormalizedExamCode(examTitle || item.title);
@@ -290,6 +299,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     
     candidateCodes.add("DE150TOAN14");
     candidateCodes.add("DE20TOAN10");
+    candidateCodes.add("DE100TOAN14");
     candidateCodes.add("101");
 
     let submissionsMap = {};
@@ -348,26 +358,36 @@ function getSubmissionTimestamp(sub) {
 }
 
 function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap) {
-    // 1. LẤY DANH SÁCH HỌC SINH TỪ FILE CHÍNH XÁC CỦA LỚP ĐÓ (VÍ DỤ TKTHEM11.JS)
+    // 1. LẤY DANH SÁCH HỌC SINH TỪ FILE CHÍNH XÁC CỦA LỚP ĐÓ
     const classAccounts = getAccountsForCategory(categoryId);
 
+    // 2. RÀ SOÁT TỪ ĐẦU ĐẾN CUỐI CHEATING_LOGS ĐỂ BÓC TÁCH TOÀN BỘ SỐ LẦN VÀ THỜI GIAN CHUYỂN TAB
     const cheatHistoryBySbd = {};
+    const maxCheatCountBySbd = {};
+
     for (let k in cheatingMap) {
         let log = cheatingMap[k];
-        let sbdKey = String(log.sbd || log.studentId || "").trim().toLowerCase();
-        let nameKey = normalizeName(log.studentName);
-        let dur = log.durationStr || "";
+        if (!log || typeof log !== 'object') continue;
 
-        if (!dur || dur === "Bắt đầu") continue;
+        let sbdKey = String(log.sbd || log.studentId || log.soBaoDanh || "").trim().toLowerCase();
+        let nameKey = normalizeName(log.studentName);
+        let dur = String(log.durationStr || log.duration || log.time || log.thoiGian || "").trim();
+
+        // Bỏ qua log mốc "Bắt đầu"
+        if (!dur || dur.toLowerCase() === "bắt đầu" || dur.toLowerCase() === "bat dau") continue;
+
         let shortDur = dur.replace(/phút/g, 'p').replace(/giây/g, 's').replace(/\s+/g, '');
-        
-        if (sbdKey && sbdKey !== "chưa nhập" && sbdKey !== "chuanhap") {
+        let sCount = parseInt(log.switchCount || log.tabSwitchCount || log.count || log.lanChuyen, 10) || 0;
+
+        if (sbdKey && sbdKey !== "chưa nhập" && sbdKey !== "chuanhap" && sbdKey !== "---") {
             if (!cheatHistoryBySbd[sbdKey]) cheatHistoryBySbd[sbdKey] = [];
             cheatHistoryBySbd[sbdKey].push(shortDur);
+            maxCheatCountBySbd[sbdKey] = Math.max(maxCheatCountBySbd[sbdKey] || 0, sCount, cheatHistoryBySbd[sbdKey].length);
         }
         if (nameKey && nameKey !== "chuanhap") {
             if (!cheatHistoryBySbd[nameKey]) cheatHistoryBySbd[nameKey] = [];
             cheatHistoryBySbd[nameKey].push(shortDur);
+            maxCheatCountBySbd[nameKey] = Math.max(maxCheatCountBySbd[nameKey] || 0, sCount, cheatHistoryBySbd[nameKey].length);
         }
     }
 
@@ -439,8 +459,16 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         }
 
         let cheatDurations = [];
-        if (accSbdLower && cheatHistoryBySbd[accSbdLower]) cheatDurations = cheatHistoryBySbd[accSbdLower];
-        else if (accNameNorm && cheatHistoryBySbd[accNameNorm]) cheatDurations = cheatHistoryBySbd[accNameNorm];
+        let cheatLogsTabCount = 0;
+
+        if (accSbdLower && cheatHistoryBySbd[accSbdLower]) {
+            cheatDurations = cheatHistoryBySbd[accSbdLower];
+            cheatLogsTabCount = maxCheatCountBySbd[accSbdLower] || cheatDurations.length;
+        } else if (accNameNorm && cheatHistoryBySbd[accNameNorm]) {
+            cheatDurations = cheatHistoryBySbd[accNameNorm];
+            cheatLogsTabCount = maxCheatCountBySbd[accNameNorm] || cheatDurations.length;
+        }
+
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
 
         let studentKey = accSbdLower || accNameNorm;
@@ -456,7 +484,8 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             allAttempts: matchedSubs,
             selectedAttemptIndex: selectedAttemptIndex,
             isDoing: isDoing,
-            cheatTimeString: cheatTimeString
+            cheatTimeString: cheatTimeString,
+            cheatLogsTabCount: cheatLogsTabCount
         });
     });
 
@@ -490,8 +519,16 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let subNameNorm = normalizeName(group.account.name);
 
         let cheatDurations = [];
-        if (subSbd && cheatHistoryBySbd[subSbd]) cheatDurations = cheatHistoryBySbd[subSbd];
-        else if (subNameNorm && cheatHistoryBySbd[subNameNorm]) cheatDurations = cheatHistoryBySbd[subNameNorm];
+        let cheatLogsTabCount = 0;
+
+        if (subSbd && cheatHistoryBySbd[subSbd]) {
+            cheatDurations = cheatHistoryBySbd[subSbd];
+            cheatLogsTabCount = maxCheatCountBySbd[subSbd] || cheatDurations.length;
+        } else if (subNameNorm && cheatHistoryBySbd[subNameNorm]) {
+            cheatDurations = cheatHistoryBySbd[subNameNorm];
+            cheatLogsTabCount = maxCheatCountBySbd[subNameNorm] || cheatDurations.length;
+        }
+
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
 
         let studentKey = subSbd || subNameNorm;
@@ -507,7 +544,8 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             allAttempts: atts,
             selectedAttemptIndex: selectedAttemptIndex,
             isDoing: false,
-            cheatTimeString: cheatTimeString
+            cheatTimeString: cheatTimeString,
+            cheatLogsTabCount: cheatLogsTabCount
         });
     }
 
@@ -638,8 +676,14 @@ function renderFilteredResultTable(rows) {
             let pillClass = scNum >= 8.0 ? 'score-pill-high' : (scNum >= 5.0 ? 'score-pill-mid' : 'score-pill-low');
             col8_score = `<span class="${pillClass}">${scNum.toFixed(1)}</span>`;
 
-            let tabCount = parseInt(currentSub.tabSwitchCount) || 0;
-            col9_tabs = tabCount > 0 ? `<span class="tabs-warn">${tabCount} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
+            // TÍNH TOÁN SỐ LẦN CHUYỂN TAB CHÍNH XÁC:
+            // Quét qua: (1) currentSub.tabSwitchCount, (2) trích xuất từ dataString, (3) tổng số lần ghi nhận từ Firebase cheating_logs
+            let rawSubTab = parseInt(currentSub.tabSwitchCount, 10) || 0;
+            let dataStringTab = extractTabCountFromDataString(currentSub.dataString);
+            let logTab = row.cheatLogsTabCount || 0;
+            let finalTabCount = Math.max(rawSubTab, dataStringTab, logTab);
+
+            col9_tabs = finalTabCount > 0 ? `<span class="tabs-warn">${finalTabCount} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
             
             col10_cheatTime = row.cheatTimeString;
 
@@ -651,11 +695,17 @@ function renderFilteredResultTable(rows) {
             col2_inTime = `<span style="color:#eab308; font-weight:800;">Vừa vào thi</span>`;
             col3_spentTime = `<span style="color:#eab308; font-weight:800;">Đang làm...</span>`;
             col6_status = `<span class="status-pill status-doing">Đang làm bài</span>`;
+            
+            let doingTabs = row.cheatLogsTabCount || 0;
+            col9_tabs = doingTabs > 0 ? `<span class="tabs-warn">${doingTabs} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
+            col10_cheatTime = row.cheatTimeString !== "0s" ? row.cheatTimeString : `<span class="status-not-submitted">---</span>`;
         }
 
         let col4_name = acc.name || (currentSub ? currentSub.studentName : "---");
         let col_class = acc.className || (currentSub ? (currentSub.studentClass || currentSub.className) : "") || "---";
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
+
+        let safeTitleCol10 = stripHtml(col10_cheatTime);
 
         tr.innerHTML = `
             <td class="td-stt">${col1_stt}</td>
@@ -670,7 +720,7 @@ function renderFilteredResultTable(rows) {
             <td style="text-align:center;">${col7_correct}</td>
             <td class="td-score">${col8_score}</td>
             <td class="td-tabs">${col9_tabs}</td>
-            <td class="td-tab-times td-truncate" title="${col10_cheatTime}">${col10_cheatTime}</td>
+            <td class="td-tab-times td-truncate" title="${safeTitleCol10}">${col10_cheatTime}</td>
             <td class="td-truncate">${col11_details}</td>
         `;
 
@@ -732,7 +782,13 @@ function exportResultsToExcel() {
         let tinhTrang = sub ? "Đã nộp bài" : (r.isDoing ? "Đang làm bài" : "Chưa thi");
         let correct = sub ? (sub.calcMetrics ? sub.calcMetrics.correctCount : (sub.correctCount !== undefined ? sub.correctCount : 0)) : "";
         let score = sub ? (sub.score10 !== undefined ? sub.score10 : (sub.calcMetrics ? sub.calcMetrics.score10Scale : "")) : "";
-        let tabs = sub ? (parseInt(sub.tabSwitchCount) || 0) : "";
+        
+        let rawSubTab = sub ? (parseInt(sub.tabSwitchCount, 10) || 0) : 0;
+        let dataStringTab = sub ? extractTabCountFromDataString(sub.dataString) : 0;
+        let logTab = r.cheatLogsTabCount || 0;
+        let finalTabCount = Math.max(rawSubTab, dataStringTab, logTab);
+
+        let tabs = sub ? `${finalTabCount} lần` : (r.isDoing ? `${finalTabCount} lần` : "");
         let cheatTimes = r.cheatTimeString || "";
         let details = sub ? (sub.dataString || "") : "";
 
