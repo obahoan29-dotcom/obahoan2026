@@ -592,8 +592,9 @@ function createExamCard(item) {
     // Kiểm tra nếu là link Padlet hoặc nằm trong chuyên mục Tự luận Padlet
     const isPadlet = (catId === "tu-luan-padlet") || (item.url && item.url.includes("padlet.com"));
 
-    // Bỏ popup đăng nhập cho link Padlet (học sinh bấm vào sẽ mở trực tiếp link Padlet tab mới)
-    const requiresLogin = !item.isDoc && !isPadlet;
+    // DANH SÁCH 6 LỚP CÓ BẢNG ĐĂNG NHẬP (NGOÀI 6 LỚP NÀY RA TẤT CẢ MỤC KHÁC MỞ THẲNG LINK KHÔNG HỎI LOGIN)
+    const LOGIN_CLASSES = ["them-10", "them-11", "them-12", "lop-11a", "lop-11c", "lop-10p"];
+    const requiresLogin = !item.isDoc && !isPadlet && LOGIN_CLASSES.includes(catId);
 
     if (requiresLogin) {
         card.href = "javascript:void(0);";
