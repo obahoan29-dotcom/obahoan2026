@@ -14,11 +14,9 @@ let tableDisplaySettings = {
     rowPadding: 9
 };
 
-// Quản lý tự động cập nhật dữ liệu thời gian thực
 let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
 
-// Hàm sắp xếp chuỗi chi tiết bài làm theo thứ tự Câu 1, Câu 2,... đến hết
 function sortDataString(str) {
     if (!str) return "";
     let parts = str.split(/\s*\|\s*/);
@@ -43,9 +41,6 @@ function sortDataString(str) {
     return parts.join(" | ");
 }
 
-/**
- * Trích xuất số lần chuyển tab từ chuỗi dataString (ví dụ "Tab Switch: 5 lần" -> 5)
- */
 function extractTabCountFromDataString(dataStr) {
     if (!dataStr) return 0;
     let m = dataStr.match(/tab\s*switch\s*:\s*(\d+)/i);
@@ -246,8 +241,6 @@ async function openExamResultModal(item, event) {
     setTimeout(initTableResizable, 50);
 
     await fetchAndRenderExamResults(item, false);
-
-    // Kích hoạt cập nhật tự động ngầm định kỳ
     startAutoRefreshResult();
 }
 
@@ -287,19 +280,15 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
         } catch(e) {}
     }
 
-    // TỔNG HỢP TOÀN BỘ CÁC MÃ ĐỀ KHẢ DĨ ĐỂ RÀ SOÁT TỪ ĐẦU ĐẾN CUỐI
     let candidateCodes = new Set();
-    
     let normCode = extractNormalizedExamCode(examTitle || item.title);
     if (normCode) candidateCodes.add(normCode);
-    
     if (maDe) candidateCodes.add(cleanExamCodeKey(maDe));
     if (examTitle) candidateCodes.add(cleanExamCodeKey(examTitle));
     if (item.title) candidateCodes.add(cleanExamCodeKey(item.title));
-    
+    candidateCodes.add("DE100TOAN14");
     candidateCodes.add("DE150TOAN14");
     candidateCodes.add("DE20TOAN10");
-    candidateCodes.add("DE100TOAN14");
     candidateCodes.add("101");
 
     let submissionsMap = {};
@@ -338,9 +327,8 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     } catch(e) { console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); }
 
     const targetCatId = item.categoryId || currentExamResultData.categoryId || "them-11";
-    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData);
+    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData, item);
 
-    // Giữ nguyên bộ lọc nếu quản trị viên đang nhập tìm kiếm
     const searchInput = document.getElementById("result-search-input");
     if (searchInput && searchInput.value.trim() !== "") {
         filterResultTable();
@@ -357,11 +345,10 @@ function getSubmissionTimestamp(sub) {
     return parseDateString(sub.timestamp) || 0;
 }
 
-function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap) {
-    // 1. LẤY DANH SÁCH HỌC SINH TỪ FILE CHÍNH XÁC CỦA LỚP ĐÓ
+function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap, examItem) {
     const classAccounts = getAccountsForCategory(categoryId);
+    const targetCatIdLower = (categoryId || "").toLowerCase().trim();
 
-    // 2. RÀ SOÁT TỪ ĐẦU ĐẾN CUỐI CHEATING_LOGS ĐỂ BÓC TÁCH TOÀN BỘ SỐ LẦN VÀ THỜI GIAN CHUYỂN TAB
     const cheatHistoryBySbd = {};
     const maxCheatCountBySbd = {};
 
@@ -373,7 +360,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let nameKey = normalizeName(log.studentName);
         let dur = String(log.durationStr || log.duration || log.time || log.thoiGian || "").trim();
 
-        // Bỏ qua log mốc "Bắt đầu"
         if (!dur || dur.toLowerCase() === "bắt đầu" || dur.toLowerCase() === "bat dau") continue;
 
         let shortDur = dur.replace(/phút/g, 'p').replace(/giây/g, 's').replace(/\s+/g, '');
@@ -416,7 +402,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     const finalRows = [];
     const usedSubmissionKeys = new Set();
 
-    // Lưu lại lựa chọn lần thi học sinh đang xem để khi auto-refresh không bị nhảy về lần cuối
     const previousSelectionMap = {};
     if (currentExamResultData.rawRows && currentExamResultData.rawRows.length > 0) {
         currentExamResultData.rawRows.forEach(r => {
@@ -425,7 +410,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // DUYỆT TỪ DANH SÁCH HỌC SINH CỦA LỚP
+    // 1. DUYỆT TỪ DANH SÁCH HỌC SINH CỦA LỚP
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -470,7 +455,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         }
 
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
-
         let studentKey = accSbdLower || accNameNorm;
         let selectedAttemptIndex = matchedSubs.length > 0 ? (matchedSubs.length - 1) : 0;
         if (previousSelectionMap[studentKey] !== undefined && previousSelectionMap[studentKey] < matchedSubs.length) {
@@ -489,15 +473,33 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     });
 
-    // DUYỆT CÁC BÀI THI CỦA THÍ SINH TỰ DO (NẾU CÓ)
+    // 2. DUYỆT THÍ SINH TỰ DO (CHỈ LẤY CÁC EM THI ĐÚNG LỚP NÀY)
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
     for (let sub of submissionsList) {
         if (usedSubmissionKeys.has(sub._keyId)) continue;
+
+        // KIỂM TRA CHÍNH XÁC XEM BÀI NỘP CỦA THÍ SINH TỰ DO CÓ THUỘC LỚP ĐANG XEM KHÔNG
+        let subCat = String(sub.categoryId || sub.cat || "").trim().toLowerCase();
+        let subClass = normalizeName(sub.studentClass || sub.className || "");
+
+        let isBelongToCurrentClass = false;
+        if (subCat) {
+            isBelongToCurrentClass = (subCat === targetCatIdLower);
+        } else {
+            // Nếu không có categoryId, so sánh theo lớp học
+            if (targetCatIdLower.includes("10") && subClass.includes("10")) isBelongToCurrentClass = true;
+            else if (targetCatIdLower.includes("11") && subClass.includes("11")) isBelongToCurrentClass = true;
+            else if (targetCatIdLower.includes("12") && subClass.includes("12")) isBelongToCurrentClass = true;
+        }
+
+        // Bỏ qua nếu không thuộc lớp này -> KHÔNG bị hiện tràn lan sang tất cả các lớp khác!
+        if (!isBelongToCurrentClass) continue;
+
         let subSbd = String(sub.sbd || sub.studentId || "free").trim().toLowerCase();
         let subName = normalizeName(sub.studentName) || "free_student";
-        let groupKey = subSbd !== "---" && subSbd !== "chuanhap" ? subSbd : subName;
+        let groupKey = (subSbd !== "---" && subSbd !== "chuanhap") ? subSbd : subName;
 
         if (!freeGroups[groupKey]) {
             freeGroups[groupKey] = {
@@ -530,7 +532,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         }
 
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
-
         let studentKey = subSbd || subNameNorm;
         let selectedAttemptIndex = atts.length - 1;
         if (previousSelectionMap[studentKey] !== undefined && previousSelectionMap[studentKey] < atts.length) {
@@ -676,15 +677,12 @@ function renderFilteredResultTable(rows) {
             let pillClass = scNum >= 8.0 ? 'score-pill-high' : (scNum >= 5.0 ? 'score-pill-mid' : 'score-pill-low');
             col8_score = `<span class="${pillClass}">${scNum.toFixed(1)}</span>`;
 
-            // TÍNH TOÁN SỐ LẦN CHUYỂN TAB CHÍNH XÁC:
-            // Quét qua: (1) currentSub.tabSwitchCount, (2) trích xuất từ dataString, (3) tổng số lần ghi nhận từ Firebase cheating_logs
             let rawSubTab = parseInt(currentSub.tabSwitchCount, 10) || 0;
             let dataStringTab = extractTabCountFromDataString(currentSub.dataString);
             let logTab = row.cheatLogsTabCount || 0;
             let finalTabCount = Math.max(rawSubTab, dataStringTab, logTab);
 
             col9_tabs = finalTabCount > 0 ? `<span class="tabs-warn">${finalTabCount} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
-            
             col10_cheatTime = row.cheatTimeString;
 
             if (currentSub.dataString) {
@@ -704,7 +702,6 @@ function renderFilteredResultTable(rows) {
         let col4_name = acc.name || (currentSub ? currentSub.studentName : "---");
         let col_class = acc.className || (currentSub ? (currentSub.studentClass || currentSub.className) : "") || "---";
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
-
         let safeTitleCol10 = stripHtml(col10_cheatTime);
 
         tr.innerHTML = `
@@ -747,7 +744,7 @@ function filterResultTable() {
 }
 
 function closeResultModal() {
-    stopAutoRefreshResult(); // Dừng chạy ngầm ngay khi đóng bảng
+    stopAutoRefreshResult();
     document.getElementById("result-fullscreen-modal").style.display = "none";
 }
 
@@ -817,14 +814,10 @@ function exportResultsToExcel() {
     }
 }
 
-// =========================================================
-// HÀM ĐIỀU KHIỂN TỰ ĐỘNG CẬP NHẬT THỜI GIAN THỰC (REALTIME)
-// =========================================================
 function startAutoRefreshResult() {
     stopAutoRefreshResult();
     if (!isAutoRefreshEnabled) return;
 
-    // Cứ 3.5 giây tự động cập nhật ngầm mà không làm giật giao diện
     autoRefreshTimer = setInterval(async () => {
         const modal = document.getElementById("result-fullscreen-modal");
         if (modal && modal.style.display === "flex" && currentExamResultData.item) {
