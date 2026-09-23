@@ -327,7 +327,7 @@ async function confirmCopyItem() {
 }
 
 // =========================================================
-// LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP (ĐÃ CẬP NHẬT CHÍNH XÁC)
+// LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP
 // =========================================================
 function switchStudentLoginMode(mode) {
     activeStudentLogin.currentMode = mode;
@@ -460,8 +460,6 @@ function submitStudentLogin() {
     }
 
     const catId = activeStudentLogin.categoryId;
-    
-    // NẠP ĐÚNG DANH SÁCH TÀI KHOẢN TỪNG LỚP (tkthem10.js, tkthem11.js, tkthem12.js, tklop10p.js, tklop11a.js, tklop11c.js)
     const accounts = getAccountsForCategory(catId);
 
     if (!accounts || accounts.length === 0) {
@@ -470,7 +468,6 @@ function submitStudentLogin() {
         return;
     }
 
-    // So khớp theo SBD, Username hoặc Họ tên cùng Mật khẩu tương ứng
     const matched = accounts.find(acc => 
         ((acc.username && acc.username.trim().toLowerCase() === uVal.toLowerCase()) ||
          (acc.sbd && String(acc.sbd).trim().toLowerCase() === uVal.toLowerCase()) ||
@@ -592,8 +589,11 @@ function createExamCard(item) {
     item.categoryId = catId;
     let itemId = item.firebaseId || item.id || ("item_" + Date.now());
 
-    // Yêu cầu popup đăng nhập cho tất cả các đề trắc nghiệm của các lớp
-    const requiresLogin = !item.isDoc;
+    // Kiểm tra nếu là link Padlet hoặc nằm trong chuyên mục Tự luận Padlet
+    const isPadlet = (catId === "tu-luan-padlet") || (item.url && item.url.includes("padlet.com"));
+
+    // Bỏ popup đăng nhập cho link Padlet (học sinh bấm vào sẽ mở trực tiếp link Padlet tab mới)
+    const requiresLogin = !item.isDoc && !isPadlet;
 
     if (requiresLogin) {
         card.href = "javascript:void(0);";
@@ -607,7 +607,7 @@ function createExamCard(item) {
     }
     
     let leftResultBtnHtml = "";
-    if (isAdminLoggedIn && !item.isDoc) {
+    if (isAdminLoggedIn && !item.isDoc && !isPadlet) {
         leftResultBtnHtml = `
         <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
             📊 Kết quả thi
