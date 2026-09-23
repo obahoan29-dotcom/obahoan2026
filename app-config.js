@@ -80,7 +80,9 @@ let CHINH_KHOA_CATEGORIES = [
     { 
         id: "tu-luan-padlet", title: "💜 Nộp tự luận Padlet", isPurple: true, row: 2, visibleCount: 5, 
         links: [ 
-            { id: "padlet_1", firebaseId: "padlet_1", categoryId: "tu-luan-padlet", title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
+            { id: "padlet_1", firebaseId: "padlet_1", categoryId: "tu-luan-padlet", title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+            { id: "padlet_2", firebaseId: "padlet_2", categoryId: "tu-luan-padlet", title: "11C chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11c-nop-tu-luan-padlet-160926-s023me1v17byc9z8qj13", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+            { id: "padlet_3", firebaseId: "padlet_3", categoryId: "tu-luan-padlet", title: "10P chụp tự luận Padlet", date: "05/09/2026 - 08:00", url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
         ] 
     }
 ];
@@ -115,7 +117,6 @@ function getAccountsForCategory(categoryId) {
     if (cat.includes("11c") || cat === "lop-11c") return window.STUDENT_ACCOUNTS["lop-11c"] || [];
     if (cat.includes("10p") || cat === "lop-10p") return window.STUDENT_ACCOUNTS["lop-10p"] || [];
 
-    // Tìm kiếm trực tiếp qua key
     if (window.STUDENT_ACCOUNTS[categoryId]) return window.STUDENT_ACCOUNTS[categoryId];
 
     return window.STUDENT_ACCOUNTS["them-11"] || window.STUDENT_ACCOUNTS["them-10"] || [];
@@ -164,12 +165,11 @@ function extractNormalizedExamCode(title) {
         .replace(/Đ/g, "D").replace(/đ/g, "d")
         .toUpperCase();
 
-    // Khớp mẫu "DE 150 - TOAN 14" hoặc "DE SO 20 - TOAN 10"
     let m = clean.match(/(DE\s*(?:SO)?\s*\d+)\s*[-:]*\s*(TOAN\s*\d+)/i);
     if (m) {
         let p1 = m[1].replace(/\s+/g, "").replace("SO", "");
         let p2 = m[2].replace(/\s+/g, "");
-        return p1 + p2; // Ra DE150TOAN14, DE20TOAN10
+        return p1 + p2;
     }
     return clean.replace(/[^A-Z0-9]/g, "");
 }
