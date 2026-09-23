@@ -205,6 +205,10 @@ async function switchExamResult(examItem) {
 
     const displayCatName = getCategoryDisplayName(currentExamResultData.categoryId);
 
+    // Cập nhật tên lớp trong sơ đồ cây
+    const breadcrumbCat = document.getElementById("breadcrumb-category");
+    if (breadcrumbCat) breadcrumbCat.innerText = displayCatName;
+
     if (headTitle) headTitle.innerText = `📊 Kết quả: ${examItem.title || "Bài thi"}`;
     if (headSub) headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${examItem.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${examItem.title}`;
@@ -229,6 +233,13 @@ async function openExamResultModal(item, event) {
     const currentExamBtnText = document.getElementById("current-selected-exam-name");
 
     const displayCatName = getCategoryDisplayName(currentExamResultData.categoryId);
+
+    // CẬP NHẬT TÊN LỚP TRÊN SƠ ĐỒ CÂY BREADCRUMB
+    const breadcrumbCat = document.getElementById("breadcrumb-category");
+    if (breadcrumbCat) breadcrumbCat.innerText = displayCatName;
+
+    // LƯU TRẠNG THÁI VÀO LỊCH SỬ DUYỆT ĐỂ BẮT NÚT LÙI
+    window.history.pushState({ isViewingResult: true }, "", "#bang-ket-qua");
 
     modal.style.display = "flex";
     headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
@@ -743,9 +754,16 @@ function filterResultTable() {
     renderFilteredResultTable(filtered);
 }
 
-function closeResultModal() {
+// ĐÓNG BẢNG KẾT QUẢ VÀ ĐỒNG BỘ NÚT BACK CỦA TRÌNH DUYỆT
+function closeResultModal(triggerHistoryBack = true) {
     stopAutoRefreshResult();
-    document.getElementById("result-fullscreen-modal").style.display = "none";
+    const modal = document.getElementById("result-fullscreen-modal");
+    if (modal) modal.style.display = "none";
+
+    // Nếu người dùng bấm nút Đóng/Quay lại trên màn hình thì tự lùi hash URL
+    if (triggerHistoryBack && window.location.hash === "#bang-ket-qua") {
+        window.history.back();
+    }
 }
 
 function exportResultsToExcel() {
@@ -853,3 +871,11 @@ function toggleAutoRefresh(event) {
         stopAutoRefreshResult();
     }
 }
+
+// BẮT SỰ KIỆN NÚT LÙI (BACK) CỦA ĐIỆN THOẠI HOẶC TRÌNH DUYỆT ĐỂ THU GỌN BẢNG KẾT QUẢ VỀ TRANG CHỦ
+window.addEventListener("popstate", function(event) {
+    const resModal = document.getElementById("result-fullscreen-modal");
+    if (resModal && resModal.style.display === "flex") {
+        closeResultModal(false);
+    }
+});
