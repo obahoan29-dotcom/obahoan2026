@@ -54,6 +54,17 @@
                     <input type="password" id="admin-pass-input" class="auth-input" placeholder="Mật khẩu..." onkeypress="handleEnter(event)">
                     <button type="button" class="eye-toggle-btn" id="eye-toggle-btn" onclick="togglePasswordVisibility()" title="Hiện/Ẩn">👁️</button>
                 </div>
+                <!-- Ô CHỌN THỜI HẠN DUY TRÌ ĐĂNG NHẬP -->
+                <select id="admin-expiry-select" class="admin-duration-select" title="Thời gian duy trì trạng thái đăng nhập">
+                    <option value="1h">1 giờ</option>
+                    <option value="2h">2 giờ</option>
+                    <option value="4h">4 giờ</option>
+                    <option value="8h">8 giờ</option>
+                    <option value="1d" selected>1 ngày</option>
+                    <option value="3d">3 ngày</option>
+                    <option value="7d">7 ngày</option>
+                    <option value="30d">30 ngày</option>
+                </select>
                 <button class="auth-btn" onclick="checkAdminPassword()">VÀO</button>
             </div>
             
@@ -61,7 +72,10 @@
 
             <!-- BẢNG QUẢN TRỊ XÒE RA -->
             <div class="admin-popover-panel" id="admin-popover-panel">
-                <div class="admin-popover-title">🚀 Đăng đề thi và tài liệu - videos</div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                    <div class="admin-popover-title" style="margin-bottom: 0;">🚀 Đăng đề thi & tài liệu</div>
+                    <button type="button" class="admin-logout-btn" onclick="logoutAdmin(event)" title="Khóa quyền quản trị ngay lập tức">🔒 Khóa lại</button>
+                </div>
                 
                 <div class="admin-tabs">
                     <button class="admin-tab-btn active" id="tab-btn-quiz" onclick="switchAdminTab('quiz')">📝 Đăng đề thi (JS)</button>
