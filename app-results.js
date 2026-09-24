@@ -16,6 +16,7 @@ let tableDisplaySettings = {
 
 let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
+let scoreChartInstance = null;
 
 function sortDataString(str) {
     if (!str) return "";
@@ -239,6 +240,10 @@ async function openExamResultModal(item, event) {
     window.history.pushState({ isViewingResult: true }, "", "#bang-ket-qua");
 
     modal.style.display = "flex";
+    document.getElementById("result-modal-main-view").style.display = "flex";
+    document.getElementById("result-detailed-stats-view").style.display = "none";
+    document.getElementById("breadcrumb-current-view").innerText = "📊 Bảng kết quả";
+
     headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
     headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${item.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${item.title}`;
@@ -261,7 +266,7 @@ async function refreshCurrentExamResults() {
 }
 
 // =========================================================
-// HÀM KIỂM TRA BÀI NỘP CÓ THUỘC ĐÚNG ĐỀ THI ĐANG XEM HAY KHÔNG
+// HÀM KIỂM TRA BÀI NỘP / PHIÊN THI CÓ KHỚP VỚI ĐỀ HIỆN TẠI
 // =========================================================
 function isSubmissionMatchingCurrentExam(sub, examInfo) {
     if (!sub || typeof sub !== 'object') return false;
@@ -295,7 +300,7 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
         if (subMaDe === examInfo.maDe) return true;
     }
 
-    // 5. So khớp theo node thư mục Firebase (nếu node đó là mã riêng của đề)
+    // 5. So khớp theo node thư mục Firebase
     if (sub._nodeCode && sub._nodeCode !== "101") {
         if (sub._nodeCode === examInfo.quizId || sub._nodeCode === examInfo.maDe || sub._nodeCode === examInfo.normCode) {
             return true;
@@ -383,7 +388,15 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             if (aRes && aRes.ok) {
                 let aJson = await aRes.json();
                 if (aJson && typeof aJson === 'object') {
-                    for (let aId in aJson) activeSessionsData[aId] = aJson[aId];
+                    for (let aId in aJson) {
+                        let aObj = aJson[aId];
+                        if (typeof aObj === 'object' && aObj !== null) {
+                            aObj._nodeCode = code;
+                            activeSessionsData[aId] = aObj;
+                        } else {
+                            activeSessionsData[aId] = { lastPing: aObj, _nodeCode: code };
+                        }
+                    }
                 }
             }
         }
@@ -434,7 +447,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let log = cheatingMap[k];
         if (!log || typeof log !== 'object') continue;
 
-        // Bỏ qua log gian lận nếu thuộc về đề thi khác
         if ((log.examName || log.quizId) && !isSubmissionMatchingCurrentExam(log, currentExamInfo)) {
             continue;
         }
@@ -473,17 +485,19 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     }
     submissionsList.sort((a, b) => getSubmissionTimestamp(a) - getSubmissionTimestamp(b));
 
-    const activeUsersSet = new Set();
+    const activeUsersMap = {};
     const nowMs = Date.now();
     for (let sId in activeSessionsMap) {
-        let lastPing = activeSessionsMap[sId];
-        if (typeof lastPing === 'number' && (nowMs - lastPing < 120000)) {
-            activeUsersSet.add(String(sId).trim().toLowerCase());
+        let sess = activeSessionsMap[sId];
+        let lastPing = (typeof sess === 'number') ? sess : (sess && sess.lastPing ? sess.lastPing : 0);
+        if (nowMs - lastPing < 120000) {
+            activeUsersMap[String(sId).trim().toLowerCase()] = sess;
         }
     }
 
     const finalRows = [];
     const usedSubmissionKeys = new Set();
+    const usedSbdSet = new Set();
 
     const previousSelectionMap = {};
     if (currentExamResultData.rawRows && currentExamResultData.rawRows.length > 0) {
@@ -493,7 +507,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // 1. DUYỆT TỪ DANH SÁCH HỌC SINH CỦA LỚP
+    // 1. DUYỆT DANH SÁCH HỌC SINH CỦA LỚP
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -501,9 +515,10 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         const accUserNorm = normalizeName(acc.username);
         const accClassNorm = normalizeName(acc.className);
 
+        if (accSbdLower) usedSbdSet.add(accSbdLower);
+
         let matchedSubs = [];
         for (let sub of submissionsList) {
-            // Chỉ nhận bài nộp nếu đúng là đề thi hiện tại đang xem
             if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
 
             let subSbd = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
@@ -525,7 +540,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
 
         let isDoing = false;
         let safeSbd = accSbdLower.replace(/[^a-zA-Z0-9]/g, '_');
-        if (matchedSubs.length === 0 && (activeUsersSet.has(accSbdLower) || activeUsersSet.has(safeSbd))) {
+        if (matchedSubs.length === 0 && (activeUsersMap[accSbdLower] || activeUsersMap[safeSbd])) {
             isDoing = true;
         }
 
@@ -554,22 +569,20 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             allAttempts: matchedSubs,
             selectedAttemptIndex: selectedAttemptIndex,
             isDoing: isDoing,
+            isFreeDoing: false,
             cheatTimeString: cheatTimeString,
             cheatLogsTabCount: cheatLogsTabCount
         });
     });
 
-    // 2. DUYỆT THÍ SINH TỰ DO (CHỈ LẤY CÁC EM THI ĐÚNG ĐỀ HIỆN TẠI VÀ ĐÚNG LỚP NÀY)
+    // 2. DUYỆT THÍ SINH TỰ DO ĐÃ NỘP BÀI
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
     for (let sub of submissionsList) {
         if (usedSubmissionKeys.has(sub._keyId)) continue;
-
-        // BẮT BUỘC: Thí sinh tự do phải thi đúng đề thi hiện tại đang xem!
         if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
 
-        // KIỂM TRA XEM BÀI NỘP CÓ THUỘC LỚP ĐANG XEM HAY KHÔNG
         let subCat = String(sub.categoryId || sub.cat || "").trim().toLowerCase();
         let subClass = normalizeName(sub.studentClass || sub.className || "");
 
@@ -580,6 +593,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             if (targetCatIdLower.includes("10") && subClass.includes("10")) isBelongToCurrentClass = true;
             else if (targetCatIdLower.includes("11") && subClass.includes("11")) isBelongToCurrentClass = true;
             else if (targetCatIdLower.includes("12") && subClass.includes("12")) isBelongToCurrentClass = true;
+            else isBelongToCurrentClass = true;
         }
 
         if (!isBelongToCurrentClass) continue;
@@ -599,6 +613,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             };
         }
         freeGroups[groupKey].attempts.push(sub);
+        usedSbdSet.add(subSbd);
     }
 
     for (let gKey in freeGroups) {
@@ -632,8 +647,46 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             allAttempts: atts,
             selectedAttemptIndex: selectedAttemptIndex,
             isDoing: false,
+            isFreeDoing: false,
             cheatTimeString: cheatTimeString,
             cheatLogsTabCount: cheatLogsTabCount
+        });
+    }
+
+    // 3. YÊU CẦU 3: HIỂN THỊ NGAY LẬP TỨC THÍ SINH ĐANG THI TỰ DO
+    for (let aKey in activeUsersMap) {
+        let session = activeUsersMap[aKey];
+        if (!session || typeof session !== 'object') continue;
+
+        let sSbd = String(session.sbd || "").trim().toLowerCase();
+        let sName = session.name || "";
+        let sClass = session.className || "Tự do";
+
+        if (sSbd && usedSbdSet.has(sSbd)) continue;
+        if (!isSubmissionMatchingCurrentExam(session, currentExamInfo)) continue;
+
+        usedSbdSet.add(sSbd || normalizeName(sName));
+
+        let sbdLower = sSbd;
+        let cheatDurations = (sbdLower && cheatHistoryBySbd[sbdLower]) ? cheatHistoryBySbd[sbdLower] : [];
+        let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
+        let logTab = (sbdLower && maxCheatCountBySbd[sbdLower]) ? maxCheatCountBySbd[sbdLower] : 0;
+
+        finalRows.push({
+            stt: freeCounter++,
+            isClassStudent: false,
+            account: {
+                sbd: session.sbd || "---",
+                name: sName || "Thí sinh tự do",
+                className: sClass
+            },
+            allAttempts: [],
+            selectedAttemptIndex: 0,
+            isDoing: true,
+            isFreeDoing: true, // Nhãn Đang thi-tự do
+            startTimeStr: session.startTime ? new Date(session.startTime).toLocaleTimeString("vi-VN") : "Vừa vào thi",
+            cheatTimeString: cheatTimeString,
+            cheatLogsTabCount: logTab
         });
     }
 
@@ -643,30 +696,69 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
 
 function updateStatsAndRenderTable(rows) {
     let total = rows.length;
+    let classCount = rows.filter(r => r.isClassStudent).length;
+    let freeCount = total - classCount;
+
     let submittedCount = rows.filter(r => r.allAttempts.length > 0).length;
     let doingCount = rows.filter(r => r.isDoing && r.allAttempts.length === 0).length;
     let unsubmittedCount = total - submittedCount - doingCount;
+    
     let sumScore = 0;
     let scoredStudents = 0;
+
+    let countUnder5 = 0;
+    let count5To7 = 0;
+    let countOver7 = 0;
 
     rows.forEach(r => {
         if (r.allAttempts.length > 0) {
             let curSub = r.allAttempts[r.selectedAttemptIndex] || r.allAttempts[r.allAttempts.length - 1];
             if (curSub && curSub.score10 !== undefined) {
-                sumScore += Number(curSub.score10) || 0;
-                scoredStudents++;
+                let sc = Number(curSub.score10);
+                if (!isNaN(sc)) {
+                    sumScore += sc;
+                    scoredStudents++;
+
+                    if (sc < 5.0) {
+                        countUnder5++;
+                    } else if (sc <= 7.0) {
+                        count5To7++;
+                    } else {
+                        countOver7++;
+                    }
+                }
             }
         }
     });
+    
     let avg = scoredStudents > 0 ? (sumScore / scoredStudents).toFixed(1) : "0.0";
 
+    // Cập nhật Yêu cầu 1: Tách của lớp và tự do
     document.getElementById("stat-total-students").innerText = total;
+    const classEl = document.getElementById("stat-class-students");
+    const freeEl = document.getElementById("stat-free-students");
+    if (classEl) classEl.innerText = classCount;
+    if (freeEl) freeEl.innerText = freeCount;
+
     document.getElementById("stat-submitted-students").innerText = submittedCount;
     document.getElementById("stat-doing-students").innerText = doingCount;
     document.getElementById("stat-unsubmitted-students").innerText = unsubmittedCount;
     document.getElementById("stat-avg-score").innerText = avg;
 
+    // Cập nhật Yêu cầu 2: Thống kê số hs <5, 5 đến 7, >7
+    const u5El = document.getElementById("stat-score-under-5");
+    const midEl = document.getElementById("stat-score-5-to-7");
+    const o7El = document.getElementById("stat-score-over-7");
+    if (u5El) u5El.innerText = countUnder5;
+    if (midEl) midEl.innerText = count5To7;
+    if (o7El) o7El.innerText = countOver7;
+
     renderFilteredResultTable(rows);
+
+    const detailView = document.getElementById("result-detailed-stats-view");
+    if (detailView && detailView.style.display === "flex") {
+        renderDetailedScoreChart();
+    }
 }
 
 function selectStudentAttempt(rowIndex, attemptIdx, event) {
@@ -777,9 +869,14 @@ function renderFilteredResultTable(rows) {
                 col11_details = `<span class="td-details" title="${safeText}" onclick="alert('📋 CHI TIẾT BÀI LÀM:\\n\\n' + this.title.replace(/ \\| /g, '\\n'))">${currentSub.dataString}</span>`;
             }
         } else if (row.isDoing) {
-            col2_inTime = `<span style="color:#eab308; font-weight:800;">Vừa vào thi</span>`;
-            col3_spentTime = `<span style="color:#eab308; font-weight:800;">Đang làm...</span>`;
-            col6_status = `<span class="status-pill status-doing">Đang làm bài</span>`;
+            col2_inTime = `<span style="color:#0284c7; font-weight:800;">${row.startTimeStr || "Vừa vào thi"}</span>`;
+            col3_spentTime = `<span style="color:#f59e0b; font-weight:800;">Đang làm...</span>`;
+            
+            if (row.isFreeDoing) {
+                col6_status = `<span class="status-pill" style="background:#fff7ed; color:#c2410c; border:1px solid #fdba74; font-weight:800;">⚡ Đang thi-tự do</span>`;
+            } else {
+                col6_status = `<span class="status-pill status-doing">Đang làm bài</span>`;
+            }
             
             let doingTabs = row.cheatLogsTabCount || 0;
             col9_tabs = doingTabs > 0 ? `<span class="tabs-warn">${doingTabs} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
@@ -823,11 +920,179 @@ function filterResultTable() {
         let name = (r.account.name || "").toLowerCase();
         let sbd = String(r.account.sbd || "").toLowerCase();
         let cName = String(r.account.className || "").toLowerCase();
-        let statusText = r.allAttempts.length > 0 ? "đã nộp bài" : (r.isDoing ? "đang làm bài" : "chưa thi");
+        let statusText = r.allAttempts.length > 0 ? "đã nộp bài" : (r.isFreeDoing ? "đang thi tự do" : (r.isDoing ? "đang làm bài" : "chưa thi"));
         return name.includes(query) || sbd.includes(query) || cName.includes(query) || statusText.includes(query);
     });
 
     renderFilteredResultTable(filtered);
+}
+
+// =========================================================
+// ĐIỀU HƯỚNG MÀN HÌNH THỐNG KÊ CHI TIẾT & BIỂU ĐỒ HÌNH CỘT (YÊU CẦU 2)
+// =========================================================
+function openDetailedStatsView() {
+    window.location.hash = "#bang-ket-qua/thong-ke";
+    showDetailedStatsUI();
+}
+
+function closeDetailedStatsView() {
+    window.location.hash = "#bang-ket-qua";
+    showMainResultTableUI();
+}
+
+function handleResultHeaderBack() {
+    if (window.location.hash === "#bang-ket-qua/thong-ke") {
+        closeDetailedStatsView();
+    } else {
+        closeResultModal();
+    }
+}
+
+function showDetailedStatsUI() {
+    const mainView = document.getElementById("result-modal-main-view");
+    const detailView = document.getElementById("result-detailed-stats-view");
+    const scoreBar = document.getElementById("result-modal-score-bar");
+    const searchInput = document.getElementById("result-search-input");
+    const breadcrumbView = document.getElementById("breadcrumb-current-view");
+    const detailExamName = document.getElementById("detail-stat-exam-name");
+
+    if (mainView) mainView.style.display = "none";
+    if (detailView) detailView.style.display = "flex";
+    if (scoreBar) scoreBar.style.display = "none";
+    if (searchInput) searchInput.style.display = "none";
+    if (breadcrumbView) breadcrumbView.innerText = "📈 Phổ điểm chi tiết";
+
+    const currentTitle = (currentExamResultData.item && currentExamResultData.item.title) ? currentExamResultData.item.title : "Bài kiểm tra";
+    if (detailExamName) detailExamName.innerText = currentTitle;
+
+    renderDetailedScoreChart();
+}
+
+function showMainResultTableUI() {
+    const mainView = document.getElementById("result-modal-main-view");
+    const detailView = document.getElementById("result-detailed-stats-view");
+    const scoreBar = document.getElementById("result-modal-score-bar");
+    const searchInput = document.getElementById("result-search-input");
+    const breadcrumbView = document.getElementById("breadcrumb-current-view");
+
+    if (mainView) mainView.style.display = "flex";
+    if (detailView) detailView.style.display = "none";
+    if (scoreBar) scoreBar.style.display = "flex";
+    if (searchInput) searchInput.style.display = "block";
+    if (breadcrumbView) breadcrumbView.innerText = "📊 Bảng kết quả";
+}
+
+function renderDetailedScoreChart() {
+    const scores = [];
+    currentExamResultData.rawRows.forEach(r => {
+        if (r.allAttempts.length > 0) {
+            let curSub = r.allAttempts[r.selectedAttemptIndex] || r.allAttempts[r.allAttempts.length - 1];
+            if (curSub && curSub.score10 !== undefined) {
+                let sc = parseFloat(curSub.score10);
+                if (!isNaN(sc)) scores.push(sc);
+            }
+        }
+    });
+
+    const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
+    const minScore = scores.length > 0 ? Math.min(...scores) : 0;
+    const avgScore = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    const passCount = scores.filter(s => s >= 5.0).length;
+    const goodCount = scores.filter(s => s >= 7.0).length;
+
+    document.getElementById("kpi-max-score").innerText = scores.length > 0 ? maxScore.toFixed(1) : "0.0";
+    document.getElementById("kpi-min-score").innerText = scores.length > 0 ? minScore.toFixed(1) : "0.0";
+    document.getElementById("kpi-avg-score").innerText = scores.length > 0 ? avgScore.toFixed(1) : "0.0";
+    document.getElementById("kpi-pass-rate").innerText = scores.length > 0 ? Math.round((passCount / scores.length) * 100) + "%" : "0%";
+    document.getElementById("kpi-good-rate").innerText = scores.length > 0 ? Math.round((goodCount / scores.length) * 100) + "%" : "0%";
+
+    const bins = Array(10).fill(0);
+    scores.forEach(s => {
+        let binIdx = Math.min(Math.floor(s), 9);
+        bins[binIdx]++;
+    });
+
+    const canvas = document.getElementById("detailedScoreChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    if (scoreChartInstance) {
+        scoreChartInstance.destroy();
+    }
+
+    const columnColors = [
+        '#ef4444', '#f87171', '#fb923c', '#fbbf24', '#facc15',
+        '#a3e635', '#4ade80', '#22c55e', '#10b981', '#06b6d4'
+    ];
+
+    scoreChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [
+                '0 - 1đ', '1 - 2đ', '2 - 3đ', '3 - 4đ', '4 - 5đ', 
+                '5 - 6đ', '6 - 7đ', '7 - 8đ', '8 - 9đ', '9 - 10đ'
+            ],
+            datasets: [{
+                label: 'Số lượng thí sinh',
+                data: bins,
+                backgroundColor: columnColors,
+                borderRadius: 8,
+                borderSkipped: false,
+                borderWidth: 1.5,
+                borderColor: '#cbd5e1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ` Có ${ctx.parsed.y} thí sinh đạt mức điểm này`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, color: '#64748b', font: { weight: 'bold' } },
+                    grid: { color: '#f1f5f9' }
+                },
+                x: {
+                    ticks: { color: '#1e293b', font: { weight: 'bold' } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    const totalSubmitted = scores.length;
+    const ratingGroups = [
+        { name: "Giỏi - Xuất sắc", range: "8.0 - 10.0", count: scores.filter(s => s >= 8.0).length, note: "Nắm vững toàn diện kiến thức", color: "#16a34a" },
+        { name: "Khá", range: "6.5 - 7.9", count: scores.filter(s => s >= 6.5 && s < 8.0).length, note: "Hiểu bài tốt, kỹ năng vững", color: "#0284c7" },
+        { name: "Trung bình", range: "5.0 - 6.4", count: scores.filter(s => s >= 5.0 && s < 6.5).length, note: "Đạt chuẩn kiến thức cơ bản", color: "#d97706" },
+        { name: "Yếu", range: "3.5 - 4.9", count: scores.filter(s => s >= 3.5 && s < 5.0).length, note: "Cần củng cố thêm phần lý thuyết", color: "#ea580c" },
+        { name: "Kém", range: "0.0 - 3.4", count: scores.filter(s => s < 3.5).length, note: "Cần kế hoạch phụ đạo bổ trợ", color: "#dc2626" }
+    ];
+
+    const rTbody = document.getElementById("rating-breakdown-tbody");
+    if (rTbody) {
+        rTbody.innerHTML = ratingGroups.map(g => {
+            const percent = totalSubmitted > 0 ? ((g.count / totalSubmitted) * 100).toFixed(1) : "0.0";
+            return `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding:10px 12px; font-weight:800; color:${g.color};">${g.name}</td>
+                    <td style="padding:10px 12px; font-weight:700; color:#475569;">${g.range}</td>
+                    <td style="padding:10px 12px; text-align:center; font-weight:900; font-size:14px;">${g.count} hs</td>
+                    <td style="padding:10px 12px; text-align:center; font-weight:800; color:#334155;">${percent}%</td>
+                    <td style="padding:10px 12px; color:#64748b;">${g.note}</td>
+                </tr>
+            `;
+        }).join('');
+    }
 }
 
 function closeResultModal(triggerHistoryBack = true) {
@@ -835,7 +1100,7 @@ function closeResultModal(triggerHistoryBack = true) {
     const modal = document.getElementById("result-fullscreen-modal");
     if (modal) modal.style.display = "none";
 
-    if (triggerHistoryBack && window.location.hash === "#bang-ket-qua") {
+    if (triggerHistoryBack && window.location.hash.startsWith("#bang-ket-qua")) {
         window.history.back();
     }
 }
@@ -868,7 +1133,7 @@ function exportResultsToExcel() {
         let name = acc.name || "";
         let lop = acc.className || (sub ? (sub.studentClass || sub.className) : "") || "";
         let sbd = acc.sbd || "";
-        let tinhTrang = sub ? "Đã nộp bài" : (r.isDoing ? "Đang làm bài" : "Chưa thi");
+        let tinhTrang = sub ? "Đã nộp bài" : (r.isFreeDoing ? "Đang thi-tự do" : (r.isDoing ? "Đang làm bài" : "Chưa thi"));
         let correct = sub ? (sub.calcMetrics ? sub.calcMetrics.correctCount : (sub.correctCount !== undefined ? sub.correctCount : 0)) : "";
         let score = sub ? (sub.score10 !== undefined ? sub.score10 : (sub.calcMetrics ? sub.calcMetrics.score10Scale : "")) : "";
         
@@ -946,9 +1211,17 @@ function toggleAutoRefresh(event) {
     }
 }
 
+// BẮT SỰ KIỆN NÚT LÙI LẠI TRÊN TRÌNH DUYỆT (BACK BUTTON / POPSTATE)
 window.addEventListener("popstate", function(event) {
     const resModal = document.getElementById("result-fullscreen-modal");
-    if (resModal && resModal.style.display === "flex") {
+    if (!resModal || resModal.style.display !== "flex") return;
+
+    const hash = window.location.hash;
+    if (hash === "#bang-ket-qua/thong-ke") {
+        showDetailedStatsUI();
+    } else if (hash === "#bang-ket-qua") {
+        showMainResultTableUI();
+    } else {
         closeResultModal(false);
     }
 });
