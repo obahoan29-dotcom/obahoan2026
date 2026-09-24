@@ -165,7 +165,6 @@
             filter: brightness(1.05);
         }
 
-        /* KHUNG DROPDOWN XÒE RA 3 TÊN */
         .sub-padlet-dropdown { 
             display: none; 
             flex-direction: column; 
@@ -185,7 +184,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* NÚT PADLET VIỀN XANH DƯƠNG */
         .btn-padlet-opt { 
             display: flex; 
             align-items: center; 
@@ -551,7 +549,7 @@
             }
         }
 
-        // ================= HỆ THỐNG ĐẾM SỐ HỌC SINH ONLINE =================
+        // ================= HỆ THỐNG ĐẾM SỐ HỌC SINH ONLINE & ĐỒNG BỘ TRẠNG THÁI ĐANG THI =================
         function startPresenceSystem(sId) {
             const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
             const examCode = getExamCode();
@@ -559,14 +557,42 @@
             updatePresence(examCode, safeId);
             fetchOnlineCount(examCode);
 
-            presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 25000);
+            if (presenceInterval) clearInterval(presenceInterval);
+            if (onlineCountInterval) clearInterval(onlineCountInterval);
+
+            presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 20000);
             onlineCountInterval = setInterval(() => { fetchOnlineCount(examCode); }, 10000);
         }
 
         async function updatePresence(examCode, safeId) {
             try {
+                const sId = document.getElementById("student-id") ? document.getElementById("student-id").value.trim() : "";
+                const sName = document.getElementById("student-name") ? document.getElementById("student-name").value.trim() : "";
+                const sClass = document.getElementById("student-class") ? document.getElementById("student-class").value.trim() : "";
+                const currentCat = getExamCategory();
+                const checkInClass = findStudentFromDatabase(sId, currentCat);
+                const isFree = !checkInClass;
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentQuizId = urlParams.get('id') || "";
+
+                const presencePayload = {
+                    sbd: sId,
+                    name: sName,
+                    className: sClass,
+                    cat: currentCat,
+                    categoryId: currentCat,
+                    isFree: isFree,
+                    quizId: currentQuizId,
+                    maDe: getMaDe(),
+                    examName: EXAM_NAME,
+                    examTitle: EXAM_NAME,
+                    startTime: examStartTime || Date.now(),
+                    lastPing: Date.now()
+                };
+
                 await fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
-                    method: 'PUT', body: JSON.stringify(Date.now())
+                    method: 'PUT', body: JSON.stringify(presencePayload)
                 });
             } catch(e) {}
         }
@@ -579,7 +605,9 @@
                     const now = Date.now();
                     let activeCount = 0;
                     for (const key in data) {
-                        if (now - data[key] < 60000) activeCount++;
+                        const val = data[key];
+                        const pingTime = (typeof val === 'number') ? val : (val && val.lastPing ? val.lastPing : 0);
+                        if (now - pingTime < 120000) activeCount++;
                     }
                     const badge = document.getElementById("nav-online-val");
                     if (badge) badge.innerText = Math.max(1, activeCount);
