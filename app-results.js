@@ -244,6 +244,9 @@ async function openExamResultModal(item, event) {
     document.getElementById("result-detailed-stats-view").style.display = "none";
     document.getElementById("breadcrumb-current-view").innerText = "📊 Bảng kết quả";
 
+    const statsBar = document.getElementById("result-modal-stats-bar");
+    if (statsBar) statsBar.style.display = "flex";
+
     headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
     headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${item.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${item.title}`;
@@ -653,7 +656,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // 3. YÊU CẦU 3: HIỂN THỊ NGAY LẬP TỨC THÍ SINH ĐANG THI TỰ DO
+    // 3. THÍ SINH ĐANG THI TỰ DO TRỰC TUYẾN
     for (let aKey in activeUsersMap) {
         let session = activeUsersMap[aKey];
         if (!session || typeof session !== 'object') continue;
@@ -683,7 +686,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             allAttempts: [],
             selectedAttemptIndex: 0,
             isDoing: true,
-            isFreeDoing: true, // Nhãn Đang thi-tự do
+            isFreeDoing: true,
             startTimeStr: session.startTime ? new Date(session.startTime).toLocaleTimeString("vi-VN") : "Vừa vào thi",
             cheatTimeString: cheatTimeString,
             cheatLogsTabCount: logTab
@@ -733,7 +736,7 @@ function updateStatsAndRenderTable(rows) {
     
     let avg = scoredStudents > 0 ? (sumScore / scoredStudents).toFixed(1) : "0.0";
 
-    // Cập nhật Yêu cầu 1: Tách của lớp và tự do
+    // Cập nhật thẻ hiển thị
     document.getElementById("stat-total-students").innerText = total;
     const classEl = document.getElementById("stat-class-students");
     const freeEl = document.getElementById("stat-free-students");
@@ -745,7 +748,6 @@ function updateStatsAndRenderTable(rows) {
     document.getElementById("stat-unsubmitted-students").innerText = unsubmittedCount;
     document.getElementById("stat-avg-score").innerText = avg;
 
-    // Cập nhật Yêu cầu 2: Thống kê số hs <5, 5 đến 7, >7
     const u5El = document.getElementById("stat-score-under-5");
     const midEl = document.getElementById("stat-score-5-to-7");
     const o7El = document.getElementById("stat-score-over-7");
@@ -928,7 +930,7 @@ function filterResultTable() {
 }
 
 // =========================================================
-// ĐIỀU HƯỚNG MÀN HÌNH THỐNG KÊ CHI TIẾT & BIỂU ĐỒ HÌNH CỘT (YÊU CẦU 2)
+// ĐIỀU HƯỚNG MÀN HÌNH THỐNG KÊ CHI TIẾT & BIỂU ĐỒ HÌNH CỘT
 // =========================================================
 function openDetailedStatsView() {
     window.location.hash = "#bang-ket-qua/thong-ke";
@@ -951,14 +953,14 @@ function handleResultHeaderBack() {
 function showDetailedStatsUI() {
     const mainView = document.getElementById("result-modal-main-view");
     const detailView = document.getElementById("result-detailed-stats-view");
-    const scoreBar = document.getElementById("result-modal-score-bar");
+    const statsBar = document.getElementById("result-modal-stats-bar");
     const searchInput = document.getElementById("result-search-input");
     const breadcrumbView = document.getElementById("breadcrumb-current-view");
     const detailExamName = document.getElementById("detail-stat-exam-name");
 
     if (mainView) mainView.style.display = "none";
     if (detailView) detailView.style.display = "flex";
-    if (scoreBar) scoreBar.style.display = "none";
+    if (statsBar) statsBar.style.display = "none";
     if (searchInput) searchInput.style.display = "none";
     if (breadcrumbView) breadcrumbView.innerText = "📈 Phổ điểm chi tiết";
 
@@ -971,13 +973,13 @@ function showDetailedStatsUI() {
 function showMainResultTableUI() {
     const mainView = document.getElementById("result-modal-main-view");
     const detailView = document.getElementById("result-detailed-stats-view");
-    const scoreBar = document.getElementById("result-modal-score-bar");
+    const statsBar = document.getElementById("result-modal-stats-bar");
     const searchInput = document.getElementById("result-search-input");
     const breadcrumbView = document.getElementById("breadcrumb-current-view");
 
     if (mainView) mainView.style.display = "flex";
     if (detailView) detailView.style.display = "none";
-    if (scoreBar) scoreBar.style.display = "flex";
+    if (statsBar) statsBar.style.display = "flex";
     if (searchInput) searchInput.style.display = "block";
     if (breadcrumbView) breadcrumbView.innerText = "📊 Bảng kết quả";
 }
