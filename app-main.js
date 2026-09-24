@@ -37,7 +37,7 @@ function toggleAdminPanel(e) {
     const panel = document.getElementById("admin-popover-panel");
     const gear = document.getElementById("gear-btn");
 
-    if (isAdminLoggedIn) {
+    if (checkAdminSessionValidity()) {
         if (panel.classList.contains("show")) { closeAdminPanel(); } 
         else { panel.classList.add("show"); gear.classList.add("active-gear"); }
     } else {
@@ -48,11 +48,56 @@ function toggleAdminPanel(e) {
 
 function handleEnter(e) { if (e.key === 'Enter') checkAdminPassword(); }
 
+// Chuyển đổi mã chuỗi thời gian (vd: '2h', '1d') thành số mili-giây
+function parseExpiryDurationMs(val) {
+    switch (val) {
+        case '1h': return 1 * 60 * 60 * 1000;
+        case '2h': return 2 * 60 * 60 * 1000;
+        case '4h': return 4 * 60 * 60 * 1000;
+        case '8h': return 8 * 60 * 60 * 1000;
+        case '1d': return 24 * 60 * 60 * 1000;
+        case '3d': return 3 * 24 * 60 * 60 * 1000;
+        case '7d': return 7 * 24 * 60 * 60 * 1000;
+        case '30d': return 30 * 24 * 60 * 60 * 1000;
+        default: return 24 * 60 * 60 * 1000;
+    }
+}
+
+// Kiểm tra tính hợp lệ của phiên đăng nhập quản trị viên
+function checkAdminSessionValidity() {
+    try {
+        const logged = localStorage.getItem("adminLoggedInSession");
+        const expiresAt = localStorage.getItem("admin_expires_at");
+        if (logged === "true" && expiresAt) {
+            const expTime = parseInt(expiresAt, 10);
+            if (Date.now() < expTime) {
+                isAdminLoggedIn = true;
+                return true;
+            } else {
+                logoutAdmin(); // Hết hạn -> tự động xóa phiên
+            }
+        }
+    } catch(e) {}
+    isAdminLoggedIn = false;
+    return false;
+}
+
 function checkAdminPassword() {
     const pass = document.getElementById("admin-pass-input").value;
     if (pass === ADMIN_PASSWORD) {
         isAdminLoggedIn = true;
-        sessionStorage.setItem("adminLoggedInSession", "true");
+
+        const durationVal = document.getElementById("admin-expiry-select") ? document.getElementById("admin-expiry-select").value : "1d";
+        const durationMs = parseExpiryDurationMs(durationVal);
+        const expiresAt = Date.now() + durationMs;
+
+        try {
+            localStorage.setItem("adminLoggedInSession", "true");
+            localStorage.setItem("admin_expires_at", String(expiresAt));
+            localStorage.setItem("admin_duration_choice", durationVal);
+            sessionStorage.setItem("adminLoggedInSession", "true");
+        } catch(e) {}
+
         document.getElementById("auth-container").classList.remove("show");
         document.getElementById("admin-popover-panel").classList.add("show");
         document.getElementById("gear-btn").classList.add("active-gear");
@@ -63,11 +108,27 @@ function checkAdminPassword() {
     }
 }
 
+// Nút khóa lại ngay lập tức (Bỏ qua mọi điều kiện, hủy phiên ngay)
+function logoutAdmin(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    isAdminLoggedIn = false;
+    try {
+        localStorage.removeItem("adminLoggedInSession");
+        localStorage.removeItem("admin_expires_at");
+        sessionStorage.removeItem("adminLoggedInSession");
+    } catch(e) {}
+    closeAdminPanel();
+    const gear = document.getElementById("gear-btn");
+    if (gear) gear.classList.remove("active-gear");
+    refreshAllViews();
+    alert("🔒 Đã khóa quyền quản trị thành công!");
+}
+
 function closeAdminPanel() {
     const panel = document.getElementById("admin-popover-panel");
     const gear = document.getElementById("gear-btn");
     if (panel) panel.classList.remove("show");
-    if (gear) gear.classList.remove("active-gear");
+    if (gear && !isAdminLoggedIn) gear.classList.remove("active-gear");
 }
 
 function refreshAllViews() {
@@ -546,11 +607,16 @@ function toggleBadgeMenu(wrapperEl, event) {
 async function changeBadge(categoryId, itemId, newBadgeType, event) {
     event.preventDefault(); event.stopPropagation();
 
-    if (!isAdminLoggedIn) {
+    if (!checkAdminSessionValidity()) {
         let pass = prompt("🔐 Nhập mật khẩu quản trị viên để thay đổi nhãn:");
         if (pass !== ADMIN_PASSWORD) { alert("❌ Sai mật khẩu!"); return; }
         isAdminLoggedIn = true;
-        sessionStorage.setItem("adminLoggedInSession", "true");
+        try {
+            const exp = Date.now() + 24 * 60 * 60 * 1000;
+            localStorage.setItem("adminLoggedInSession", "true");
+            localStorage.setItem("admin_expires_at", String(exp));
+            sessionStorage.setItem("adminLoggedInSession", "true");
+        } catch(e) {}
         document.getElementById("gear-btn").classList.add("active-gear");
         refreshAllViews();
     }
@@ -946,8 +1012,14 @@ document.addEventListener("click", function(e) {
 
 // KHỞI CHẠY TRANG CHỦ VÀ GẮN SỰ KIỆN PHÍM ENTER
 window.onload = async function() {
-    if (sessionStorage.getItem("adminLoggedInSession") === "true") { 
-        isAdminLoggedIn = true; 
+    // Phục hồi lựa chọn thời gian đã lưu (nếu có)
+    const savedDuration = localStorage.getItem("admin_duration_choice");
+    const durSelect = document.getElementById("admin-expiry-select");
+    if (savedDuration && durSelect) {
+        durSelect.value = savedDuration;
+    }
+
+    if (checkAdminSessionValidity()) { 
         document.getElementById("gear-btn").classList.add("active-gear");
     }
 
