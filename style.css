@@ -116,7 +116,9 @@ body {
 .dantri-nav-container { margin-bottom: 10px; width: 100%; border: none; background: transparent; }
 .dantri-scroll-bar { display: flex; align-items: center; overflow-x: auto; white-space: nowrap; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 4px 2px 8px 2px; }
 .dantri-scroll-bar::-webkit-scrollbar { display: none; }
-.full-width-nav-row { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 8px; }
+.full-width-nav-row { display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 10px; }
+
+/* NÚT THANH DÂN TRÍ CHUNG */
 .dantri-nav-btn { 
     display: inline-flex; align-items: center; justify-content: center; gap: 5px; 
     padding: 9px 8px; min-height: 42px; font-size: 13.5px; font-weight: 700; color: #334155; 
@@ -125,9 +127,139 @@ body {
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); user-select: none; flex-shrink: 0; 
     border-radius: 999px; font-family: inherit; box-shadow: var(--shadow-sm);
 }
-.full-width-nav-row .dantri-nav-btn { flex: 1 1 0; min-width: 0; margin-right: 0; text-align: center; }
-.dantri-nav-btn:hover { color: var(--primary-blue); border-color: #7dd3fc; background: #ffffff; transform: translateY(-2px); }
-.dantri-nav-btn.active { color: #ffffff; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border-color: transparent; box-shadow: 0 5px 15px rgba(2, 132, 199, 0.35); font-weight: 800; }
+
+/* ========================================================================= */
+/* TÙY CHỈNH NÚT CÁC LỚP: CHIỀU CAO CAO HƠN, CHỮ TO HƠN, SẶC SỠ, ĐỔ BÓNG, TRONG SUỐT */
+/* ========================================================================= */
+.full-width-nav-row .dantri-nav-btn { 
+    flex: 1 1 0; 
+    min-width: 0; 
+    margin-right: 0; 
+    text-align: center;
+    min-height: 48px; /* Tăng chiều cao nút vừa vặn, thanh thoát */
+    font-size: 15px;  /* Cỡ chữ to hơn, rõ ràng */
+    font-weight: 800; 
+    letter-spacing: -0.2px;
+    border-radius: 999px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.full-width-nav-row .dantri-nav-btn:hover {
+    transform: translateY(-2.5px) scale(1.02);
+}
+
+/* 1. DÃY LỚP DẠY THÊM */
+/* Nút Thêm 10: Xanh Dương Nhạt - Cyan Biển Trong Suốt */
+#daythem-nav-bar .dantri-nav-btn:nth-child(1) {
+    background: linear-gradient(135deg, rgba(240, 249, 255, 0.85) 0%, rgba(186, 230, 253, 0.72) 100%);
+    border: 1.5px solid rgba(56, 189, 248, 0.6);
+    color: #0284c7;
+    box-shadow: 0 6px 18px rgba(14, 165, 233, 0.2);
+}
+#daythem-nav-bar .dantri-nav-btn:nth-child(1):hover {
+    background: linear-gradient(135deg, rgba(224, 242, 254, 0.95) 0%, rgba(125, 211, 252, 0.85) 100%);
+    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.32);
+}
+#daythem-nav-bar .dantri-nav-btn:nth-child(1).active {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 8px 22px rgba(2, 132, 199, 0.45);
+}
+
+/* Nút Thêm 11: Cam Đào - Hổ Phách Rực Rỡ Trong Suốt */
+#daythem-nav-bar .dantri-nav-btn:nth-child(2) {
+    background: linear-gradient(135deg, rgba(255, 247, 237, 0.85) 0%, rgba(254, 215, 170, 0.72) 100%);
+    border: 1.5px solid rgba(251, 146, 60, 0.65);
+    color: #c2410c;
+    box-shadow: 0 6px 18px rgba(249, 115, 22, 0.2);
+}
+#daythem-nav-bar .dantri-nav-btn:nth-child(2):hover {
+    background: linear-gradient(135deg, rgba(255, 237, 213, 0.95) 0%, rgba(253, 186, 116, 0.85) 100%);
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.32);
+}
+#daythem-nav-bar .dantri-nav-btn:nth-child(2).active {
+    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 8px 22px rgba(234, 88, 12, 0.45);
+}
+
+/* Nút Thêm 12: Tím Lavender - Phong Lan Quyến Rũ Trong Suốt */
+#daythem-nav-bar .dantri-nav-btn:nth-child(3) {
+    background: linear-gradient(135deg, rgba(250, 245, 255, 0.85) 0%, rgba(233, 213, 255, 0.72) 100%);
+    border: 1.5px solid rgba(192, 132, 252, 0.65);
+    color: #7e22ce;
+    box-shadow: 0 6px 18px rgba(168, 85, 247, 0.2);
+}
+#daythem-nav-bar .dantri-nav-btn:nth-child(3):hover {
+    background: linear-gradient(135deg, rgba(243, 232, 255, 0.95) 0%, rgba(216, 180, 254, 0.85) 100%);
+    box-shadow: 0 8px 24px rgba(168, 85, 247, 0.32);
+}
+#daythem-nav-bar .dantri-nav-btn:nth-child(3).active {
+    background: linear-gradient(135deg, #9333ea 0%, #6b21a8 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 8px 22px rgba(147, 51, 234, 0.45);
+}
+
+/* 2. DÃY LỚP CHÍNH KHÓA (Hàng 1) */
+/* Lớp 11A: Xanh Lá Ngọc Lục Bảo (Emerald) Tươi Mát Trong Suốt */
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(1) {
+    background: linear-gradient(135deg, rgba(240, 253, 244, 0.85) 0%, rgba(187, 247, 208, 0.72) 100%);
+    border: 1.5px solid rgba(74, 222, 128, 0.65);
+    color: #15803d;
+    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.2);
+}
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(1):hover {
+    background: linear-gradient(135deg, rgba(220, 252, 231, 0.95) 0%, rgba(134, 239, 172, 0.85) 100%);
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.32);
+}
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(1).active {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 8px 22px rgba(22, 163, 74, 0.45);
+}
+
+/* Lớp 11C: Đỏ Hồng Dâu Tây (Ruby Rose) Nổi Bật Trong Suốt */
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(2) {
+    background: linear-gradient(135deg, rgba(255, 241, 242, 0.85) 0%, rgba(254, 205, 211, 0.72) 100%);
+    border: 1.5px solid rgba(251, 113, 133, 0.65);
+    color: #be123c;
+    box-shadow: 0 6px 18px rgba(244, 63, 94, 0.2);
+}
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(2):hover {
+    background: linear-gradient(135deg, rgba(255, 228, 230, 0.95) 0%, rgba(253, 164, 175, 0.85) 100%);
+    box-shadow: 0 8px 24px rgba(244, 63, 94, 0.32);
+}
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(2).active {
+    background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 8px 22px rgba(225, 29, 72, 0.45);
+}
+
+/* Lớp 10P: Vàng Mật Ong - Hoàng Kim (Gold Amber) Rực Rỡ Trong Suốt */
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(3) {
+    background: linear-gradient(135deg, rgba(254, 252, 232, 0.85) 0%, rgba(254, 240, 138, 0.72) 100%);
+    border: 1.5px solid rgba(250, 204, 21, 0.7);
+    color: #854d0e;
+    box-shadow: 0 6px 18px rgba(234, 179, 8, 0.2);
+}
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(3):hover {
+    background: linear-gradient(135deg, rgba(254, 249, 195, 0.95) 0%, rgba(253, 224, 71, 0.85) 100%);
+    box-shadow: 0 8px 24px rgba(234, 179, 8, 0.32);
+}
+#chinhkhoa-row1-bar .dantri-nav-btn:nth-child(3).active {
+    background: linear-gradient(135deg, #ca8a04 0%, #854d0e 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 8px 22px rgba(202, 138, 4, 0.45);
+}
+
 .dantri-nav-btn .caret-icon { font-size: 11px; transition: transform 0.25s ease; color: inherit; opacity: 0.75; flex-shrink: 0; }
 .dantri-nav-btn.active .caret-icon { transform: rotate(180deg); opacity: 1; }
 
@@ -139,6 +271,69 @@ body {
 .dantri-nav-btn.padlet-purple-btn:hover { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(139, 92, 246, 0.45); }
 .dantri-nav-btn.padlet-purple-btn.active { background: linear-gradient(135deg, #7c3aed 0%, #581c87 100%); box-shadow: 0 5px 16px rgba(109, 40, 217, 0.5); }
 #dantri-nav-bar .dantri-nav-btn { min-height: 44px; padding: 6px 12px; font-size: 13px; line-height: 1.25; border-radius: 14px; gap: 4px; margin-right: 8px;}
+
+/* ========================================================================= */
+/* BIỂU TƯỢNG LOGO TẾT TRUNG THU CỐ ĐỊNH MÉP PHẢI TRƯỢT THEO MÀN HÌNH */
+/* ========================================================================= */
+.mid-autumn-badge {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(145deg, rgba(255, 241, 242, 0.95) 0%, rgba(254, 243, 199, 0.92) 50%, rgba(254, 215, 170, 0.95) 100%);
+    border: 2px solid #ea580c;
+    border-right: none;
+    border-radius: 20px 0 0 20px;
+    padding: 10px 7px 11px 9px;
+    box-shadow: -4px 8px 24px rgba(234, 88, 12, 0.38), 0 2px 10px rgba(0,0,0,0.12);
+    cursor: pointer;
+    user-select: none;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    animation: floatMidAutumn 3.2s ease-in-out infinite;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
+    text-decoration: none;
+}
+
+.mid-autumn-badge:hover {
+    transform: translateY(-50%) translateX(-4px) scale(1.06);
+    box-shadow: -6px 12px 30px rgba(234, 88, 12, 0.5);
+}
+
+.mid-autumn-icon {
+    font-size: 32px;
+    line-height: 1;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(225, 29, 72, 0.4));
+    animation: swingLantern 2.6s ease-in-out infinite;
+    transform-origin: top center;
+}
+
+.mid-autumn-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    color: #991b1b;
+    margin-top: 6px;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+@keyframes floatMidAutumn {
+    0%, 100% { transform: translateY(-50%); }
+    50% { transform: translateY(calc(-50% - 9px)); }
+}
+
+@keyframes swingLantern {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg) scale(1.08); }
+    75% { transform: rotate(10deg) scale(1.08); }
+}
 
 /* BẢNG XÒE & CONTAINER */
 .dantri-dropdown-panel { 
@@ -588,7 +783,7 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .banner-title { font-size: 12px; padding: 5px 12px; }
     .banner-watermark { font-size: 17px; letter-spacing: 1.5px; }
     #dantri-nav-bar .dantri-nav-btn { min-height: 40px; padding: 5px 9px; font-size: 12px; }
-    .full-width-nav-row .dantri-nav-btn { font-size: 12.5px; padding: 8px 4px; min-height: 38px; }
+    .full-width-nav-row .dantri-nav-btn { font-size: 13px; padding: 8px 4px; min-height: 44px; }
     .news-img-box { width: 68px; height: 46px; }
     .exam-thumb-box { width: 38px; height: 44px; }
     .auth-input { width: 100px; }
@@ -600,4 +795,7 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .result-search-input { width: 110px; }
     .result-search-input:focus { width: 140px; }
     .table-settings-popover { width: 280px; right: -50px; }
+    .mid-autumn-badge { padding: 8px 5px 9px 7px; }
+    .mid-autumn-icon { font-size: 26px; }
+    .mid-autumn-text { font-size: 9.5px; }
 }
