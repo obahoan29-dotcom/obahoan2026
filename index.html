@@ -38,11 +38,50 @@
 </head>
 <body>
 
-<!-- BIỂU TƯỢNG LOGO TẾT TRUNG THU CỐ ĐỊNH MÉP PHẢI TRƯỢT THEO KHI VUỐT TRANG -->
-<div class="mid-autumn-badge" title="Tết Trung Thu Vui Vẻ - Đêm Hội Trăng Rằm! 🏮🥮">
-    <div class="lantern-light"></div>
-    <span class="mid-autumn-icon">🏮</span>
-    <span class="mid-autumn-text">TRUNG THU 🥮</span>
+<!-- 1. BÁNH TRUNG THU NHỎ XINH BÊN HÔNG TRÁI CỐ ĐỊNH TRƯỢT THEO KHI VUỐT TRANG -->
+<div class="mid-autumn-left-badge" id="mid-autumn-left-badge" title="Tết Trung Thu - Bánh nướng thơm lừng trăng rằm! 🥮">
+    <button type="button" class="mid-autumn-close-btn" onclick="dismissMidAutumnBadge('left', event)" title="Tắt logo bánh trung thu">✕</button>
+    <svg class="mooncake-svg-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Đáy và thân bánh nướng vàng ruộm -->
+        <circle cx="32" cy="32" r="28" fill="#d97706" stroke="#b45309" stroke-width="2.5"/>
+        <!-- Múi hoa văn cánh bánh nổi -->
+        <circle cx="32" cy="32" r="24" fill="#f59e0b" stroke="#d97706" stroke-width="1.8"/>
+        <!-- Hoa văn nhụy hoa truyền thống -->
+        <circle cx="32" cy="32" r="18" fill="#fbbf24" stroke="#b45309" stroke-width="1.5" stroke-dasharray="2 3"/>
+        <path d="M32 18 C35 25, 41 25, 46 22 C43 27, 43 33, 46 38 C41 35, 35 35, 32 42 C29 35, 23 35, 18 38 C21 33, 21 27, 18 22 C23 25, 29 25, 32 18 Z" fill="#b45309" opacity="0.85"/>
+        <circle cx="32" cy="30" r="4.5" fill="#fef08a" stroke="#92400e" stroke-width="1"/>
+    </svg>
+    <span class="mooncake-text-pill">TRĂNG RẰM 🥮</span>
+</div>
+
+<!-- 2. ĐÈN LỒNG CÓ CÁN CẦM BÊN HÔNG PHẢI CỐ ĐỊNH TRƯỢT THEO KHI VUỐT TRANG -->
+<div class="mid-autumn-right-badge" id="mid-autumn-right-badge" title="Tết Trung Thu - Rước đèn lồng đón hội trăng rằm! 🏮">
+    <button type="button" class="mid-autumn-close-btn" onclick="dismissMidAutumnBadge('right', event)" title="Tắt logo đèn lồng">✕</button>
+    <div class="lantern-stick-wrapper">
+        <svg class="lantern-stick-svg" viewBox="0 0 64 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Cán cầm tre/gỗ đỏ nghiêng thanh thoát -->
+            <path d="M4 14 L42 8" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="4" cy="14" r="2.5" fill="#78350f"/>
+            <!-- Dây treo lụa đỏ nối từ đầu cán cầm xuống đèn -->
+            <path d="M40 9 L32 24" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Mũ đèn lồng vàng kim -->
+            <rect x="25" y="24" width="14" height="3" rx="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.8"/>
+            <!-- Quả đèn lồng đỏ truyền thống lung linh -->
+            <ellipse cx="32" cy="40" rx="16" ry="15" fill="#dc2626" stroke="#991b1b" stroke-width="1.5"/>
+            <!-- Nan lồng sọc vàng phản chiếu -->
+            <path d="M24 26 C21 33 21 47 24 54" stroke="#fbbf24" stroke-width="1.2" fill="none"/>
+            <path d="M32 26 L32 54" stroke="#fef08a" stroke-width="1.2"/>
+            <path d="M40 26 C43 33 43 47 40 54" stroke="#fbbf24" stroke-width="1.2" fill="none"/>
+            <!-- Ánh sáng lõi ngọn nến bên trong -->
+            <circle cx="32" cy="40" r="4.5" fill="#fef08a" opacity="0.9"/>
+            <!-- Đáy đèn lồng -->
+            <rect x="25" y="53" width="14" height="3" rx="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.8"/>
+            <!-- Chùm tua rua rủ đuôi đung đưa -->
+            <path d="M29 56 L27 74 M32 56 L32 76 M35 56 L37 74" stroke="#ef4444" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="32" cy="58" r="2" fill="#fbbf24"/>
+        </svg>
+    </div>
+    <span class="lantern-text-pill">RƯỚC ĐÈN 🏮</span>
 </div>
 
 <div class="container" id="app">
@@ -85,6 +124,50 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
                     <div class="admin-popover-title" style="margin-bottom: 0;">🚀 Đăng đề thi & tài liệu</div>
                     <button type="button" class="admin-logout-btn" onclick="logoutAdmin(event)" title="Khóa quyền quản trị ngay lập tức">🔒 Khóa lại</button>
+                </div>
+
+                <!-- KHU VỰC CẤU HÌNH TRANG TRÍ TẾT TRUNG THU (DÀNH CHO QUẢN TRỊ VIÊN) -->
+                <div class="admin-midautumn-control-card">
+                    <div class="admin-midautumn-header">
+                        <span class="admin-midautumn-icon">🥮🏮</span>
+                        <div class="admin-midautumn-title-wrap">
+                            <span class="admin-midautumn-title">Trang trí Tết Trung Thu</span>
+                            <span class="admin-midautumn-sub">Bánh nướng & Đèn lồng trượt 2 bên</span>
+                        </div>
+                        <!-- CÔNG TẮC BẬT / TẮT LOGO -->
+                        <label class="switch-toggle" title="Bật hoặc Tắt hiển thị logo Trung Thu">
+                            <input type="checkbox" id="admin-midautumn-toggle" onchange="toggleMidAutumnDecor(this.checked)">
+                            <span class="slider-toggle"></span>
+                        </label>
+                    </div>
+                    
+                    <div id="admin-midautumn-body" class="admin-midautumn-body">
+                        <!-- 1. THANH KÉO KÍCH THƯỚC TO - NHỎ -->
+                        <div class="admin-midautumn-row">
+                            <div class="admin-midautumn-lbl-row">
+                                <span>🔍 Kích thước (To - Nhỏ):</span>
+                                <span class="admin-midautumn-badge" id="lbl-midautumn-size">100%</span>
+                            </div>
+                            <div class="admin-slider-wrap">
+                                <span style="font-size: 11px;">Nhỏ</span>
+                                <input type="range" id="slider-midautumn-size" min="60" max="150" step="5" value="100" oninput="changeMidAutumnSize(this.value)">
+                                <span style="font-size: 11px;">To</span>
+                            </div>
+                        </div>
+
+                        <!-- 2. THANH KÉO ĐỘ TRONG SUỐT (TỪ RẤT TRONG ĐẾN HƠI TRONG / ĐẬM RÕ) -->
+                        <div class="admin-midautumn-row">
+                            <div class="admin-midautumn-lbl-row">
+                                <span>✨ Độ trong suốt:</span>
+                                <span class="admin-midautumn-badge" id="lbl-midautumn-opacity">88% (Hơi trong)</span>
+                            </div>
+                            <div class="admin-slider-wrap">
+                                <span style="font-size: 11px;">Rất trong</span>
+                                <input type="range" id="slider-midautumn-opacity" min="20" max="100" step="5" value="88" oninput="changeMidAutumnOpacity(this.value)">
+                                <span style="font-size: 11px;">Đậm rõ</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="admin-tabs">
@@ -296,10 +379,9 @@
         </div>
     </div>
 
-    <!-- HÀNG THỐNG KÊ TỔNG QUAN & PHÂN LOẠI ĐIỂM TRÊN CÙNG 1 HÀNG DUY NHẤT (GỘP GỌN GÀNG) -->
+    <!-- HÀNG THỐNG KÊ TỔNG QUAN & PHÂN LOẠI ĐIỂM TRÊN CÙNG 1 HÀNG DUY NHẤT -->
     <div class="result-modal-stats-bar" id="result-modal-stats-bar" style="background:#f8fafc; padding:8px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid #e2e8f0; font-size:13px; font-weight:700; flex-shrink:0; overflow-x:auto;">
         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:nowrap;">
-            <!-- NHÓM 1: CÁC THẺ TỔNG QUAN -->
             <div class="stat-badge-item">
                 👥 Tổng thí sinh: <b id="stat-total-students">0</b>
                 <span style="font-size:12px; color:#64748b; margin-left:4px; font-weight:700;">
@@ -311,10 +393,8 @@
             <div class="stat-badge-item">⏳ Chưa thi: <b id="stat-unsubmitted-students" style="color:#ef4444;">0</b></div>
             <div class="stat-badge-item">🎯 Điểm TB: <b id="stat-avg-score" style="color:#8b5cf6;">0.0</b></div>
 
-            <!-- VẠCH NGĂN CÁCH GIỮA 2 NHÓM THỐNG KÊ -->
             <span style="display:inline-block; width:1.5px; height:20px; background:#cbd5e1; margin:0 4px; flex-shrink:0;"></span>
 
-            <!-- NHÓM 2: PHÂN LOẠI ĐIỂM (ĐÃ ĐƯA LÊN CÙNG HÀNG) -->
             <span style="color:#475569; display:inline-flex; align-items:center; gap:4px; font-size:12.5px; white-space:nowrap;">
                 📊 <b>Phân loại điểm:</b>
             </span>
@@ -329,7 +409,6 @@
             </div>
         </div>
 
-        <!-- NÚT CHI TIẾT ĐẨY SÁT GÓC PHẢI -->
         <div style="flex-shrink:0; margin-left:auto;">
             <button type="button" id="btn-view-detailed-stats" onclick="openDetailedStatsView()" style="background:linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color:#fff; border:none; border-radius:18px; padding:6px 14px; font-size:12.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 3px 10px rgba(99,102,241,0.32); white-space:nowrap; transition:all 0.2s;">
                 📈 Chi tiết ➔
@@ -375,9 +454,8 @@
         </div>
     </div>
 
-    <!-- VIEW 2: MÀN HÌNH THỐNG KÊ CHI TIẾT BẰNG BIỂU ĐỒ HÌNH CỘT (ĐI THEO ĐƯỜNG DẪN ĐỂ LÙI LẠI ĐƯỢC) -->
+    <!-- VIEW 2: MÀN HÌNH THỐNG KÊ CHI TIẾT BẰNG BIỂU ĐỒ HÌNH CỘT -->
     <div id="result-detailed-stats-view" style="display:none; flex:1; padding:16px; overflow-y:auto; background:#f1f5f9; flex-direction:column; gap:16px;">
-        <!-- NÚT LÙI LẠI TRÊN THANH CHI TIẾT -->
         <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; padding:12px 18px; border-radius:14px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
             <button type="button" onclick="closeDetailedStatsView()" style="background:#f8fafc; color:#1e293b; border:1.5px solid #cbd5e1; border-radius:10px; padding:7px 15px; font-weight:800; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px; transition:0.2s;">
                 ⬅ Quay lại bảng kết quả
@@ -387,7 +465,6 @@
             </div>
         </div>
 
-        <!-- CÁC THẺ THỐNG KÊ KPI RỰC RỠ -->
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
             <div style="background:linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius:14px; padding:16px; border-left:5px solid #16a34a; box-shadow:0 3px 10px rgba(22,163,74,0.1);">
                 <div style="color:#166534; font-size:12px; font-weight:800;">ĐIỂM CAO NHẤT</div>
@@ -411,7 +488,6 @@
             </div>
         </div>
 
-        <!-- KHỐI BIỂU ĐỒ HÌNH CỘT PHỔ ĐIỂM -->
         <div style="background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; padding:20px; box-shadow:0 4px 18px rgba(0,0,0,0.05);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
                 <h3 style="margin:0; font-size:16px; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:8px;">
@@ -424,7 +500,6 @@
             </div>
         </div>
 
-        <!-- BẢNG CHI TIẾT THEO CÁC NHÓM XẾP LOẠI ĐIỂM -->
         <div style="background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; padding:18px; box-shadow:0 4px 18px rgba(0,0,0,0.05);">
             <h4 style="margin:0 0 12px 0; font-size:15px; font-weight:900; color:#0f172a;">
                 📑 Bảng tổng hợp mức xếp loại học lực bài thi
