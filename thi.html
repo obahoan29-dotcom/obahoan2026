@@ -26,7 +26,15 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
     <style>
-        :root { --primary: #0284c7; --primary-dark: #0369a1; --secondary: #0d9488; --accent-orange: #f97316; --accent-orange-hover: #ea580c; --bg-page: #f8fafc; --card-bg: #ffffff; --border-color: #e2e8f0; --text-dark: #0f172a; --text-muted: #64748b; --success: #10b981; --danger: #ef4444; }
+        :root { 
+            --primary: #0284c7; --primary-dark: #0369a1; --secondary: #0d9488; --accent-orange: #f97316; 
+            --accent-orange-hover: #ea580c; --bg-page: #f8fafc; --card-bg: #ffffff; --border-color: #e2e8f0; 
+            --text-dark: #0f172a; --text-muted: #64748b; --success: #10b981; --danger: #ef4444; 
+
+            /* THÔNG SỐ ĐỒNG BỘ MÙA TRUNG THU */
+            --midautumn-scale: 1;
+            --midautumn-opacity: 0.88;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg-page); color: var(--text-dark); min-height: 100vh; padding-bottom: 30px; -webkit-tap-highlight-color: transparent; }
         mjx-container[jax="CHTML"][display="true"] { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
@@ -101,110 +109,41 @@
         .tf-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; line-height: 1.5; color: #334155;}
         .tf-table input[type="radio"] { width: 20px; height: 20px; accent-color: #0d9488; cursor: pointer; }
 
-        /* KHỐI TỰ LUẬN & ĐIỀN ĐÁP SỐ CHUẨN ĐẸP */
+        /* KHỐI TỰ LUẬN & ĐIỀN ĐÁP SỐ */
         .part4-row-container { 
-            display: flex; 
-            gap: 14px; 
-            align-items: flex-start; 
-            margin-top: 14px; 
-            flex-wrap: wrap; 
+            display: flex; gap: 14px; align-items: flex-start; margin-top: 14px; flex-wrap: wrap; 
         }
-        .part4-left-col { 
-            flex: 1 1 240px; 
-            min-width: 0; 
-        }
-        .part4-right-col { 
-            flex: 1 1 210px; 
-            min-width: 0; 
-            position: relative; 
-            display: flex;
-            flex-direction: column;
-        }
+        .part4-left-col { flex: 1 1 240px; min-width: 0; }
+        .part4-right-col { flex: 1 1 210px; min-width: 0; position: relative; display: flex; flex-direction: column; }
         .short-input-box { 
-            width: 100%; 
-            padding: 13px 15px; 
-            border: 2px solid #cbd5e1; 
-            border-radius: 14px; 
-            font-size: 1.05rem; 
-            font-weight: 600; 
-            outline: none; 
-            transition: 0.2s; 
-            margin-top: 0; 
-            color: #0f172a;
-            background: #ffffff;
-            box-sizing: border-box;
+            width: 100%; padding: 13px 15px; border: 2px solid #cbd5e1; border-radius: 14px; 
+            font-size: 1.05rem; font-weight: 600; outline: none; transition: 0.2s; 
+            margin-top: 0; color: #0f172a; background: #ffffff; box-sizing: border-box;
         }
-        .short-input-box:focus { 
-            border-color: #0284c7; 
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); 
-        }
+        .short-input-box:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
         /* NÚT TÍM CHỤP ẢNH TỰ LUẬN */
         .btn-photo-trigger { 
-            width: 100%; 
-            min-height: 48px; 
-            background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); 
-            color: #ffffff; 
-            border: none; 
-            padding: 12px 16px; 
-            border-radius: 14px; 
-            font-weight: 800; 
-            font-size: 0.95rem; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 6px; 
-            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); 
-            transition: all 0.2s ease; 
-            text-align: center; 
+            width: 100%; min-height: 48px; background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); 
+            color: #ffffff; border: none; padding: 12px 16px; border-radius: 14px; font-weight: 800; 
+            font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            gap: 6px; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); transition: all 0.2s ease; text-align: center; 
         }
-        .btn-photo-trigger:hover { 
-            transform: translateY(-1px); 
-            box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4); 
-            filter: brightness(1.05);
-        }
+        .btn-photo-trigger:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4); filter: brightness(1.05); }
 
         .sub-padlet-dropdown { 
-            display: none; 
-            flex-direction: column; 
-            gap: 10px; 
-            margin-top: 10px; 
-            background: #ffffff; 
-            border: 2px solid #cbd5e1; 
-            padding: 12px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); 
-            width: 100%; 
-            box-sizing: border-box;
-            animation: expandDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: none; flex-direction: column; gap: 10px; margin-top: 10px; background: #ffffff; 
+            border: 2px solid #cbd5e1; padding: 12px; border-radius: 16px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); 
+            width: 100%; box-sizing: border-box; animation: expandDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes expandDropdown {
-            from { opacity: 0; transform: translateY(-6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes expandDropdown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 
         .btn-padlet-opt { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 6px; 
-            background: #ffffff; 
-            color: #0284c7; 
-            border: 2px solid #0284c7; 
-            padding: 10px 14px; 
-            border-radius: 12px; 
-            font-weight: 800; 
-            font-size: 0.95rem; 
-            text-decoration: none; 
-            transition: all 0.2s ease; 
-            box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center; gap: 6px; background: #ffffff; 
+            color: #0284c7; border: 2px solid #0284c7; padding: 10px 14px; border-radius: 12px; 
+            font-weight: 800; font-size: 0.95rem; text-decoration: none; transition: all 0.2s ease; box-sizing: border-box;
         }
-        .btn-padlet-opt:hover { 
-            background: #0284c7; 
-            color: #ffffff; 
-            box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3);
-        }
+        .btn-padlet-opt:hover { background: #0284c7; color: #ffffff; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3); }
         
         .quiz-img-container { text-align: center; margin: 16px 0; max-width: 100%; overflow: hidden; }
         .quiz-img { max-width: 100%; max-height: 380px; height: auto; object-fit: contain; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.06); background: #ffffff; }
@@ -243,14 +182,213 @@
         .explanation-box { background: #fefce8; border-left: 4px solid #eab308; padding: 12px 16px; border-radius: 8px; margin-top: 14px; font-size: 0.95rem; color: #713f12; line-height: 1.6; font-weight: 500;}
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes pulseWait { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
-        @media(max-width: 600px) { .container { padding: 8px; } .card-panel, .question-card { padding: 16px; border-radius: 12px;} .q-content-text { font-size: 1rem; } .opt-text { font-size: 0.95rem; } .short-input-box { font-size: 1rem; padding: 12px; } .tf-table th { font-size: 0.8rem; } .tf-table td { font-size: 0.9rem; } .q-num-badge { min-width: 28px; height: 28px; font-size: 0.85rem; } .opt-circle { width: 26px; height: 26px; font-size: 0.85rem; } .explanation-box { font-size: 0.9rem; } }
         
         #global-loading { position: fixed; inset: 0; background: #fff; z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
         .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #0284c7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+
+        /* ========================================================================= */
+        /* 2 LOGO TRƯỢT TẾT TRUNG THU TRONG GIAO DIỆN LÀM BÀI THI (THI.HTML) */
+        /* ========================================================================= */
+        .mid-autumn-left-badge {
+            position: fixed;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%) scale(var(--midautumn-scale, 1));
+            transform-origin: left center;
+            opacity: var(--midautumn-opacity, 0.88);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, rgba(255, 251, 235, 0.95) 0%, rgba(254, 243, 199, 0.85) 50%, rgba(254, 215, 170, 0.92) 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 24px;
+            padding: 10px 8px 10px 8px;
+            box-shadow: 0 10px 30px rgba(217, 119, 6, 0.38), 0 0 18px rgba(251, 191, 36, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            user-select: none;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            animation: floatMooncake 3.6s ease-in-out infinite;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s, opacity 0.25s;
+            text-decoration: none;
+        }
+        .mid-autumn-left-badge:hover {
+            transform: translateY(-50%) scale(calc(var(--midautumn-scale, 1) * 1.08));
+            box-shadow: 0 14px 38px rgba(217, 119, 6, 0.55), 0 0 24px rgba(251, 191, 36, 0.6);
+            opacity: 1;
+        }
+
+        .mid-autumn-right-badge {
+            position: fixed;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%) scale(var(--midautumn-scale, 1));
+            transform-origin: right center;
+            opacity: var(--midautumn-opacity, 0.88);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, rgba(255, 241, 242, 0.95) 0%, rgba(254, 242, 242, 0.85) 50%, rgba(254, 215, 170, 0.92) 100%);
+            border: 2px solid #ef4444;
+            border-radius: 24px;
+            padding: 10px 8px 10px 8px;
+            box-shadow: 0 10px 30px rgba(225, 29, 72, 0.38), 0 0 20px rgba(244, 63, 94, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            user-select: none;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            animation: floatLanternStick 3.2s ease-in-out infinite;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s, opacity 0.25s;
+            text-decoration: none;
+        }
+        .mid-autumn-right-badge:hover {
+            transform: translateY(-50%) scale(calc(var(--midautumn-scale, 1) * 1.08));
+            box-shadow: 0 14px 38px rgba(225, 29, 72, 0.55), 0 0 26px rgba(239, 68, 68, 0.65);
+            opacity: 1;
+        }
+
+        /* NÚT TẮT [X] NHỎ XINH TRÊN MỖI LOGO */
+        .mid-autumn-close-btn {
+            position: absolute;
+            top: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #475569;
+            border: 1.5px solid #cbd5e1;
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10001;
+            padding: 0;
+        }
+        .mid-autumn-left-badge .mid-autumn-close-btn { right: -6px; }
+        .mid-autumn-right-badge .mid-autumn-close-btn { left: -6px; }
+        .mid-autumn-close-btn:hover {
+            background: #ef4444; color: #ffffff; border-color: #dc2626; transform: scale(1.18);
+        }
+
+        .mooncake-svg-icon {
+            width: 44px; height: 44px;
+            filter: drop-shadow(0 4px 8px rgba(180, 83, 9, 0.45));
+            animation: pulseMooncakeGlow 2.5s ease-in-out infinite alternate;
+        }
+        .mooncake-text-pill {
+            background: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+            color: #fef3c7; font-size: 10px; font-weight: 900; letter-spacing: 0.5px;
+            padding: 3px 8px; border-radius: 12px; margin-top: 6px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 2px 6px rgba(120, 53, 15, 0.35); white-space: nowrap;
+        }
+
+        .lantern-stick-wrapper {
+            display: flex; flex-direction: column; align-items: center;
+            transform-origin: top center; animation: swingLanternArt 3s ease-in-out infinite;
+        }
+        .lantern-stick-svg {
+            width: 46px; height: 58px;
+            filter: drop-shadow(0 4px 10px rgba(220, 38, 38, 0.45));
+        }
+        .lantern-text-pill {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: #fee2e2; font-size: 10px; font-weight: 900; letter-spacing: 0.5px;
+            padding: 3px 8px; border-radius: 12px; margin-top: 4px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 2px 6px rgba(153, 27, 27, 0.35); white-space: nowrap;
+        }
+
+        @keyframes floatMooncake {
+            0%, 100% { transform: translateY(-50%) rotate(0deg); }
+            50% { transform: translateY(calc(-50% - 9px)) rotate(-4deg); }
+        }
+        @keyframes pulseMooncakeGlow {
+            0% { transform: scale(1); filter: drop-shadow(0 4px 8px rgba(180, 83, 9, 0.4)); }
+            100% { transform: scale(1.05); filter: drop-shadow(0 6px 14px rgba(245, 158, 11, 0.7)); }
+        }
+        @keyframes floatLanternStick {
+            0%, 100% { transform: translateY(-50%); }
+            50% { transform: translateY(calc(-50% - 8px)); }
+        }
+        @keyframes swingLanternArt {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-8deg); }
+            75% { transform: rotate(8deg); }
+        }
+
+        @media(max-width: 600px) { 
+            .container { padding: 8px; } 
+            .card-panel, .question-card { padding: 16px; border-radius: 12px;} 
+            .q-content-text { font-size: 1rem; } 
+            .opt-text { font-size: 0.95rem; } 
+            .short-input-box { font-size: 1rem; padding: 12px; } 
+            .tf-table th { font-size: 0.8rem; } 
+            .tf-table td { font-size: 0.9rem; } 
+            .q-num-badge { min-width: 28px; height: 28px; font-size: 0.85rem; } 
+            .opt-circle { width: 26px; height: 26px; font-size: 0.85rem; } 
+            .explanation-box { font-size: 0.9rem; } 
+
+            .mid-autumn-left-badge {
+                left: 2px; padding: 6px 5px 7px 5px;
+                transform: translateY(-50%) scale(calc(var(--midautumn-scale, 1) * 0.75));
+            }
+            .mid-autumn-right-badge {
+                right: 2px; padding: 6px 5px 7px 5px;
+                transform: translateY(-50%) scale(calc(var(--midautumn-scale, 1) * 0.75));
+            }
+            .mooncake-svg-icon { width: 34px; height: 34px; }
+            .lantern-stick-svg { width: 36px; height: 48px; }
+            .mooncake-text-pill, .lantern-text-pill { font-size: 8.5px; padding: 2px 5px; }
+        }
     </style>
 </head>
 <body>
     
+    <!-- 1. BÁNH TRUNG THU NHỎ XINH TRƯỢT THEO KHI KÉO LÀM BÀI BÊN HÔNG TRÁI -->
+    <div class="mid-autumn-left-badge" id="mid-autumn-left-badge" title="Tết Trung Thu - Bánh nướng thơm lừng trăng rằm! 🥮">
+        <button type="button" class="mid-autumn-close-btn" onclick="dismissMidAutumnBadge('left', event)" title="Tắt logo bánh trung thu">✕</button>
+        <svg class="mooncake-svg-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="28" fill="#d97706" stroke="#b45309" stroke-width="2.5"/>
+            <circle cx="32" cy="32" r="24" fill="#f59e0b" stroke="#d97706" stroke-width="1.8"/>
+            <circle cx="32" cy="32" r="18" fill="#fbbf24" stroke="#b45309" stroke-width="1.5" stroke-dasharray="2 3"/>
+            <path d="M32 18 C35 25, 41 25, 46 22 C43 27, 43 33, 46 38 C41 35, 35 35, 32 42 C29 35, 23 35, 18 38 C21 33, 21 27, 18 22 C23 25, 29 25, 32 18 Z" fill="#b45309" opacity="0.85"/>
+            <circle cx="32" cy="30" r="4.5" fill="#fef08a" stroke="#92400e" stroke-width="1"/>
+        </svg>
+        <span class="mooncake-text-pill">TRĂNG RẰM 🥮</span>
+    </div>
+
+    <!-- 2. ĐÈN LỒNG CÓ CÁN CẦM TRƯỢT THEO KHI KÉO LÀM BÀI BÊN HÔNG PHẢI -->
+    <div class="mid-autumn-right-badge" id="mid-autumn-right-badge" title="Tết Trung Thu - Rước đèn lồng đón hội trăng rằm! 🏮">
+        <button type="button" class="mid-autumn-close-btn" onclick="dismissMidAutumnBadge('right', event)" title="Tắt logo đèn lồng">✕</button>
+        <div class="lantern-stick-wrapper">
+            <svg class="lantern-stick-svg" viewBox="0 0 64 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 14 L42 8" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="4" cy="14" r="2.5" fill="#78350f"/>
+                <path d="M40 9 L32 24" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/>
+                <rect x="25" y="24" width="14" height="3" rx="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.8"/>
+                <ellipse cx="32" cy="40" rx="16" ry="15" fill="#dc2626" stroke="#991b1b" stroke-width="1.5"/>
+                <path d="M24 26 C21 33 21 47 24 54" stroke="#fbbf24" stroke-width="1.2" fill="none"/>
+                <path d="M32 26 L32 54" stroke="#fef08a" stroke-width="1.2"/>
+                <path d="M40 26 C43 33 43 47 40 54" stroke="#fbbf24" stroke-width="1.2" fill="none"/>
+                <circle cx="32" cy="40" r="4.5" fill="#fef08a" opacity="0.9"/>
+                <rect x="25" y="53" width="14" height="3" rx="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.8"/>
+                <path d="M29 56 L27 74 M32 56 L32 76 M35 56 L37 74" stroke="#ef4444" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="32" cy="58" r="2" fill="#fbbf24"/>
+            </svg>
+        </div>
+        <span class="lantern-text-pill">RƯỚC ĐÈN 🏮</span>
+    </div>
+
     <div id="global-loading">
         <div class="spinner"></div>
         <h2 style="color: #0369a1; font-weight: 800;">Đang tải dữ liệu đề thi...</h2>
@@ -417,6 +555,13 @@
         let presenceInterval = null;
         let onlineCountInterval = null;
 
+        // Cấu hình hiển thị logo Trung Thu trong trang thi
+        let midAutumnThiConfig = {
+            enabled: true,
+            scale: 1.0,
+            opacity: 0.88
+        };
+
         function getExamCategory() {
             const urlParams = new URLSearchParams(window.location.search);
             let cat = urlParams.get('cat');
@@ -429,6 +574,61 @@
                 }
             } catch(e) {}
             return "them-11";
+        }
+
+        // ================= HỆ THỐNG ĐỒNG BỘ LOGO TRUNG THU TRONG THI.HTML =================
+        function applyMidAutumnThiStyles() {
+            const leftEl = document.getElementById("mid-autumn-left-badge");
+            const rightEl = document.getElementById("mid-autumn-right-badge");
+
+            document.documentElement.style.setProperty("--midautumn-scale", midAutumnThiConfig.scale);
+            document.documentElement.style.setProperty("--midautumn-opacity", midAutumnThiConfig.opacity);
+
+            const isVisible = midAutumnThiConfig.enabled !== false;
+            if (leftEl && !leftEl.dataset.dismissed) {
+                leftEl.style.display = isVisible ? "flex" : "none";
+            }
+            if (rightEl && !rightEl.dataset.dismissed) {
+                rightEl.style.display = isVisible ? "flex" : "none";
+            }
+        }
+
+        async function initMidAutumnInThiPage() {
+            try {
+                const saved = localStorage.getItem("mid_autumn_settings");
+                if (saved) {
+                    midAutumnThiConfig = { ...midAutumnThiConfig, ...JSON.parse(saved) };
+                }
+            } catch(e) {}
+
+            applyMidAutumnThiStyles();
+
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/system_settings/mid_autumn.json`);
+                const fbData = await res.json();
+                if (fbData && typeof fbData === 'object') {
+                    midAutumnThiConfig = { ...midAutumnThiConfig, ...fbData };
+                    applyMidAutumnThiStyles();
+                }
+            } catch(e) {}
+        }
+
+        function dismissMidAutumnBadge(side, event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const targetId = side === 'left' ? 'mid-autumn-left-badge' : 'mid-autumn-right-badge';
+            const el = document.getElementById(targetId);
+            if (el) {
+                el.style.transition = 'all 0.25s ease';
+                el.style.opacity = '0';
+                el.style.transform = (side === 'left' ? 'translateX(-30px)' : 'translateX(30px)') + ' scale(0.7)';
+                setTimeout(() => {
+                    el.style.display = 'none';
+                    el.dataset.dismissed = 'true';
+                }, 250);
+            }
         }
 
         // ================= HỆ THỐNG TÌM HỌC SINH CHUẨN XÁC =================
@@ -623,6 +823,8 @@
         }
 
         window.onload = async function() {
+            initMidAutumnInThiPage();
+
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
 
