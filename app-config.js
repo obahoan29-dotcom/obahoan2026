@@ -104,22 +104,23 @@ const NEWS_DATA = [
 // =========================================================
 
 /**
- * Lấy danh sách tài khoản chính xác theo danh mục lớp
+ * Lấy danh sách tài khoản chuẩn xác 100% theo danh mục lớp
  */
 function getAccountsForCategory(categoryId) {
     if (!window.STUDENT_ACCOUNTS) return [];
-    const cat = (categoryId || "").toLowerCase();
+    const cat = String(categoryId || "").toLowerCase().trim();
 
-    if (cat.includes("11") && (cat.includes("them") || cat === "them-11")) return window.STUDENT_ACCOUNTS["them-11"] || [];
-    if (cat.includes("10") && (cat.includes("them") || cat === "them-10")) return window.STUDENT_ACCOUNTS["them-10"] || [];
-    if (cat.includes("12") && (cat.includes("them") || cat === "them-12")) return window.STUDENT_ACCOUNTS["them-12"] || [];
-    if (cat.includes("11a") || cat === "lop-11a") return window.STUDENT_ACCOUNTS["lop-11a"] || [];
-    if (cat.includes("11c") || cat === "lop-11c") return window.STUDENT_ACCOUNTS["lop-11c"] || [];
-    if (cat.includes("10p") || cat === "lop-10p") return window.STUDENT_ACCOUNTS["lop-10p"] || [];
+    if (cat === "lop-11c" || cat.includes("11c")) return window.STUDENT_ACCOUNTS["lop-11c"] || [];
+    if (cat === "lop-11a" || cat.includes("11a")) return window.STUDENT_ACCOUNTS["lop-11a"] || [];
+    if (cat === "lop-10p" || cat.includes("10p")) return window.STUDENT_ACCOUNTS["lop-10p"] || [];
+    if (cat === "them-11" || cat.includes("them-11") || cat.includes("them 11")) return window.STUDENT_ACCOUNTS["them-11"] || [];
+    if (cat === "them-10" || cat.includes("them-10") || cat.includes("them 10")) return window.STUDENT_ACCOUNTS["them-10"] || [];
+    if (cat === "them-12" || cat.includes("them-12") || cat.includes("them 12")) return window.STUDENT_ACCOUNTS["them-12"] || [];
 
+    if (window.STUDENT_ACCOUNTS[cat]) return window.STUDENT_ACCOUNTS[cat];
     if (window.STUDENT_ACCOUNTS[categoryId]) return window.STUDENT_ACCOUNTS[categoryId];
 
-    return window.STUDENT_ACCOUNTS["them-11"] || window.STUDENT_ACCOUNTS["them-10"] || [];
+    return [];
 }
 
 /**
