@@ -48,7 +48,6 @@ function toggleAdminPanel(e) {
 
 function handleEnter(e) { if (e.key === 'Enter') checkAdminPassword(); }
 
-// Chuyển đổi mã chuỗi thời gian (vd: '2h', '1d') thành số mili-giây
 function parseExpiryDurationMs(val) {
     switch (val) {
         case '1h': return 1 * 60 * 60 * 1000;
@@ -63,7 +62,6 @@ function parseExpiryDurationMs(val) {
     }
 }
 
-// Kiểm tra tính hợp lệ của phiên đăng nhập quản trị viên
 function checkAdminSessionValidity() {
     try {
         const logged = localStorage.getItem("adminLoggedInSession");
@@ -74,7 +72,7 @@ function checkAdminSessionValidity() {
                 isAdminLoggedIn = true;
                 return true;
             } else {
-                logoutAdmin(); // Hết hạn -> tự động xóa phiên
+                logoutAdmin();
             }
         }
     } catch(e) {}
@@ -108,7 +106,6 @@ function checkAdminPassword() {
     }
 }
 
-// Nút khóa lại ngay lập tức (Bỏ qua mọi điều kiện, hủy phiên ngay)
 function logoutAdmin(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     isAdminLoggedIn = false;
@@ -227,7 +224,7 @@ function processUpload() {
             const linkData = { 
                 title: parsedData.title, 
                 date: dateStr, 
-                url: `./thi.html?id=${quizId}`, 
+                url: `./thi.html?id=${quizId}&cat=${encodeURIComponent(category)}`, 
                 badgeText: "HOT", 
                 isHot: true, 
                 isDoc: false, 
@@ -359,7 +356,16 @@ async function confirmMoveQuiz() {
     const newCategory = document.getElementById("move-category-select").value;
     if(newCategory === currentMoveData.oldCategory) { alert("Đã nằm ở mục này rồi!"); return; }
     try {
-        let updatedData = { ...currentMoveData.quizData, categoryId: newCategory };
+        let itemUrl = currentMoveData.quizData.url || "";
+        try {
+            if (itemUrl.includes("thi.html")) {
+                let u = new URL(itemUrl, window.location.href);
+                u.searchParams.set("cat", newCategory);
+                itemUrl = u.pathname + u.search + u.hash;
+            }
+        } catch(e) {}
+
+        let updatedData = { ...currentMoveData.quizData, categoryId: newCategory, url: itemUrl };
         await fetch(`${FIREBASE_DB_URL}/custom_links/${newCategory}/${currentMoveData.quizId}.json`, { method: 'PUT', body: JSON.stringify(updatedData) });
         await fetch(`${FIREBASE_DB_URL}/custom_links/${currentMoveData.oldCategory}/${currentMoveData.quizId}.json`, { method: 'DELETE' });
         window.location.reload();
@@ -378,7 +384,21 @@ async function confirmCopyItem() {
     const destCategory = document.getElementById("copy-category-select").value;
     try {
         const newItemId = (currentCopyData.itemData.isDoc ? "doc_" : "quiz_") + Date.now();
-        const copyData = { ...currentCopyData.itemData, categoryId: destCategory, timestamp: Date.now() }; 
+        let itemUrl = currentCopyData.itemData.url || "";
+        try {
+            if (itemUrl.includes("thi.html")) {
+                let u = new URL(itemUrl, window.location.href);
+                u.searchParams.set("cat", destCategory);
+                itemUrl = u.pathname + u.search + u.hash;
+            }
+        } catch(e) {}
+
+        const copyData = { 
+            ...currentCopyData.itemData, 
+            categoryId: destCategory, 
+            url: itemUrl,
+            timestamp: Date.now() 
+        }; 
         await fetch(`${FIREBASE_DB_URL}/custom_links/${destCategory}/${newItemId}.json`, { 
             method: 'PUT', body: JSON.stringify(copyData) 
         });
@@ -408,7 +428,7 @@ function switchStudentLoginMode(mode) {
         boxClass.style.display = "none";
         boxFree.style.display = "block";
         iconEl.innerText = "🎯";
-        document.getElementById("st-modal-main-title").innerText = "Thí Sinh Tự Do Vào Thi";
+        document.getElementById("st-modal-main-title").innerText = `Thí Sinh Tự Do Vào Thi - ${getCategoryDisplayName(activeStudentLogin.categoryId)}`;
         setTimeout(() => { document.getElementById("st-free-name-input").focus(); }, 100);
     } else {
         tabFree.classList.remove("active");
@@ -465,6 +485,7 @@ function toggleStudentPassVisibility() {
 function submitStudentLogin() {
     const errBox = document.getElementById("st-login-error");
     const btn = document.getElementById("st-submit-btn");
+    const currentTargetCat = activeStudentLogin.categoryId;
 
     if (activeStudentLogin.currentMode === 'free') {
         const freeName = document.getElementById("st-free-name-input").value.trim();
@@ -484,7 +505,7 @@ function submitStudentLogin() {
             className: freeClass,
             username: "free_" + freeSbd, 
             isFreeStudent: true,
-            categoryId: activeStudentLogin.categoryId
+            categoryId: currentTargetCat
         };
 
         try {
@@ -495,9 +516,19 @@ function submitStudentLogin() {
             localStorage.setItem("saved_student_class", freeClass);
         } catch(e) {}
 
-        let targetUrl = activeStudentLogin.targetUrl;
-        let joinChar = targetUrl.includes('?') ? '&' : '?';
-        const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(freeSbd)}&name=${encodeURIComponent(freeName)}&class=${encodeURIComponent(freeClass)}&cat=${encodeURIComponent(activeStudentLogin.categoryId)}&autostart=1`;
+        let urlObj;
+        try {
+            urlObj = new URL(activeStudentLogin.targetUrl, window.location.href);
+        } catch(e) {
+            urlObj = new URL(window.location.origin + "/" + activeStudentLogin.targetUrl);
+        }
+        urlObj.searchParams.set('sbd', freeSbd);
+        urlObj.searchParams.set('name', freeName);
+        urlObj.searchParams.set('class', freeClass);
+        urlObj.searchParams.set('cat', currentTargetCat);
+        urlObj.searchParams.set('autostart', '1');
+
+        const finalRedirectUrl = urlObj.pathname + urlObj.search + urlObj.hash;
 
         btn.innerHTML = "🎉 Thí sinh tự do vào thi...";
         btn.style.background = "#10b981";
@@ -555,9 +586,19 @@ function submitStudentLogin() {
             localStorage.setItem("saved_student_class", matched.className);
         } catch(e) {}
 
-        let targetUrl = activeStudentLogin.targetUrl;
-        let joinChar = targetUrl.includes('?') ? '&' : '?';
-        const finalRedirectUrl = `${targetUrl}${joinChar}sbd=${encodeURIComponent(matched.sbd)}&name=${encodeURIComponent(matched.name || matched.username)}&class=${encodeURIComponent(matched.className)}&cat=${encodeURIComponent(catId)}&autostart=1`;
+        let urlObj;
+        try {
+            urlObj = new URL(activeStudentLogin.targetUrl, window.location.href);
+        } catch(e) {
+            urlObj = new URL(window.location.origin + "/" + activeStudentLogin.targetUrl);
+        }
+        urlObj.searchParams.set('sbd', matched.sbd);
+        urlObj.searchParams.set('name', matched.name || matched.username);
+        urlObj.searchParams.set('class', matched.className);
+        urlObj.searchParams.set('cat', catId);
+        urlObj.searchParams.set('autostart', '1');
+
+        const finalRedirectUrl = urlObj.pathname + urlObj.search + urlObj.hash;
 
         btn.innerHTML = "🎉 Đăng nhập thành công! Đang vào...";
         btn.style.background = "#10b981";
@@ -569,7 +610,7 @@ function submitStudentLogin() {
             btn.style.background = "";
         }, 400);
     } else {
-        errBox.innerText = "❌ Sai Tên đăng nhập (hoặc SBD) hoặc Mật khẩu! Vui lòng thử lại.";
+        errBox.innerText = `❌ Sai Tên đăng nhập (hoặc SBD) hoặc Mật khẩu trong ${getCategoryDisplayName(catId)}! Vui lòng thử lại.`;
         errBox.style.display = "block";
     }
 }
@@ -655,10 +696,7 @@ function createExamCard(item) {
     item.categoryId = catId;
     let itemId = item.firebaseId || item.id || ("item_" + Date.now());
 
-    // Kiểm tra nếu là link Padlet hoặc nằm trong chuyên mục Tự luận Padlet
     const isPadlet = (catId === "tu-luan-padlet") || (item.url && item.url.includes("padlet.com"));
-
-    // DANH SÁCH 6 LỚP CÓ BẢNG ĐĂNG NHẬP (NGOÀI 6 LỚP NÀY RA TẤT CẢ MỤC KHÁC MỞ THẲNG LINK KHÔNG HỎI LOGIN)
     const LOGIN_CLASSES = ["them-10", "them-11", "them-12", "lop-11a", "lop-11c", "lop-10p"];
     const requiresLogin = !item.isDoc && !isPadlet && LOGIN_CLASSES.includes(catId);
 
@@ -675,8 +713,9 @@ function createExamCard(item) {
     
     let leftResultBtnHtml = "";
     if (isAdminLoggedIn && !item.isDoc && !isPadlet) {
+        let copyItem = { ...item, categoryId: catId };
         leftResultBtnHtml = `
-        <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
+        <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(copyItem).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
             📊 Kết quả thi
         </button>`;
     }
@@ -1012,7 +1051,6 @@ document.addEventListener("click", function(e) {
 
 // KHỞI CHẠY TRANG CHỦ VÀ GẮN SỰ KIỆN PHÍM ENTER
 window.onload = async function() {
-    // Phục hồi lựa chọn thời gian đã lưu (nếu có)
     const savedDuration = localStorage.getItem("admin_duration_choice");
     const durSelect = document.getElementById("admin-expiry-select");
     if (savedDuration && durSelect) {
