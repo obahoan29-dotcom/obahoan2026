@@ -11,10 +11,6 @@
     --table-font-size: 13px;
     --table-row-padding-y: 9px;
     --table-row-padding-x: 10px;
-
-    /* TÙY BIẾN LOGO TRUNG THU TRƯỢT 2 BÊN */
-    --midautumn-scale: 1;
-    --midautumn-opacity: 0.88;
 }
 
 * { box-sizing: border-box; }
@@ -83,8 +79,8 @@ body {
 
 /* BẢNG QUẢN TRỊ POPOVER */
 .admin-popover-panel { 
-    position: absolute; top: calc(100% + 12px); right: 0; width: 420px; 
-    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+    position: absolute; top: calc(100% + 12px); right: 0; width: 410px; 
+    background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
     border-radius: 20px; padding: 18px; 
     box-shadow: 0 20px 48px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.9); 
     z-index: 999; border: var(--glass-border);
@@ -93,86 +89,6 @@ body {
 }
 .admin-popover-panel.show { visibility: visible; opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
 .admin-popover-title { font-size: 1.2rem; font-weight: 900; color: transparent; background-clip: text; -webkit-background-clip: text; background-image: linear-gradient(135deg, #0284c7 0%, #be123c 100%); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;}
-
-/* KHỐI CÀI ĐẶT TRANG TRÍ TẾT TRUNG THU TRONG MENU QUẢN TRỊ */
-.admin-midautumn-control-card {
-    background: linear-gradient(145deg, #fffbeb 0%, #fef3c7 50%, #ffedd5 100%);
-    border: 1.5px solid #f59e0b;
-    border-radius: 14px;
-    padding: 12px;
-    margin-bottom: 14px;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
-}
-.admin-midautumn-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    border-bottom: 1px solid rgba(245, 158, 11, 0.35);
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-}
-.admin-midautumn-icon {
-    font-size: 22px;
-    line-height: 1;
-}
-.admin-midautumn-title-wrap {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
-.admin-midautumn-title {
-    font-size: 13.5px;
-    font-weight: 900;
-    color: #9a3412;
-}
-.admin-midautumn-sub {
-    font-size: 11px;
-    font-weight: 600;
-    color: #b45309;
-}
-.admin-midautumn-body {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.admin-midautumn-row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-.admin-midautumn-lbl-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 12px;
-    font-weight: 800;
-    color: #78350f;
-}
-.admin-midautumn-badge {
-    background: #ffffff;
-    color: #ea580c;
-    border: 1px solid #f97316;
-    padding: 1px 7px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 900;
-}
-.admin-slider-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #9a3412;
-    font-weight: 700;
-}
-.admin-slider-wrap input[type="range"] {
-    flex: 1;
-    height: 6px;
-    accent-color: #ea580c;
-    cursor: pointer;
-}
-
 .admin-tabs { display: flex; gap: 6px; margin-bottom: 14px; background: rgba(226, 232, 240, 0.7); padding: 4px; border-radius: 14px;}
 .admin-tab-btn { flex: 1; padding: 9px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; color: #475569; background: transparent; transition: 0.2s; font-family: inherit;}
 .admin-tab-btn.active { background: #ffffff; color: var(--primary-blue); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
@@ -212,6 +128,9 @@ body {
     border-radius: 999px; font-family: inherit; box-shadow: var(--shadow-sm);
 }
 
+/* ========================================================================= */
+/* TÙY CHỈNH NÚT CÁC LỚP */
+/* ========================================================================= */
 .full-width-nav-row .dantri-nav-btn { 
     flex: 1 1 0; 
     min-width: 0; 
@@ -348,175 +267,81 @@ body {
 #dantri-nav-bar .dantri-nav-btn { min-height: 44px; padding: 6px 12px; font-size: 13px; line-height: 1.25; border-radius: 14px; gap: 4px; margin-right: 8px;}
 
 /* ========================================================================= */
-/* 2 LOGO TRƯỢT TẾT TRUNG THU: BÁNH TRUNG THU BÊN TRÁI & ĐÈN LỒNG CÁN CẦM BÊN PHẢI */
+/* BIỂU TƯỢNG ĐÈN TRUNG THU CỐ ĐỊNH MÉP PHẢI TRƯỢT THEO MÀN HÌNH (KHÔNG KHUNG) */
 /* ========================================================================= */
-
-/* 1. BÁNH TRUNG THU BÊN HÔNG TRÁI */
-.mid-autumn-left-badge {
+.mid-autumn-badge {
     position: fixed;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%) scale(var(--midautumn-scale, 1));
-    transform-origin: left center;
-    opacity: var(--midautumn-opacity, 0.88);
+    right: 4px;
+    top: 48%;
+    transform: translateY(-50%);
     z-index: 9999;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    background: linear-gradient(145deg, rgba(255, 251, 235, 0.95) 0%, rgba(254, 243, 199, 0.85) 50%, rgba(254, 215, 170, 0.92) 100%);
-    border: 2px solid #f59e0b;
-    border-radius: 24px;
-    padding: 10px 8px 10px 8px;
-    box-shadow: 0 10px 30px rgba(217, 119, 6, 0.38), 0 0 18px rgba(251, 191, 36, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
     cursor: pointer;
     user-select: none;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    animation: floatMooncake 3.6s ease-in-out infinite;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s, opacity 0.25s;
+    pointer-events: auto;
     text-decoration: none;
-}
-.mid-autumn-left-badge:hover {
-    transform: translateY(-50%) scale(calc(var(--midautumn-scale, 1) * 1.08));
-    box-shadow: 0 14px 38px rgba(217, 119, 6, 0.55), 0 0 24px rgba(251, 191, 36, 0.6);
-    opacity: 1;
+    opacity: 0.88;
+    animation: floatMidAutumn 3.2s ease-in-out infinite;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
 
-/* 2. ĐÈN LỒNG CÓ CÁN CẦM BÊN HÔNG PHẢI */
-.mid-autumn-right-badge {
-    position: fixed;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%) scale(var(--midautumn-scale, 1));
-    transform-origin: right center;
-    opacity: var(--midautumn-opacity, 0.88);
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(145deg, rgba(255, 241, 242, 0.95) 0%, rgba(254, 242, 242, 0.85) 50%, rgba(254, 215, 170, 0.92) 100%);
-    border: 2px solid #ef4444;
-    border-radius: 24px;
-    padding: 10px 8px 10px 8px;
-    box-shadow: 0 10px 30px rgba(225, 29, 72, 0.38), 0 0 20px rgba(244, 63, 94, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    user-select: none;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    animation: floatLanternStick 3.2s ease-in-out infinite;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s, opacity 0.25s;
-    text-decoration: none;
-}
-.mid-autumn-right-badge:hover {
-    transform: translateY(-50%) scale(calc(var(--midautumn-scale, 1) * 1.08));
-    box-shadow: 0 14px 38px rgba(225, 29, 72, 0.55), 0 0 26px rgba(239, 68, 68, 0.65);
+.mid-autumn-badge:hover {
     opacity: 1;
+    transform: translateY(-50%) scale(1.1);
 }
 
-/* NÚT [X] NHỎ XINH Ở CẠNH MỖI LOGO */
-.mid-autumn-close-btn {
-    position: absolute;
-    top: -8px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #ffffff;
-    color: #475569;
-    border: 1.5px solid #cbd5e1;
-    font-size: 11px;
-    font-weight: 900;
+/* Cán đèn tre/gỗ uốn cong trang nhã vươn từ mép phải ra */
+.lantern-stick {
+    width: 26px;
+    height: 3px;
+    background: linear-gradient(90deg, #b45309 0%, #f59e0b 60%, #d97706 100%);
+    border-radius: 3px;
+    transform: rotate(-22deg) translateX(4px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Dây treo đèn mềm mại */
+.lantern-string {
+    width: 1.5px;
+    height: 10px;
+    background: linear-gradient(to bottom, #f59e0b, #e11d48);
+    margin: -1px auto 0 auto;
+    box-shadow: 0 0 4px rgba(245, 158, 11, 0.6);
+}
+
+/* Chiếc đèn lồng phát quang mờ ảo và đung đưa nhẹ */
+.mid-autumn-icon {
+    font-size: 24px;
     line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 10001;
-    padding: 0;
-}
-.mid-autumn-left-badge .mid-autumn-close-btn {
-    right: -6px;
-}
-.mid-autumn-right-badge .mid-autumn-close-btn {
-    left: -6px;
-}
-.mid-autumn-close-btn:hover {
-    background: #ef4444;
-    color: #ffffff;
-    border-color: #dc2626;
-    transform: scale(1.18);
-}
-
-/* CHI TIẾT ĐỒ HỌA BÁNH TRUNG THU */
-.mooncake-svg-icon {
-    width: 44px;
-    height: 44px;
-    filter: drop-shadow(0 4px 8px rgba(180, 83, 9, 0.45));
-    animation: pulseMooncakeGlow 2.5s ease-in-out infinite alternate;
-}
-.mooncake-text-pill {
-    background: linear-gradient(135deg, #b45309 0%, #78350f 100%);
-    color: #fef3c7;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.5px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    margin-top: 6px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-    box-shadow: 0 2px 6px rgba(120, 53, 15, 0.35);
-    white-space: nowrap;
-}
-
-/* CHI TIẾT ĐỒ HỌA ĐÈN LỒNG CÓ CÁN CẦM */
-.lantern-stick-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: block;
     transform-origin: top center;
-    animation: swingLanternArt 3s ease-in-out infinite;
-}
-.lantern-stick-svg {
-    width: 46px;
-    height: 58px;
-    filter: drop-shadow(0 4px 10px rgba(220, 38, 38, 0.45));
-}
-.lantern-text-pill {
-    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-    color: #fee2e2;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.5px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    margin-top: 4px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-    box-shadow: 0 2px 6px rgba(153, 27, 27, 0.35);
-    white-space: nowrap;
+    animation: swingLantern 2.8s ease-in-out infinite, lanternGlowPulse 2.4s ease-in-out infinite alternate;
 }
 
-@keyframes floatMooncake {
-    0%, 100% { transform: translateY(-50%) rotate(0deg); }
-    50% { transform: translateY(calc(-50% - 9px)) rotate(-4deg); }
-}
-
-@keyframes pulseMooncakeGlow {
-    0% { transform: scale(1); filter: drop-shadow(0 4px 8px rgba(180, 83, 9, 0.4)); }
-    100% { transform: scale(1.05); filter: drop-shadow(0 6px 14px rgba(245, 158, 11, 0.7)); }
-}
-
-@keyframes floatLanternStick {
+@keyframes floatMidAutumn {
     0%, 100% { transform: translateY(-50%); }
-    50% { transform: translateY(calc(-50% - 8px)); }
+    50% { transform: translateY(calc(-50% - 7px)); }
 }
 
-@keyframes swingLanternArt {
+@keyframes swingLantern {
     0%, 100% { transform: rotate(0deg); }
     25% { transform: rotate(-8deg); }
     75% { transform: rotate(8deg); }
+}
+
+@keyframes lanternGlowPulse {
+    0% {
+        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.7)) drop-shadow(0 3px 8px rgba(225, 29, 72, 0.5));
+    }
+    100% {
+        filter: drop-shadow(0 0 14px rgba(253, 224, 71, 0.95)) drop-shadow(0 0 22px rgba(249, 115, 22, 0.75)) drop-shadow(0 4px 12px rgba(225, 29, 72, 0.6));
+    }
 }
 
 /* BẢNG XÒE & CONTAINER */
@@ -979,19 +804,10 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .result-search-input { width: 110px; }
     .result-search-input:focus { width: 140px; }
     .table-settings-popover { width: 280px; right: -50px; }
-
-    /* Điều chỉnh logo 2 bên trên màn hình nhỏ di động */
-    .mid-autumn-left-badge {
-        left: 2px;
-        padding: 6px 5px 7px 5px;
-        transform: translateY(-50%) scale(calc(var(--midautumn-scale, 1) * 0.8));
-    }
-    .mid-autumn-right-badge {
-        right: 2px;
-        padding: 6px 5px 7px 5px;
-        transform: translateY(-50%) scale(calc(var(--midautumn-scale, 1) * 0.8));
-    }
-    .mooncake-svg-icon { width: 34px; height: 34px; }
-    .lantern-stick-svg { width: 36px; height: 48px; }
-    .mooncake-text-pill, .lantern-text-pill { font-size: 8.5px; padding: 2px 5px; }
+    
+    /* Đèn trung thu thu nhỏ trên thiết bị di động để không chiếm không gian */
+    .mid-autumn-badge { right: 2px; }
+    .lantern-stick { width: 20px; height: 2.5px; }
+    .lantern-string { height: 8px; }
+    .mid-autumn-icon { font-size: 20px; }
 }
