@@ -1,6 +1,9 @@
 // =========================================================
 // QUẢN TRỊ VIÊN, ĐĂNG ĐỀ, TÀI LIỆU, BADGES & LOGIN HỌC SINH
 // =========================================================
+let currentEditingTimeQuizId = null;
+let currentEditingTimeMode = null; // 'minutes' hoặc 'schedule'
+
 function initAvatarGrid() {
     const grid = document.getElementById("avatar-grid");
     if (!grid) return;
@@ -408,6 +411,119 @@ async function confirmCopyItem() {
 }
 
 // =========================================================
+// YÊU CẦU 4: NÚT THAY ĐỔI THỜI GIAN LÀM BÀI & GIA HẠN LỊCH MỞ ĐỀ
+// =========================================================
+function extractQuizIdFromItem(item) {
+    if (item.firebaseId && item.firebaseId.startsWith('quiz_')) return item.firebaseId;
+    if (item.url && item.url.includes("?id=")) {
+        try {
+            let u = new URL(item.url, window.location.href);
+            return u.searchParams.get("id");
+        } catch(e) {}
+    }
+    return null;
+}
+
+function toLocalDatetimeString(dateObj) {
+    if (!dateObj || isNaN(dateObj.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}T${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
+}
+
+async function openEditMinutesModal(quizId, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    currentEditingTimeQuizId = quizId;
+    currentEditingTimeMode = 'minutes';
+
+    document.getElementById("exam-time-modal-title").innerText = "⏱ Đổi thời lượng làm bài";
+    document.getElementById("modal-time-minutes-group").style.display = "block";
+    document.getElementById("modal-time-schedule-group").style.display = "none";
+    document.getElementById("edit-time-limit").value = "";
+
+    try {
+        const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
+        const qData = await res.json();
+        if (qData && qData.timeLimitMinutes !== undefined) {
+            document.getElementById("edit-time-limit").value = qData.timeLimitMinutes;
+        }
+    } catch(e) {}
+
+    document.getElementById("exam-time-modal").style.display = "flex";
+}
+
+async function openEditScheduleModal(quizId, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    currentEditingTimeQuizId = quizId;
+    currentEditingTimeMode = 'schedule';
+
+    document.getElementById("exam-time-modal-title").innerText = "📅 Gia hạn khung giờ làm bài";
+    document.getElementById("modal-time-minutes-group").style.display = "none";
+    document.getElementById("modal-time-schedule-group").style.display = "block";
+
+    const startInput = document.getElementById("edit-start-time");
+    const endInput = document.getElementById("edit-end-time");
+    startInput.value = "";
+    endInput.value = "";
+
+    try {
+        const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
+        const qData = await res.json();
+        if (qData) {
+            if (qData.examStartTimeStr) {
+                startInput.value = toLocalDatetimeString(new Date(qData.examStartTimeStr));
+            }
+            if (qData.examEndTimeStr) {
+                endInput.value = toLocalDatetimeString(new Date(qData.examEndTimeStr));
+            }
+        }
+    } catch(e) {}
+
+    document.getElementById("exam-time-modal").style.display = "flex";
+}
+
+function closeExamTimeModal() {
+    document.getElementById("exam-time-modal").style.display = "none";
+    currentEditingTimeQuizId = null;
+    currentEditingTimeMode = null;
+}
+
+async function saveExamTimeConfig() {
+    if (!currentEditingTimeQuizId) return;
+    const btn = document.getElementById("btn-save-exam-time");
+    btn.innerText = "⏳ Đang lưu..."; btn.disabled = true;
+
+    try {
+        let payload = {};
+        if (currentEditingTimeMode === 'minutes') {
+            const mins = parseInt(document.getElementById("edit-time-limit").value, 10);
+            if (isNaN(mins) || mins <= 0) {
+                alert("⚠️ Vui lòng nhập số phút hợp lệ (> 0)!");
+                btn.innerText = "Lưu cấu hình"; btn.disabled = false;
+                return;
+            }
+            payload.timeLimitMinutes = mins;
+        } else if (currentEditingTimeMode === 'schedule') {
+            const startVal = document.getElementById("edit-start-time").value;
+            const endVal = document.getElementById("edit-end-time").value;
+            if (startVal) payload.examStartTimeStr = startVal;
+            if (endVal) payload.examEndTimeStr = endVal;
+        }
+
+        await fetch(`${FIREBASE_DB_URL}/quizzes/${currentEditingTimeQuizId}.json`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload)
+        });
+
+        alert("✅ Đã cập nhật thời gian đề thi thành công!");
+        closeExamTimeModal();
+    } catch(e) {
+        alert("❌ Lỗi khi lưu cấu hình thời gian: " + e.message);
+    } finally {
+        btn.innerText = "Lưu cấu hình"; btn.disabled = false;
+    }
+}
+
+// =========================================================
 // LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP
 // =========================================================
 function switchStudentLoginMode(mode) {
@@ -443,7 +559,8 @@ function switchStudentLoginMode(mode) {
     }
 }
 
-function openStudentLoginModal(targetUrl, examTitle, categoryId) {
+// YÊU CẦU 2: HIỂN THỊ KHUNG THỜI GIAN LÀM BÀI DƯỚI TÊN ĐỀ
+async function openStudentLoginModal(targetUrl, examTitle, categoryId) {
     activeStudentLogin = { 
         targetUrl: targetUrl, 
         examTitle: examTitle, 
@@ -458,12 +575,49 @@ function openStudentLoginModal(targetUrl, examTitle, categoryId) {
     document.getElementById("st-free-class-input").value = "";
     document.getElementById("st-free-sbd-input").value = "";
     
+    const timeBox = document.getElementById("st-modal-time-box");
+    if (timeBox) timeBox.innerText = "⏳ Đang kiểm tra khung thời gian thi...";
+
     const errBox = document.getElementById("st-login-error");
     errBox.style.display = "none";
     errBox.innerText = "";
     
     switchStudentLoginMode('class');
     document.getElementById("student-login-modal").style.display = "flex";
+
+    // Trích xuất quizId để nạp thời gian mở / đóng / thời lượng
+    let quizId = null;
+    try {
+        let u = new URL(targetUrl, window.location.href);
+        quizId = u.searchParams.get("id");
+    } catch(e) {}
+
+    if (quizId) {
+        try {
+            const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
+            const qData = await res.json();
+            if (qData && timeBox) {
+                let parts = [];
+                if (qData.timeLimitMinutes) {
+                    parts.push(`⏱ Thời gian làm: <b>${qData.timeLimitMinutes} phút</b>`);
+                }
+                if (qData.examStartTimeStr && qData.examEndTimeStr) {
+                    const st = new Date(qData.examStartTimeStr).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const et = new Date(qData.examEndTimeStr).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                    parts.push(`📅 Khung giờ: <b>${st}</b> đến <b>${et}</b>`);
+                } else if (qData.examEndTimeStr) {
+                    const et = new Date(qData.examEndTimeStr).toLocaleString("vi-VN");
+                    parts.push(`📅 Hạn cuối: <b>${et}</b>`);
+                }
+                
+                timeBox.innerHTML = parts.length > 0 ? parts.join("<br>") : "⏱ Thời gian làm bài theo quy định của giáo viên";
+            }
+        } catch(e) {
+            if (timeBox) timeBox.innerText = "⏱ Thời gian làm bài theo quy định của giáo viên";
+        }
+    } else {
+        if (timeBox) timeBox.innerText = "⏱ Thời gian làm bài theo quy định của giáo viên";
+    }
 }
 
 function closeStudentLoginModal() {
@@ -711,13 +865,32 @@ function createExamCard(item) {
         card.target = "_blank";
     }
     
+    // YÊU CẦU 4: NÚT KẾT QUẢ THI + NÚT GIA HẠN + NÚT ĐỔI GIỜ
     let leftResultBtnHtml = "";
     if (isAdminLoggedIn && !item.isDoc && !isPadlet) {
         let copyItem = { ...item, categoryId: catId };
+        let linkedQuizId = extractQuizIdFromItem(item);
+        let subTimeButtonsHtml = "";
+
+        if (linkedQuizId) {
+            subTimeButtonsHtml = `
+            <div class="left-sub-btns-row" onclick="event.preventDefault(); event.stopPropagation();">
+                <button type="button" class="btn-time-sub-action btn-time-sub-minutes" onclick="openEditMinutesModal('${linkedQuizId}', event)" title="Thay đổi thời lượng làm bài (phút)">
+                    ⏱ Đổi phút
+                </button>
+                <button type="button" class="btn-time-sub-action btn-time-sub-schedule" onclick="openEditScheduleModal('${linkedQuizId}', event)" title="Gia hạn khung ngày giờ làm bài">
+                    📅 Gia hạn lịch
+                </button>
+            </div>`;
+        }
+
         leftResultBtnHtml = `
-        <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(copyItem).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
-            📊 Kết quả thi
-        </button>`;
+        <div class="left-admin-actions-col">
+            <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(copyItem).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
+                📊 Kết quả thi
+            </button>
+            ${subTimeButtonsHtml}
+        </div>`;
     }
 
     let thumbHtml = item.avatar ? `<div class="exam-thumb-box"><img src="${item.avatar}" class="exam-thumb" alt="Avatar"></div>` : '';
@@ -1014,13 +1187,14 @@ document.addEventListener("click", function(e) {
     const authContainer = document.getElementById("auth-container");
     const moveModal = document.getElementById("move-modal");
     const copyModal = document.getElementById("copy-modal");
+    const examTimeModal = document.getElementById("exam-time-modal");
     const studentModal = document.getElementById("student-login-modal");
     const resModal = document.getElementById("result-fullscreen-modal");
     const examPickerMenu = document.getElementById("exam-picker-dropdown-list");
     const tableSettingsWrapper = document.getElementById("table-settings-wrapper");
 
     if (panel && panel.classList.contains("show")) {
-        if (!panel.contains(e.target) && !gear.contains(e.target) && (!moveModal || !moveModal.contains(e.target)) && (!copyModal || !copyModal.contains(e.target)) && (!studentModal || !studentModal.contains(e.target)) && (!resModal || !resModal.contains(e.target))) {
+        if (!panel.contains(e.target) && !gear.contains(e.target) && (!moveModal || !moveModal.contains(e.target)) && (!copyModal || !copyModal.contains(e.target)) && (!examTimeModal || !examTimeModal.contains(e.target)) && (!studentModal || !studentModal.contains(e.target)) && (!resModal || !resModal.contains(e.target))) {
             closeAdminPanel();
         }
     }
