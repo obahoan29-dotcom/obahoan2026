@@ -1075,7 +1075,10 @@ function showMainResultTableUI() {
     if (breadcrumbView) breadcrumbView.innerText = "📊 Bảng kết quả";
 }
 
-// VẼ BIỂU ĐỒ HÌNH CỘT & VIẾT TÊN CÁC EM GỌN GÀNG BÊN TRONG CỘT TƯƠNG ỨNG
+// =========================================================
+// YÊU CẦU 1: VẼ BIỂU ĐỒ HÌNH CỘT VỚI CHỮ HỌ TÊN TO RÕ,
+// MỖI HỌC SINH 1 DÒNG PHỦ KÍN CỘT ĐỀU ĐẶN TỪ TRÊN XUỐNG DƯỚI
+// =========================================================
 function renderDetailedScoreChart() {
     const scores = [];
     const binStudents = Array.from({ length: 10 }, () => []);
@@ -1122,7 +1125,7 @@ function renderDetailedScoreChart() {
         '#a3e635', '#4ade80', '#22c55e', '#10b981', '#06b6d4'
     ];
 
-    // PLUGIN VẼ TRỰC TIẾP HỌ VÀ TÊN HỌC SINH NẰM GỌN BÊN TRONG CỘT
+    // PLUGIN VẼ TRỰC TIẾP HỌ VÀ TÊN HỌC SINH TO, 1 NGƯỜI 1 DÒNG PHỦ KÍN CỘT TỪ TRÊN XUỐNG DƯỚI
     const namesInsideBarsPlugin = {
         id: 'namesInsideBarsPlugin',
         afterDatasetsDraw(chart) {
@@ -1132,57 +1135,68 @@ function renderDetailedScoreChart() {
 
             meta.data.forEach((bar, index) => {
                 const students = binStudents[index] || [];
-                if (students.length === 0) return;
+                const n = students.length;
+                if (n === 0) return;
 
                 const barX = bar.x;
                 const barTopY = bar.y;
                 const barBaseY = bar.base;
                 const barWidth = bar.width;
+                const totalBarHeight = barBaseY - barTopY;
 
-                const fontSize = Math.min(10, Math.max(8, Math.floor(barWidth / 9)));
-                const lineHeight = fontSize + 4;
+                // Chia đều chiều cao cột thành N ô tương ứng với N học sinh
+                const slotHeight = totalBarHeight / n;
+
+                // Cỡ chữ to rõ, tự động co dãn theo chiều cao ô và độ rộng cột
+                const calculatedSize = Math.floor(Math.min(14.5, Math.max(10.5, slotHeight * 0.72, barWidth / 7.5)));
+                const fontSize = Math.max(10, calculatedSize);
 
                 ctx.save();
                 ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
+                ctx.textBaseline = 'middle';
                 ctx.font = `bold ${fontSize}px 'Be Vietnam Pro', Arial, sans-serif`;
 
-                let startY = barBaseY - 6;
-
+                // Phân bổ từng em học sinh vào 1 dòng, phủ kín cột đều đặn từ trên xuống dưới
                 students.forEach((fullName, sIdx) => {
-                    const textY = startY - (sIdx * lineHeight);
-                    if (textY >= barTopY + 2) {
-                        let displayName = fullName;
-                        if (ctx.measureText(displayName).width > barWidth - 6) {
-                            const words = fullName.trim().split(/\s+/);
-                            if (words.length >= 3) {
-                                displayName = words[0][0] + '.' + words.slice(1, -1).map(w => w[0] + '.').join('') + ' ' + words[words.length - 1];
-                            } else if (words.length === 2) {
-                                displayName = words[0][0] + '. ' + words[1];
-                            }
-                            if (ctx.measureText(displayName).width > barWidth - 4) {
-                                while (displayName.length > 3 && ctx.measureText(displayName + '..').width > barWidth - 4) {
-                                    displayName = displayName.slice(0, -1);
-                                }
-                                displayName += '..';
-                            }
-                        }
+                    const centerY = barTopY + (sIdx + 0.5) * slotHeight;
 
-                        ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
-                        ctx.shadowBlur = 3;
-                        ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
-                        ctx.lineWidth = 2.5;
-                        ctx.strokeText(displayName, barX, textY);
-                        
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillText(displayName, barX, textY);
+                    let displayName = fullName.trim();
+                    // Nếu tên quá dài so với chiều ngang cột thì rút gọn tên đệm
+                    if (ctx.measureText(displayName).width > barWidth - 4) {
+                        const words = displayName.split(/\s+/);
+                        if (words.length >= 3) {
+                            displayName = words[0] + ' ' + words.slice(1, -1).map(w => w[0] + '.').join('') + ' ' + words[words.length - 1];
+                        }
+                        if (ctx.measureText(displayName).width > barWidth - 4 && words.length >= 2) {
+                            displayName = words.slice(0, -1).map(w => w[0] + '.').join('') + ' ' + words[words.length - 1];
+                        }
+                        if (ctx.measureText(displayName).width > barWidth - 4) {
+                            while (displayName.length > 2 && ctx.measureText(displayName + '..').width > barWidth - 4) {
+                                displayName = displayName.slice(0, -1);
+                            }
+                            displayName += '..';
+                        }
                     }
+
+                    // Viền đen đổ bóng tương phản cao giúp chữ luôn sáng rõ trên mọi màu nền cột
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+                    ctx.shadowBlur = 3;
+                    ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
+                    ctx.lineWidth = 2.8;
+                    ctx.strokeText(displayName, barX, centerY);
+
+                    // Chữ trắng đậm sáng nổi bật
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(displayName, barX, centerY);
                 });
 
+                // Hiển thị tổng số học sinh trên đỉnh cột
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = '#0f172a';
-                ctx.font = `bold 12px 'Be Vietnam Pro', Arial, sans-serif`;
-                ctx.fillText(`${students.length} hs`, barX, barTopY - 4);
+                ctx.font = `bold 12.5px 'Be Vietnam Pro', Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(`${n} hs`, barX, barTopY - 4);
 
                 ctx.restore();
             });
@@ -1211,7 +1225,7 @@ function renderDetailedScoreChart() {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-                padding: { top: 22 }
+                padding: { top: 24 }
             },
             plugins: {
                 legend: { display: false },
