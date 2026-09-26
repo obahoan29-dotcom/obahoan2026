@@ -218,6 +218,7 @@ function processUpload() {
             if (!parsedData.title || !parsedData.questions) throw new Error("File không đúng cấu trúc.");
 
             parsedData.isShuffled = true;
+            parsedData.allowFreeStudent = true; // Mặc định cho phép tự do thi
             const quizId = "quiz_" + Date.now();
             await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { method: 'PUT', body: JSON.stringify(parsedData) });
 
@@ -234,6 +235,7 @@ function processUpload() {
                 avatar: selectedAvatarUrl, 
                 timestamp: Date.now(), 
                 isShuffled: true,
+                allowFreeStudent: true,
                 categoryId: category 
             };
 
@@ -410,9 +412,6 @@ async function confirmCopyItem() {
     } catch(e) { alert("Lỗi khi sao chép!"); }
 }
 
-// =========================================================
-// YÊU CẦU 4: NÚT THAY ĐỔI THỜI GIAN LÀM BÀI & GIA HẠN LỊCH MỞ ĐỀ
-// =========================================================
 function extractQuizIdFromItem(item) {
     if (item.firebaseId && item.firebaseId.startsWith('quiz_')) return item.firebaseId;
     if (item.url && item.url.includes("?id=")) {
@@ -523,10 +522,49 @@ async function saveExamTimeConfig() {
     }
 }
 
+// BẬT / TẮT THÍ SINH TỰ DO THI TRÊN THẺ ĐỀ THI
+async function toggleFreeStudentAllowed(categoryId, itemId, isChecked, event) {
+    event.stopPropagation();
+    try {
+        let payload = { allowFreeStudent: isChecked };
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+            method: 'PATCH', body: JSON.stringify(payload)
+        });
+        
+        let quizId = itemId.startsWith('quiz_') ? itemId : null;
+        if (!quizId) {
+            let cat = DAY_THEM_CATEGORIES.find(c => c.id === categoryId) || CHINH_KHOA_CATEGORIES.find(c => c.id === categoryId);
+            if (cat) {
+                let it = cat.links.find(l => l.firebaseId === itemId || l.id === itemId);
+                if (it) quizId = extractQuizIdFromItem(it);
+            }
+        }
+        if (quizId) {
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
+                method: 'PATCH', body: JSON.stringify(payload)
+            });
+        }
+
+        const wrap = event.target.closest('.free-student-toggle-wrap');
+        if (wrap) {
+            const statusEl = wrap.querySelector('.free-toggle-status');
+            if (statusEl) {
+                statusEl.textContent = isChecked ? 'BẬT' : 'TẮT';
+                statusEl.className = `free-toggle-status ${isChecked ? 'st-on' : 'st-off'}`;
+            }
+        }
+    } catch(e) { alert("❌ Lỗi đổi trạng thái thi tự do!"); }
+}
+
 // =========================================================
 // LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP
 // =========================================================
 function switchStudentLoginMode(mode) {
+    if (mode === 'free' && activeStudentLogin.allowFreeStudent === false) {
+        alert("⛔ Bài thi này hiện đã bị giáo viên TẮT quyền tham gia của Thí sinh tự do!");
+        return;
+    }
+
     activeStudentLogin.currentMode = mode;
     const tabClass = document.getElementById("tab-st-class");
     const tabFree = document.getElementById("tab-st-free");
@@ -559,13 +597,13 @@ function switchStudentLoginMode(mode) {
     }
 }
 
-// YÊU CẦU 2: HIỂN THỊ KHUNG THỜI GIAN LÀM BÀI DƯỚI TÊN ĐỀ
-async function openStudentLoginModal(targetUrl, examTitle, categoryId) {
+async function openStudentLoginModal(targetUrl, examTitle, categoryId, itemData = null) {
     activeStudentLogin = { 
         targetUrl: targetUrl, 
         examTitle: examTitle, 
         categoryId: categoryId || "them-10", 
-        currentMode: "class" 
+        currentMode: "class",
+        allowFreeStudent: (itemData && itemData.allowFreeStudent !== false)
     };
     
     document.getElementById("st-modal-exam-name").innerText = examTitle || "Bài kiểm tra trực tuyến";
@@ -585,7 +623,6 @@ async function openStudentLoginModal(targetUrl, examTitle, categoryId) {
     switchStudentLoginMode('class');
     document.getElementById("student-login-modal").style.display = "flex";
 
-    // Trích xuất quizId để nạp thời gian mở / đóng / thời lượng
     let quizId = null;
     try {
         let u = new URL(targetUrl, window.location.href);
@@ -596,21 +633,41 @@ async function openStudentLoginModal(targetUrl, examTitle, categoryId) {
         try {
             const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
             const qData = await res.json();
-            if (qData && timeBox) {
-                let parts = [];
-                if (qData.timeLimitMinutes) {
-                    parts.push(`⏱ Thời gian làm: <b>${qData.timeLimitMinutes} phút</b>`);
+            if (qData) {
+                if (qData.allowFreeStudent !== undefined) {
+                    activeStudentLogin.allowFreeStudent = (qData.allowFreeStudent !== false);
                 }
-                if (qData.examStartTimeStr && qData.examEndTimeStr) {
-                    const st = new Date(qData.examStartTimeStr).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-                    const et = new Date(qData.examEndTimeStr).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-                    parts.push(`📅 Khung giờ: <b>${st}</b> đến <b>${et}</b>`);
-                } else if (qData.examEndTimeStr) {
-                    const et = new Date(qData.examEndTimeStr).toLocaleString("vi-VN");
-                    parts.push(`📅 Hạn cuối: <b>${et}</b>`);
+
+                const tabFree = document.getElementById("tab-st-free");
+                if (tabFree) {
+                    if (activeStudentLogin.allowFreeStudent === false) {
+                        tabFree.title = "Đã bị giáo viên khóa thi tự do";
+                        tabFree.style.opacity = "0.5";
+                    } else {
+                        tabFree.title = "";
+                        tabFree.style.opacity = "1";
+                    }
                 }
-                
-                timeBox.innerHTML = parts.length > 0 ? parts.join("<br>") : "⏱ Thời gian làm bài theo quy định của giáo viên";
+
+                if (timeBox) {
+                    let parts = [];
+                    if (qData.timeLimitMinutes) {
+                        parts.push(`⏱ Thời gian làm: <b>${qData.timeLimitMinutes} phút</b>`);
+                    }
+                    if (qData.examStartTimeStr && qData.examEndTimeStr) {
+                        const st = new Date(qData.examStartTimeStr).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                        const et = new Date(qData.examEndTimeStr).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                        parts.push(`📅 Khung giờ: <b>${st}</b> đến <b>${et}</b>`);
+                    } else if (qData.examEndTimeStr) {
+                        const et = new Date(qData.examEndTimeStr).toLocaleString("vi-VN");
+                        parts.push(`📅 Hạn cuối: <b>${et}</b>`);
+                    }
+                    
+                    if (activeStudentLogin.allowFreeStudent === false) {
+                        parts.push(`<span style="color:#dc2626; font-weight:800;">🔒 Tự do thi: ĐÃ TẮT</span>`);
+                    }
+                    timeBox.innerHTML = parts.length > 0 ? parts.join("<br>") : "⏱ Thời gian làm bài theo quy định của giáo viên";
+                }
             }
         } catch(e) {
             if (timeBox) timeBox.innerText = "⏱ Thời gian làm bài theo quy định của giáo viên";
@@ -642,6 +699,12 @@ function submitStudentLogin() {
     const currentTargetCat = activeStudentLogin.categoryId;
 
     if (activeStudentLogin.currentMode === 'free') {
+        if (activeStudentLogin.allowFreeStudent === false) {
+            errBox.innerText = "⛔ Giáo viên đã TẮT quyền tham gia của Thí sinh tự do đối với đề thi này!";
+            errBox.style.display = "block";
+            return;
+        }
+
         const freeName = document.getElementById("st-free-name-input").value.trim();
         const freeClass = document.getElementById("st-free-class-input").value.trim();
         const freeSbd = document.getElementById("st-free-sbd-input").value.trim();
@@ -858,19 +921,20 @@ function createExamCard(item) {
         card.href = "javascript:void(0);";
         card.onclick = function(e) {
             e.preventDefault();
-            openStudentLoginModal(item.url, item.title, catId);
+            openStudentLoginModal(item.url, item.title, catId, item);
         };
     } else {
         card.href = item.url; 
         card.target = "_blank";
     }
     
-    // YÊU CẦU 4: NÚT KẾT QUẢ THI + NÚT GIA HẠN + NÚT ĐỔI GIỜ
+    // CỤM NÚT QUẢN TRỊ TRÁI: CÔNG TẮC TỰ DO + KẾT QUẢ THI + ĐỔI PHÚT + GIA HẠN LỊCH
     let leftResultBtnHtml = "";
     if (isAdminLoggedIn && !item.isDoc && !isPadlet) {
         let copyItem = { ...item, categoryId: catId };
         let linkedQuizId = extractQuizIdFromItem(item);
         let subTimeButtonsHtml = "";
+        let isFreeAllowed = (item.allowFreeStudent !== false);
 
         if (linkedQuizId) {
             subTimeButtonsHtml = `
@@ -886,6 +950,17 @@ function createExamCard(item) {
 
         leftResultBtnHtml = `
         <div class="left-admin-actions-col">
+            <!-- NÚT GẠT TẮT/MỞ THÍ SINH TỰ DO THI -->
+            <div class="free-student-toggle-wrap" onclick="event.preventDefault(); event.stopPropagation();" title="Gạt phải: BẬT cho phép Thí sinh tự do thi | Gạt trái: TẮT thi tự do">
+                <span class="free-toggle-lbl">🎯 Tự do:</span>
+                <label class="switch-toggle mini-switch">
+                    <input type="checkbox" ${isFreeAllowed ? 'checked' : ''} onchange="toggleFreeStudentAllowed('${catId}', '${itemId}', this.checked, event)">
+                    <span class="slider-toggle"></span>
+                </label>
+                <span class="free-toggle-status ${isFreeAllowed ? 'st-on' : 'st-off'}">${isFreeAllowed ? 'BẬT' : 'TẮT'}</span>
+            </div>
+
+            <!-- NÚT KẾT QUẢ THI -->
             <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(copyItem).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
                 📊 Kết quả thi
             </button>
@@ -920,7 +995,7 @@ function createExamCard(item) {
     
     if (isAdminLoggedIn && item.firebaseId) {
         arrowHtml = "";
-        let cleanData = { title: item.title, date: item.date, url: item.url, badgeText: currentBadge, isHot: (currentBadge==='HOT'), isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp, isShuffled: item.isShuffled, categoryId: catId };
+        let cleanData = { title: item.title, date: item.date, url: item.url, badgeText: currentBadge, isHot: (currentBadge==='HOT'), isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp, isShuffled: item.isShuffled, allowFreeStudent: item.allowFreeStudent, categoryId: catId };
         let strData = encodeURIComponent(JSON.stringify(cleanData));
         let escapedTitle = (item.title || "").replace(/'/g, "\\'"); 
         let isDocFlag = item.isDoc ? 'true' : 'false';
