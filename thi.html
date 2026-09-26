@@ -560,10 +560,10 @@
             if (presenceInterval) clearInterval(presenceInterval);
             if (onlineCountInterval) clearInterval(onlineCountInterval);
 
-            // Chạy chu kỳ 20 giây: vừa ping online, vừa kéo cập nhật thời gian từ Firebase
+            // Chạy chu kỳ 20 giây: vừa ping online, vừa kéo cập nhật thời gian và quyền thi tự do từ Firebase
             presenceInterval = setInterval(() => { 
                 updatePresence(examCode, safeId); 
-                syncRealtimeExamTimeConfig(); // Tự động đồng bộ thời gian thi mới nhất
+                syncRealtimeExamTimeConfig(); 
             }, 20000);
             onlineCountInterval = setInterval(() => { fetchOnlineCount(examCode); }, 10000);
         }
@@ -601,7 +601,7 @@
             } catch(e) {}
         }
 
-        // ================= TỰ ĐỘNG ĐỒNG BỘ THỜI GIAN THI THEO THỜI GIAN THỰC (REAL-TIME) =================
+        // ================= TỰ ĐỘNG ĐỒNG BỘ THỜI GIAN VÀ QUYỀN TỰ DO THEO THỜI GIAN THỰC (REAL-TIME 20S) =================
         async function syncRealtimeExamTimeConfig() {
             if (isSubmitted || !examStartTime) return;
             const urlParams = new URLSearchParams(window.location.search);
@@ -613,9 +613,23 @@
                 const latestData = await res.json();
                 if (!latestData) return;
 
+                // 1. Kiểm tra quyền thí sinh tự do (nếu bị giáo viên tắt, tự thu bài thí sinh tự do sau 20s)
+                if (latestData.allowFreeStudent === false) {
+                    const sId = document.getElementById("student-id").value.trim();
+                    const currentCat = getExamCategory();
+                    const checkInClass = findStudentFromDatabase(sId, currentCat);
+                    const isFreeStudent = !checkInClass;
+                    
+                    if (isFreeStudent) {
+                        alert("⛔ THÔNG BÁO TỪ GIÁO VIÊN:\nĐề thi này đã TẮT quyền tham gia của Thí sinh tự do. Hệ thống sẽ tự động thu bài của bạn!");
+                        executeSubmitExam(true);
+                        return;
+                    }
+                }
+
                 let updated = false;
 
-                // 1. Kiểm tra nếu giáo viên đổi số phút làm bài (ví dụ từ 50 lên 90)
+                // 2. Kiểm tra nếu giáo viên đổi số phút làm bài (ví dụ từ 50 lên 90)
                 if (latestData.timeLimitMinutes !== undefined && latestData.timeLimitMinutes !== "") {
                     const newLimit = parseInt(latestData.timeLimitMinutes, 10);
                     if (!isNaN(newLimit) && newLimit !== TIME_LIMIT_MINUTES) {
@@ -626,7 +640,7 @@
                     }
                 }
 
-                // 2. Kiểm tra nếu giáo viên gia hạn ngày/giờ mở - đóng đề
+                // 3. Kiểm tra nếu giáo viên gia hạn ngày/giờ mở - đóng đề
                 if (latestData.examEndTimeStr && examData && latestData.examEndTimeStr !== examData.examEndTimeStr) {
                     examData.examEndTimeStr = latestData.examEndTimeStr;
                     updated = true;
@@ -642,7 +656,6 @@
                     const elapsedTimeSec = Math.floor((now - examStartTime) / 1000);
                     remainingSeconds = totalTimeSeconds - elapsedTimeSec;
 
-                    // Bỏ nháy cảnh báo nếu thời gian được gia hạn trên 2 phút
                     const timerBox = document.getElementById("nav-timer-box");
                     const timerVal = document.getElementById("nav-timer-val");
                     if (timerBox && remainingSeconds > 120) {
@@ -1070,6 +1083,15 @@
                 alert("⚠️ Vui lòng nhập đầy đủ SBD, Họ tên, Lớp!"); 
                 return; 
             } 
+
+            // Kiểm tra quyền thí sinh tự do khi bấm vào thi
+            if (examData && examData.allowFreeStudent === false) {
+                const checkInClass = findStudentFromDatabase(sId, getExamCategory());
+                if (!checkInClass) {
+                    alert("⛔ BÀI THI ĐÃ KHÓA THÍ SINH TỰ DO!\nGiáo viên chỉ cho phép học sinh theo danh sách lớp tham gia bài thi này.");
+                    return;
+                }
+            }
             
             const now = Date.now(); let startTimeMs = 0; let endTimeMs = Infinity; 
             if (typeof examData !== 'undefined') { 
