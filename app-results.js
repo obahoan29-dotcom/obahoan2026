@@ -1,6 +1,8 @@
 // =========================================================
+// FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
 // =========================================================
+
 let currentExamResultData = {
     item: null,
     title: "",
@@ -17,6 +19,35 @@ let tableDisplaySettings = {
 let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
 let scoreChartInstance = null;
+
+// Định dạng ngày giờ chuẩn: HH:mm:ss DD/MM/YY (VD: 20:08:26 26/9/26)
+function formatDateTimeFull(timestamp) {
+    if (!timestamp) return "---";
+    let d = new Date(timestamp);
+    if (isNaN(d.getTime())) {
+        let parsed = parseDateString(timestamp);
+        if (parsed) d = new Date(parsed);
+        else return String(timestamp);
+    }
+    const pad = (n) => String(n).padStart(2, '0');
+    const hh = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    const DD = pad(d.getDate());
+    const MM = pad(d.getMonth() + 1);
+    const YY = String(d.getFullYear()).slice(-2);
+    return `${hh}:${mm}:${ss} ${DD}/${MM}/${YY}`;
+}
+
+// Định dạng thời gian thi thực tế đang đếm
+function formatElapsedDuration(startTimeMs) {
+    if (!startTimeMs) return "Đang làm...";
+    const diffSec = Math.max(0, Math.floor((Date.now() - startTimeMs) / 1000));
+    const mins = Math.floor(diffSec / 60);
+    const secs = diffSec % 60;
+    if (mins === 0) return `${secs} giây`;
+    return `${mins} phút ${secs} giây`;
+}
 
 function isSameCategory(catA, catB) {
     if (!catA || !catB) return false;
@@ -127,6 +158,7 @@ function closeTableSettingsPopover(event) {
 
 function onFontSizeChange(val) { tableDisplaySettings.fontSize = parseInt(val); applyTableSettings(); }
 function onRowPaddingChange(val) { tableDisplaySettings.rowPadding = parseInt(val); applyTableSettings(); }
+
 function adjustSetting(type, step) {
     if (type === 'fontSize') {
         tableDisplaySettings.fontSize = Math.min(22, Math.max(10, tableDisplaySettings.fontSize + step));
@@ -135,6 +167,7 @@ function adjustSetting(type, step) {
     }
     applyTableSettings();
 }
+
 function applyFontSizePreset(size) { tableDisplaySettings.fontSize = size; applyTableSettings(); }
 function applyRowPaddingPreset(pad) { tableDisplaySettings.rowPadding = pad; applyTableSettings(); }
 function resetTableSettings() { tableDisplaySettings.fontSize = 13; tableDisplaySettings.rowPadding = 9; applyTableSettings(); }
@@ -577,12 +610,14 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         }
 
         let isDoing = false;
+        let doingStartTime = null;
         let safeSbd = accSbdLower.replace(/[^a-zA-Z0-9]/g, '_');
         let activeSess = activeUsersMap[accSbdLower] || activeUsersMap[safeSbd];
         if (matchedSubs.length === 0 && activeSess) {
             let sCat = activeSess.categoryId || activeSess.cat;
             if (!sCat || isSameCategory(sCat, targetCatIdLower)) {
                 isDoing = true;
+                doingStartTime = activeSess.startTime || (activeSess.lastPing ? activeSess.lastPing - 10000 : Date.now());
             }
         }
 
@@ -611,6 +646,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             allAttempts: matchedSubs,
             selectedAttemptIndex: selectedAttemptIndex,
             isDoing: isDoing,
+            doingStartTime: doingStartTime,
             isFreeDoing: false,
             cheatTimeString: cheatTimeString,
             cheatLogsTabCount: cheatLogsTabCount
@@ -691,6 +727,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             allAttempts: atts,
             selectedAttemptIndex: selectedAttemptIndex,
             isDoing: false,
+            doingStartTime: null,
             isFreeDoing: false,
             cheatTimeString: cheatTimeString,
             cheatLogsTabCount: cheatLogsTabCount
@@ -718,6 +755,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let cheatDurations = (sbdLower && cheatHistoryBySbd[sbdLower]) ? cheatHistoryBySbd[sbdLower] : [];
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
         let logTab = (sbdLower && maxCheatCountBySbd[sbdLower]) ? maxCheatCountBySbd[sbdLower] : 0;
+        let freeStart = session.startTime || session.lastPing || Date.now();
 
         finalRows.push({
             stt: freeCounter++,
@@ -730,8 +768,8 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             allAttempts: [],
             selectedAttemptIndex: 0,
             isDoing: true,
+            doingStartTime: freeStart,
             isFreeDoing: true,
-            startTimeStr: session.startTime ? new Date(session.startTime).toLocaleTimeString("vi-VN") : "Vừa vào thi",
             cheatTimeString: cheatTimeString,
             cheatLogsTabCount: logTab
         });
@@ -829,6 +867,7 @@ function toggleAttemptMenu(rowIndex, event) {
     }
 }
 
+// BẢNG DANH SÁCH: HIỂN THỊ CHUẨN THỜI GIAN VÀO THI VÀ ĐẾM THỜI GIAN THI THỰC TẾ
 function renderFilteredResultTable(rows) {
     const tbody = document.getElementById("result-table-tbody");
     tbody.innerHTML = "";
@@ -889,7 +928,9 @@ function renderFilteredResultTable(rows) {
         let col11_details = `<span class="status-not-submitted">---</span>`;
 
         if (currentSub) {
-            col2_inTime = currentSub.timestamp || (currentSub.createdAt ? new Date(currentSub.createdAt).toLocaleTimeString("vi-VN") : "---");
+            // Đã nộp bài
+            let subDateMs = getSubmissionTimestamp(currentSub);
+            col2_inTime = subDateMs ? formatDateTimeFull(subDateMs) : (currentSub.timestamp || "---");
             col3_spentTime = currentSub.completionTime || (currentSub.calcMetrics && currentSub.calcMetrics.completionTimeStr) || `${currentSub.spentMins||0} phút`;
             col6_status = `<span class="status-pill status-done">Đã nộp bài</span>`;
             
@@ -914,8 +955,12 @@ function renderFilteredResultTable(rows) {
                 col11_details = `<span class="td-details" title="${safeText}" onclick="alert('📋 CHI TIẾT BÀI LÀM:\\n\\n' + this.title.replace(/ \\| /g, '\\n'))">${currentSub.dataString}</span>`;
             }
         } else if (row.isDoing) {
-            col2_inTime = `<span style="color:#0284c7; font-weight:800;">${row.startTimeStr || "Vừa vào thi"}</span>`;
-            col3_spentTime = `<span style="color:#f59e0b; font-weight:800;">Đang làm...</span>`;
+            // Đang làm bài -> Cột vào thi hiện chính xác ngày giờ bắt đầu, cột thời gian thi đếm trực tiếp thời gian thực
+            let formattedIn = formatDateTimeFull(row.doingStartTime);
+            let liveDuration = formatElapsedDuration(row.doingStartTime);
+
+            col2_inTime = `<span style="color:#0284c7; font-weight:800; font-family:monospace;">${formattedIn}</span>`;
+            col3_spentTime = `<span style="color:#ea580c; font-weight:800; background:#fff7ed; padding:2px 6px; border-radius:6px; border:1px solid #fdba74;">⏱ ${liveDuration}</span>`;
             
             if (row.isFreeDoing) {
                 col6_status = `<span class="status-pill" style="background:#fff7ed; color:#c2410c; border:1px solid #fdba74; font-weight:800;">⚡ Đang thi-tự do</span>`;
@@ -1173,8 +1218,8 @@ function exportResultsToExcel() {
 
         let stt = r.stt;
         let soLanThi = attCount > 0 ? `${attCount} lần (Đang xem lần ${r.selectedAttemptIndex + 1})` : "Chưa thi";
-        let inTime = sub ? (sub.timestamp || "") : (r.isDoing ? "Đang thi" : "Chưa thi");
-        let spent = sub ? (sub.completionTime || "") : "";
+        let inTime = sub ? (sub.timestamp || "") : (r.isDoing ? formatDateTimeFull(r.doingStartTime) : "Chưa thi");
+        let spent = sub ? (sub.completionTime || "") : (r.isDoing ? formatElapsedDuration(r.doingStartTime) : "");
         let name = acc.name || "";
         let lop = acc.className || (sub ? (sub.studentClass || sub.className) : "") || "";
         let sbd = acc.sbd || "";
