@@ -7,8 +7,8 @@ window.STUDENT_ACCOUNTS = window.STUDENT_ACCOUNTS || {};
 window.STUDENT_ACCOUNTS["lop-10p"] = [
     { stt: 1, pass: "1", sbd: "10p01", username: "ĐOÀN QUANG ANH", name: "ĐOÀN QUANG ANH", className: "10P" },
     { stt: 2, pass: "2", sbd: "10p02", username: "LÊ THỊ PHƯƠNG ANH", name: "LÊ THỊ PHƯƠNG ANH", className: "10P" },
-    { stt: 3, pass: "3", sbd: "10p03", username: "NGUYỄN PHƯƠNG ANH", name: "NGUYỄN PHƯƠNG ANH", className: "10P" },
-    { stt: 4, pass: "4", sbd: "10p04", username: "NGUYỄN PHƯƠNG ANH", name: "NGUYỄN PHƯƠNG ANH", className: "10P" },
+    { stt: 3, pass: "3", sbd: "10p03", username: "NGUYỄN PHƯƠNG ANH 9", name: "NGUYỄN PHƯƠNG ANH 9", className: "10P" },
+    { stt: 4, pass: "4", sbd: "10p04", username: "NGUYỄN PHƯƠNG ANH 12", name: "NGUYỄN PHƯƠNG ANH 12", className: "10P" },
     { stt: 5, pass: "5", sbd: "10p05", username: "PHẠM THỊ PHƯƠNG ANH", name: "PHẠM THỊ PHƯƠNG ANH", className: "10P" },
     { stt: 6, pass: "6", sbd: "10p06", username: "VŨ THÙY ANH", name: "VŨ THÙY ANH", className: "10P" },
     { stt: 7, pass: "7", sbd: "10p07", username: "VŨ XUÂN BÁCH", name: "VŨ XUÂN BÁCH", className: "10P" },
