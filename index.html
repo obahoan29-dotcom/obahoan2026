@@ -38,7 +38,7 @@
 </head>
 <body>
 
-<!-- BIỂU TƯỢNG ĐÈN TRUNG THU CỐ ĐỊNH MÉP PHẢI TRƯỢT THEO KHI VUỐT TRANG (KHÔNG KHUNG, CÓ CÁN ĐÈN) -->
+<!-- BIỂU TƯỢNG ĐÈN TRUNG THU CỐ ĐỊNH MÉP PHẢI TRƯỢT THEO KHI VUỐT TRANG (TO GẤP ĐÔI, LUNG LINH RỰC RỠ) -->
 <div class="mid-autumn-badge" title="Tết Trung Thu Vui Vẻ - Đêm Hội Trăng Rằm! 🏮">
     <div class="lantern-stick"></div>
     <div class="lantern-string"></div>
@@ -206,13 +206,11 @@
 <div class="result-fullscreen-modal" id="result-fullscreen-modal">
     <div class="result-modal-header">
         <div class="result-modal-title-box">
-            <!-- NÚT QUAY LẠI RÕ RÀNG -->
             <button type="button" id="btn-result-back-action" onclick="handleResultHeaderBack()" style="background:#e0f2fe; color:#0284c7; border:1.5px solid #7dd3fc; border-radius:10px; padding:7px 12px; font-weight:800; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:5px; flex-shrink:0;">
                 ← Quay lại
             </button>
             <div class="result-modal-icon">📊</div>
             <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
-                <!-- SƠ ĐỒ CÂY (BREADCRUMBS) -->
                 <div style="font-size: 12px; color: #64748b; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <a href="javascript:void(0)" onclick="closeResultModal()" style="color:#0284c7; text-decoration:none;">🏠 Trang chủ</a>
                     <span>/</span>
@@ -227,7 +225,6 @@
         <div class="result-modal-tools">
             <input type="text" id="result-search-input" class="result-search-input" placeholder="🔍 Tìm tên, SBD..." oninput="filterResultTable()">
             
-            <!-- NÚT BẬT / TẮT TỰ ĐỘNG CẬP NHẬT THEO THỜI GIAN THỰC -->
             <button type="button" id="btn-toggle-autorefresh" onclick="toggleAutoRefresh(event)" 
                 style="background: #1e293b; color: #38bdf8; border: 1.5px solid #38bdf8; border-radius: 20px; padding: 7px 12px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;" 
                 title="Bấm để Tạm dừng hoặc Bật lại tự động cập nhật">
@@ -237,7 +234,6 @@
             <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
             <button class="btn-export-excel" onclick="exportResultsToExcel()" title="Tải file Excel (.xlsx)">📥 Tải Excel (.xlsx)</button>
             
-            <!-- NÚT BÁNH RĂNG CÀI ĐẶT CỠ CHỮ & KHOẢNG CÁCH DÒNG -->
             <div class="table-settings-wrapper" id="table-settings-wrapper">
                 <button type="button" class="btn-table-settings" id="btn-table-settings" onclick="toggleTableSettingsPopover(event)" title="Tùy chỉnh cỡ chữ & khoảng cách giữa các dòng">
                     ⚙️
@@ -248,7 +244,6 @@
                         <button type="button" class="btn-close-settings" onclick="closeTableSettingsPopover(event)">✕</button>
                     </div>
 
-                    <!-- 1. CỠ CHỮ -->
                     <div class="setting-item">
                         <div class="setting-label-row">
                             <span>🔤 Cỡ chữ hiển thị:</span>
@@ -267,7 +262,6 @@
                         </div>
                     </div>
 
-                    <!-- 2. KHOẢNG CÁCH DÒNG -->
                     <div class="setting-item">
                         <div class="setting-label-row">
                             <span>↕️ Khoảng cách giữa các dòng:</span>
@@ -296,10 +290,9 @@
         </div>
     </div>
 
-    <!-- HÀNG THỐNG KÊ TỔNG QUAN & PHÂN LOẠI ĐIỂM TRÊN CÙNG 1 HÀNG DUY NHẤT (GỘP GỌN GÀNG) -->
+    <!-- HÀNG THỐNG KÊ TỔNG QUAN -->
     <div class="result-modal-stats-bar" id="result-modal-stats-bar" style="background:#f8fafc; padding:8px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid #e2e8f0; font-size:13px; font-weight:700; flex-shrink:0; overflow-x:auto;">
         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:nowrap;">
-            <!-- NHÓM 1: CÁC THẺ TỔNG QUAN -->
             <div class="stat-badge-item">
                 👥 Tổng thí sinh: <b id="stat-total-students">0</b>
                 <span style="font-size:12px; color:#64748b; margin-left:4px; font-weight:700;">
@@ -311,10 +304,8 @@
             <div class="stat-badge-item">⏳ Chưa thi: <b id="stat-unsubmitted-students" style="color:#ef4444;">0</b></div>
             <div class="stat-badge-item">🎯 Điểm TB: <b id="stat-avg-score" style="color:#8b5cf6;">0.0</b></div>
 
-            <!-- VẠCH NGĂN CÁCH GIỮA 2 NHÓM THỐNG KÊ -->
             <span style="display:inline-block; width:1.5px; height:20px; background:#cbd5e1; margin:0 4px; flex-shrink:0;"></span>
 
-            <!-- NHÓM 2: PHÂN LOẠI ĐIỂM (ĐÃ ĐƯA LÊN CÙNG HÀNG) -->
             <span style="color:#475569; display:inline-flex; align-items:center; gap:4px; font-size:12.5px; white-space:nowrap;">
                 📊 <b>Phân loại điểm:</b>
             </span>
@@ -329,7 +320,6 @@
             </div>
         </div>
 
-        <!-- NÚT CHI TIẾT ĐẨY SÁT GÓC PHẢI -->
         <div style="flex-shrink:0; margin-left:auto;">
             <button type="button" id="btn-view-detailed-stats" onclick="openDetailedStatsView()" style="background:linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color:#fff; border:none; border-radius:18px; padding:6px 14px; font-size:12.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 3px 10px rgba(99,102,241,0.32); white-space:nowrap; transition:all 0.2s;">
                 📈 Chi tiết ➔
@@ -375,9 +365,8 @@
         </div>
     </div>
 
-    <!-- VIEW 2: MÀN HÌNH THỐNG KÊ CHI TIẾT BẰNG BIỂU ĐỒ HÌNH CỘT (ĐI THEO ĐƯỜNG DẪN ĐỂ LÙI LẠI ĐƯỢC) -->
+    <!-- VIEW 2: MÀN HÌNH THỐNG KÊ CHI TIẾT BẰNG BIỂU ĐỒ HÌNH CỘT -->
     <div id="result-detailed-stats-view" style="display:none; flex:1; padding:16px; overflow-y:auto; background:#f1f5f9; flex-direction:column; gap:16px;">
-        <!-- NÚT LÙI LẠI TRÊN THANH CHI TIẾT -->
         <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; padding:12px 18px; border-radius:14px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
             <button type="button" onclick="closeDetailedStatsView()" style="background:#f8fafc; color:#1e293b; border:1.5px solid #cbd5e1; border-radius:10px; padding:7px 15px; font-weight:800; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px; transition:0.2s;">
                 ⬅ Quay lại bảng kết quả
@@ -387,7 +376,6 @@
             </div>
         </div>
 
-        <!-- CÁC THẺ THỐNG KÊ KPI RỰC RỠ -->
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
             <div style="background:linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius:14px; padding:16px; border-left:5px solid #16a34a; box-shadow:0 3px 10px rgba(22,163,74,0.1);">
                 <div style="color:#166534; font-size:12px; font-weight:800;">ĐIỂM CAO NHẤT</div>
@@ -411,7 +399,6 @@
             </div>
         </div>
 
-        <!-- KHỐI BIỂU ĐỒ HÌNH CỘT PHỔ ĐIỂM -->
         <div style="background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; padding:20px; box-shadow:0 4px 18px rgba(0,0,0,0.05);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
                 <h3 style="margin:0; font-size:16px; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:8px;">
@@ -424,7 +411,6 @@
             </div>
         </div>
 
-        <!-- BẢNG CHI TIẾT THEO CÁC NHÓM XẾP LOẠI ĐIỂM -->
         <div style="background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; padding:18px; box-shadow:0 4px 18px rgba(0,0,0,0.05);">
             <h4 style="margin:0 0 12px 0; font-size:15px; font-weight:900; color:#0f172a;">
                 📑 Bảng tổng hợp mức xếp loại học lực bài thi
@@ -447,13 +433,20 @@
     </div>
 </div>
 
-<!-- MODAL ĐĂNG NHẬP THI HỌC SINH -->
+<!-- ========================================================= -->
+<!-- MODAL ĐĂNG NHẬP THI HỌC SINH (BỔ SUNG KHUNG THỜI GIAN LÀM BÀI) -->
+<!-- ========================================================= -->
 <div class="move-modal-overlay" id="student-login-modal">
     <div class="student-login-box">
         <div class="student-login-header">
             <div class="student-login-icon" id="st-modal-icon">🔐</div>
             <div class="student-login-title" id="st-modal-main-title">Đăng Nhập Làm Bài Thi</div>
             <div class="student-login-sub" id="st-modal-exam-name">Hệ thống bài thi trắc nghiệm</div>
+            
+            <!-- KHUNG THỜI GIAN LÀM BÀI VÀ HẠN NỘP (YÊU CẦU 2) -->
+            <div class="st-modal-time-box" id="st-modal-time-box">
+                ⏳ Đang tải khung thời gian làm bài...
+            </div>
         </div>
 
         <div class="student-type-tabs">
@@ -519,6 +512,40 @@
         <div class="st-btn-row">
             <button type="button" class="st-btn st-btn-cancel" onclick="closeStudentLoginModal()">Hủy bỏ</button>
             <button type="button" class="st-btn st-btn-submit" id="st-submit-btn" onclick="submitStudentLogin()">Vào thi 🚀</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL THAY ĐỔI THỜI GIAN THI & GIA HẠN LỊCH MỞ ĐỀ (YÊU CẦU 4) -->
+<!-- ========================================================= -->
+<div class="move-modal-overlay" id="exam-time-modal">
+    <div class="move-modal-box" style="width: 360px;">
+        <h4 id="exam-time-modal-title">⏱ Cấu hình thời gian đề thi</h4>
+        
+        <!-- DẠNG 1: ĐỔI THỜI LƯỢNG LÀM BÀI (PHÚT) -->
+        <div id="modal-time-minutes-group" style="display: none;">
+            <div class="admin-input-group">
+                <label>Thời lượng làm bài (phút):</label>
+                <input type="number" id="edit-time-limit" min="5" max="300" placeholder="VD: 45, 60, 90...">
+            </div>
+        </div>
+
+        <!-- DẠNG 2: GIA HẠN KHUNG THỜI GIAN (BẮT ĐẦU - KẾT THÚC) -->
+        <div id="modal-time-schedule-group" style="display: none;">
+            <div class="admin-input-group">
+                <label>Thời gian mở đề (Bắt đầu):</label>
+                <input type="datetime-local" id="edit-start-time">
+            </div>
+            <div class="admin-input-group">
+                <label>Thời gian đóng đề (Hết hạn):</label>
+                <input type="datetime-local" id="edit-end-time">
+            </div>
+        </div>
+
+        <div class="move-btn-row" style="margin-top: 14px;">
+            <button class="move-btn-cancel" onclick="closeExamTimeModal()">Hủy</button>
+            <button class="move-btn-submit" id="btn-save-exam-time" onclick="saveExamTimeConfig()">Lưu cấu hình</button>
         </div>
     </div>
 </div>
