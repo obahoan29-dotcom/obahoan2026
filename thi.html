@@ -560,7 +560,11 @@
             if (presenceInterval) clearInterval(presenceInterval);
             if (onlineCountInterval) clearInterval(onlineCountInterval);
 
-            presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 20000);
+            // Chạy chu kỳ 20 giây: vừa ping online, vừa kéo cập nhật thời gian từ Firebase
+            presenceInterval = setInterval(() => { 
+                updatePresence(examCode, safeId); 
+                syncRealtimeExamTimeConfig(); // Tự động đồng bộ thời gian thi mới nhất
+            }, 20000);
             onlineCountInterval = setInterval(() => { fetchOnlineCount(examCode); }, 10000);
         }
 
@@ -594,6 +598,60 @@
                 await fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
                     method: 'PUT', body: JSON.stringify(presencePayload)
                 });
+            } catch(e) {}
+        }
+
+        // ================= TỰ ĐỘNG ĐỒNG BỘ THỜI GIAN THI THEO THỜI GIAN THỰC (REAL-TIME) =================
+        async function syncRealtimeExamTimeConfig() {
+            if (isSubmitted || !examStartTime) return;
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentQuizId = urlParams.get('id');
+            if (!currentQuizId) return;
+
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${currentQuizId}.json`);
+                const latestData = await res.json();
+                if (!latestData) return;
+
+                let updated = false;
+
+                // 1. Kiểm tra nếu giáo viên đổi số phút làm bài (ví dụ từ 50 lên 90)
+                if (latestData.timeLimitMinutes !== undefined && latestData.timeLimitMinutes !== "") {
+                    const newLimit = parseInt(latestData.timeLimitMinutes, 10);
+                    if (!isNaN(newLimit) && newLimit !== TIME_LIMIT_MINUTES) {
+                        TIME_LIMIT_MINUTES = newLimit;
+                        totalTimeSeconds = TIME_LIMIT_MINUTES * 60;
+                        if (examData) examData.timeLimitMinutes = newLimit;
+                        updated = true;
+                    }
+                }
+
+                // 2. Kiểm tra nếu giáo viên gia hạn ngày/giờ mở - đóng đề
+                if (latestData.examEndTimeStr && examData && latestData.examEndTimeStr !== examData.examEndTimeStr) {
+                    examData.examEndTimeStr = latestData.examEndTimeStr;
+                    updated = true;
+                }
+                if (latestData.examStartTimeStr && examData && latestData.examStartTimeStr !== examData.examStartTimeStr) {
+                    examData.examStartTimeStr = latestData.examStartTimeStr;
+                    updated = true;
+                }
+
+                // Cập nhật lại thời gian còn lại ngay lập tức
+                if (updated) {
+                    const now = Date.now();
+                    const elapsedTimeSec = Math.floor((now - examStartTime) / 1000);
+                    remainingSeconds = totalTimeSeconds - elapsedTimeSec;
+
+                    // Bỏ nháy cảnh báo nếu thời gian được gia hạn trên 2 phút
+                    const timerBox = document.getElementById("nav-timer-box");
+                    const timerVal = document.getElementById("nav-timer-val");
+                    if (timerBox && remainingSeconds > 120) {
+                        timerBox.classList.remove("timer-warning");
+                    }
+                    if (timerVal) {
+                        timerVal.innerText = formatHHMMSS(Math.max(0, remainingSeconds));
+                    }
+                }
             } catch(e) {}
         }
 
@@ -1080,7 +1138,43 @@
         function reapplySavedAnswers() { Object.keys(userAnswersState).forEach(key => { const val = userAnswersState[key]; if (key.includes('_')) { const r = document.querySelector(`input[name="${key}"][value="${val}"]`); if (r) r.checked = true; } else if (document.getElementById(`${key}-input`)) { document.getElementById(`${key}-input`).value = val; } else { const qId = key.replace('q', ''); selectOption(qId, val); } }); }
         function formatHHMMSS(totalSecs) { const h = Math.floor(totalSecs / 3600); const m = Math.floor((totalSecs % 3600) / 60); const s = totalSecs % 60; return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; }
         
-        function startCountdownTimer() { const timerVal = document.getElementById("nav-timer-val"); const timerBox = document.getElementById("nav-timer-box"); if (timerInterval) clearInterval(timerInterval); let endTimeMs = Infinity; if (typeof examData !== 'undefined' && examData.examEndTimeStr) { endTimeMs = new Date(examData.examEndTimeStr).getTime(); } timerInterval = setInterval(() => { const now = Date.now(); if (now >= endTimeMs) { clearInterval(timerInterval); timerVal.innerText = "00:00:00"; alert("⛔ Đã hết thời gian cho phép của đợt thi! Hệ thống tự động thu bài."); executeSubmitExam(true); return; } const elapsedTimeSec = Math.floor((now - examStartTime) / 1000); remainingSeconds = totalTimeSeconds - elapsedTimeSec; if (remainingSeconds <= 0) { clearInterval(timerInterval); timerVal.innerText = "00:00:00"; alert("⏰ Đã hết thời gian làm bài! Hệ thống tự động thu bài."); executeSubmitExam(true); return; } timerVal.innerText = formatHHMMSS(remainingSeconds); if (remainingSeconds <= 120) timerBox.classList.add("timer-warning"); }, 1000); }
+        function startCountdownTimer() { 
+            const timerVal = document.getElementById("nav-timer-val"); 
+            const timerBox = document.getElementById("nav-timer-box"); 
+            if (timerInterval) clearInterval(timerInterval); 
+            
+            timerInterval = setInterval(() => { 
+                const now = Date.now(); 
+                let endTimeMs = Infinity; 
+                if (typeof examData !== 'undefined' && examData && examData.examEndTimeStr) { 
+                    endTimeMs = new Date(examData.examEndTimeStr).getTime(); 
+                } 
+
+                if (now >= endTimeMs) { 
+                    clearInterval(timerInterval); 
+                    timerVal.innerText = "00:00:00"; 
+                    alert("⛔ Đã hết thời gian cho phép của đợt thi! Hệ thống tự động thu bài."); 
+                    executeSubmitExam(true); 
+                    return; 
+                } 
+
+                const elapsedTimeSec = Math.floor((now - examStartTime) / 1000); 
+                remainingSeconds = totalTimeSeconds - elapsedTimeSec; 
+
+                if (remainingSeconds <= 0) { 
+                    clearInterval(timerInterval); 
+                    timerVal.innerText = "00:00:00"; 
+                    alert("⏰ Đã hết thời gian làm bài! Hệ thống tự động thu bài."); 
+                    executeSubmitExam(true); 
+                    return; 
+                } 
+
+                timerVal.innerText = formatHHMMSS(remainingSeconds); 
+                if (remainingSeconds <= 120) timerBox.classList.add("timer-warning"); 
+                else timerBox.classList.remove("timer-warning");
+            }, 1000); 
+        }
+
         document.addEventListener("visibilitychange", function() { if (!examStartTime || isSubmitted) return; if (document.hidden) { if (!isTabHidden) { isTabHidden = true; leaveTime = Date.now(); tabSwitchCount++; } } else { if (isTabHidden && leaveTime > 0) { isTabHidden = false; let durationSec = Math.max(1, Math.round((Date.now() - leaveTime) / 1000)); leaveTime = 0; let mins = Math.floor(durationSec / 60); let secs = durationSec % 60; let durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`; sendTabSwitchLog(tabSwitchCount, durationStr, durationSec); setTimeout(() => alert(`⚠️ CẢNH BÁO GIAN LẬN:\nBạn vừa rời bài thi ${durationStr} (Lần ${tabSwitchCount}).`), 100); } } });
         
         function sendTabSwitchLog(switchCount, durationStr, durationSec = 0) { 
