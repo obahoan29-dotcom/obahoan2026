@@ -505,11 +505,13 @@ async function saveExamTimeConfig() {
                 return;
             }
             payload.timeLimitMinutes = mins;
+            payload.timeUpdatedAt = Date.now(); // Cập nhật dấu thời gian để máy học sinh nhận diện ngay lập tức
         } else if (currentEditingTimeMode === 'schedule') {
             const startVal = document.getElementById("edit-start-time").value;
             const endVal = document.getElementById("edit-end-time").value;
             if (startVal) payload.examStartTimeStr = startVal;
             if (endVal) payload.examEndTimeStr = endVal;
+            payload.scheduleUpdatedAt = Date.now();
         }
 
         await fetch(`${FIREBASE_DB_URL}/quizzes/${currentEditingTimeQuizId}.json`, {
@@ -517,7 +519,7 @@ async function saveExamTimeConfig() {
             body: JSON.stringify(payload)
         });
 
-        alert("✅ Đã cập nhật thời gian đề thi thành công!");
+        alert("✅ Đã cập nhật thời gian đề thi thành công! Học sinh đang làm bài sẽ được cập nhật ngay.");
         closeExamTimeModal();
     } catch(e) {
         alert("❌ Lỗi khi lưu cấu hình thời gian: " + e.message);
@@ -976,8 +978,7 @@ async function changeBadge(categoryId, itemId, newBadgeType, event) {
 }
 
 // =========================================================
-// YÊU CẦU 2: VIẾT LẠI CREATE EXAM CARD ĐỂ Ở CHẾ ĐỘ ADMIN
-// CÁC NÚT ĐIỀU KHIỂN NẰM HÀNG TRÊN, TIÊU ĐỀ ĐỀ THI TRẢI ĐẦY 2-3 DÒNG Ở DƯỚI
+// THẺ ĐỀ THI: ĐỔI CHỖ NÚT KẾT QUẢ THI VÀ CHẾ ĐỘ THI TỰ DO
 // =========================================================
 function createExamCard(item) {
     let card = document.createElement("a"); 
@@ -1026,11 +1027,10 @@ function createExamCard(item) {
 
     let docBadgeHtml = item.isDoc ? `<span class="badge-doc">TÀI LIỆU</span>` : '';
 
-    // TRƯỜNG HỢP 1: ADMIN ĐANG ĐĂNG NHẬP -> DÀN THÀNH 2 HÀNG THOÁNG ĐẸP, TIÊU ĐỀ RỘNG 100%
+    // TRƯỜNG HỢP 1: ADMIN ĐANG ĐĂNG NHẬP -> ĐỔI CHỖ NÚT "KẾT QUẢ THI" LÊN TRƯỚC "TỰ DO"
     if (isAdminLoggedIn) {
         card.classList.add("admin-card-mode");
 
-        // CỤM NÚT TRÁI
         let leftControlsHtml = "";
         if (!item.isDoc && !isPadlet) {
             let copyItem = { ...item, categoryId: catId };
@@ -1072,17 +1072,17 @@ function createExamCard(item) {
                 </span>
             </div>`;
 
+            // YÊU CẦU: ĐỔI CHỖ NÚT "KẾT QUẢ THI" LÊN TRƯỚC "TỰ DO"
             leftControlsHtml = `
             <div class="left-admin-actions-col">
-                ${freeToggleHtml}
                 <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(copyItem).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
                     📊 Kết quả thi
                 </button>
+                ${freeToggleHtml}
                 ${subTimeButtonsHtml}
             </div>`;
         }
 
-        // CỤM NÚT PHẢI
         let rightControlsHtml = "";
         if (item.firebaseId) {
             let cleanData = { title: item.title, date: item.date, url: item.url, badgeText: currentBadge, isHot: (currentBadge==='HOT'), isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp, isShuffled: item.isShuffled, allowFree: (item.allowFree !== false), categoryId: catId };
@@ -1135,7 +1135,7 @@ function createExamCard(item) {
         return card;
     }
 
-    // TRƯỜNG HỢP 2: HỌC SINH XEM THÔNG THƯỜNG (CHƯA ĐĂNG NHẬP ADMIN)
+    // TRƯỜNG HỢP 2: HỌC SINH XEM THÔNG THƯỜNG
     let arrowHtml = `<div class="arrow">&#8250;</div>`;
     card.innerHTML = `
         ${thumbHtml}
