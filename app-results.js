@@ -20,7 +20,7 @@ let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
 let scoreChartInstance = null;
 
-// Định dạng ngày giờ chuẩn: HH:mm:ss DD/MM/YY (VD: 20:08:26 26/9/26)
+// Định dạng ngày giờ chuẩn: HH:mm:ss DD/MM/YY (VD: 20:08:26 26/09/26)
 function formatDateTimeFull(timestamp) {
     if (!timestamp) return "---";
     let d = new Date(timestamp);
@@ -779,6 +779,10 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     updateStatsAndRenderTable(finalRows);
 }
 
+// =========================================================
+// YÊU CẦU 3: CẬP NHẬT THỐNG KÊ PHÂN LOẠI 7 KHOẢNG ĐIỂM
+// 0 đến <3, 3 đến <5, 5 đến <=6, 6 đến <=7, 7 đến <=8, 8 đến <=9, 9 đến <=10
+// =========================================================
 function updateStatsAndRenderTable(rows) {
     let total = rows.length;
     let classCount = rows.filter(r => r.isClassStudent).length;
@@ -791,9 +795,14 @@ function updateStatsAndRenderTable(rows) {
     let sumScore = 0;
     let scoredStudents = 0;
 
-    let countUnder5 = 0;
-    let count5To7 = 0;
-    let countOver7 = 0;
+    // Khởi tạo 7 bộ đếm điểm theo yêu cầu
+    let c_0_to_3  = 0; // 0 <= điểm < 3
+    let c_3_to_5  = 0; // 3 <= điểm < 5
+    let c_5_to_6  = 0; // 5 <= điểm <= 6
+    let c_6_to_7  = 0; // 6 < điểm <= 7
+    let c_7_to_8  = 0; // 7 < điểm <= 8
+    let c_8_to_9  = 0; // 8 < điểm <= 9
+    let c_9_to_10 = 0; // 9 < điểm <= 10
 
     rows.forEach(r => {
         if (r.allAttempts.length > 0) {
@@ -804,12 +813,20 @@ function updateStatsAndRenderTable(rows) {
                     sumScore += sc;
                     scoredStudents++;
 
-                    if (sc < 5.0) {
-                        countUnder5++;
+                    if (sc < 3.0) {
+                        c_0_to_3++;
+                    } else if (sc < 5.0) {
+                        c_3_to_5++;
+                    } else if (sc <= 6.0) {
+                        c_5_to_6++;
                     } else if (sc <= 7.0) {
-                        count5To7++;
+                        c_6_to_7++;
+                    } else if (sc <= 8.0) {
+                        c_7_to_8++;
+                    } else if (sc <= 9.0) {
+                        c_8_to_9++;
                     } else {
-                        countOver7++;
+                        c_9_to_10++;
                     }
                 }
             }
@@ -829,12 +846,22 @@ function updateStatsAndRenderTable(rows) {
     document.getElementById("stat-unsubmitted-students").innerText = unsubmittedCount;
     document.getElementById("stat-avg-score").innerText = avg;
 
-    const u5El = document.getElementById("stat-score-under-5");
-    const midEl = document.getElementById("stat-score-5-to-7");
-    const o7El = document.getElementById("stat-score-over-7");
-    if (u5El) u5El.innerText = countUnder5;
-    if (midEl) midEl.innerText = count5To7;
-    if (o7El) o7El.innerText = countOver7;
+    // Gán 7 khoảng điểm vào các thẻ badge trên thanh header
+    const el_0_3 = document.getElementById("stat-score-0-to-3");
+    const el_3_5 = document.getElementById("stat-score-3-to-5");
+    const el_5_6 = document.getElementById("stat-score-5-to-6");
+    const el_6_7 = document.getElementById("stat-score-6-to-7");
+    const el_7_8 = document.getElementById("stat-score-7-to-8");
+    const el_8_9 = document.getElementById("stat-score-8-to-9");
+    const el_9_10 = document.getElementById("stat-score-9-to-10");
+
+    if (el_0_3) el_0_3.innerText = c_0_to_3;
+    if (el_3_5) el_3_5.innerText = c_3_to_5;
+    if (el_5_6) el_5_6.innerText = c_5_to_6;
+    if (el_6_7) el_6_7.innerText = c_6_to_7;
+    if (el_7_8) el_7_8.innerText = c_7_to_8;
+    if (el_8_9) el_8_9.innerText = c_8_to_9;
+    if (el_9_10) el_9_10.innerText = c_9_to_10;
 
     renderFilteredResultTable(rows);
 
@@ -1076,7 +1103,7 @@ function showMainResultTableUI() {
 }
 
 // =========================================================
-// YÊU CẦU 1: VẼ BIỂU ĐỒ HÌNH CỘT VỚI CHỮ HỌ TÊN TO RÕ,
+// VẼ BIỂU ĐỒ HÌNH CỘT VỚI CHỮ HỌ TÊN HỌC SINH RÕ NÉT,
 // MỖI HỌC SINH 1 DÒNG PHỦ KÍN CỘT ĐỀU ĐẶN TỪ TRÊN XUỐNG DƯỚI
 // =========================================================
 function renderDetailedScoreChart() {
@@ -1125,7 +1152,6 @@ function renderDetailedScoreChart() {
         '#a3e635', '#4ade80', '#22c55e', '#10b981', '#06b6d4'
     ];
 
-    // PLUGIN VẼ TRỰC TIẾP HỌ VÀ TÊN HỌC SINH TO, 1 NGƯỜI 1 DÒNG PHỦ KÍN CỘT TỪ TRÊN XUỐNG DƯỚI
     const namesInsideBarsPlugin = {
         id: 'namesInsideBarsPlugin',
         afterDatasetsDraw(chart) {
@@ -1144,10 +1170,7 @@ function renderDetailedScoreChart() {
                 const barWidth = bar.width;
                 const totalBarHeight = barBaseY - barTopY;
 
-                // Chia đều chiều cao cột thành N ô tương ứng với N học sinh
                 const slotHeight = totalBarHeight / n;
-
-                // Cỡ chữ to rõ, tự động co dãn theo chiều cao ô và độ rộng cột
                 const calculatedSize = Math.floor(Math.min(14.5, Math.max(10.5, slotHeight * 0.72, barWidth / 7.5)));
                 const fontSize = Math.max(10, calculatedSize);
 
@@ -1156,12 +1179,10 @@ function renderDetailedScoreChart() {
                 ctx.textBaseline = 'middle';
                 ctx.font = `bold ${fontSize}px 'Be Vietnam Pro', Arial, sans-serif`;
 
-                // Phân bổ từng em học sinh vào 1 dòng, phủ kín cột đều đặn từ trên xuống dưới
                 students.forEach((fullName, sIdx) => {
                     const centerY = barTopY + (sIdx + 0.5) * slotHeight;
 
                     let displayName = fullName.trim();
-                    // Nếu tên quá dài so với chiều ngang cột thì rút gọn tên đệm
                     if (ctx.measureText(displayName).width > barWidth - 4) {
                         const words = displayName.split(/\s+/);
                         if (words.length >= 3) {
@@ -1178,19 +1199,16 @@ function renderDetailedScoreChart() {
                         }
                     }
 
-                    // Viền đen đổ bóng tương phản cao giúp chữ luôn sáng rõ trên mọi màu nền cột
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
                     ctx.shadowBlur = 3;
                     ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
                     ctx.lineWidth = 2.8;
                     ctx.strokeText(displayName, barX, centerY);
 
-                    // Chữ trắng đậm sáng nổi bật
                     ctx.fillStyle = '#ffffff';
                     ctx.fillText(displayName, barX, centerY);
                 });
 
-                // Hiển thị tổng số học sinh trên đỉnh cột
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = '#0f172a';
                 ctx.font = `bold 12.5px 'Be Vietnam Pro', Arial, sans-serif`;
@@ -1256,12 +1274,15 @@ function renderDetailedScoreChart() {
     });
 
     const totalSubmitted = scores.length;
+    // Bảng chi tiết đồng bộ chuẩn 7 mức phổ điểm
     const ratingGroups = [
-        { name: "Giỏi - Xuất sắc", range: "8.0 - 10.0", count: scores.filter(s => s >= 8.0).length, note: "Nắm vững toàn diện kiến thức", color: "#16a34a" },
-        { name: "Khá", range: "6.5 - 7.9", count: scores.filter(s => s >= 6.5 && s < 8.0).length, note: "Hiểu bài tốt, kỹ năng vững", color: "#0284c7" },
-        { name: "Trung bình", range: "5.0 - 6.4", count: scores.filter(s => s >= 5.0 && s < 6.5).length, note: "Đạt chuẩn kiến thức cơ bản", color: "#d97706" },
-        { name: "Yếu", range: "3.5 - 4.9", count: scores.filter(s => s >= 3.5 && s < 5.0).length, note: "Cần củng cố thêm phần lý thuyết", color: "#ea580c" },
-        { name: "Kém", range: "0.0 - 3.4", count: scores.filter(s => s < 3.5).length, note: "Cần kế hoạch phụ đạo bổ trợ", color: "#dc2626" }
+        { name: "Xuất sắc", range: "9.0 < Điểm ≤ 10.0", count: scores.filter(s => s > 9.0).length, note: "Nắm vững toàn diện kiến thức nâng cao", color: "#2563eb" },
+        { name: "Giỏi", range: "8.0 < Điểm ≤ 9.0", count: scores.filter(s => s > 8.0 && s <= 9.0).length, note: "Kỹ năng làm bài rất tốt, chính xác cao", color: "#059669" },
+        { name: "Khá giỏi", range: "7.0 < Điểm ≤ 8.0", count: scores.filter(s => s > 7.0 && s <= 8.0).length, note: "Hiểu sâu kiến thức, tư duy nhạy bén", color: "#16a34a" },
+        { name: "Khá", range: "6.0 < Điểm ≤ 7.0", count: scores.filter(s => s > 6.0 && s <= 7.0).length, note: "Vận dụng tốt các dạng bài trọng tâm", color: "#b45309" },
+        { name: "Trung bình", range: "5.0 ≤ Điểm ≤ 6.0", count: scores.filter(s => s >= 5.0 && s <= 6.0).length, note: "Đạt chuẩn kiến thức cơ bản", color: "#d97706" },
+        { name: "Yếu", range: "3.0 ≤ Điểm < 5.0", count: scores.filter(s => s >= 3.0 && s < 5.0).length, note: "Cần củng cố thêm phần lý thuyết cơ bản", color: "#e11d48" },
+        { name: "Kém", range: "0.0 ≤ Điểm < 3.0", count: scores.filter(s => s < 3.0).length, note: "Cần kế hoạch phụ đạo tăng cường", color: "#dc2626" }
     ];
 
     const rTbody = document.getElementById("rating-breakdown-tbody");
