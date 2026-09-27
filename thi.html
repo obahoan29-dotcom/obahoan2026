@@ -549,22 +549,6 @@
             }
         }
 
-        // KIỂM TRA QUYỀN THI TỰ DO SIÊU NHẠY VỚI BỘ NHỚ ĐỆM TỨC THÌ
-        function isCurrentExamAllowFree() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const quizId = urlParams.get('id');
-            if (quizId) {
-                const localVal = localStorage.getItem(`exam_allow_free_${quizId}`);
-                if (localVal !== null) {
-                    return (localVal === 'true');
-                }
-            }
-            if (examData && examData.allowFree !== undefined) {
-                return (examData.allowFree !== false);
-            }
-            return true;
-        }
-
         // ================= HỆ THỐNG ĐẾM SỐ HỌC SINH ONLINE & ĐỒNG BỘ TRẠNG THÁI ĐANG THI =================
         function startPresenceSystem(sId) {
             const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
@@ -656,11 +640,6 @@
                     throw new Error("Mã đề thi không tồn tại trên hệ thống!");
                 }
                 
-                // Đồng bộ cấu hình quyền tự do vào localStorage
-                if (examData.allowFree !== undefined) {
-                    localStorage.setItem(`exam_allow_free_${quizId}`, String(examData.allowFree !== false));
-                }
-
                 document.getElementById('global-loading').style.display = 'none';
                 
                 fetchExamQuestions();
@@ -1018,14 +997,14 @@
             let sName = document.getElementById("student-name").value.trim(); 
             let sClass = document.getElementById("student-class").value.trim(); 
             
-            const currentCat = getExamCategory();
-            const matchedClassAcc = findStudentFromDatabase(sId, currentCat) || findStudentFromDatabase(sName, currentCat);
-
-            if (!sName && sId && matchedClassAcc) {
-                applyStudentToUI(matchedClassAcc);
-                sId = matchedClassAcc.sbd;
-                sName = matchedClassAcc.name;
-                sClass = matchedClassAcc.className;
+            if (!sName && sId) {
+                const found = findStudentFromDatabase(sId, getExamCategory());
+                if (found) {
+                    applyStudentToUI(found);
+                    sId = found.sbd;
+                    sName = found.name;
+                    sClass = found.className;
+                }
             }
 
             if (!sId || !sName || !sClass) { 
@@ -1034,16 +1013,6 @@
                 return; 
             } 
             
-            // CHỐT CHẶN TỨC THÌ: KIỂM TRA QUYỀN THI TỰ DO
-            const isFreeStudent = !matchedClassAcc;
-            const allowFree = isCurrentExamAllowFree();
-
-            if (isFreeStudent && !allowFree) {
-                alert("⛔ GIÁO VIÊN ĐÃ TẮT CHẾ ĐỘ THI TỰ DO!\nĐề thi này hiện chỉ dành riêng cho học sinh chính thức có tên trong danh sách lớp.");
-                document.getElementById("student-card").style.display = "block";
-                return;
-            }
-
             const now = Date.now(); let startTimeMs = 0; let endTimeMs = Infinity; 
             if (typeof examData !== 'undefined') { 
                 if (examData.examStartTimeStr) startTimeMs = new Date(examData.examStartTimeStr).getTime(); 

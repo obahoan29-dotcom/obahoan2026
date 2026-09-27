@@ -867,7 +867,7 @@ function toggleAttemptMenu(rowIndex, event) {
     }
 }
 
-// BẢNG DANH SÁCH: TÔ MÀU NỔI BẬT & DÓNG HÀNG LUÂN PHIÊN
+// BẢNG DANH SÁCH: HIỂN THỊ CHUẨN THỜI GIAN VÀO THI VÀ ĐẾM THỜI GIAN THI THỰC TẾ
 function renderFilteredResultTable(rows) {
     const tbody = document.getElementById("result-table-tbody");
     tbody.innerHTML = "";
@@ -928,13 +928,14 @@ function renderFilteredResultTable(rows) {
         let col11_details = `<span class="status-not-submitted">---</span>`;
 
         if (currentSub) {
+            // Đã nộp bài
             let subDateMs = getSubmissionTimestamp(currentSub);
-            col2_inTime = `<span style="font-family:monospace; font-weight:700; color:#0369a1;">${subDateMs ? formatDateTimeFull(subDateMs) : (currentSub.timestamp || "---")}</span>`;
-            col3_spentTime = `<span style="color:#0f766e; font-weight:700;">${currentSub.completionTime || (currentSub.calcMetrics && currentSub.calcMetrics.completionTimeStr) || `${currentSub.spentMins||0} phút`}</span>`;
-            col6_status = `<span class="status-pill status-done">✓ Đã nộp bài</span>`;
+            col2_inTime = subDateMs ? formatDateTimeFull(subDateMs) : (currentSub.timestamp || "---");
+            col3_spentTime = currentSub.completionTime || (currentSub.calcMetrics && currentSub.calcMetrics.completionTimeStr) || `${currentSub.spentMins||0} phút`;
+            col6_status = `<span class="status-pill status-done">Đã nộp bài</span>`;
             
             let cCount = currentSub.calcMetrics ? currentSub.calcMetrics.correctCount : (currentSub.correctCount !== undefined ? currentSub.correctCount : 0);
-            col7_correct = `<span style="font-weight:900; color:#15803d;">${cCount} câu</span>`;
+            col7_correct = `<span style="font-weight:800; color:#10b981;">${cCount} câu</span>`;
 
             let sc = currentSub.score10 !== undefined ? currentSub.score10 : (currentSub.calcMetrics ? currentSub.calcMetrics.score10Scale : 0);
             let scNum = parseFloat(sc) || 0;
@@ -946,7 +947,7 @@ function renderFilteredResultTable(rows) {
             let logTab = row.cheatLogsTabCount || 0;
             let finalTabCount = Math.max(rawSubTab, dataStringTab, logTab);
 
-            col9_tabs = finalTabCount > 0 ? `<span class="tabs-warn">⚠️ ${finalTabCount} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
+            col9_tabs = finalTabCount > 0 ? `<span class="tabs-warn">${finalTabCount} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
             col10_cheatTime = row.cheatTimeString;
 
             if (currentSub.dataString) {
@@ -954,30 +955,26 @@ function renderFilteredResultTable(rows) {
                 col11_details = `<span class="td-details" title="${safeText}" onclick="alert('📋 CHI TIẾT BÀI LÀM:\\n\\n' + this.title.replace(/ \\| /g, '\\n'))">${currentSub.dataString}</span>`;
             }
         } else if (row.isDoing) {
+            // Đang làm bài -> Cột vào thi hiện chính xác ngày giờ bắt đầu, cột thời gian thi đếm trực tiếp thời gian thực
             let formattedIn = formatDateTimeFull(row.doingStartTime);
             let liveDuration = formatElapsedDuration(row.doingStartTime);
 
             col2_inTime = `<span style="color:#0284c7; font-weight:800; font-family:monospace;">${formattedIn}</span>`;
-            col3_spentTime = `<span style="color:#ea580c; font-weight:800; background:#fff7ed; padding:3px 7px; border-radius:6px; border:1px solid #fdba74;">⏱ ${liveDuration}</span>`;
+            col3_spentTime = `<span style="color:#ea580c; font-weight:800; background:#fff7ed; padding:2px 6px; border-radius:6px; border:1px solid #fdba74;">⏱ ${liveDuration}</span>`;
             
             if (row.isFreeDoing) {
-                col6_status = `<span class="status-pill" style="background:#fff7ed; color:#c2410c; border:1.5px solid #fdba74; font-weight:800;">⚡ Đang thi-tự do</span>`;
+                col6_status = `<span class="status-pill" style="background:#fff7ed; color:#c2410c; border:1px solid #fdba74; font-weight:800;">⚡ Đang thi-tự do</span>`;
             } else {
-                col6_status = `<span class="status-pill status-doing">⏳ Đang làm bài</span>`;
+                col6_status = `<span class="status-pill status-doing">Đang làm bài</span>`;
             }
             
             let doingTabs = row.cheatLogsTabCount || 0;
-            col9_tabs = doingTabs > 0 ? `<span class="tabs-warn">⚠️ ${doingTabs} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
+            col9_tabs = doingTabs > 0 ? `<span class="tabs-warn">${doingTabs} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
             col10_cheatTime = row.cheatTimeString !== "0s" ? row.cheatTimeString : `<span class="status-not-submitted">---</span>`;
         }
 
-        let rawName = acc.name || (currentSub ? currentSub.studentName : "---");
-        let freeTagHtml = (!row.isClassStudent) ? `<span class="tag-free-student">Tự do</span>` : '';
-        let col4_name = `<span class="td-name">${rawName}</span>${freeTagHtml}`;
-        
-        let rawClass = acc.className || (currentSub ? (currentSub.studentClass || currentSub.className) : "") || "---";
-        let col_class = `<span class="class-badge">${rawClass}</span>`;
-        
+        let col4_name = acc.name || (currentSub ? currentSub.studentName : "---");
+        let col_class = acc.className || (currentSub ? (currentSub.studentClass || currentSub.className) : "") || "---";
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
         let safeTitleCol10 = stripHtml(col10_cheatTime);
 
@@ -987,8 +984,8 @@ function renderFilteredResultTable(rows) {
             <td class="td-attempt-cell-wrap">${col_attemptCount}</td>
             <td class="td-truncate" title="${stripHtml(col2_inTime)}">${col2_inTime}</td>
             <td class="td-truncate" title="${stripHtml(col3_spentTime)}">${col3_spentTime}</td>
-            <td class="td-truncate" title="${rawName}">${col4_name}</td>
-            <td class="td-class td-truncate" title="${rawClass}">${col_class}</td>
+            <td class="td-name td-truncate" title="${col4_name}">${col4_name}</td>
+            <td class="td-class td-truncate" title="${col_class}">${col_class}</td>
             <td class="td-sbd td-truncate" title="${col5_sbd}">${col5_sbd}</td>
             <td style="text-align:center;">${col6_status}</td>
             <td style="text-align:center;">${col7_correct}</td>
@@ -1075,25 +1072,14 @@ function showMainResultTableUI() {
     if (breadcrumbView) breadcrumbView.innerText = "📊 Bảng kết quả";
 }
 
-// =========================================================
-// YÊU CẦU 1: VẼ BIỂU ĐỒ HÌNH CỘT VỚI CHỮ HỌ TÊN TO RÕ,
-// MỖI HỌC SINH 1 DÒNG PHỦ KÍN CỘT ĐỀU ĐẶN TỪ TRÊN XUỐNG DƯỚI
-// =========================================================
 function renderDetailedScoreChart() {
     const scores = [];
-    const binStudents = Array.from({ length: 10 }, () => []);
-
     currentExamResultData.rawRows.forEach(r => {
         if (r.allAttempts.length > 0) {
             let curSub = r.allAttempts[r.selectedAttemptIndex] || r.allAttempts[r.allAttempts.length - 1];
             if (curSub && curSub.score10 !== undefined) {
                 let sc = parseFloat(curSub.score10);
-                if (!isNaN(sc)) {
-                    scores.push(sc);
-                    let binIdx = Math.min(Math.floor(sc), 9);
-                    let stName = r.account.name || (curSub ? curSub.studentName : "Học sinh");
-                    binStudents[binIdx].push(stName);
-                }
+                if (!isNaN(sc)) scores.push(sc);
             }
         }
     });
@@ -1110,7 +1096,11 @@ function renderDetailedScoreChart() {
     document.getElementById("kpi-pass-rate").innerText = scores.length > 0 ? Math.round((passCount / scores.length) * 100) + "%" : "0%";
     document.getElementById("kpi-good-rate").innerText = scores.length > 0 ? Math.round((goodCount / scores.length) * 100) + "%" : "0%";
 
-    const bins = binStudents.map(arr => arr.length);
+    const bins = Array(10).fill(0);
+    scores.forEach(s => {
+        let binIdx = Math.min(Math.floor(s), 9);
+        bins[binIdx]++;
+    });
 
     const canvas = document.getElementById("detailedScoreChart");
     if (!canvas) return;
@@ -1124,84 +1114,6 @@ function renderDetailedScoreChart() {
         '#ef4444', '#f87171', '#fb923c', '#fbbf24', '#facc15',
         '#a3e635', '#4ade80', '#22c55e', '#10b981', '#06b6d4'
     ];
-
-    // PLUGIN VẼ TRỰC TIẾP HỌ VÀ TÊN HỌC SINH TO, 1 NGƯỜI 1 DÒNG PHỦ KÍN CỘT TỪ TRÊN XUỐNG DƯỚI
-    const namesInsideBarsPlugin = {
-        id: 'namesInsideBarsPlugin',
-        afterDatasetsDraw(chart) {
-            const { ctx } = chart;
-            const meta = chart.getDatasetMeta(0);
-            if (!meta || !meta.data) return;
-
-            meta.data.forEach((bar, index) => {
-                const students = binStudents[index] || [];
-                const n = students.length;
-                if (n === 0) return;
-
-                const barX = bar.x;
-                const barTopY = bar.y;
-                const barBaseY = bar.base;
-                const barWidth = bar.width;
-                const totalBarHeight = barBaseY - barTopY;
-
-                // Chia đều chiều cao cột thành N ô tương ứng với N học sinh
-                const slotHeight = totalBarHeight / n;
-
-                // Cỡ chữ to rõ, tự động co dãn theo chiều cao ô và độ rộng cột
-                const calculatedSize = Math.floor(Math.min(14.5, Math.max(10.5, slotHeight * 0.72, barWidth / 7.5)));
-                const fontSize = Math.max(10, calculatedSize);
-
-                ctx.save();
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.font = `bold ${fontSize}px 'Be Vietnam Pro', Arial, sans-serif`;
-
-                // Phân bổ từng em học sinh vào 1 dòng, phủ kín cột đều đặn từ trên xuống dưới
-                students.forEach((fullName, sIdx) => {
-                    const centerY = barTopY + (sIdx + 0.5) * slotHeight;
-
-                    let displayName = fullName.trim();
-                    // Nếu tên quá dài so với chiều ngang cột thì rút gọn tên đệm
-                    if (ctx.measureText(displayName).width > barWidth - 4) {
-                        const words = displayName.split(/\s+/);
-                        if (words.length >= 3) {
-                            displayName = words[0] + ' ' + words.slice(1, -1).map(w => w[0] + '.').join('') + ' ' + words[words.length - 1];
-                        }
-                        if (ctx.measureText(displayName).width > barWidth - 4 && words.length >= 2) {
-                            displayName = words.slice(0, -1).map(w => w[0] + '.').join('') + ' ' + words[words.length - 1];
-                        }
-                        if (ctx.measureText(displayName).width > barWidth - 4) {
-                            while (displayName.length > 2 && ctx.measureText(displayName + '..').width > barWidth - 4) {
-                                displayName = displayName.slice(0, -1);
-                            }
-                            displayName += '..';
-                        }
-                    }
-
-                    // Viền đen đổ bóng tương phản cao giúp chữ luôn sáng rõ trên mọi màu nền cột
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-                    ctx.shadowBlur = 3;
-                    ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
-                    ctx.lineWidth = 2.8;
-                    ctx.strokeText(displayName, barX, centerY);
-
-                    // Chữ trắng đậm sáng nổi bật
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillText(displayName, barX, centerY);
-                });
-
-                // Hiển thị tổng số học sinh trên đỉnh cột
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = '#0f172a';
-                ctx.font = `bold 12.5px 'Be Vietnam Pro', Arial, sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(`${n} hs`, barX, barTopY - 4);
-
-                ctx.restore();
-            });
-        }
-    };
 
     scoreChartInstance = new Chart(ctx, {
         type: 'bar',
@@ -1220,23 +1132,15 @@ function renderDetailedScoreChart() {
                 borderColor: '#cbd5e1'
             }]
         },
-        plugins: [namesInsideBarsPlugin],
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            layout: {
-                padding: { top: 24 }
-            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
                         label: function(ctx) {
-                            const count = ctx.parsed.y;
-                            const idx = ctx.dataIndex;
-                            const names = binStudents[idx] || [];
-                            let text = ` Có ${count} thí sinh: ` + names.join(', ');
-                            return text;
+                            return ` Có ${ctx.parsed.y} thí sinh đạt mức điểm này`;
                         }
                     }
                 }
