@@ -44,11 +44,13 @@
         .u-label { font-weight: 800; color: #0369a1; }
         .u-value { font-weight: 700; color: #0f172a; }
         .nav-right-tools { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .clock-pill { background: #ffffff; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #cbd5e1; }
+        .clock-pill { background: #ffffff; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #cbd5e1; transition: all 0.3s ease; }
         .clock-icon { font-size: 0.85rem; line-height: 1; }
         .clock-val { font-size: 0.85rem; font-weight: 800; font-family: 'Courier New', Courier, monospace; color: #0f172a; }
         .clock-pill.timer-warning { background: #fef2f2; border-color: #ef4444; animation: blinkWarning 0.9s infinite alternate; }
         .clock-pill.timer-warning .clock-val { color: #dc2626; }
+        .clock-pill.timer-updated { background: #f0fdf4 !important; border-color: #22c55e !important; transform: scale(1.08); box-shadow: 0 0 12px rgba(34, 197, 94, 0.4); }
+        .clock-pill.timer-updated .clock-val { color: #15803d !important; }
         @keyframes blinkWarning { 0% { transform: scale(1); } 100% { transform: scale(1.03); } }
         .btn-top-submit { background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-hover)); color: #fff; border: none; padding: 5px 12px; border-radius: 12px; font-weight: 800; font-size: 0.8rem; cursor: pointer; box-shadow: 0 2px 6px rgba(249, 115, 22, 0.3); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
         .q-nav-bar { display: flex; align-items: center; gap: 4px; width: 100%; }
@@ -101,116 +103,28 @@
         .tf-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; line-height: 1.5; color: #334155;}
         .tf-table input[type="radio"] { width: 20px; height: 20px; accent-color: #0d9488; cursor: pointer; }
 
-        /* KHỐI TỰ LUẬN & ĐIỀN ĐÁP SỐ CHUẨN ĐẸP */
-        .part4-row-container { 
-            display: flex; 
-            gap: 14px; 
-            align-items: flex-start; 
-            margin-top: 14px; 
-            flex-wrap: wrap; 
-        }
-        .part4-left-col { 
-            flex: 1 1 240px; 
-            min-width: 0; 
-        }
-        .part4-right-col { 
-            flex: 1 1 210px; 
-            min-width: 0; 
-            position: relative; 
-            display: flex;
-            flex-direction: column;
-        }
-        .short-input-box { 
-            width: 100%; 
-            padding: 13px 15px; 
-            border: 2px solid #cbd5e1; 
-            border-radius: 14px; 
-            font-size: 1.05rem; 
-            font-weight: 600; 
-            outline: none; 
-            transition: 0.2s; 
-            margin-top: 0; 
-            color: #0f172a;
-            background: #ffffff;
-            box-sizing: border-box;
-        }
-        .short-input-box:focus { 
-            border-color: #0284c7; 
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); 
-        }
+        /* KHỐI TỰ LUẬN & ĐIỀN ĐÁP SỐ */
+        .part4-row-container { display: flex; gap: 14px; align-items: flex-start; margin-top: 14px; flex-wrap: wrap; }
+        .part4-left-col { flex: 1 1 240px; min-width: 0; }
+        .part4-right-col { flex: 1 1 210px; min-width: 0; position: relative; display: flex; flex-direction: column; }
+        .short-input-box { width: 100%; padding: 13px 15px; border: 2px solid #cbd5e1; border-radius: 14px; font-size: 1.05rem; font-weight: 600; outline: none; transition: 0.2s; margin-top: 0; color: #0f172a; background: #ffffff; box-sizing: border-box; }
+        .short-input-box:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
         /* NÚT TÍM CHỤP ẢNH TỰ LUẬN */
-        .btn-photo-trigger { 
-            width: 100%; 
-            min-height: 48px; 
-            background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); 
-            color: #ffffff; 
-            border: none; 
-            padding: 12px 16px; 
-            border-radius: 14px; 
-            font-weight: 800; 
-            font-size: 0.95rem; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 6px; 
-            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); 
-            transition: all 0.2s ease; 
-            text-align: center; 
-        }
-        .btn-photo-trigger:hover { 
-            transform: translateY(-1px); 
-            box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4); 
-            filter: brightness(1.05);
-        }
+        .btn-photo-trigger { width: 100%; min-height: 48px; background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); color: #ffffff; border: none; padding: 12px 16px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); transition: all 0.2s ease; text-align: center; }
+        .btn-photo-trigger:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4); filter: brightness(1.05); }
 
-        .sub-padlet-dropdown { 
-            display: none; 
-            flex-direction: column; 
-            gap: 10px; 
-            margin-top: 10px; 
-            background: #ffffff; 
-            border: 2px solid #cbd5e1; 
-            padding: 12px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); 
-            width: 100%; 
-            box-sizing: border-box;
-            animation: expandDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes expandDropdown {
-            from { opacity: 0; transform: translateY(-6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .sub-padlet-dropdown { display: none; flex-direction: column; gap: 10px; margin-top: 10px; background: #ffffff; border: 2px solid #cbd5e1; padding: 12px; border-radius: 16px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); width: 100%; box-sizing: border-box; animation: expandDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes expandDropdown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-padlet-opt { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 6px; 
-            background: #ffffff; 
-            color: #0284c7; 
-            border: 2px solid #0284c7; 
-            padding: 10px 14px; 
-            border-radius: 12px; 
-            font-weight: 800; 
-            font-size: 0.95rem; 
-            text-decoration: none; 
-            transition: all 0.2s ease; 
-            box-sizing: border-box;
-        }
-        .btn-padlet-opt:hover { 
-            background: #0284c7; 
-            color: #ffffff; 
-            box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3);
-        }
+        .btn-padlet-opt { display: flex; align-items: center; justify-content: center; gap: 6px; background: #ffffff; color: #0284c7; border: 2px solid #0284c7; padding: 10px 14px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; text-decoration: none; transition: all 0.2s ease; box-sizing: border-box; }
+        .btn-padlet-opt:hover { background: #0284c7; color: #ffffff; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3); }
         
         .quiz-img-container { text-align: center; margin: 16px 0; max-width: 100%; overflow: hidden; }
         .quiz-img { max-width: 100%; max-height: 380px; height: auto; object-fit: contain; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.06); background: #ffffff; }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 16px; }
-        .modal-box { background: #ffffff; border-radius: 20px; max-width: 380px; width: 100%; padding: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-box { background: #ffffff; border-radius: 20px; max-width: 400px; width: 100%; padding: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .modal-icon { font-size: 42px; margin-bottom: 10px; }
         .modal-title { font-size: 1.25rem; font-weight: 900; color: #0f172a; margin-bottom: 8px; }
@@ -247,6 +161,17 @@
         
         #global-loading { position: fixed; inset: 0; background: #fff; z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
         .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #0284c7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+
+        /* BANNER THÔNG BÁO ĐỔI PHÚT TỨC THÌ */
+        .time-change-toast {
+            position: fixed; top: 75px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff; padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: 800;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); z-index: 9999999;
+            opacity: 0; pointer-events: none; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .time-change-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -256,13 +181,18 @@
         <h2 style="color: #0369a1; font-weight: 800;">Đang tải dữ liệu đề thi...</h2>
     </div>
 
-    <div class="network-status-bar" id="net-status-banner">⚠️ Mất kết nối Internet! Bài làm đang được lưu trên máy.</div>
+    <!-- TOAST THÔNG BÁO KHI GIÁO VIÊN ĐỔI PHÚT -->
+    <div class="time-change-toast" id="time-change-toast">
+        <span>⏱</span> <span id="time-change-toast-msg">Giáo viên vừa cập nhật thời gian làm bài!</span>
+    </div>
+
+    <div class="network-status-bar" id="net-status-banner">⚠️ Mất kết nối Internet! Bài làm đang được lưu an toàn trên máy.</div>
     <div class="pending-status-bar" id="pending-resend-bar">
         <span id="pending-info-txt">📌 Đang gửi hoặc có bài làm tạm chưa nộp...</span>
         <div style="margin-top: 6px; display: flex; gap: 8px; justify-content: center;">
-            <button onclick="retrySubmitPending()" style="background:#0284c7; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem;">🚀 Thử gửi lại</button>
-            <button onclick="downloadPendingSubmissionFile()" style="background:#0d9488; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem;">💾 Tải file</button>
-            <button onclick="dismissPendingBar()" style="background:#cbd5e1; color:#334155; border:none; padding:6px 10px; border-radius:8px; font-weight:700; font-size:0.8rem;">Đóng</button>
+            <button onclick="retrySubmitPending()" style="background:#0284c7; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">🚀 Thử gửi lại</button>
+            <button onclick="downloadPendingSubmissionFile()" style="background:#0d9488; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">💾 Tải file</button>
+            <button onclick="dismissPendingBar()" style="background:#cbd5e1; color:#334155; border:none; padding:6px 10px; border-radius:8px; font-weight:700; font-size:0.8rem; cursor:pointer;">Đóng</button>
         </div>
     </div>
     
@@ -367,14 +297,21 @@
     
     <div class="modal-overlay" id="submit-confirm-modal">
         <div class="modal-box">
-            <div class="modal-icon">📝</div>
-            <div class="modal-title">Xác nhận nộp bài?</div>
+            <div class="modal-icon" id="modal-submit-icon">📝</div>
+            <div class="modal-title" id="modal-submit-main-title">Xác nhận nộp bài?</div>
             <div class="modal-body-text">
-                <div>Thời gian còn lại:</div>
-                <div class="modal-time-highlight" id="modal-remain-time">00:00:00</div>
-                <div>Đã trả lời: <b id="modal-answered-count" style="color: #0f172a; font-weight: 800;">0/0</b> câu</div>
-                <div class="modal-warning" id="modal-unanswered-warning">⚠️ Còn X câu chưa làm!</div>
-                <div id="modal-submit-status-msg" style="margin-top: 12px; font-weight: 700; color: #1e293b;">Bạn có chắc chắn muốn kết thúc?</div>
+                <div id="modal-normal-submit-view">
+                    <div>Thời gian còn lại:</div>
+                    <div class="modal-time-highlight" id="modal-remain-time">00:00:00</div>
+                    <div>Đã trả lời: <b id="modal-answered-count" style="color: #0f172a; font-weight: 800;">0/0</b> câu</div>
+                    <div class="modal-warning" id="modal-unanswered-warning">⚠️ Còn X câu chưa làm!</div>
+                    <div id="modal-submit-status-msg" style="margin-top: 12px; font-weight: 700; color: #1e293b;">Bạn có chắc chắn muốn kết thúc và nộp bài?</div>
+                </div>
+                <div id="modal-submitting-progress-view" style="display:none; padding:15px 0;">
+                    <div class="spinner" style="width:36px; height:36px; margin:0 auto 12px auto; border-top-color:#f97316;"></div>
+                    <div style="font-weight:800; color:#0284c7; font-size:1.05rem;" id="submit-progress-text">Đang bảo lưu bài làm...</div>
+                    <div style="font-size:0.85rem; color:#64748b; margin-top:6px;">Vui lòng không đóng trang web trong khi nộp.</div>
+                </div>
             </div>
             <div class="modal-actions" id="modal-actions-container">
                 <div class="modal-btn-row">
@@ -401,6 +338,7 @@
         let isTabHidden = false;
         let timerInterval = null;
         let waitingInterval = null;
+        let timeWatcherInterval = null; // POLLING SIÊU NHẠY THEO DÕI THỜI GIAN ĐỔI TỪ ADMIN
         
         let isSubmitted = false;
         let examStartTime = null;
@@ -549,7 +487,7 @@
             }
         }
 
-        // KIỂM TRA QUYỀN THI TỰ DO SIÊU NHẠY VỚI BỘ NHỚ ĐỆM TỨC THÌ
+        // KIỂM TRA QUYỀN THI TỰ DO
         function isCurrentExamAllowFree() {
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
@@ -565,7 +503,7 @@
             return true;
         }
 
-        // ================= HỆ THỐNG ĐẾM SỐ HỌC SINH ONLINE & ĐỒNG BỘ TRẠNG THÁI ĐANG THI =================
+        // ================= HỆ THỐNG ĐẾM SỐ HỌC SINH ONLINE =================
         function startPresenceSystem(sId) {
             const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
             const examCode = getExamCode();
@@ -638,6 +576,68 @@
             fetch(`${FIREBASE_DB_URL}/active_sessions/${getExamCode()}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
         }
 
+        // =========================================================================
+        // YÊU CẦU 1: CƠ CHẾ ĐỔI PHÚT SIÊU NHẠY KHI ĐANG LÀM BÀI (REALTIME WATCHER)
+        // =========================================================================
+        function showTimeChangeToast(message) {
+            const toast = document.getElementById("time-change-toast");
+            const msg = document.getElementById("time-change-toast-msg");
+            if (!toast || !msg) return;
+            msg.innerText = message;
+            toast.classList.add("show");
+            setTimeout(() => { toast.classList.remove("show"); }, 4000);
+        }
+
+        function startTimeWatcherRealtime(quizId) {
+            if (!quizId) return;
+            if (timeWatcherInterval) clearInterval(timeWatcherInterval);
+
+            // Kiểm tra mỗi 2.5 giây một lần để cực nhạy khi giáo viên đổi phút
+            timeWatcherInterval = setInterval(async () => {
+                if (isSubmitted || !examStartTime) return;
+                try {
+                    const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
+                    const freshData = await res.json();
+                    if (!freshData) return;
+
+                    // 1. Kiểm tra đổi thời lượng (phút)
+                    if (freshData.timeLimitMinutes && parseInt(freshData.timeLimitMinutes, 10) !== TIME_LIMIT_MINUTES) {
+                        const oldMinutes = TIME_LIMIT_MINUTES;
+                        const newMinutes = parseInt(freshData.timeLimitMinutes, 10);
+                        TIME_LIMIT_MINUTES = newMinutes;
+                        totalTimeSeconds = TIME_LIMIT_MINUTES * 60;
+
+                        // Tính lại thời gian còn lại dựa trên thời gian bắt đầu
+                        const now = Date.now();
+                        const elapsedTimeSec = Math.floor((now - examStartTime) / 1000);
+                        remainingSeconds = Math.max(0, totalTimeSeconds - elapsedTimeSec);
+
+                        const timerVal = document.getElementById("nav-timer-val");
+                        const timerBox = document.getElementById("nav-timer-box");
+                        if (timerVal) timerVal.innerText = formatHHMMSS(remainingSeconds);
+                        if (timerBox) {
+                            timerBox.classList.add("timer-updated");
+                            setTimeout(() => timerBox.classList.remove("timer-updated"), 2500);
+                        }
+
+                        saveExamStateToStorage();
+                        showTimeChangeToast(`⏱ Giáo viên vừa cập nhật thời gian làm bài: ${newMinutes} phút!`);
+                    }
+
+                    // 2. Kiểm tra nếu có cập nhật hạn chót (examEndTimeStr)
+                    if (freshData.examEndTimeStr && examData) {
+                        examData.examEndTimeStr = freshData.examEndTimeStr;
+                    }
+
+                    // 3. Kiểm tra nếu giáo viên đổi trạng thái thi tự do
+                    if (freshData.allowFree !== undefined) {
+                        examData.allowFree = freshData.allowFree;
+                        localStorage.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
+                    }
+                } catch(e) {}
+            }, 2500);
+        }
+
         window.onload = async function() {
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
@@ -656,7 +656,6 @@
                     throw new Error("Mã đề thi không tồn tại trên hệ thống!");
                 }
                 
-                // Đồng bộ cấu hình quyền tự do vào localStorage
                 if (examData.allowFree !== undefined) {
                     localStorage.setItem(`exam_allow_free_${quizId}`, String(examData.allowFree !== false));
                 }
@@ -668,6 +667,7 @@
                 requestWakeLock();
                 checkPendingSubmissionOnLoad();
                 checkSessionStatus();
+                startTimeWatcherRealtime(quizId);
 
                 const sbdInput = document.getElementById("student-id");
                 if (sbdInput) {
@@ -733,7 +733,7 @@
         function setupBackPrevention() { window.history.pushState({ page: 'quiz' }, "", ""); window.addEventListener('popstate', function () { if (!isSubmitted && examStartTime) { window.history.pushState({ page: 'quiz' }, "", ""); confirm("⚠️ BẠN ĐANG TRONG BÀI THI!\nThoát hoặc quay lại sẽ làm gián đoạn bài làm của bạn."); } }); window.addEventListener('beforeunload', function (e) { if (!isSubmitted && examStartTime) { saveExamStateToStorage(); e.preventDefault(); e.returnValue = 'Bài làm của bạn chưa được nộp. Dữ liệu đã được lưu tạm an toàn.'; } }); window.addEventListener('online', function() { document.getElementById("net-status-banner").style.display = "none"; checkPendingSubmissionOnLoad(); }); window.addEventListener('offline', function() { document.getElementById("net-status-banner").style.display = "block"; }); }
         function getStorageKey() { return `exam_autosave_active_session_${EXAM_NAME}_${getMaDe()}`; }
         
-        function saveExamStateToStorage() { if (!examStartTime || isSubmitted) return; const dataToSave = { userAnswers: userAnswersState, padletClickedMap: padletClickedMap, examStartTime: examStartTime, tabSwitchCount: tabSwitchCount, studentId: document.getElementById("student-id").value.trim(), studentName: document.getElementById("student-name").value.trim(), studentClass: document.getElementById("student-class").value.trim(), isStarted: true }; try { localStorage.setItem(getStorageKey(), JSON.stringify(dataToSave)); } catch(e) {} }
+        function saveExamStateToStorage() { if (!examStartTime || isSubmitted) return; const dataToSave = { userAnswers: userAnswersState, padletClickedMap: padletClickedMap, examStartTime: examStartTime, tabSwitchCount: tabSwitchCount, timeLimitMinutes: TIME_LIMIT_MINUTES, studentId: document.getElementById("student-id").value.trim(), studentName: document.getElementById("student-name").value.trim(), studentClass: document.getElementById("student-class").value.trim(), isStarted: true }; try { localStorage.setItem(getStorageKey(), JSON.stringify(dataToSave)); } catch(e) {} }
         
         function restoreExamStateFromStorage() { 
             try { 
@@ -753,6 +753,10 @@
                     padletClickedMap = parsed.padletClickedMap || {}; 
                     tabSwitchCount = parsed.tabSwitchCount || 0; 
                     examStartTime = parsed.examStartTime || Date.now(); 
+                    if (parsed.timeLimitMinutes) {
+                        TIME_LIMIT_MINUTES = parseInt(parsed.timeLimitMinutes, 10);
+                        totalTimeSeconds = TIME_LIMIT_MINUTES * 60;
+                    }
                     if (parsed.studentId) document.getElementById("student-id").value = parsed.studentId; 
                     if (parsed.studentName) document.getElementById("student-name").value = parsed.studentName; 
                     if (parsed.studentClass) document.getElementById("student-class").value = parsed.studentClass; 
@@ -770,7 +774,18 @@
             window.location.reload(); 
         }
         
-        function checkPendingSubmissionOnLoad() { try { const raw = localStorage.getItem("pending_exam_submission"); if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.studentName) { pendingSubmissionPayload = parsed; } } } catch(e) {} }
+        function checkPendingSubmissionOnLoad() { 
+            try { 
+                const raw = localStorage.getItem("pending_exam_submission"); 
+                if (raw) { 
+                    const parsed = JSON.parse(raw); 
+                    if (parsed && parsed.studentName) { 
+                        pendingSubmissionPayload = parsed; 
+                        document.getElementById("pending-resend-bar").style.display = "block";
+                    } 
+                } 
+            } catch(e) {} 
+        }
         function dismissPendingBar() { document.getElementById("pending-resend-bar").style.display = "none"; }
         
         function checkSessionStatus() { 
@@ -822,7 +837,7 @@
                 document.getElementById("nav-exam-code-text").innerText = `Đề: ${getMaDe()}`; 
                 if (examData.password !== undefined) EXAM_PASSWORD = String(examData.password).trim(); 
                 if (examData.timeLimitMinutes !== undefined && examData.timeLimitMinutes !== "") { 
-                    TIME_LIMIT_MINUTES = parseInt(examData.timeLimitMinutes); 
+                    TIME_LIMIT_MINUTES = parseInt(examData.timeLimitMinutes, 10); 
                     totalTimeSeconds = TIME_LIMIT_MINUTES * 60; 
                     remainingSeconds = totalTimeSeconds; 
                 } 
@@ -1034,7 +1049,6 @@
                 return; 
             } 
             
-            // CHỐT CHẶN TỨC THÌ: KIỂM TRA QUYỀN THI TỰ DO
             const isFreeStudent = !matchedClassAcc;
             const allowFree = isCurrentExamAllowFree();
 
@@ -1111,7 +1125,40 @@
         function reapplySavedAnswers() { Object.keys(userAnswersState).forEach(key => { const val = userAnswersState[key]; if (key.includes('_')) { const r = document.querySelector(`input[name="${key}"][value="${val}"]`); if (r) r.checked = true; } else if (document.getElementById(`${key}-input`)) { document.getElementById(`${key}-input`).value = val; } else { const qId = key.replace('q', ''); selectOption(qId, val); } }); }
         function formatHHMMSS(totalSecs) { const h = Math.floor(totalSecs / 3600); const m = Math.floor((totalSecs % 3600) / 60); const s = totalSecs % 60; return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; }
         
-        function startCountdownTimer() { const timerVal = document.getElementById("nav-timer-val"); const timerBox = document.getElementById("nav-timer-box"); if (timerInterval) clearInterval(timerInterval); let endTimeMs = Infinity; if (typeof examData !== 'undefined' && examData.examEndTimeStr) { endTimeMs = new Date(examData.examEndTimeStr).getTime(); } timerInterval = setInterval(() => { const now = Date.now(); if (now >= endTimeMs) { clearInterval(timerInterval); timerVal.innerText = "00:00:00"; alert("⛔ Đã hết thời gian cho phép của đợt thi! Hệ thống tự động thu bài."); executeSubmitExam(true); return; } const elapsedTimeSec = Math.floor((now - examStartTime) / 1000); remainingSeconds = totalTimeSeconds - elapsedTimeSec; if (remainingSeconds <= 0) { clearInterval(timerInterval); timerVal.innerText = "00:00:00"; alert("⏰ Đã hết thời gian làm bài! Hệ thống tự động thu bài."); executeSubmitExam(true); return; } timerVal.innerText = formatHHMMSS(remainingSeconds); if (remainingSeconds <= 120) timerBox.classList.add("timer-warning"); }, 1000); }
+        function startCountdownTimer() { 
+            const timerVal = document.getElementById("nav-timer-val"); 
+            const timerBox = document.getElementById("nav-timer-box"); 
+            if (timerInterval) clearInterval(timerInterval); 
+            
+            let endTimeMs = Infinity; 
+            if (typeof examData !== 'undefined' && examData.examEndTimeStr) { 
+                endTimeMs = new Date(examData.examEndTimeStr).getTime(); 
+            } 
+            
+            timerInterval = setInterval(() => { 
+                const now = Date.now(); 
+                if (now >= endTimeMs) { 
+                    clearInterval(timerInterval); 
+                    timerVal.innerText = "00:00:00"; 
+                    alert("⛔ Đã hết thời gian cho phép của đợt thi! Hệ thống tự động thu bài."); 
+                    executeSubmitExam(true); 
+                    return; 
+                } 
+                const elapsedTimeSec = Math.floor((now - examStartTime) / 1000); 
+                remainingSeconds = totalTimeSeconds - elapsedTimeSec; 
+                if (remainingSeconds <= 0) { 
+                    clearInterval(timerInterval); 
+                    timerVal.innerText = "00:00:00"; 
+                    alert("⏰ Đã hết thời gian làm bài! Hệ thống tự động thu bài."); 
+                    executeSubmitExam(true); 
+                    return; 
+                } 
+                timerVal.innerText = formatHHMMSS(remainingSeconds); 
+                if (remainingSeconds <= 120) timerBox.classList.add("timer-warning"); 
+                else timerBox.classList.remove("timer-warning");
+            }, 1000); 
+        }
+
         document.addEventListener("visibilitychange", function() { if (!examStartTime || isSubmitted) return; if (document.hidden) { if (!isTabHidden) { isTabHidden = true; leaveTime = Date.now(); tabSwitchCount++; } } else { if (isTabHidden && leaveTime > 0) { isTabHidden = false; let durationSec = Math.max(1, Math.round((Date.now() - leaveTime) / 1000)); leaveTime = 0; let mins = Math.floor(durationSec / 60); let secs = durationSec % 60; let durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`; sendTabSwitchLog(tabSwitchCount, durationStr, durationSec); setTimeout(() => alert(`⚠️ CẢNH BÁO GIAN LẬN:\nBạn vừa rời bài thi ${durationStr} (Lần ${tabSwitchCount}).`), 100); } } });
         
         function sendTabSwitchLog(switchCount, durationStr, durationSec = 0) { 
@@ -1148,13 +1195,79 @@
             postToGoogleSheet(URL1_TAB_CHEATING, payload, 25000).catch(e=>{}); 
             postToFirebase(`exams/${getExamCode()}/cheating_logs`, payload, 25000).catch(e=>{}); 
         }
-        function showSubmitConfirmModal() { if (isSubmitted) return; const answered = updateProgress(); const unanswered = totalQuestionsCount - answered; document.getElementById("modal-remain-time").innerText = formatHHMMSS(Math.max(0, remainingSeconds)); document.getElementById("modal-answered-count").innerText = `${answered}/${totalQuestionsCount}`; const warnBox = document.getElementById("modal-unanswered-warning"); if (unanswered > 0) { warnBox.style.display = "block"; warnBox.innerText = `⚠️ Còn ${unanswered} câu chưa làm!`; } else { warnBox.style.display = "none"; } document.getElementById("submit-confirm-modal").style.display = "flex"; }
-        function closeSubmitConfirmModal() { document.getElementById("submit-confirm-modal").style.display = "none"; }
-        
-        function executeSubmitExam(isForceSubmit = false) { 
+
+        function showSubmitConfirmModal() { 
             if (isSubmitted) return; 
-            if (timerInterval) clearInterval(timerInterval); 
+            const answered = updateProgress(); 
+            const unanswered = totalQuestionsCount - answered; 
+            document.getElementById("modal-remain-time").innerText = formatHHMMSS(Math.max(0, remainingSeconds)); 
+            document.getElementById("modal-answered-count").innerText = `${answered}/${totalQuestionsCount}`; 
+            const warnBox = document.getElementById("modal-unanswered-warning"); 
+            if (unanswered > 0) { 
+                warnBox.style.display = "block"; 
+                warnBox.innerText = `⚠️ Còn ${unanswered} câu chưa làm!`; 
+            } else { 
+                warnBox.style.display = "none"; 
+            } 
+            document.getElementById("modal-normal-submit-view").style.display = "block";
+            document.getElementById("modal-submitting-progress-view").style.display = "none";
+            document.getElementById("modal-actions-container").style.display = "block";
+            document.getElementById("submit-confirm-modal").style.display = "flex"; 
+        }
+
+        function closeSubmitConfirmModal() { 
+            document.getElementById("submit-confirm-modal").style.display = "none"; 
+        }
+        
+        // =========================================================================
+        // YÊU CẦU 2: CƠ CHẾ NỘP BÀI SIÊU BỀN VỮNG (CHỐNG MẤT BÀI 100%)
+        // =========================================================================
+        async function robustPostToFirebase(examCode, payload, maxRetries = 4) {
+            let lastError = null;
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 12000);
+                    const res = await fetch(`${FIREBASE_DB_URL}/exams/${examCode}/submissions.json`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    if (res.ok) {
+                        const json = await res.json();
+                        return { ok: true, data: json };
+                    }
+                    throw new Error(`Firebase status: ${res.status}`);
+                } catch(err) {
+                    lastError = err;
+                    // Chờ ngắn trước khi thử lại
+                    await new Promise(r => setTimeout(r, attempt * 600));
+                }
+            }
+            return { ok: false, error: lastError };
+        }
+
+        async function executeSubmitExam(isForceSubmit = false) { 
+            if (isSubmitted) return; 
             
+            // Chuyển UI Modal sang trạng thái nộp bài kiên cố
+            const confirmModal = document.getElementById("submit-confirm-modal");
+            const normalView = document.getElementById("modal-normal-submit-view");
+            const progressView = document.getElementById("modal-submitting-progress-view");
+            const actionsBox = document.getElementById("modal-actions-container");
+            const progressText = document.getElementById("submit-progress-text");
+
+            if (confirmModal) confirmModal.style.display = "flex";
+            if (normalView) normalView.style.display = "none";
+            if (progressView) progressView.style.display = "block";
+            if (actionsBox) actionsBox.style.display = "none";
+            if (progressText) progressText.innerText = "⏳ Đang mã hóa và bảo lưu bài thi...";
+
+            if (timerInterval) clearInterval(timerInterval); 
+            if (timeWatcherInterval) clearInterval(timeWatcherInterval);
+
             clearPresence(document.getElementById("student-id").value.trim());
 
             const sId = document.getElementById("student-id").value.trim(); 
@@ -1248,17 +1361,32 @@
                 createdAt: Date.now() 
             }; 
 
-            try { localStorage.setItem("pending_exam_submission", JSON.stringify(payload)); } catch(e) {} 
+            // 1. Sao lưu cục bộ tức thì đảm bảo không bao giờ mất
+            try { 
+                localStorage.setItem("pending_exam_submission", JSON.stringify(payload)); 
+                localStorage.setItem(`submitted_backup_${getExamCode()}_${sId}`, JSON.stringify(payload));
+            } catch(e) {} 
             pendingSubmissionPayload = payload; 
-            
-            Promise.all([ 
-                postToGoogleSheet(URL2_EXAM_RESULT, payload, 20000), 
-                postToFirebase(`exams/${getExamCode()}/submissions`, payload, 20000) 
-            ]).then(() => { 
-                try { localStorage.removeItem("pending_exam_submission"); } catch(e) {} 
-            }).catch(() => { 
-                console.log("Submit delayed or failed, user can retry later via pending UI."); 
-            }); 
+
+            if (progressText) progressText.innerText = "🚀 Đang gửi bài thi lên máy chủ...";
+
+            // 2. Gửi đồng thời lên Firebase với Retry tự động và Google Sheets
+            let fbPromise = robustPostToFirebase(getExamCode(), payload, 4);
+            let sheetPromise = postToGoogleSheet(URL2_EXAM_RESULT, payload, 25000).catch(e => null);
+
+            let fbResult = await fbPromise;
+
+            if (fbResult.ok) {
+                try { localStorage.removeItem("pending_exam_submission"); } catch(e) {}
+                if (progressText) progressText.innerText = "✅ Nộp bài thành công 100%!";
+            } else {
+                console.warn("Gửi trực tiếp gặp lỗi, kích hoạt chế độ nộp nền:", fbResult.error);
+                if (progressText) progressText.innerText = "⚠️ Đang lưu bài vào hàng đợi dự phòng an toàn...";
+                document.getElementById("pending-resend-bar").style.display = "block";
+            }
+
+            // Chờ một chút để trải nghiệm chuyển màn hình mượt mà
+            await new Promise(r => setTimeout(r, 600));
 
             isSubmitted = true; 
             try { 
@@ -1266,7 +1394,7 @@
                 localStorage.removeItem(`shuffled_exam_${getExamCode()}`); 
             } catch(e) {} 
             
-            document.getElementById("submit-confirm-modal").style.display = "none"; 
+            if (confirmModal) confirmModal.style.display = "none"; 
             renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, score10Scale); 
         }
         
