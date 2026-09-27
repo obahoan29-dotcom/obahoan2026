@@ -569,18 +569,28 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-        await Promise.all([
-            fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
+        const pushNodes = [examCode];
+        if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
+        let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
+        if (numMatch) {
+            pushNodes.push(numMatch[1]);
+            pushNodes.push("DE" + numMatch[1]);
+            pushNodes.push("DE" + numMatch[1] + "TOAN11");
+        }
+
+        const tasks = pushNodes.map(n => 
+            fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
                 method: 'PUT', body: JSON.stringify(presencePayload), signal: controller.signal
-            }).catch(() => null),
-            (currentQuizId && currentQuizId !== examCode) ? fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, {
-                method: 'PUT', body: JSON.stringify(presencePayload), signal: controller.signal
-            }).catch(() => null) : Promise.resolve(),
+            }).catch(() => null)
+        );
+
+        tasks.push(
             fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
                 method: 'POST', body: JSON.stringify(logPayload), signal: controller.signal
             }).catch(() => null)
-        ]);
+        );
 
+        await Promise.all(tasks);
         clearTimeout(timeoutId);
     } catch(e) {
         console.warn("Handshake bắt đầu bài thi:", e);
@@ -698,6 +708,7 @@ function closeSubmitConfirmModal() {
     document.getElementById("submit-confirm-modal").style.display = "none"; 
 }
 
+// SỬA: CHỈ GỬI 1 LẦN DUY NHẤT LÊN FIREBASE ĐỂ KHÔNG BỊ TRÙNG THỜI GIAN
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted) return; 
     
@@ -818,7 +829,7 @@ async function executeSubmitExam(isForceSubmit = false) {
     } catch(e) {} 
     pendingSubmissionPayload = payload; 
 
-    if (progressText) progressText.innerText = "🚀 Đang gửi và xác thực bài thi trên Firebase...";
+    if (progressText) progressText.innerText = "🚀 Đang gửi bài thi lên máy chủ...";
 
     const examCode = getExamCode();
     let firebaseConfirmed = false;
@@ -840,13 +851,9 @@ async function executeSubmitExam(isForceSubmit = false) {
         return false;
     };
 
+    // Chỉ gửi 1 lần duy nhất vào node examCode chính
     try {
-        const tasks = [sendToFirebaseEndpoint(examCode)];
-        if (currentQuizId && currentQuizId !== examCode) {
-            tasks.push(sendToFirebaseEndpoint(currentQuizId));
-        }
-        const results = await Promise.all(tasks);
-        firebaseConfirmed = results.some(r => r === true);
+        firebaseConfirmed = await sendToFirebaseEndpoint(examCode);
     } catch(err) {
         console.warn("Lỗi gửi Firebase lần 1, thử lại ngay:", err);
         try {
