@@ -153,13 +153,44 @@ function extractNormalizedExamCode(title) {
         .replace(/Đ/g, "D").replace(/đ/g, "d")
         .toUpperCase();
 
-    let m = clean.match(/(DE\s*(?:SO)?\s*\d+)\s*[-:]*\s*(TOAN\s*\d+)/i);
-    if (m) {
-        let p1 = m[1].replace(/\s+/g, "").replace("SO", "");
-        let p2 = m[2].replace(/\s+/g, "");
-        return p1 + p2;
-    }
+    let m = clean.match(/(DE\s*(?:SO)?\s*\d+)/i);
+    let p1 = m ? m[1].replace(/\s+/g, "").replace("SO", "") : "";
+    let mToan = clean.match(/TOAN\s*(?:LOP\s*)?(\d+)/i);
+    let p2 = mToan ? ("TOAN" + mToan[1]) : "";
+
+    if (p1 && p2) return p1 + p2;
+    if (p1) return p1;
     return clean.replace(/[^A-Z0-9]/g, "");
+}
+
+function getExamCandidateCodes(title, maDe, quizId) {
+    let codes = new Set();
+    if (quizId) codes.add(String(quizId).trim());
+    if (maDe) {
+        let cleanMd = cleanExamCodeKey(maDe);
+        if (cleanMd) codes.add(cleanMd);
+        let normMd = extractNormalizedExamCode(maDe);
+        if (normMd) codes.add(normMd);
+    }
+    if (title) {
+        let cleanT = cleanExamCodeKey(title);
+        if (cleanT) codes.add(cleanT);
+        let norm = extractNormalizedExamCode(title);
+        if (norm) codes.add(norm);
+
+        let mNum = String(title).match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
+        if (mNum) {
+            let n = mNum[1];
+            codes.add(n);
+            codes.add("DE" + n);
+            codes.add("DE_" + n);
+            codes.add("DE" + n + "TOAN11");
+            codes.add("DE" + n + "TOAN10");
+            codes.add("DE" + n + "TOAN12");
+        }
+    }
+    codes.add("101");
+    return Array.from(codes);
 }
 
 function normalizeName(str) {
