@@ -318,6 +318,8 @@ async function submitStudentLogin() {
     } catch(e) {}
 
     const safeSbd = String(studentDataToVerify.sbd || "user").replace(/[^a-zA-Z0-9]/g, '_');
+    const examTitle = activeStudentLogin.examTitle || "Bài thi";
+
     const handshakePayload = {
         sbd: studentDataToVerify.sbd,
         name: studentDataToVerify.name,
@@ -326,7 +328,8 @@ async function submitStudentLogin() {
         categoryId: currentTargetCat,
         quizId: quizId,
         isFree: !!studentDataToVerify.isFreeStudent,
-        examTitle: activeStudentLogin.examTitle || "Bài thi",
+        examTitle: examTitle,
+        startTime: Date.now(),
         loginTime: Date.now(),
         lastPing: Date.now(),
         status: "logged_in"
@@ -336,16 +339,21 @@ async function submitStudentLogin() {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000);
-        const res = await fetch(`${FIREBASE_DB_URL}/active_sessions/${quizId}/${safeSbd}.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(handshakePayload),
-            signal: controller.signal
-        });
+
+        // ĐỒNG BỘ PHIÊN HOẠT ĐỘNG LÊN TOÀN BỘ CÁC NODE TƯƠNG ỨNG ĐỂ HIỂN THỊ "ĐANG THI" NGAY LẬP TỨC
+        const targetNodes = getExamCandidateCodes(examTitle, "", quizId);
+        const tasks = targetNodes.map(node => 
+            fetch(`${FIREBASE_DB_URL}/active_sessions/${node}/${safeSbd}.json`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(handshakePayload),
+                signal: controller.signal
+            }).catch(() => null)
+        );
+
+        await Promise.all(tasks);
         clearTimeout(timeoutId);
-        if (res.ok) {
-            serverConfirmed = true;
-        }
+        serverConfirmed = true;
     } catch(e) {
         console.warn("Handshake cảnh báo kết nối:", e);
     }
