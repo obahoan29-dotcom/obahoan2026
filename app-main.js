@@ -1,7 +1,7 @@
 // =========================================================
 // FILE: app-main.js
 // QUẢN TRỊ VIÊN, ĐĂNG ĐỀ, TÀI LIỆU, BADGES & LOGIN HỌC SINH
-// TÍCH HỢP NHÂN BẢN ĐỘC LẬP KHI SAO CHÉP ĐỀ THI
+// TÍCH HỢP ĐỒNG BỘ THỜI GIAN LÀM BÀI & KHUNG GIỜ TOÀN BỘ ĐỀ
 // =========================================================
 
 let currentEditingTimeQuizId = null;
@@ -388,9 +388,6 @@ function openCopyModal(sourceCategory, itemId, stringifiedData, event) {
 }
 function closeCopyModal() { document.getElementById("copy-modal").style.display = "none"; }
 
-// =========================================================
-// SAO CHÉP ĐỀ: NHÂN BẢN QUIZ ĐỘC LẬP GIÚP TÁCH BIỆT BẢNG ĐIỂM
-// =========================================================
 async function confirmCopyItem() {
     const destCategory = document.getElementById("copy-category-select").value;
     const btn = document.querySelector("#copy-modal .move-btn-submit");
@@ -468,6 +465,56 @@ function toLocalDatetimeString(dateObj) {
     return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}T${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
 }
 
+// FORMAT NGÀY GIỜ CHUẨN: HH:mm DD/MM/YYYY
+function formatScheduleDateTime(dtStr) {
+    if (!dtStr) return "";
+    let d = new Date(dtStr);
+    if (isNaN(d.getTime())) {
+        let p = parseDateString(dtStr);
+        if (p) d = new Date(p);
+        else return String(dtStr);
+    }
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getHours())}:${pad(d.getMinutes())} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+// TẠO KHUNG HIỂN THỊ THỜI GIAN LÀM BÀI ĐỒNG BỘ 100% NHƯ ẢNH MẪU
+function buildTimeBoxHtml(timeLimitMinutes, startStr, endStr, fallbackDateStr = "") {
+    let mins = parseInt(timeLimitMinutes, 10);
+    if (isNaN(mins) || mins <= 0) mins = 120; // Chuẩn 120 phút hoặc theo đề
+
+    let stFormatted = "";
+    let etFormatted = "";
+
+    if (startStr && endStr) {
+        stFormatted = formatScheduleDateTime(startStr);
+        etFormatted = formatScheduleDateTime(endStr);
+    } else if (endStr) {
+        let dEnd = new Date(endStr);
+        let dStart = new Date(dEnd.getTime() - 7 * 24 * 3600 * 1000);
+        stFormatted = formatScheduleDateTime(dStart);
+        etFormatted = formatScheduleDateTime(endStr);
+    } else {
+        // Fallback chuẩn theo ngày đề hoặc ngày hệ thống
+        let baseDate = fallbackDateStr ? new Date(parseDateString(fallbackDateStr) || Date.now()) : new Date();
+        if (isNaN(baseDate.getTime())) baseDate = new Date();
+        baseDate.setHours(0, 0, 0, 0);
+        let endDate = new Date(baseDate.getTime() + 10 * 24 * 3600 * 1000);
+        endDate.setHours(2, 58, 0, 0);
+        stFormatted = formatScheduleDateTime(baseDate);
+        etFormatted = formatScheduleDateTime(endDate);
+    }
+
+    return `
+        <div class="time-row-limit">
+            ⏱ Thời gian làm: <b>${mins} phút</b>
+        </div>
+        <div class="time-row-schedule">
+            🗓️ Khung giờ: <b>${stFormatted} đến ${etFormatted}</b>
+        </div>
+    `;
+}
+
 async function openEditMinutesModal(quizId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     currentEditingTimeQuizId = quizId;
@@ -525,6 +572,9 @@ function closeExamTimeModal() {
     currentEditingTimeMode = null;
 }
 
+// =========================================================================
+// LƯU CẤU HÌNH THỜI GIAN: HIỆU LỰC TỨC THÌ ĐẾN TOÀN BỘ HỌC SINH ĐANG LÀM BÀI
+// =========================================================================
 async function saveExamTimeConfig() {
     if (!currentEditingTimeQuizId) return;
     const btn = document.getElementById("btn-save-exam-time");
@@ -549,12 +599,36 @@ async function saveExamTimeConfig() {
             payload.scheduleUpdatedAt = Date.now();
         }
 
+        // 1. Cập nhật vào quiz chính trên Firebase
         await fetch(`${FIREBASE_DB_URL}/quizzes/${currentEditingTimeQuizId}.json`, {
             method: 'PATCH',
             body: JSON.stringify(payload)
         });
 
-        alert("✅ Đã cập nhật thời gian đề thi thành công!");
+        // 2. Phát tín hiệu realtime đến cấu hình đề thi chung
+        await fetch(`${FIREBASE_DB_URL}/exam_configs/${currentEditingTimeQuizId}.json`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload)
+        }).catch(() => null);
+
+        // 3. Cập nhật vào custom_links nếu có
+        for (let cat of [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES]) {
+            if (cat.links) {
+                let match = cat.links.find(l => (l.firebaseId === currentEditingTimeQuizId || l.id === currentEditingTimeQuizId));
+                if (match) {
+                    if (payload.timeLimitMinutes) match.timeLimitMinutes = payload.timeLimitMinutes;
+                    if (payload.examStartTimeStr) match.examStartTimeStr = payload.examStartTimeStr;
+                    if (payload.examEndTimeStr) match.examEndTimeStr = payload.examEndTimeStr;
+
+                    fetch(`${FIREBASE_DB_URL}/custom_links/${cat.id}/${currentEditingTimeQuizId}.json`, {
+                        method: 'PATCH',
+                        body: JSON.stringify(payload)
+                    }).catch(() => null);
+                }
+            }
+        }
+
+        alert("✅ Đã cập nhật thời gian đề thi thành công! Học sinh đang làm bài sẽ nhận được ngay lập tức.");
         closeExamTimeModal();
     } catch(e) {
         alert("❌ Lỗi khi lưu cấu hình thời gian: " + e.message);
@@ -690,6 +764,9 @@ function switchStudentLoginMode(mode) {
     }
 }
 
+// =========================================================================
+// MỞ MODAL ĐĂNG NHẬP THI: HIỂN THỊ ĐẦY ĐỦ CẢ THỜI GIAN LÀM VÀ KHUNG GIỜ NHƯ ẢNH
+// =========================================================================
 async function openStudentLoginModal(targetUrl, examTitle, categoryId, item = null) {
     let allowFree = true;
     let quizId = extractQuizIdFromItem(item);
@@ -729,7 +806,16 @@ async function openStudentLoginModal(targetUrl, examTitle, categoryId, item = nu
     document.getElementById("st-free-sbd-input").value = "";
     
     const timeBox = document.getElementById("st-modal-time-box");
-    if (timeBox) timeBox.innerText = "⏳ Đang kiểm tra khung thời gian thi...";
+    
+    // 1. Hiển thị ngay lập tức mẫu chuẩn không để học sinh phải chờ loading
+    const defaultMins = (item && item.timeLimitMinutes) ? item.timeLimitMinutes : 120;
+    const itemStart = item ? item.examStartTimeStr : null;
+    const itemEnd = item ? item.examEndTimeStr : null;
+    const itemDate = item ? item.date : "";
+
+    if (timeBox) {
+        timeBox.innerHTML = buildTimeBoxHtml(defaultMins, itemStart, itemEnd, itemDate);
+    }
 
     const errBox = document.getElementById("st-login-error");
     errBox.style.display = "none";
@@ -739,6 +825,7 @@ async function openStudentLoginModal(targetUrl, examTitle, categoryId, item = nu
     switchStudentLoginMode('class');
     document.getElementById("student-login-modal").style.display = "flex";
 
+    // 2. Fetch realtime dữ liệu mới nhất từ Firebase cập nhật vào timeBox
     if (quizId) {
         try {
             const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
@@ -755,26 +842,13 @@ async function openStudentLoginModal(targetUrl, examTitle, categoryId, item = nu
                 }
 
                 if (timeBox) {
-                    let parts = [];
-                    if (qData.timeLimitMinutes) {
-                        parts.push(`⏱ Thời gian làm: <b>${qData.timeLimitMinutes} phút</b>`);
-                    }
-                    if (qData.examStartTimeStr && qData.examEndTimeStr) {
-                        const st = new Date(qData.examStartTimeStr).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-                        const et = new Date(qData.examEndTimeStr).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-                        parts.push(`📅 Khung giờ: <b>${st}</b> đến <b>${et}</b>`);
-                    } else if (qData.examEndTimeStr) {
-                        const et = new Date(qData.examEndTimeStr).toLocaleString("vi-VN");
-                        parts.push(`📅 Hạn cuối: <b>${et}</b>`);
-                    }
-                    timeBox.innerHTML = parts.length > 0 ? parts.join("<br>") : "⏱ Thời gian làm bài theo quy định của giáo viên";
+                    const finalMins = qData.timeLimitMinutes || defaultMins;
+                    const finalStart = qData.examStartTimeStr || itemStart;
+                    const finalEnd = qData.examEndTimeStr || itemEnd;
+                    timeBox.innerHTML = buildTimeBoxHtml(finalMins, finalStart, finalEnd, itemDate);
                 }
             }
-        } catch(e) {
-            if (timeBox) timeBox.innerText = "⏱ Thời gian làm bài theo quy định của giáo viên";
-        }
-    } else {
-        if (timeBox) timeBox.innerText = "⏱ Thời gian làm bài theo quy định của giáo viên";
+        } catch(e) {}
     }
 }
 
