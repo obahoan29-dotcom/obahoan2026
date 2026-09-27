@@ -1,4 +1,4 @@
-/ =========================================================
+// =========================================================
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
 // ĐẢM BẢO LỚP NÀO CHỈ HIỆN ĐÚNG DANH SÁCH HỌC SINH LỚP ĐÓ
