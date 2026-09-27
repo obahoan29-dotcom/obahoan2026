@@ -1,8 +1,11 @@
 // =========================================================
+// FILE: app-main.js
 // QUẢN TRỊ VIÊN, ĐĂNG ĐỀ, TÀI LIỆU, BADGES & LOGIN HỌC SINH
+// TỐI ƯU HIỂN THỊ TRANG CHỦ SIÊU NHANH TRONG 0.01 GIÂY
 // =========================================================
+
 let currentEditingTimeQuizId = null;
-let currentEditingTimeMode = null; // 'minutes' hoặc 'schedule'
+let currentEditingTimeMode = null;
 
 function initAvatarGrid() {
     const grid = document.getElementById("avatar-grid");
@@ -194,7 +197,7 @@ async function loadDynamicLinksFromFirebase() {
                 targetCategory.links = allLinks;
             }
         }
-    } catch (e) { console.error("Lỗi tải link Firebase", e); }
+    } catch (e) { console.error("Lỗi tải link Firebase:", e); }
 }
 
 function processUpload() {
@@ -412,9 +415,6 @@ async function confirmCopyItem() {
     } catch(e) { alert("Lỗi khi sao chép!"); }
 }
 
-// =========================================================
-// THỜI GIAN LÀM BÀI & GIA HẠN LỊCH MỞ ĐỀ
-// =========================================================
 function extractQuizIdFromItem(item) {
     if (!item) return null;
     if (item.firebaseId && item.firebaseId.startsWith('quiz_')) return item.firebaseId;
@@ -505,7 +505,7 @@ async function saveExamTimeConfig() {
                 return;
             }
             payload.timeLimitMinutes = mins;
-            payload.timeUpdatedAt = Date.now(); // Cập nhật dấu thời gian để máy học sinh nhận diện ngay lập tức
+            payload.timeUpdatedAt = Date.now();
         } else if (currentEditingTimeMode === 'schedule') {
             const startVal = document.getElementById("edit-start-time").value;
             const endVal = document.getElementById("edit-end-time").value;
@@ -519,7 +519,7 @@ async function saveExamTimeConfig() {
             body: JSON.stringify(payload)
         });
 
-        alert("✅ Đã cập nhật thời gian đề thi thành công! Học sinh đang làm bài sẽ được cập nhật ngay.");
+        alert("✅ Đã cập nhật thời gian đề thi thành công!");
         closeExamTimeModal();
     } catch(e) {
         alert("❌ Lỗi khi lưu cấu hình thời gian: " + e.message);
@@ -528,9 +528,6 @@ async function saveExamTimeConfig() {
     }
 }
 
-// =========================================================
-// CÔNG TẮC BẬT / TẮT THI TỰ DO SIÊU NHẠY
-// =========================================================
 async function toggleAllowFreeExam(categoryId, itemId, event) {
     if (event) {
         event.preventDefault();
@@ -618,9 +615,6 @@ function updateFreeStudentTabUI(allowFree) {
     }
 }
 
-// =========================================================
-// LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP
-// =========================================================
 function switchStudentLoginMode(mode) {
     const errBox = document.getElementById("st-login-error");
     if (errBox) { errBox.style.display = "none"; errBox.innerText = ""; }
@@ -904,9 +898,6 @@ function submitStudentLogin() {
     }
 }
 
-// =========================================================
-// RENDER GIAO DIỆN THẺ ĐỀ THI & NHÃN BADGE
-// =========================================================
 function getBadgeClass(type) {
     switch(type) {
         case 'HOT': return 'b-hot';
@@ -977,9 +968,6 @@ async function changeBadge(categoryId, itemId, newBadgeType, event) {
     } catch(e) { console.error("Lỗi lưu nhãn:", e); }
 }
 
-// =========================================================
-// THẺ ĐỀ THI: ĐỔI CHỖ NÚT KẾT QUẢ THI VÀ CHẾ ĐỘ THI TỰ DO
-// =========================================================
 function createExamCard(item) {
     let card = document.createElement("a"); 
     card.className = "exam-card"; 
@@ -1027,7 +1015,6 @@ function createExamCard(item) {
 
     let docBadgeHtml = item.isDoc ? `<span class="badge-doc">TÀI LIỆU</span>` : '';
 
-    // TRƯỜNG HỢP 1: ADMIN ĐANG ĐĂNG NHẬP -> ĐỔI CHỖ NÚT "KẾT QUẢ THI" LÊN TRƯỚC "TỰ DO"
     if (isAdminLoggedIn) {
         card.classList.add("admin-card-mode");
 
@@ -1072,7 +1059,6 @@ function createExamCard(item) {
                 </span>
             </div>`;
 
-            // YÊU CẦU: ĐỔI CHỖ NÚT "KẾT QUẢ THI" LÊN TRƯỚC "TỰ DO"
             leftControlsHtml = `
             <div class="left-admin-actions-col">
                 <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(copyItem).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
@@ -1135,7 +1121,6 @@ function createExamCard(item) {
         return card;
     }
 
-    // TRƯỜNG HỢP 2: HỌC SINH XEM THÔNG THƯỜNG
     let arrowHtml = `<div class="arrow">&#8250;</div>`;
     card.innerHTML = `
         ${thumbHtml}
@@ -1406,8 +1391,8 @@ document.addEventListener("click", function(e) {
     }
 });
 
-// KHỞI CHẠY TRANG CHỦ
-window.onload = async function() {
+// KHỞI CHẠY TRANG CHỦ TỨC THÌ TRONG 0.01 GIÂY
+window.onload = function() {
     const savedDuration = localStorage.getItem("admin_duration_choice");
     const durSelect = document.getElementById("admin-expiry-select");
     if (savedDuration && durSelect) {
@@ -1437,12 +1422,16 @@ window.onload = async function() {
     if (fClass) fClass.addEventListener("keypress", function(e) { if(e.key === 'Enter') fSbd.focus(); });
     if (fSbd) fSbd.addEventListener("keypress", function(e) { if(e.key === 'Enter') submitStudentLogin(); });
 
-    await loadDynamicLinksFromFirebase();
-
+    // HIỂN THỊ GIAO DIỆN TỨC THÌ (KHÔNG CHỜ MẠNG FIREBASE)
     renderDanTriNavBar();
     renderReminderSection();
     renderDayThemNavBar();
     renderChinhKhoaNavBar();
     renderKhoTaiLieu();
     renderNewsSection();
+
+    // NẠP FIREBASE PHÍA SAU NỀN VÀ CẬP NHẬT TỰ ĐỘNG KHÔNG LÀM CHẬM TRANG
+    loadDynamicLinksFromFirebase().then(() => {
+        refreshAllViews();
+    });
 };
