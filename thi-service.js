@@ -224,7 +224,7 @@ function startPresenceSystem(sId) {
     if (presenceInterval) clearInterval(presenceInterval);
     if (onlineCountInterval) clearInterval(onlineCountInterval);
 
-    presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 15000);
+    presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 12000);
     onlineCountInterval = setInterval(() => { fetchOnlineCount(examCode); }, 10000);
 }
 
@@ -255,15 +255,20 @@ async function updatePresence(examCode, safeId) {
             lastPing: Date.now()
         };
 
-        await fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
-            method: 'PUT', body: JSON.stringify(presencePayload)
-        });
-
-        if (currentQuizId && currentQuizId !== examCode) {
-            await fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, {
-                method: 'PUT', body: JSON.stringify(presencePayload)
-            });
+        const pushNodes = [examCode];
+        if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
+        let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
+        if (numMatch) {
+            pushNodes.push(numMatch[1]);
+            pushNodes.push("DE" + numMatch[1]);
+            pushNodes.push("DE" + numMatch[1] + "TOAN11");
         }
+
+        await Promise.all(pushNodes.map(n => 
+            fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
+                method: 'PUT', body: JSON.stringify(presencePayload)
+            }).catch(() => null)
+        ));
     } catch(e) {}
 }
 
@@ -277,7 +282,7 @@ async function fetchOnlineCount(examCode) {
             for (const key in data) {
                 const val = data[key];
                 const pingTime = (typeof val === 'number') ? val : (val && val.lastPing ? val.lastPing : 0);
-                if (now - pingTime < 120000) activeCount++;
+                if (now - pingTime < 180000) activeCount++;
             }
             const badge = document.getElementById("nav-online-val");
             if (badge) badge.innerText = Math.max(1, activeCount);
