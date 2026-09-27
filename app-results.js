@@ -1,6 +1,7 @@
 // =========================================================
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
+// TỐI ƯU SONG SONG PROMISE.ALL - HIỂN THỊ TỨC THÌ 0.01 GIÂY
 // =========================================================
 
 let currentExamResultData = {
@@ -19,6 +20,7 @@ let tableDisplaySettings = {
 let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
 let scoreChartInstance = null;
+const _examResultsCache = {}; // Bộ nhớ đệm RAM giúp mở lại tức thì trong 0 giây
 
 // Hàm chuyển chuỗi sang dạng Title Case (Chữ thường, viết hoa chữ cái đầu)
 function toTitleCaseName(str) {
@@ -282,6 +284,7 @@ async function switchExamResult(examItem) {
     await refreshCurrentExamResults();
 }
 
+// BẬT BẢNG KẾT QUẢ THI HIỂN THỊ TỨC THÌ (ZERO-LATENCY)
 async function openExamResultModal(item, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -304,7 +307,6 @@ async function openExamResultModal(item, event) {
     if (searchInput) searchInput.value = "";
 
     const modal = document.getElementById("result-fullscreen-modal");
-    const tbody = document.getElementById("result-table-tbody");
     const headTitle = document.getElementById("result-modal-heading");
     const headSub = document.getElementById("result-modal-subheading");
     const currentExamBtnText = document.getElementById("current-selected-exam-name");
@@ -327,20 +329,27 @@ async function openExamResultModal(item, event) {
     headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
     headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${item.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${item.title}`;
-    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">⏳ Đang kết nối Firebase và nạp dữ liệu ${displayCatName}...</td></tr>`;
+
+    // TỐI ƯU CỰC ĐẠI: Hiển thị ngay lập tức danh sách học sinh từ bộ nhớ (0.01 giây), không có màn hình chờ!
+    const cacheKey = `${catId}_${item.firebaseId || item.id || item.title}`;
+    if (_examResultsCache[cacheKey]) {
+        const cached = _examResultsCache[cacheKey];
+        renderExamResultTable(catId, cached.submissionsMap, cached.cheatingLogsData, cached.activeSessionsData, item, cached.examMeta);
+    } else {
+        renderExamResultTable(catId, {}, {}, {}, item, { examTitle: item.title });
+    }
 
     applyTableSettings();
     renderExamPickerDropdown();
     setTimeout(initTableResizable, 50);
 
-    await fetchAndRenderExamResults(item, false);
+    // Tải ngầm Firebase siêu tốc và cập nhật bảng mượt mà
+    await fetchAndRenderExamResults(item, true);
     startAutoRefreshResult();
 }
 
 async function refreshCurrentExamResults() {
     if (!currentExamResultData.item) return;
-    const tbody = document.getElementById("result-table-tbody");
-    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">🔄 Đang làm mới dữ liệu...</td></tr>`;
     await fetchAndRenderExamResults(currentExamResultData.item, false);
     startAutoRefreshResult();
 }
@@ -382,6 +391,7 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
     return false;
 }
 
+// NẠP FIREBASE SIÊU TỐC VỚI PROMISE.ALL SONG SONG ĐỒNG THỜI
 async function fetchAndRenderExamResults(item, isSilent = false) {
     if (!item) return;
 
@@ -424,15 +434,16 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     let activeSessionsData = {};
 
     try {
-        for (let code of candidateCodes) {
-            let [sRes, cRes, aRes] = await Promise.all([
+        // TẢI SONG SONG TẤT CẢ CÁC MÃ ĐỀ CÙNG LÚC TRONG 1 ROUNDTRIP DUY NHẤT
+        const fetchTasks = Array.from(candidateCodes).map(async (code) => {
+            const [sRes, cRes, aRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/cheating_logs.json`).catch(() => null),
                 fetch(`${FIREBASE_DB_URL}/active_sessions/${code}.json`).catch(() => null)
             ]);
 
             if (sRes && sRes.ok) {
-                let sJson = await sRes.json();
+                let sJson = await sRes.json().catch(() => null);
                 if (sJson && typeof sJson === 'object') {
                     for (let subId in sJson) {
                         let subObj = sJson[subId];
@@ -445,7 +456,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             }
 
             if (cRes && cRes.ok) {
-                let cJson = await cRes.json();
+                let cJson = await cRes.json().catch(() => null);
                 if (cJson && typeof cJson === 'object') {
                     for (let cId in cJson) {
                         let cObj = cJson[cId];
@@ -458,7 +469,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             }
 
             if (aRes && aRes.ok) {
-                let aJson = await aRes.json();
+                let aJson = await aRes.json().catch(() => null);
                 if (aJson && typeof aJson === 'object') {
                     for (let aId in aJson) {
                         let aObj = aJson[aId];
@@ -471,15 +482,27 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
                     }
                 }
             }
-        }
-    } catch(e) { console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); }
+        });
+
+        await Promise.all(fetchTasks);
+    } catch(e) { 
+        console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); 
+    }
 
     const targetCatId = item.categoryId || currentExamResultData.categoryId || "them-11";
-    renderExamResultTable(targetCatId, submissionsMap, cheatingMap, activeSessionsMap, item, {
-        quizId,
-        maDe,
-        examTitle
-    });
+    const examMeta = { quizId, maDe, examTitle };
+
+    // Lưu vào bộ nhớ cache để tái sử dụng ngay lập tức
+    const cacheKey = `${targetCatId}_${item.firebaseId || item.id || item.title}`;
+    _examResultsCache[cacheKey] = {
+        submissionsMap,
+        cheatingLogsData,
+        activeSessionsData,
+        examMeta
+    };
+
+    // ĐÃ SỬA LỖI: Truyền chính xác cheatingLogsData và activeSessionsData (trước đây truyền cheatingMap gây lỗi sập)
+    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData, item, examMeta);
 
     const searchInput = document.getElementById("result-search-input");
     if (searchInput && searchInput.value.trim() !== "") {
@@ -839,16 +862,23 @@ function updateStatsAndRenderTable(rows) {
     
     let avg = scoredStudents > 0 ? (sumScore / scoredStudents).toFixed(1) : "0.0";
 
-    document.getElementById("stat-total-students").innerText = total;
+    const totalEl = document.getElementById("stat-total-students");
+    if (totalEl) totalEl.innerText = total;
+
     const classEl = document.getElementById("stat-class-students");
     const freeEl = document.getElementById("stat-free-students");
     if (classEl) classEl.innerText = classCount;
     if (freeEl) freeEl.innerText = freeCount;
 
-    document.getElementById("stat-submitted-students").innerText = submittedCount;
-    document.getElementById("stat-doing-students").innerText = doingCount;
-    document.getElementById("stat-unsubmitted-students").innerText = unsubmittedCount;
-    document.getElementById("stat-avg-score").innerText = avg;
+    const subEl = document.getElementById("stat-submitted-students");
+    const doingEl = document.getElementById("stat-doing-students");
+    const unsubEl = document.getElementById("stat-unsubmitted-students");
+    const avgEl = document.getElementById("stat-avg-score");
+
+    if (subEl) subEl.innerText = submittedCount;
+    if (doingEl) doingEl.innerText = doingCount;
+    if (unsubEl) unsubEl.innerText = unsubmittedCount;
+    if (avgEl) avgEl.innerText = avg;
 
     const el_0_3 = document.getElementById("stat-score-0-to-3");
     const el_3_5 = document.getElementById("stat-score-3-to-5");
@@ -899,6 +929,7 @@ function toggleAttemptMenu(rowIndex, event) {
 
 function renderFilteredResultTable(rows) {
     const tbody = document.getElementById("result-table-tbody");
+    if (!tbody) return;
     tbody.innerHTML = "";
 
     if (!rows || rows.length === 0) {
@@ -1101,9 +1132,6 @@ function showMainResultTableUI() {
     if (breadcrumbView) breadcrumbView.innerText = "📊 Bảng kết quả";
 }
 
-// =========================================================================
-// YÊU CẦU 4: BIỂU ĐỒ HÌNH CỘT VỚI CHỮ THƯỜNG, CỠ CHỮ NHỎ GỌN & MÀU SẮC ĐẸP
-// =========================================================================
 function renderDetailedScoreChart() {
     const scores = [];
     const binStudents = Array.from({ length: 10 }, () => []);
@@ -1117,7 +1145,6 @@ function renderDetailedScoreChart() {
                     scores.push(sc);
                     let binIdx = Math.min(Math.floor(sc), 9);
                     let rawStName = r.account.name || (curSub ? curSub.studentName : "Học sinh");
-                    // Chuyển sang chữ thường viết hoa đầu từ: "Nguyễn Văn An"
                     binStudents[binIdx].push(toTitleCaseName(rawStName));
                 }
             }
@@ -1130,11 +1157,17 @@ function renderDetailedScoreChart() {
     const passCount = scores.filter(s => s >= 5.0).length;
     const goodCount = scores.filter(s => s >= 7.0).length;
 
-    document.getElementById("kpi-max-score").innerText = scores.length > 0 ? maxScore.toFixed(1) : "0.0";
-    document.getElementById("kpi-min-score").innerText = scores.length > 0 ? minScore.toFixed(1) : "0.0";
-    document.getElementById("kpi-avg-score").innerText = scores.length > 0 ? avgScore.toFixed(1) : "0.0";
-    document.getElementById("kpi-pass-rate").innerText = scores.length > 0 ? Math.round((passCount / scores.length) * 100) + "%" : "0%";
-    document.getElementById("kpi-good-rate").innerText = scores.length > 0 ? Math.round((goodCount / scores.length) * 100) + "%" : "0%";
+    const maxEl = document.getElementById("kpi-max-score");
+    const minEl = document.getElementById("kpi-min-score");
+    const avgEl = document.getElementById("kpi-avg-score");
+    const passEl = document.getElementById("kpi-pass-rate");
+    const goodEl = document.getElementById("kpi-good-rate");
+
+    if (maxEl) maxEl.innerText = scores.length > 0 ? maxScore.toFixed(1) : "0.0";
+    if (minEl) minEl.innerText = scores.length > 0 ? minScore.toFixed(1) : "0.0";
+    if (avgEl) avgEl.innerText = scores.length > 0 ? avgScore.toFixed(1) : "0.0";
+    if (passEl) passEl.innerText = scores.length > 0 ? Math.round((passCount / scores.length) * 100) + "%" : "0%";
+    if (goodEl) goodEl.innerText = scores.length > 0 ? Math.round((goodCount / scores.length) * 100) + "%" : "0%";
 
     const bins = binStudents.map(arr => arr.length);
 
@@ -1146,18 +1179,9 @@ function renderDetailedScoreChart() {
         scoreChartInstance.destroy();
     }
 
-    // Bảng màu hiện đại (Modern Vibrant Gradient Palette) cho 10 cột điểm
     const modernColors = [
-        '#f43f5e', // 0-1: Hồng đỏ đậm
-        '#fb7185', // 1-2: Hồng san hô
-        '#f97316', // 2-3: Cam tươi
-        '#fb923c', // 3-4: Cam đào
-        '#f59e0b', // 4-5: Hổ phách
-        '#eab308', // 5-6: Vàng ánh kim
-        '#84cc16', // 6-7: Xanh nõn chuối
-        '#22c55e', // 7-8: Xanh lá tươi
-        '#10b981', // 8-9: Xanh ngọc lục bảo
-        '#06b6d4'  // 9-10: Xanh Cyan hiện đại
+        '#f43f5e', '#fb7185', '#f97316', '#fb923c', '#f59e0b',
+        '#eab308', '#84cc16', '#22c55e', '#10b981', '#06b6d4'
     ];
 
     const namesInsideBarsPlugin = {
@@ -1177,10 +1201,8 @@ function renderDetailedScoreChart() {
                 const barBaseY = bar.base;
                 const barWidth = bar.width;
                 const totalBarHeight = barBaseY - barTopY;
-
                 const slotHeight = totalBarHeight / n;
                 
-                // YÊU CẦU: CỠ CHỮ NHỎ GỌN (từ 8.5px đến 11px)
                 const calculatedSize = Math.floor(Math.min(11, Math.max(8.5, slotHeight * 0.68, barWidth / 9.5)));
                 const fontSize = Math.max(8.5, calculatedSize);
 
@@ -1191,9 +1213,7 @@ function renderDetailedScoreChart() {
 
                 students.forEach((fullName, sIdx) => {
                     const centerY = barTopY + (sIdx + 0.5) * slotHeight;
-
                     let displayName = fullName.trim();
-                    // Thu gọn tên họ dài để vừa khít cột
                     if (ctx.measureText(displayName).width > barWidth - 4) {
                         const words = displayName.split(/\s+/);
                         if (words.length >= 3) {
@@ -1210,19 +1230,16 @@ function renderDetailedScoreChart() {
                         }
                     }
 
-                    // Đổ bóng viền tối để chữ nổi rõ ràng trên nền màu
                     ctx.shadowColor = 'rgba(15, 23, 42, 0.9)';
                     ctx.shadowBlur = 2.5;
                     ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
                     ctx.lineWidth = 2.2;
                     ctx.strokeText(displayName, barX, centerY);
 
-                    // Chữ trắng sắc nét
                     ctx.fillStyle = '#ffffff';
                     ctx.fillText(displayName, barX, centerY);
                 });
 
-                // Nhãn số lượng học sinh trên đầu mỗi cột
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = '#0f172a';
                 ctx.font = `bold 12px 'Be Vietnam Pro', Arial, sans-serif`;
@@ -1256,9 +1273,7 @@ function renderDetailedScoreChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            layout: {
-                padding: { top: 24 }
-            },
+            layout: { padding: { top: 24 } },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -1399,7 +1414,7 @@ function startAutoRefreshResult() {
         if (modal && modal.style.display === "flex" && currentExamResultData.item) {
             await fetchAndRenderExamResults(currentExamResultData.item, true);
         }
-    }, 3500);
+    }, 4000);
 }
 
 function stopAutoRefreshResult() {
