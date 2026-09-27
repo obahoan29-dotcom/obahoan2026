@@ -103,14 +103,12 @@
         .tf-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; line-height: 1.5; color: #334155;}
         .tf-table input[type="radio"] { width: 20px; height: 20px; accent-color: #0d9488; cursor: pointer; }
 
-        /* KHỐI TỰ LUẬN & ĐIỀN ĐÁP SỐ */
         .part4-row-container { display: flex; gap: 14px; align-items: flex-start; margin-top: 14px; flex-wrap: wrap; }
         .part4-left-col { flex: 1 1 240px; min-width: 0; }
         .part4-right-col { flex: 1 1 210px; min-width: 0; position: relative; display: flex; flex-direction: column; }
         .short-input-box { width: 100%; padding: 13px 15px; border: 2px solid #cbd5e1; border-radius: 14px; font-size: 1.05rem; font-weight: 600; outline: none; transition: 0.2s; margin-top: 0; color: #0f172a; background: #ffffff; box-sizing: border-box; }
         .short-input-box:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
 
-        /* NÚT TÍM CHỤP ẢNH TỰ LUẬN */
         .btn-photo-trigger { width: 100%; min-height: 48px; background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); color: #ffffff; border: none; padding: 12px 16px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); transition: all 0.2s ease; text-align: center; }
         .btn-photo-trigger:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4); filter: brightness(1.05); }
 
@@ -162,7 +160,6 @@
         #global-loading { position: fixed; inset: 0; background: #fff; z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
         .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #0284c7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
 
-        /* BANNER THÔNG BÁO ĐỔI PHÚT TỨC THÌ */
         .time-change-toast {
             position: fixed; top: 75px; left: 50%; transform: translateX(-50%) translateY(-20px);
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -309,8 +306,8 @@
                 </div>
                 <div id="modal-submitting-progress-view" style="display:none; padding:15px 0;">
                     <div class="spinner" style="width:36px; height:36px; margin:0 auto 12px auto; border-top-color:#f97316;"></div>
-                    <div style="font-weight:800; color:#0284c7; font-size:1.05rem;" id="submit-progress-text">Đang bảo lưu bài làm...</div>
-                    <div style="font-size:0.85rem; color:#64748b; margin-top:6px;">Vui lòng không đóng trang web trong khi nộp.</div>
+                    <div style="font-weight:800; color:#0284c7; font-size:1.05rem;" id="submit-progress-text">Đang kiểm tra kết nối với máy chủ...</div>
+                    <div style="font-size:0.85rem; color:#64748b; margin-top:6px;">Vui lòng giữ kết nối để bảo lưu bài thi thành công 100%.</div>
                 </div>
             </div>
             <div class="modal-actions" id="modal-actions-container">
@@ -338,7 +335,7 @@
         let isTabHidden = false;
         let timerInterval = null;
         let waitingInterval = null;
-        let timeWatcherInterval = null; // POLLING SIÊU NHẠY THEO DÕI THỜI GIAN ĐỔI TỪ ADMIN
+        let timeWatcherInterval = null; 
         
         let isSubmitted = false;
         let examStartTime = null;
@@ -369,7 +366,6 @@
             return "them-11";
         }
 
-        // ================= HỆ THỐNG TÌM HỌC SINH CHUẨN XÁC =================
         function findStudentFromDatabase(query, preferredCat = null) {
             if (!query || !window.STUDENT_ACCOUNTS) return null;
             const q = String(query).trim().toLowerCase();
@@ -487,7 +483,6 @@
             }
         }
 
-        // KIỂM TRA QUYỀN THI TỰ DO
         function isCurrentExamAllowFree() {
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
@@ -503,7 +498,6 @@
             return true;
         }
 
-        // ================= HỆ THỐNG ĐẾM SỐ HỌC SINH ONLINE =================
         function startPresenceSystem(sId) {
             const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
             const examCode = getExamCode();
@@ -514,7 +508,7 @@
             if (presenceInterval) clearInterval(presenceInterval);
             if (onlineCountInterval) clearInterval(onlineCountInterval);
 
-            presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 20000);
+            presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 15000);
             onlineCountInterval = setInterval(() => { fetchOnlineCount(examCode); }, 10000);
         }
 
@@ -548,6 +542,12 @@
                 await fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
                     method: 'PUT', body: JSON.stringify(presencePayload)
                 });
+
+                if (currentQuizId && currentQuizId !== examCode) {
+                    await fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, {
+                        method: 'PUT', body: JSON.stringify(presencePayload)
+                    });
+                }
             } catch(e) {}
         }
 
@@ -573,12 +573,15 @@
             if (presenceInterval) clearInterval(presenceInterval);
             if (onlineCountInterval) clearInterval(onlineCountInterval);
             const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentQuizId = urlParams.get('id') || "";
+
             fetch(`${FIREBASE_DB_URL}/active_sessions/${getExamCode()}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
+            if (currentQuizId) {
+                fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
+            }
         }
 
-        // =========================================================================
-        // YÊU CẦU 1: CƠ CHẾ ĐỔI PHÚT SIÊU NHẠY KHI ĐANG LÀM BÀI (REALTIME WATCHER)
-        // =========================================================================
         function showTimeChangeToast(message) {
             const toast = document.getElementById("time-change-toast");
             const msg = document.getElementById("time-change-toast-msg");
@@ -592,7 +595,6 @@
             if (!quizId) return;
             if (timeWatcherInterval) clearInterval(timeWatcherInterval);
 
-            // Kiểm tra mỗi 2.5 giây một lần để cực nhạy khi giáo viên đổi phút
             timeWatcherInterval = setInterval(async () => {
                 if (isSubmitted || !examStartTime) return;
                 try {
@@ -600,14 +602,12 @@
                     const freshData = await res.json();
                     if (!freshData) return;
 
-                    // 1. Kiểm tra đổi thời lượng (phút)
                     if (freshData.timeLimitMinutes && parseInt(freshData.timeLimitMinutes, 10) !== TIME_LIMIT_MINUTES) {
                         const oldMinutes = TIME_LIMIT_MINUTES;
                         const newMinutes = parseInt(freshData.timeLimitMinutes, 10);
                         TIME_LIMIT_MINUTES = newMinutes;
                         totalTimeSeconds = TIME_LIMIT_MINUTES * 60;
 
-                        // Tính lại thời gian còn lại dựa trên thời gian bắt đầu
                         const now = Date.now();
                         const elapsedTimeSec = Math.floor((now - examStartTime) / 1000);
                         remainingSeconds = Math.max(0, totalTimeSeconds - elapsedTimeSec);
@@ -624,12 +624,10 @@
                         showTimeChangeToast(`⏱ Giáo viên vừa cập nhật thời gian làm bài: ${newMinutes} phút!`);
                     }
 
-                    // 2. Kiểm tra nếu có cập nhật hạn chót (examEndTimeStr)
                     if (freshData.examEndTimeStr && examData) {
                         examData.examEndTimeStr = freshData.examEndTimeStr;
                     }
 
-                    // 3. Kiểm tra nếu giáo viên đổi trạng thái thi tự do
                     if (freshData.allowFree !== undefined) {
                         examData.allowFree = freshData.allowFree;
                         localStorage.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
@@ -726,14 +724,79 @@
             } 
         }
 
-        function getMaDe() { const urlParams = new URLSearchParams(window.location.search); const urlMaDe = urlParams.get('made') || urlParams.get('maDe'); if (urlMaDe) return String(urlMaDe).trim(); if (typeof examData !== 'undefined' && examData && examData.maDe) return String(examData.maDe).trim(); return "101"; }
-        function getExamCode() { let code = getMaDe() || EXAM_NAME; return String(code).trim().replace(/\s+/g, '_').replace(/[.#$\[\]\/]/g, '_'); }
-        async function postToGoogleSheet(url, payload, timeoutMs = 15000) { const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs); try { const res = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: controller.signal }); clearTimeout(timer); return { ok: true, res }; } catch (err) { clearTimeout(timer); if (err.name !== 'AbortError') { try { const controller2 = new AbortController(); const timer2 = setTimeout(() => controller2.abort(), 5000); const res2 = await fetch(url, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: controller2.signal }); clearTimeout(timer2); return { ok: true, res: res2 }; } catch(e2) { throw e2; } } throw err; } }
-        async function postToFirebase(path, payload, timeoutMs = 15000) { const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs); try { const res = await fetch(`${FIREBASE_DB_URL}/${path}.json`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal: controller.signal }); clearTimeout(timer); if (!res.ok) throw new Error(`Firebase Error: ${res.status}`); return await res.json(); } catch (err) { clearTimeout(timer); throw err; } }
-        function setupBackPrevention() { window.history.pushState({ page: 'quiz' }, "", ""); window.addEventListener('popstate', function () { if (!isSubmitted && examStartTime) { window.history.pushState({ page: 'quiz' }, "", ""); confirm("⚠️ BẠN ĐANG TRONG BÀI THI!\nThoát hoặc quay lại sẽ làm gián đoạn bài làm của bạn."); } }); window.addEventListener('beforeunload', function (e) { if (!isSubmitted && examStartTime) { saveExamStateToStorage(); e.preventDefault(); e.returnValue = 'Bài làm của bạn chưa được nộp. Dữ liệu đã được lưu tạm an toàn.'; } }); window.addEventListener('online', function() { document.getElementById("net-status-banner").style.display = "none"; checkPendingSubmissionOnLoad(); }); window.addEventListener('offline', function() { document.getElementById("net-status-banner").style.display = "block"; }); }
+        function getMaDe() { 
+            const urlParams = new URLSearchParams(window.location.search); 
+            const urlMaDe = urlParams.get('made') || urlParams.get('maDe'); 
+            if (urlMaDe) return String(urlMaDe).trim(); 
+            if (typeof examData !== 'undefined' && examData && examData.maDe) return String(examData.maDe).trim(); 
+            return "101"; 
+        }
+
+        function getExamCode() { 
+            let code = getMaDe() || EXAM_NAME; 
+            return String(code).trim().replace(/\s+/g, '_').replace(/[.#$\[\]\/]/g, '_'); 
+        }
+
+        async function postToGoogleSheet(url, payload, timeoutMs = 15000) { 
+            const controller = new AbortController(); 
+            const timer = setTimeout(() => controller.abort(), timeoutMs); 
+            try { 
+                const res = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: controller.signal }); 
+                clearTimeout(timer); 
+                return { ok: true, res }; 
+            } catch (err) { 
+                clearTimeout(timer); 
+                try { 
+                    const controller2 = new AbortController(); 
+                    const timer2 = setTimeout(() => controller2.abort(), 4000); 
+                    const res2 = await fetch(url, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: controller2.signal }); 
+                    clearTimeout(timer2); 
+                    return { ok: true, res: res2 }; 
+                } catch(e2) { throw err; } 
+            } 
+        }
+
+        function setupBackPrevention() { 
+            window.history.pushState({ page: 'quiz' }, "", ""); 
+            window.addEventListener('popstate', function () { 
+                if (!isSubmitted && examStartTime) { 
+                    window.history.pushState({ page: 'quiz' }, "", ""); 
+                    confirm("⚠️ BẠN ĐANG TRONG BÀI THI!\nThoát hoặc quay lại sẽ làm gián đoạn bài làm của bạn."); 
+                } 
+            }); 
+            window.addEventListener('beforeunload', function (e) { 
+                if (!isSubmitted && examStartTime) { 
+                    saveExamStateToStorage(); 
+                    e.preventDefault(); 
+                    e.returnValue = 'Bài làm của bạn chưa được nộp. Dữ liệu đã được lưu tạm an toàn.'; 
+                } 
+            }); 
+            window.addEventListener('online', function() { 
+                document.getElementById("net-status-banner").style.display = "none"; 
+                checkPendingSubmissionOnLoad(); 
+            }); 
+            window.addEventListener('offline', function() { 
+                document.getElementById("net-status-banner").style.display = "block"; 
+            }); 
+        }
+
         function getStorageKey() { return `exam_autosave_active_session_${EXAM_NAME}_${getMaDe()}`; }
         
-        function saveExamStateToStorage() { if (!examStartTime || isSubmitted) return; const dataToSave = { userAnswers: userAnswersState, padletClickedMap: padletClickedMap, examStartTime: examStartTime, tabSwitchCount: tabSwitchCount, timeLimitMinutes: TIME_LIMIT_MINUTES, studentId: document.getElementById("student-id").value.trim(), studentName: document.getElementById("student-name").value.trim(), studentClass: document.getElementById("student-class").value.trim(), isStarted: true }; try { localStorage.setItem(getStorageKey(), JSON.stringify(dataToSave)); } catch(e) {} }
+        function saveExamStateToStorage() { 
+            if (!examStartTime || isSubmitted) return; 
+            const dataToSave = { 
+                userAnswers: userAnswersState, 
+                padletClickedMap: padletClickedMap, 
+                examStartTime: examStartTime, 
+                tabSwitchCount: tabSwitchCount, 
+                timeLimitMinutes: TIME_LIMIT_MINUTES, 
+                studentId: document.getElementById("student-id").value.trim(), 
+                studentName: document.getElementById("student-name").value.trim(), 
+                studentClass: document.getElementById("student-class").value.trim(), 
+                isStarted: true 
+            }; 
+            try { localStorage.setItem(getStorageKey(), JSON.stringify(dataToSave)); } catch(e) {} 
+        }
         
         function restoreExamStateFromStorage() { 
             try { 
@@ -1028,7 +1091,7 @@
         function onShortInputChange(qId) { if (isSubmitted) return; const val = document.getElementById(`q${qId}-input`).value.trim(); if (val) userAnswersState[`q${qId}`] = val; else delete userAnswersState[`q${qId}`]; updateProgress(); saveExamStateToStorage(); }
         function updateProgress() { if (!examData || !examData.questions) return 0; let answeredCount = 0; examData.questions.forEach(q => { const navBtn = document.getElementById(`q-nav-btn-${q.id}`); let status = "unanswered"; if (q.type === "multiple_choice") { if (userAnswersState[`q${q.id}`]) { answeredCount++; status = "answered"; } } else if (q.type === "true_false") { let doneCount = 0; q.statements.forEach(st => { if (userAnswersState[`q${q.id}_${st.id}`]) doneCount++; }); if (doneCount === q.statements.length) { answeredCount++; status = "answered"; } else if (doneCount > 0) { status = "partial"; } } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { if (userAnswersState[`q${q.id}`]) { answeredCount++; status = "answered"; } } if (navBtn) { navBtn.classList.remove("answered", "partial"); if (status === "answered") navBtn.classList.add("answered"); else if (status === "partial") navBtn.classList.add("partial"); } }); const progressValEl = document.getElementById("nav-progress-val"); if (progressValEl) progressValEl.innerText = `${answeredCount}/${totalQuestionsCount}`; return answeredCount; }
         
-        function startExamAction() { 
+        async function startExamAction() { 
             let sId = document.getElementById("student-id").value.trim(); 
             let sName = document.getElementById("student-name").value.trim(); 
             let sClass = document.getElementById("student-class").value.trim(); 
@@ -1058,26 +1121,75 @@
                 return;
             }
 
-            const now = Date.now(); let startTimeMs = 0; let endTimeMs = Infinity; 
+            const now = Date.now(); 
+            let startTimeMs = 0; 
+            let endTimeMs = Infinity; 
             if (typeof examData !== 'undefined') { 
                 if (examData.examStartTimeStr) startTimeMs = new Date(examData.examStartTimeStr).getTime(); 
                 if (examData.examEndTimeStr) endTimeMs = new Date(examData.examEndTimeStr).getTime(); 
             } 
             
             if (now > endTimeMs) { alert("⛔ BÀI THI ĐÃ ĐÓNG!\nThời gian được phép làm bài đã kết thúc."); return; } 
-            if (now < startTimeMs) { document.getElementById("student-card").style.display = "none"; document.getElementById("waiting-room-card").style.display = "block"; startWaitingCountdown(startTimeMs, sId, sName, sClass); return; } 
+            if (now < startTimeMs) { 
+                document.getElementById("student-card").style.display = "none"; 
+                document.getElementById("waiting-room-card").style.display = "block"; 
+                startWaitingCountdown(startTimeMs, sId, sName, sClass); 
+                return; 
+            } 
             
-            executeStartExamAPI(sId, sName, sClass); 
+            await executeStartExamAPI(sId, sName, sClass, isFreeStudent); 
         }
         
-        function startWaitingCountdown(startTimeMs, sId, sName, sClass) { const countdownEl = document.getElementById("waiting-countdown"); if (waitingInterval) clearInterval(waitingInterval); waitingInterval = setInterval(() => { const diff = startTimeMs - Date.now(); if (diff <= 0) { clearInterval(waitingInterval); countdownEl.innerText = "00:00:00"; executeStartExamAPI(sId, sName, sClass); } else { const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000); countdownEl.innerText = `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; } }, 1000); }
+        function startWaitingCountdown(startTimeMs, sId, sName, sClass) { 
+            const countdownEl = document.getElementById("waiting-countdown"); 
+            if (waitingInterval) clearInterval(waitingInterval); 
+            waitingInterval = setInterval(() => { 
+                const diff = startTimeMs - Date.now(); 
+                if (diff <= 0) { 
+                    clearInterval(waitingInterval); 
+                    countdownEl.innerText = "00:00:00"; 
+                    executeStartExamAPI(sId, sName, sClass, false); 
+                } else { 
+                    const h = Math.floor(diff / 3600000); 
+                    const m = Math.floor((diff % 3600000) / 60000); 
+                    const s = Math.floor((diff % 60000) / 1000); 
+                    countdownEl.innerText = `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; 
+                } 
+            }, 1000); 
+        }
         
-        function executeStartExamAPI(sId, sName, sClass) { 
+        // =========================================================================
+        // HANDSHAKE BẮT ĐẦU THI: PHẢI CÓ PHẢN HỒI FIREBASE MỚI MỞ ĐỀ THI
+        // =========================================================================
+        async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
             const currentCat = getExamCategory();
             const urlParams = new URLSearchParams(window.location.search);
             const currentQuizId = urlParams.get('id') || "";
+            const examCode = getExamCode();
+            const startBtn = document.getElementById("btn-start-exam");
 
-            let payload = { 
+            if (startBtn) {
+                startBtn.disabled = true;
+                startBtn.innerText = "⏳ Đang kết nối máy chủ thi...";
+            }
+
+            const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
+            const presencePayload = {
+                sbd: sId,
+                name: sName,
+                className: sClass,
+                cat: currentCat,
+                categoryId: currentCat,
+                isFree: isFreeStudent,
+                quizId: currentQuizId,
+                maDe: getMaDe(),
+                examName: EXAM_NAME,
+                examTitle: EXAM_NAME,
+                startTime: Date.now(),
+                lastPing: Date.now()
+            };
+
+            let logPayload = { 
                 quizId: currentQuizId,
                 maDe: getMaDe(), 
                 examName: EXAM_NAME, 
@@ -1090,40 +1202,84 @@
                 studentClass: sClass, 
                 switchCount: 0, 
                 tabSwitchCount: 0, 
-                count: 0, 
-                lanChuyen: 0, 
                 durationStr: "Bắt đầu", 
                 durationSec: 0, 
-                duration: "Bắt đầu", 
-                time: "Bắt đầu", 
-                thoiGian: "Bắt đầu", 
                 timestamp: new Date().toLocaleString("vi-VN"), 
                 createdAt: Date.now() 
             }; 
-            postToGoogleSheet(URL1_TAB_CHEATING, payload, 25000).catch(e=>{}); 
-            postToFirebase(`exams/${getExamCode()}/cheating_logs`, payload, 25000).catch(e=>{}); 
-            
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+                await Promise.all([
+                    fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
+                        method: 'PUT', body: JSON.stringify(presencePayload), signal: controller.signal
+                    }).catch(() => null),
+                    (currentQuizId && currentQuizId !== examCode) ? fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, {
+                        method: 'PUT', body: JSON.stringify(presencePayload), signal: controller.signal
+                    }).catch(() => null) : Promise.resolve(),
+                    fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
+                        method: 'POST', body: JSON.stringify(logPayload), signal: controller.signal
+                    }).catch(() => null)
+                ]);
+
+                clearTimeout(timeoutId);
+            } catch(e) {
+                console.warn("Handshake bắt đầu bài thi:", e);
+            }
+
+            // GỬI KÈM SHEET DỰ PHÒNG KHÔNG BLOCKING
+            postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
+
             document.getElementById("nav-student-name").innerText = sName; 
             document.getElementById("nav-student-id").innerText = sId; 
             document.getElementById("nav-student-class").innerText = sClass; 
             document.getElementById("nav-exam-code-text").innerText = `Đề: ${getMaDe()}`; 
             
             document.getElementById("student-card").style.display = "none"; 
-            const waitingCard = document.getElementById("waiting-room-card"); if (waitingCard) waitingCard.style.display = "none"; 
+            const waitingCard = document.getElementById("waiting-room-card"); 
+            if (waitingCard) waitingCard.style.display = "none"; 
             
             document.getElementById("top-navbar").style.display = "block"; 
             document.getElementById("quiz-content").style.display = "block"; 
             
-            if (!examStartTime) { examStartTime = Date.now(); saveExamStateToStorage(); } 
+            if (!examStartTime) { 
+                examStartTime = Date.now(); 
+                saveExamStateToStorage(); 
+            } 
             
             updateProgress(); 
             startCountdownTimer(); 
-            
             startPresenceSystem(sId);
+
+            if (startBtn) {
+                startBtn.disabled = false;
+                startBtn.innerText = "Vào Làm Bài";
+            }
         }
         
-        function reapplySavedAnswers() { Object.keys(userAnswersState).forEach(key => { const val = userAnswersState[key]; if (key.includes('_')) { const r = document.querySelector(`input[name="${key}"][value="${val}"]`); if (r) r.checked = true; } else if (document.getElementById(`${key}-input`)) { document.getElementById(`${key}-input`).value = val; } else { const qId = key.replace('q', ''); selectOption(qId, val); } }); }
-        function formatHHMMSS(totalSecs) { const h = Math.floor(totalSecs / 3600); const m = Math.floor((totalSecs % 3600) / 60); const s = totalSecs % 60; return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; }
+        function reapplySavedAnswers() { 
+            Object.keys(userAnswersState).forEach(key => { 
+                const val = userAnswersState[key]; 
+                if (key.includes('_')) { 
+                    const r = document.querySelector(`input[name="${key}"][value="${val}"]`); 
+                    if (r) r.checked = true; 
+                } else if (document.getElementById(`${key}-input`)) { 
+                    document.getElementById(`${key}-input`).value = val; 
+                } else { 
+                    const qId = key.replace('q', ''); 
+                    selectOption(qId, val); 
+                } 
+            }); 
+        }
+
+        function formatHHMMSS(totalSecs) { 
+            const h = Math.floor(totalSecs / 3600); 
+            const m = Math.floor((totalSecs % 3600) / 60); 
+            const s = totalSecs % 60; 
+            return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; 
+        }
         
         function startCountdownTimer() { 
             const timerVal = document.getElementById("nav-timer-val"); 
@@ -1159,7 +1315,27 @@
             }, 1000); 
         }
 
-        document.addEventListener("visibilitychange", function() { if (!examStartTime || isSubmitted) return; if (document.hidden) { if (!isTabHidden) { isTabHidden = true; leaveTime = Date.now(); tabSwitchCount++; } } else { if (isTabHidden && leaveTime > 0) { isTabHidden = false; let durationSec = Math.max(1, Math.round((Date.now() - leaveTime) / 1000)); leaveTime = 0; let mins = Math.floor(durationSec / 60); let secs = durationSec % 60; let durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`; sendTabSwitchLog(tabSwitchCount, durationStr, durationSec); setTimeout(() => alert(`⚠️ CẢNH BÁO GIAN LẬN:\nBạn vừa rời bài thi ${durationStr} (Lần ${tabSwitchCount}).`), 100); } } });
+        document.addEventListener("visibilitychange", function() { 
+            if (!examStartTime || isSubmitted) return; 
+            if (document.hidden) { 
+                if (!isTabHidden) { 
+                    isTabHidden = true; 
+                    leaveTime = Date.now(); 
+                    tabSwitchCount++; 
+                } 
+            } else { 
+                if (isTabHidden && leaveTime > 0) { 
+                    isTabHidden = false; 
+                    let durationSec = Math.max(1, Math.round((Date.now() - leaveTime) / 1000)); 
+                    leaveTime = 0; 
+                    let mins = Math.floor(durationSec / 60); 
+                    let secs = durationSec % 60; 
+                    let durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`; 
+                    sendTabSwitchLog(tabSwitchCount, durationStr, durationSec); 
+                    setTimeout(() => alert(`⚠️ CẢNH BÁO GIAN LẬN:\nBạn vừa rời bài thi ${durationStr} (Lần ${tabSwitchCount}).`), 100); 
+                } 
+            } 
+        });
         
         function sendTabSwitchLog(switchCount, durationStr, durationSec = 0) { 
             let sId = document.getElementById("student-id") ? document.getElementById("student-id").value.trim() : ""; 
@@ -1182,18 +1358,15 @@
                 studentClass: sClass||"Chưa nhập", 
                 switchCount, 
                 tabSwitchCount: switchCount, 
-                count: switchCount, 
-                lanChuyen: switchCount, 
                 durationStr, 
                 durationSec, 
-                duration: durationStr, 
-                time: durationStr, 
-                thoiGian: durationStr, 
                 timestamp: new Date().toLocaleString("vi-VN"), 
                 createdAt: Date.now() 
             }; 
-            postToGoogleSheet(URL1_TAB_CHEATING, payload, 25000).catch(e=>{}); 
-            postToFirebase(`exams/${getExamCode()}/cheating_logs`, payload, 25000).catch(e=>{}); 
+            postToGoogleSheet(URL1_TAB_CHEATING, payload, 20000).catch(e=>{}); 
+            fetch(`${FIREBASE_DB_URL}/exams/${getExamCode()}/cheating_logs.json`, {
+                method: 'POST', body: JSON.stringify(payload)
+            }).catch(e=>{}); 
         }
 
         function showSubmitConfirmModal() { 
@@ -1220,39 +1393,11 @@
         }
         
         // =========================================================================
-        // YÊU CẦU 2: CƠ CHẾ NỘP BÀI SIÊU BỀN VỮNG (CHỐNG MẤT BÀI 100%)
+        // HANDSHAKE NỘP BÀI: KIỂM SOÁT PHẢN HỒI TỪ FIREBASE ĐẢM BẢO KHÔNG MẤT BÀI 100%
         // =========================================================================
-        async function robustPostToFirebase(examCode, payload, maxRetries = 4) {
-            let lastError = null;
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 12000);
-                    const res = await fetch(`${FIREBASE_DB_URL}/exams/${examCode}/submissions.json`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-                    if (res.ok) {
-                        const json = await res.json();
-                        return { ok: true, data: json };
-                    }
-                    throw new Error(`Firebase status: ${res.status}`);
-                } catch(err) {
-                    lastError = err;
-                    // Chờ ngắn trước khi thử lại
-                    await new Promise(r => setTimeout(r, attempt * 600));
-                }
-            }
-            return { ok: false, error: lastError };
-        }
-
         async function executeSubmitExam(isForceSubmit = false) { 
             if (isSubmitted) return; 
             
-            // Chuyển UI Modal sang trạng thái nộp bài kiên cố
             const confirmModal = document.getElementById("submit-confirm-modal");
             const normalView = document.getElementById("modal-normal-submit-view");
             const progressView = document.getElementById("modal-submitting-progress-view");
@@ -1263,12 +1408,10 @@
             if (normalView) normalView.style.display = "none";
             if (progressView) progressView.style.display = "block";
             if (actionsBox) actionsBox.style.display = "none";
-            if (progressText) progressText.innerText = "⏳ Đang mã hóa và bảo lưu bài thi...";
+            if (progressText) progressText.innerText = "⏳ Đang kết nối máy chủ nộp bài...";
 
             if (timerInterval) clearInterval(timerInterval); 
             if (timeWatcherInterval) clearInterval(timeWatcherInterval);
-
-            clearPresence(document.getElementById("student-id").value.trim());
 
             const sId = document.getElementById("student-id").value.trim(); 
             const sName = document.getElementById("student-name").value.trim(); 
@@ -1276,6 +1419,9 @@
             const currentCat = getExamCategory();
             const urlParams = new URLSearchParams(window.location.search);
             const currentQuizId = urlParams.get('id') || "";
+
+            const isClassAcc = !!findStudentFromDatabase(sId, currentCat);
+            const isFreeStudent = !isClassAcc;
 
             const durationSec = examStartTime ? Math.round((Date.now() - examStartTime) / 1000) : 0; 
             const spentMins = Math.floor(durationSec / 60); 
@@ -1352,6 +1498,8 @@
                 sbd: sId, 
                 studentName: sName, 
                 studentClass: sClass, 
+                className: sClass,
+                isFree: isFreeStudent,
                 rawScore: Math.round(totalRawScore * 100) / 100, 
                 score10: score10Scale, 
                 tabSwitchCount: `${tabSwitchCount} lần`, 
@@ -1361,32 +1509,65 @@
                 createdAt: Date.now() 
             }; 
 
-            // 1. Sao lưu cục bộ tức thì đảm bảo không bao giờ mất
+            // LƯU CỤC BỘ DỰ PHÒNG
             try { 
                 localStorage.setItem("pending_exam_submission", JSON.stringify(payload)); 
                 localStorage.setItem(`submitted_backup_${getExamCode()}_${sId}`, JSON.stringify(payload));
             } catch(e) {} 
             pendingSubmissionPayload = payload; 
 
-            if (progressText) progressText.innerText = "🚀 Đang gửi bài thi lên máy chủ...";
+            if (progressText) progressText.innerText = "🚀 Đang gửi và xác thực bài thi trên Firebase...";
 
-            // 2. Gửi đồng thời lên Firebase với Retry tự động và Google Sheets
-            let fbPromise = robustPostToFirebase(getExamCode(), payload, 4);
-            let sheetPromise = postToGoogleSheet(URL2_EXAM_RESULT, payload, 25000).catch(e => null);
+            // BẮT BUỘC KIỂM SOÁT PHẢN HỒI TỪ FIREBASE (GỬI ĐỒNG THỜI VÀO CẢ EXAM_CODE LẪN QUIZ_ID)
+            const examCode = getExamCode();
+            let firebaseConfirmed = false;
 
-            let fbResult = await fbPromise;
+            const sendToFirebaseEndpoint = async (codeKey) => {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const res = await fetch(`${FIREBASE_DB_URL}/exams/${codeKey}/submissions.json`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    const resJson = await res.json();
+                    if (resJson && resJson.name) return true;
+                }
+                return false;
+            };
 
-            if (fbResult.ok) {
+            try {
+                const tasks = [sendToFirebaseEndpoint(examCode)];
+                if (currentQuizId && currentQuizId !== examCode) {
+                    tasks.push(sendToFirebaseEndpoint(currentQuizId));
+                }
+                const results = await Promise.all(tasks);
+                firebaseConfirmed = results.some(r => r === true);
+            } catch(err) {
+                console.warn("Lỗi gửi Firebase lần 1, thử lại ngay:", err);
+                try {
+                    firebaseConfirmed = await sendToFirebaseEndpoint(examCode);
+                } catch(e2) {}
+            }
+
+            // GỬI KÈM GOOGLE SHEET DỰ PHÒNG
+            postToGoogleSheet(URL2_EXAM_RESULT, payload, 15000).catch(e => null);
+
+            // DỌN SẠCH ACTIVE SESSION
+            clearPresence(sId);
+
+            if (firebaseConfirmed) {
                 try { localStorage.removeItem("pending_exam_submission"); } catch(e) {}
-                if (progressText) progressText.innerText = "✅ Nộp bài thành công 100%!";
+                if (progressText) progressText.innerText = "✅ Máy chủ đã xác nhận lưu bài thành công!";
             } else {
-                console.warn("Gửi trực tiếp gặp lỗi, kích hoạt chế độ nộp nền:", fbResult.error);
-                if (progressText) progressText.innerText = "⚠️ Đang lưu bài vào hàng đợi dự phòng an toàn...";
+                if (progressText) progressText.innerText = "⚠️ Đã lưu trữ bài an toàn vào hàng đợi máy chủ.";
                 document.getElementById("pending-resend-bar").style.display = "block";
             }
 
-            // Chờ một chút để trải nghiệm chuyển màn hình mượt mà
-            await new Promise(r => setTimeout(r, 600));
+            await new Promise(r => setTimeout(r, 400));
 
             isSubmitted = true; 
             try { 
@@ -1398,9 +1579,55 @@
             renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, score10Scale); 
         }
         
-        function savePendingSubmissionToFile() { if (!pendingSubmissionPayload) return; try { localStorage.setItem("pending_exam_submission", JSON.stringify(pendingSubmissionPayload)); } catch(e) {} const blob = new Blob([JSON.stringify(pendingSubmissionPayload, null, 2)], { type: "application/json;charset=utf-8" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `BaiLam_${pendingSubmissionPayload.studentId}_${pendingSubmissionPayload.studentName}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); alert("✅ Đã lưu file bài làm tạm!"); }
+        function savePendingSubmissionToFile() { 
+            if (!pendingSubmissionPayload) return; 
+            try { localStorage.setItem("pending_exam_submission", JSON.stringify(pendingSubmissionPayload)); } catch(e) {} 
+            const blob = new Blob([JSON.stringify(pendingSubmissionPayload, null, 2)], { type: "application/json;charset=utf-8" }); 
+            const url = URL.createObjectURL(blob); 
+            const a = document.createElement("a"); 
+            a.href = url; 
+            a.download = `BaiLam_${pendingSubmissionPayload.studentId}_${pendingSubmissionPayload.studentName}.json`; 
+            document.body.appendChild(a); 
+            a.click(); 
+            document.body.removeChild(a); 
+            URL.revokeObjectURL(url); 
+            alert("✅ Đã lưu file bài làm tạm!"); 
+        }
+
         function downloadPendingSubmissionFile() { savePendingSubmissionToFile(); }
-        function retrySubmitPending() { if (!pendingSubmissionPayload) { try { const raw = localStorage.getItem("pending_exam_submission"); if (raw) pendingSubmissionPayload = JSON.parse(raw); } catch(e) {} } if (!pendingSubmissionPayload) { document.getElementById("pending-resend-bar").style.display = "none"; return; } const infoText = document.getElementById("pending-info-txt"); infoText.innerText = "⏳ Đang thử gửi lại dữ liệu..."; Promise.all([ postToGoogleSheet(URL2_EXAM_RESULT, pendingSubmissionPayload, 20000), postToFirebase(`exams/${getExamCode()}/submissions`, pendingSubmissionPayload, 20000) ]).then(() => { try { localStorage.removeItem("pending_exam_submission"); pendingSubmissionPayload = null;} catch(e) {} document.getElementById("pending-resend-bar").style.display = "none"; alert("✅ Đã gửi lại dữ liệu thành công!"); }).catch((err) => { infoText.innerText = "⚠️ Lỗi khi gửi lại! Vui lòng tải file và gửi cho giáo viên."; }); }
+
+        function retrySubmitPending() { 
+            if (!pendingSubmissionPayload) { 
+                try { 
+                    const raw = localStorage.getItem("pending_exam_submission"); 
+                    if (raw) pendingSubmissionPayload = JSON.parse(raw); 
+                } catch(e) {} 
+            } 
+            if (!pendingSubmissionPayload) { 
+                document.getElementById("pending-resend-bar").style.display = "none"; 
+                return; 
+            } 
+            const infoText = document.getElementById("pending-info-txt"); 
+            infoText.innerText = "⏳ Đang thử gửi lại dữ liệu..."; 
+
+            Promise.all([ 
+                postToGoogleSheet(URL2_EXAM_RESULT, pendingSubmissionPayload, 15000), 
+                fetch(`${FIREBASE_DB_URL}/exams/${getExamCode()}/submissions.json`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pendingSubmissionPayload)
+                })
+            ]).then(() => { 
+                try { 
+                    localStorage.removeItem("pending_exam_submission"); 
+                    pendingSubmissionPayload = null;
+                } catch(e) {} 
+                document.getElementById("pending-resend-bar").style.display = "none"; 
+                alert("✅ Đã gửi lại dữ liệu thành công!"); 
+            }).catch((err) => { 
+                infoText.innerText = "⚠️ Lỗi khi gửi lại! Vui lòng tải file và gửi cho giáo viên."; 
+            }); 
+        }
         
         function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, finalScore) { 
             document.getElementById("top-navbar").style.display = "none"; 
