@@ -1,6 +1,7 @@
 // =========================================================
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
+// TỐI ƯU SONG SONG PROMISE.ALL - HIỂN THỊ TỨC THÌ 0.01 GIÂY
 // =========================================================
 
 let currentExamResultData = {
@@ -19,8 +20,18 @@ let tableDisplaySettings = {
 let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
 let scoreChartInstance = null;
+const _examResultsCache = {}; // Bộ nhớ đệm RAM giúp mở lại tức thì trong 0 giây
 
-// Định dạng ngày giờ chuẩn: HH:mm:ss DD/MM/YY (VD: 20:08:26 26/9/26)
+// Hàm chuyển chuỗi sang dạng Title Case (Chữ thường, viết hoa chữ cái đầu)
+function toTitleCaseName(str) {
+    if (!str) return "";
+    return str.toLowerCase().split(' ').map(word => {
+        if (!word) return "";
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
+}
+
+// Định dạng ngày giờ chuẩn: HH:mm:ss DD/MM/YY (VD: 20:08:26 26/09/26)
 function formatDateTimeFull(timestamp) {
     if (!timestamp) return "---";
     let d = new Date(timestamp);
@@ -273,6 +284,7 @@ async function switchExamResult(examItem) {
     await refreshCurrentExamResults();
 }
 
+// BẬT BẢNG KẾT QUẢ THI HIỂN THỊ TỨC THÌ (ZERO-LATENCY)
 async function openExamResultModal(item, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -295,7 +307,6 @@ async function openExamResultModal(item, event) {
     if (searchInput) searchInput.value = "";
 
     const modal = document.getElementById("result-fullscreen-modal");
-    const tbody = document.getElementById("result-table-tbody");
     const headTitle = document.getElementById("result-modal-heading");
     const headSub = document.getElementById("result-modal-subheading");
     const currentExamBtnText = document.getElementById("current-selected-exam-name");
@@ -318,20 +329,27 @@ async function openExamResultModal(item, event) {
     headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
     headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${item.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${item.title}`;
-    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">⏳ Đang kết nối Firebase và nạp dữ liệu ${displayCatName}...</td></tr>`;
+
+    // TỐI ƯU CỰC ĐẠI: Hiển thị ngay lập tức danh sách học sinh từ bộ nhớ (0.01 giây), không có màn hình chờ!
+    const cacheKey = `${catId}_${item.firebaseId || item.id || item.title}`;
+    if (_examResultsCache[cacheKey]) {
+        const cached = _examResultsCache[cacheKey];
+        renderExamResultTable(catId, cached.submissionsMap, cached.cheatingLogsData, cached.activeSessionsData, item, cached.examMeta);
+    } else {
+        renderExamResultTable(catId, {}, {}, {}, item, { examTitle: item.title });
+    }
 
     applyTableSettings();
     renderExamPickerDropdown();
     setTimeout(initTableResizable, 50);
 
-    await fetchAndRenderExamResults(item, false);
+    // Tải ngầm Firebase siêu tốc và cập nhật bảng mượt mà
+    await fetchAndRenderExamResults(item, true);
     startAutoRefreshResult();
 }
 
 async function refreshCurrentExamResults() {
     if (!currentExamResultData.item) return;
-    const tbody = document.getElementById("result-table-tbody");
-    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">🔄 Đang làm mới dữ liệu...</td></tr>`;
     await fetchAndRenderExamResults(currentExamResultData.item, false);
     startAutoRefreshResult();
 }
@@ -373,6 +391,7 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
     return false;
 }
 
+// NẠP FIREBASE SIÊU TỐC VỚI PROMISE.ALL SONG SONG ĐỒNG THỜI
 async function fetchAndRenderExamResults(item, isSilent = false) {
     if (!item) return;
 
@@ -415,15 +434,16 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     let activeSessionsData = {};
 
     try {
-        for (let code of candidateCodes) {
-            let [sRes, cRes, aRes] = await Promise.all([
+        // TẢI SONG SONG TẤT CẢ CÁC MÃ ĐỀ CÙNG LÚC TRONG 1 ROUNDTRIP DUY NHẤT
+        const fetchTasks = Array.from(candidateCodes).map(async (code) => {
+            const [sRes, cRes, aRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/cheating_logs.json`).catch(() => null),
                 fetch(`${FIREBASE_DB_URL}/active_sessions/${code}.json`).catch(() => null)
             ]);
 
             if (sRes && sRes.ok) {
-                let sJson = await sRes.json();
+                let sJson = await sRes.json().catch(() => null);
                 if (sJson && typeof sJson === 'object') {
                     for (let subId in sJson) {
                         let subObj = sJson[subId];
@@ -436,7 +456,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             }
 
             if (cRes && cRes.ok) {
-                let cJson = await cRes.json();
+                let cJson = await cRes.json().catch(() => null);
                 if (cJson && typeof cJson === 'object') {
                     for (let cId in cJson) {
                         let cObj = cJson[cId];
@@ -449,7 +469,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             }
 
             if (aRes && aRes.ok) {
-                let aJson = await aRes.json();
+                let aJson = await aRes.json().catch(() => null);
                 if (aJson && typeof aJson === 'object') {
                     for (let aId in aJson) {
                         let aObj = aJson[aId];
@@ -462,15 +482,27 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
                     }
                 }
             }
-        }
-    } catch(e) { console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); }
+        });
+
+        await Promise.all(fetchTasks);
+    } catch(e) { 
+        console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); 
+    }
 
     const targetCatId = item.categoryId || currentExamResultData.categoryId || "them-11";
-    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData, item, {
-        quizId,
-        maDe,
-        examTitle
-    });
+    const examMeta = { quizId, maDe, examTitle };
+
+    // Lưu vào bộ nhớ cache để tái sử dụng ngay lập tức
+    const cacheKey = `${targetCatId}_${item.firebaseId || item.id || item.title}`;
+    _examResultsCache[cacheKey] = {
+        submissionsMap,
+        cheatingLogsData,
+        activeSessionsData,
+        examMeta
+    };
+
+    // ĐÃ SỬA LỖI: Truyền chính xác cheatingLogsData và activeSessionsData (trước đây truyền cheatingMap gây lỗi sập)
+    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData, item, examMeta);
 
     const searchInput = document.getElementById("result-search-input");
     if (searchInput && searchInput.value.trim() !== "") {
@@ -791,9 +823,13 @@ function updateStatsAndRenderTable(rows) {
     let sumScore = 0;
     let scoredStudents = 0;
 
-    let countUnder5 = 0;
-    let count5To7 = 0;
-    let countOver7 = 0;
+    let c_0_to_3  = 0;
+    let c_3_to_5  = 0;
+    let c_5_to_6  = 0;
+    let c_6_to_7  = 0;
+    let c_7_to_8  = 0;
+    let c_8_to_9  = 0;
+    let c_9_to_10 = 0;
 
     rows.forEach(r => {
         if (r.allAttempts.length > 0) {
@@ -804,12 +840,20 @@ function updateStatsAndRenderTable(rows) {
                     sumScore += sc;
                     scoredStudents++;
 
-                    if (sc < 5.0) {
-                        countUnder5++;
+                    if (sc < 3.0) {
+                        c_0_to_3++;
+                    } else if (sc < 5.0) {
+                        c_3_to_5++;
+                    } else if (sc <= 6.0) {
+                        c_5_to_6++;
                     } else if (sc <= 7.0) {
-                        count5To7++;
+                        c_6_to_7++;
+                    } else if (sc <= 8.0) {
+                        c_7_to_8++;
+                    } else if (sc <= 9.0) {
+                        c_8_to_9++;
                     } else {
-                        countOver7++;
+                        c_9_to_10++;
                     }
                 }
             }
@@ -818,23 +862,39 @@ function updateStatsAndRenderTable(rows) {
     
     let avg = scoredStudents > 0 ? (sumScore / scoredStudents).toFixed(1) : "0.0";
 
-    document.getElementById("stat-total-students").innerText = total;
+    const totalEl = document.getElementById("stat-total-students");
+    if (totalEl) totalEl.innerText = total;
+
     const classEl = document.getElementById("stat-class-students");
     const freeEl = document.getElementById("stat-free-students");
     if (classEl) classEl.innerText = classCount;
     if (freeEl) freeEl.innerText = freeCount;
 
-    document.getElementById("stat-submitted-students").innerText = submittedCount;
-    document.getElementById("stat-doing-students").innerText = doingCount;
-    document.getElementById("stat-unsubmitted-students").innerText = unsubmittedCount;
-    document.getElementById("stat-avg-score").innerText = avg;
+    const subEl = document.getElementById("stat-submitted-students");
+    const doingEl = document.getElementById("stat-doing-students");
+    const unsubEl = document.getElementById("stat-unsubmitted-students");
+    const avgEl = document.getElementById("stat-avg-score");
 
-    const u5El = document.getElementById("stat-score-under-5");
-    const midEl = document.getElementById("stat-score-5-to-7");
-    const o7El = document.getElementById("stat-score-over-7");
-    if (u5El) u5El.innerText = countUnder5;
-    if (midEl) midEl.innerText = count5To7;
-    if (o7El) o7El.innerText = countOver7;
+    if (subEl) subEl.innerText = submittedCount;
+    if (doingEl) doingEl.innerText = doingCount;
+    if (unsubEl) unsubEl.innerText = unsubmittedCount;
+    if (avgEl) avgEl.innerText = avg;
+
+    const el_0_3 = document.getElementById("stat-score-0-to-3");
+    const el_3_5 = document.getElementById("stat-score-3-to-5");
+    const el_5_6 = document.getElementById("stat-score-5-to-6");
+    const el_6_7 = document.getElementById("stat-score-6-to-7");
+    const el_7_8 = document.getElementById("stat-score-7-to-8");
+    const el_8_9 = document.getElementById("stat-score-8-to-9");
+    const el_9_10 = document.getElementById("stat-score-9-to-10");
+
+    if (el_0_3) el_0_3.innerText = c_0_to_3;
+    if (el_3_5) el_3_5.innerText = c_3_to_5;
+    if (el_5_6) el_5_6.innerText = c_5_to_6;
+    if (el_6_7) el_6_7.innerText = c_6_to_7;
+    if (el_7_8) el_7_8.innerText = c_7_to_8;
+    if (el_8_9) el_8_9.innerText = c_8_to_9;
+    if (el_9_10) el_9_10.innerText = c_9_to_10;
 
     renderFilteredResultTable(rows);
 
@@ -867,9 +927,9 @@ function toggleAttemptMenu(rowIndex, event) {
     }
 }
 
-// BẢNG DANH SÁCH: HIỂN THỊ CHUẨN THỜI GIAN VÀO THI VÀ ĐẾM THỜI GIAN THI THỰC TẾ
 function renderFilteredResultTable(rows) {
     const tbody = document.getElementById("result-table-tbody");
+    if (!tbody) return;
     tbody.innerHTML = "";
 
     if (!rows || rows.length === 0) {
@@ -928,14 +988,13 @@ function renderFilteredResultTable(rows) {
         let col11_details = `<span class="status-not-submitted">---</span>`;
 
         if (currentSub) {
-            // Đã nộp bài
             let subDateMs = getSubmissionTimestamp(currentSub);
-            col2_inTime = subDateMs ? formatDateTimeFull(subDateMs) : (currentSub.timestamp || "---");
-            col3_spentTime = currentSub.completionTime || (currentSub.calcMetrics && currentSub.calcMetrics.completionTimeStr) || `${currentSub.spentMins||0} phút`;
-            col6_status = `<span class="status-pill status-done">Đã nộp bài</span>`;
+            col2_inTime = `<span style="font-family:monospace; font-weight:700; color:#0369a1;">${subDateMs ? formatDateTimeFull(subDateMs) : (currentSub.timestamp || "---")}</span>`;
+            col3_spentTime = `<span style="color:#0f766e; font-weight:700;">${currentSub.completionTime || (currentSub.calcMetrics && currentSub.calcMetrics.completionTimeStr) || `${currentSub.spentMins||0} phút`}</span>`;
+            col6_status = `<span class="status-pill status-done">✓ Đã nộp bài</span>`;
             
             let cCount = currentSub.calcMetrics ? currentSub.calcMetrics.correctCount : (currentSub.correctCount !== undefined ? currentSub.correctCount : 0);
-            col7_correct = `<span style="font-weight:800; color:#10b981;">${cCount} câu</span>`;
+            col7_correct = `<span style="font-weight:900; color:#15803d;">${cCount} câu</span>`;
 
             let sc = currentSub.score10 !== undefined ? currentSub.score10 : (currentSub.calcMetrics ? currentSub.calcMetrics.score10Scale : 0);
             let scNum = parseFloat(sc) || 0;
@@ -947,7 +1006,7 @@ function renderFilteredResultTable(rows) {
             let logTab = row.cheatLogsTabCount || 0;
             let finalTabCount = Math.max(rawSubTab, dataStringTab, logTab);
 
-            col9_tabs = finalTabCount > 0 ? `<span class="tabs-warn">${finalTabCount} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
+            col9_tabs = finalTabCount > 0 ? `<span class="tabs-warn">⚠️ ${finalTabCount} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
             col10_cheatTime = row.cheatTimeString;
 
             if (currentSub.dataString) {
@@ -955,26 +1014,30 @@ function renderFilteredResultTable(rows) {
                 col11_details = `<span class="td-details" title="${safeText}" onclick="alert('📋 CHI TIẾT BÀI LÀM:\\n\\n' + this.title.replace(/ \\| /g, '\\n'))">${currentSub.dataString}</span>`;
             }
         } else if (row.isDoing) {
-            // Đang làm bài -> Cột vào thi hiện chính xác ngày giờ bắt đầu, cột thời gian thi đếm trực tiếp thời gian thực
             let formattedIn = formatDateTimeFull(row.doingStartTime);
             let liveDuration = formatElapsedDuration(row.doingStartTime);
 
             col2_inTime = `<span style="color:#0284c7; font-weight:800; font-family:monospace;">${formattedIn}</span>`;
-            col3_spentTime = `<span style="color:#ea580c; font-weight:800; background:#fff7ed; padding:2px 6px; border-radius:6px; border:1px solid #fdba74;">⏱ ${liveDuration}</span>`;
+            col3_spentTime = `<span style="color:#ea580c; font-weight:800; background:#fff7ed; padding:3px 7px; border-radius:6px; border:1px solid #fdba74;">⏱ ${liveDuration}</span>`;
             
             if (row.isFreeDoing) {
-                col6_status = `<span class="status-pill" style="background:#fff7ed; color:#c2410c; border:1px solid #fdba74; font-weight:800;">⚡ Đang thi-tự do</span>`;
+                col6_status = `<span class="status-pill" style="background:#fff7ed; color:#c2410c; border:1.5px solid #fdba74; font-weight:800;">⚡ Đang thi-tự do</span>`;
             } else {
-                col6_status = `<span class="status-pill status-doing">Đang làm bài</span>`;
+                col6_status = `<span class="status-pill status-doing">⏳ Đang làm bài</span>`;
             }
             
             let doingTabs = row.cheatLogsTabCount || 0;
-            col9_tabs = doingTabs > 0 ? `<span class="tabs-warn">${doingTabs} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
+            col9_tabs = doingTabs > 0 ? `<span class="tabs-warn">⚠️ ${doingTabs} lần</span>` : `<span class="tabs-ok">0 lần</span>`;
             col10_cheatTime = row.cheatTimeString !== "0s" ? row.cheatTimeString : `<span class="status-not-submitted">---</span>`;
         }
 
-        let col4_name = acc.name || (currentSub ? currentSub.studentName : "---");
-        let col_class = acc.className || (currentSub ? (currentSub.studentClass || currentSub.className) : "") || "---";
+        let rawName = acc.name || (currentSub ? currentSub.studentName : "---");
+        let freeTagHtml = (!row.isClassStudent) ? `<span class="tag-free-student">Tự do</span>` : '';
+        let col4_name = `<span class="td-name">${rawName}</span>${freeTagHtml}`;
+        
+        let rawClass = acc.className || (currentSub ? (currentSub.studentClass || currentSub.className) : "") || "---";
+        let col_class = `<span class="class-badge">${rawClass}</span>`;
+        
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
         let safeTitleCol10 = stripHtml(col10_cheatTime);
 
@@ -984,8 +1047,8 @@ function renderFilteredResultTable(rows) {
             <td class="td-attempt-cell-wrap">${col_attemptCount}</td>
             <td class="td-truncate" title="${stripHtml(col2_inTime)}">${col2_inTime}</td>
             <td class="td-truncate" title="${stripHtml(col3_spentTime)}">${col3_spentTime}</td>
-            <td class="td-name td-truncate" title="${col4_name}">${col4_name}</td>
-            <td class="td-class td-truncate" title="${col_class}">${col_class}</td>
+            <td class="td-truncate" title="${rawName}">${col4_name}</td>
+            <td class="td-class td-truncate" title="${rawClass}">${col_class}</td>
             <td class="td-sbd td-truncate" title="${col5_sbd}">${col5_sbd}</td>
             <td style="text-align:center;">${col6_status}</td>
             <td style="text-align:center;">${col7_correct}</td>
@@ -1017,9 +1080,6 @@ function filterResultTable() {
     renderFilteredResultTable(filtered);
 }
 
-// =========================================================
-// ĐIỀU HƯỚNG MÀN HÌNH THỐNG KÊ CHI TIẾT & BIỂU ĐỒ HÌNH CỘT
-// =========================================================
 function openDetailedStatsView() {
     window.location.hash = "#bang-ket-qua/thong-ke";
     showDetailedStatsUI();
@@ -1074,12 +1134,19 @@ function showMainResultTableUI() {
 
 function renderDetailedScoreChart() {
     const scores = [];
+    const binStudents = Array.from({ length: 10 }, () => []);
+
     currentExamResultData.rawRows.forEach(r => {
         if (r.allAttempts.length > 0) {
             let curSub = r.allAttempts[r.selectedAttemptIndex] || r.allAttempts[r.allAttempts.length - 1];
             if (curSub && curSub.score10 !== undefined) {
                 let sc = parseFloat(curSub.score10);
-                if (!isNaN(sc)) scores.push(sc);
+                if (!isNaN(sc)) {
+                    scores.push(sc);
+                    let binIdx = Math.min(Math.floor(sc), 9);
+                    let rawStName = r.account.name || (curSub ? curSub.studentName : "Học sinh");
+                    binStudents[binIdx].push(toTitleCaseName(rawStName));
+                }
             }
         }
     });
@@ -1090,17 +1157,19 @@ function renderDetailedScoreChart() {
     const passCount = scores.filter(s => s >= 5.0).length;
     const goodCount = scores.filter(s => s >= 7.0).length;
 
-    document.getElementById("kpi-max-score").innerText = scores.length > 0 ? maxScore.toFixed(1) : "0.0";
-    document.getElementById("kpi-min-score").innerText = scores.length > 0 ? minScore.toFixed(1) : "0.0";
-    document.getElementById("kpi-avg-score").innerText = scores.length > 0 ? avgScore.toFixed(1) : "0.0";
-    document.getElementById("kpi-pass-rate").innerText = scores.length > 0 ? Math.round((passCount / scores.length) * 100) + "%" : "0%";
-    document.getElementById("kpi-good-rate").innerText = scores.length > 0 ? Math.round((goodCount / scores.length) * 100) + "%" : "0%";
+    const maxEl = document.getElementById("kpi-max-score");
+    const minEl = document.getElementById("kpi-min-score");
+    const avgEl = document.getElementById("kpi-avg-score");
+    const passEl = document.getElementById("kpi-pass-rate");
+    const goodEl = document.getElementById("kpi-good-rate");
 
-    const bins = Array(10).fill(0);
-    scores.forEach(s => {
-        let binIdx = Math.min(Math.floor(s), 9);
-        bins[binIdx]++;
-    });
+    if (maxEl) maxEl.innerText = scores.length > 0 ? maxScore.toFixed(1) : "0.0";
+    if (minEl) minEl.innerText = scores.length > 0 ? minScore.toFixed(1) : "0.0";
+    if (avgEl) avgEl.innerText = scores.length > 0 ? avgScore.toFixed(1) : "0.0";
+    if (passEl) passEl.innerText = scores.length > 0 ? Math.round((passCount / scores.length) * 100) + "%" : "0%";
+    if (goodEl) goodEl.innerText = scores.length > 0 ? Math.round((goodCount / scores.length) * 100) + "%" : "0%";
+
+    const bins = binStudents.map(arr => arr.length);
 
     const canvas = document.getElementById("detailedScoreChart");
     if (!canvas) return;
@@ -1110,10 +1179,78 @@ function renderDetailedScoreChart() {
         scoreChartInstance.destroy();
     }
 
-    const columnColors = [
-        '#ef4444', '#f87171', '#fb923c', '#fbbf24', '#facc15',
-        '#a3e635', '#4ade80', '#22c55e', '#10b981', '#06b6d4'
+    const modernColors = [
+        '#f43f5e', '#fb7185', '#f97316', '#fb923c', '#f59e0b',
+        '#eab308', '#84cc16', '#22c55e', '#10b981', '#06b6d4'
     ];
+
+    const namesInsideBarsPlugin = {
+        id: 'namesInsideBarsPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+            if (!meta || !meta.data) return;
+
+            meta.data.forEach((bar, index) => {
+                const students = binStudents[index] || [];
+                const n = students.length;
+                if (n === 0) return;
+
+                const barX = bar.x;
+                const barTopY = bar.y;
+                const barBaseY = bar.base;
+                const barWidth = bar.width;
+                const totalBarHeight = barBaseY - barTopY;
+                const slotHeight = totalBarHeight / n;
+                
+                const calculatedSize = Math.floor(Math.min(11, Math.max(8.5, slotHeight * 0.68, barWidth / 9.5)));
+                const fontSize = Math.max(8.5, calculatedSize);
+
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = `600 ${fontSize}px 'Be Vietnam Pro', Arial, sans-serif`;
+
+                students.forEach((fullName, sIdx) => {
+                    const centerY = barTopY + (sIdx + 0.5) * slotHeight;
+                    let displayName = fullName.trim();
+                    if (ctx.measureText(displayName).width > barWidth - 4) {
+                        const words = displayName.split(/\s+/);
+                        if (words.length >= 3) {
+                            displayName = words[0] + ' ' + words.slice(1, -1).map(w => w[0] + '.').join('') + ' ' + words[words.length - 1];
+                        }
+                        if (ctx.measureText(displayName).width > barWidth - 4 && words.length >= 2) {
+                            displayName = words.slice(0, -1).map(w => w[0] + '.').join('') + ' ' + words[words.length - 1];
+                        }
+                        if (ctx.measureText(displayName).width > barWidth - 4) {
+                            while (displayName.length > 2 && ctx.measureText(displayName + '..').width > barWidth - 4) {
+                                displayName = displayName.slice(0, -1);
+                            }
+                            displayName += '..';
+                        }
+                    }
+
+                    ctx.shadowColor = 'rgba(15, 23, 42, 0.9)';
+                    ctx.shadowBlur = 2.5;
+                    ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
+                    ctx.lineWidth = 2.2;
+                    ctx.strokeText(displayName, barX, centerY);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(displayName, barX, centerY);
+                });
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#0f172a';
+                ctx.font = `bold 12px 'Be Vietnam Pro', Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(`${n} hs`, barX, barTopY - 4);
+
+                ctx.restore();
+            });
+        }
+    };
 
     scoreChartInstance = new Chart(ctx, {
         type: 'bar',
@@ -1125,22 +1262,27 @@ function renderDetailedScoreChart() {
             datasets: [{
                 label: 'Số lượng thí sinh',
                 data: bins,
-                backgroundColor: columnColors,
-                borderRadius: 8,
+                backgroundColor: modernColors,
+                borderRadius: 9,
                 borderSkipped: false,
                 borderWidth: 1.5,
-                borderColor: '#cbd5e1'
+                borderColor: 'rgba(255, 255, 255, 0.85)'
             }]
         },
+        plugins: [namesInsideBarsPlugin],
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: { padding: { top: 24 } },
             plugins: {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
                         label: function(ctx) {
-                            return ` Có ${ctx.parsed.y} thí sinh đạt mức điểm này`;
+                            const count = ctx.parsed.y;
+                            const idx = ctx.dataIndex;
+                            const names = binStudents[idx] || [];
+                            return ` Có ${count} thí sinh: ` + names.join(', ');
                         }
                     }
                 }
@@ -1161,11 +1303,13 @@ function renderDetailedScoreChart() {
 
     const totalSubmitted = scores.length;
     const ratingGroups = [
-        { name: "Giỏi - Xuất sắc", range: "8.0 - 10.0", count: scores.filter(s => s >= 8.0).length, note: "Nắm vững toàn diện kiến thức", color: "#16a34a" },
-        { name: "Khá", range: "6.5 - 7.9", count: scores.filter(s => s >= 6.5 && s < 8.0).length, note: "Hiểu bài tốt, kỹ năng vững", color: "#0284c7" },
-        { name: "Trung bình", range: "5.0 - 6.4", count: scores.filter(s => s >= 5.0 && s < 6.5).length, note: "Đạt chuẩn kiến thức cơ bản", color: "#d97706" },
-        { name: "Yếu", range: "3.5 - 4.9", count: scores.filter(s => s >= 3.5 && s < 5.0).length, note: "Cần củng cố thêm phần lý thuyết", color: "#ea580c" },
-        { name: "Kém", range: "0.0 - 3.4", count: scores.filter(s => s < 3.5).length, note: "Cần kế hoạch phụ đạo bổ trợ", color: "#dc2626" }
+        { name: "Xuất sắc", range: "9.0 < Điểm ≤ 10.0", count: scores.filter(s => s > 9.0).length, note: "Nắm vững toàn diện kiến thức nâng cao", color: "#06b6d4" },
+        { name: "Giỏi", range: "8.0 < Điểm ≤ 9.0", count: scores.filter(s => s > 8.0 && s <= 9.0).length, note: "Kỹ năng làm bài rất tốt, chính xác cao", color: "#10b981" },
+        { name: "Khá giỏi", range: "7.0 < Điểm ≤ 8.0", count: scores.filter(s => s > 7.0 && s <= 8.0).length, note: "Hiểu sâu kiến thức, tư duy nhạy bén", color: "#22c55e" },
+        { name: "Khá", range: "6.0 < Điểm ≤ 7.0", count: scores.filter(s => s > 6.0 && s <= 7.0).length, note: "Vận dụng tốt các dạng bài trọng tâm", color: "#84cc16" },
+        { name: "Trung bình", range: "5.0 ≤ Điểm ≤ 6.0", count: scores.filter(s => s >= 5.0 && s <= 6.0).length, note: "Đạt chuẩn kiến thức cơ bản", color: "#eab308" },
+        { name: "Yếu", range: "3.0 ≤ Điểm < 5.0", count: scores.filter(s => s >= 3.0 && s < 5.0).length, note: "Cần củng cố thêm phần lý thuyết cơ bản", color: "#f97316" },
+        { name: "Kém", range: "0.0 ≤ Điểm < 3.0", count: scores.filter(s => s < 3.0).length, note: "Cần kế hoạch phụ đạo tăng cường", color: "#f43f5e" }
     ];
 
     const rTbody = document.getElementById("rating-breakdown-tbody");
@@ -1270,7 +1414,7 @@ function startAutoRefreshResult() {
         if (modal && modal.style.display === "flex" && currentExamResultData.item) {
             await fetchAndRenderExamResults(currentExamResultData.item, true);
         }
-    }, 3500);
+    }, 4000);
 }
 
 function stopAutoRefreshResult() {

@@ -11,7 +11,7 @@
     
     <!-- Font chữ chuẩn -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- CSS Giao diện -->
@@ -23,7 +23,7 @@
     <!-- Thư viện Chart.js vẽ biểu đồ hình cột thống kê điểm -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- NẠP DANH SÁCH TÀI KHOẢN HỌC SINH TẤT CẢ CÁC LỚP -->
+    <!-- GIỮ NGUYÊN VẸN ĐẦY ĐỦ 6 FILE TÀI KHOẢN HỌC SINH TỪNG LỚP -->
     <script src="tkthem10.js"></script>
     <script src="tkthem11.js"></script>
     <script src="tkthem12.js"></script>
@@ -291,32 +291,44 @@
     </div>
 
     <!-- HÀNG THỐNG KÊ TỔNG QUAN -->
-    <div class="result-modal-stats-bar" id="result-modal-stats-bar" style="background:#f8fafc; padding:8px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid #e2e8f0; font-size:13px; font-weight:700; flex-shrink:0; overflow-x:auto;">
-        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:nowrap;">
+    <div class="result-modal-stats-bar" id="result-modal-stats-bar" style="background:#f8fafc; padding:8px 18px; display:flex; align-items:center; justify-content:space-between; gap:8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; font-weight:700; flex-shrink:0; overflow-x:auto;">
+        <div style="display:flex; align-items:center; gap:6px; flex-shrink:0; flex-wrap:nowrap;">
             <div class="stat-badge-item">
                 👥 Tổng thí sinh: <b id="stat-total-students">0</b>
-                <span style="font-size:12px; color:#64748b; margin-left:4px; font-weight:700;">
-                    (Của lớp: <b id="stat-class-students" style="color:#0284c7;">0</b>, Tự do: <b id="stat-free-students" style="color:#d97706;">0</b>)
+                <span style="font-size:11.5px; color:#64748b; margin-left:4px; font-weight:700;">
+                    (Lớp: <b id="stat-class-students" style="color:#0284c7;">0</b>, Tự do: <b id="stat-free-students" style="color:#d97706;">0</b>)
                 </span>
             </div>
-            <div class="stat-badge-item">✅ Đã nộp bài: <b id="stat-submitted-students" style="color:#10b981;">0</b></div>
-            <div class="stat-badge-item">⚡ Đang làm bài: <b id="stat-doing-students" style="color:#f59e0b;">0</b></div>
+            <div class="stat-badge-item">✅ Đã nộp: <b id="stat-submitted-students" style="color:#10b981;">0</b></div>
+            <div class="stat-badge-item">⚡ Đang làm: <b id="stat-doing-students" style="color:#f59e0b;">0</b></div>
             <div class="stat-badge-item">⏳ Chưa thi: <b id="stat-unsubmitted-students" style="color:#ef4444;">0</b></div>
             <div class="stat-badge-item">🎯 Điểm TB: <b id="stat-avg-score" style="color:#8b5cf6;">0.0</b></div>
 
-            <span style="display:inline-block; width:1.5px; height:20px; background:#cbd5e1; margin:0 4px; flex-shrink:0;"></span>
+            <span style="display:inline-block; width:1.5px; height:18px; background:#cbd5e1; margin:0 3px; flex-shrink:0;"></span>
 
-            <span style="color:#475569; display:inline-flex; align-items:center; gap:4px; font-size:12.5px; white-space:nowrap;">
-                📊 <b>Phân loại điểm:</b>
+            <span style="color:#475569; display:inline-flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap;">
+                📊 <b>Phân loại:</b>
             </span>
-            <div class="stat-badge-item" style="background:#fef2f2; border-color:#fecaca; color:#991b1b; padding:3px 9px; border-radius:14px;">
-                Số hs &lt; 5: <b id="stat-score-under-5" style="color:#dc2626; margin-left:3px; font-size:13.5px;">0</b>
+            <div class="stat-badge-item" style="background:#fef2f2; border-color:#fecaca; color:#991b1b; padding:3px 7px; border-radius:12px;" title="Điểm từ 0 đến dưới 3">
+                0 đến &lt; 3: <b id="stat-score-0-to-3" style="color:#dc2626; margin-left:3px;">0</b>
             </div>
-            <div class="stat-badge-item" style="background:#fefce8; border-color:#fef08a; color:#854d0e; padding:3px 9px; border-radius:14px;">
-                Số hs: 5 đến 7: <b id="stat-score-5-to-7" style="color:#d97706; margin-left:3px; font-size:13.5px;">0</b>
+            <div class="stat-badge-item" style="background:#fff1f2; border-color:#fecdd3; color:#9f1239; padding:3px 7px; border-radius:12px;" title="Điểm từ 3 đến dưới 5">
+                3 đến &lt; 5: <b id="stat-score-3-to-5" style="color:#e11d48; margin-left:3px;">0</b>
             </div>
-            <div class="stat-badge-item" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534; padding:3px 9px; border-radius:14px;">
-                Số hs &gt; 7: <b id="stat-score-over-7" style="color:#16a34a; margin-left:3px; font-size:13.5px;">0</b>
+            <div class="stat-badge-item" style="background:#fffbeb; border-color:#fef3c7; color:#92400e; padding:3px 7px; border-radius:12px;" title="Điểm từ 5 đến 6">
+                5 đến &le; 6: <b id="stat-score-5-to-6" style="color:#d97706; margin-left:3px;">0</b>
+            </div>
+            <div class="stat-badge-item" style="background:#fefce8; border-color:#fef08a; color:#854d0e; padding:3px 7px; border-radius:12px;" title="Điểm trên 6 đến 7">
+                6 đến &le; 7: <b id="stat-score-6-to-7" style="color:#b45309; margin-left:3px;">0</b>
+            </div>
+            <div class="stat-badge-item" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534; padding:3px 7px; border-radius:12px;" title="Điểm trên 7 đến 8">
+                7 đến &le; 8: <b id="stat-score-7-to-8" style="color:#16a34a; margin-left:3px;">0</b>
+            </div>
+            <div class="stat-badge-item" style="background:#ecfdf5; border-color:#a7f3d0; color:#065f46; padding:3px 7px; border-radius:12px;" title="Điểm trên 8 đến 9">
+                8 đến &le; 9: <b id="stat-score-8-to-9" style="color:#059669; margin-left:3px;">0</b>
+            </div>
+            <div class="stat-badge-item" style="background:#eff6ff; border-color:#bfdbfe; color:#1e40af; padding:3px 7px; border-radius:12px;" title="Điểm trên 9 đến 10">
+                9 đến &le; 10: <b id="stat-score-9-to-10" style="color:#2563eb; margin-left:3px;">0</b>
             </div>
         </div>
 
@@ -434,7 +446,7 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- MODAL ĐĂNG NHẬP THI HỌC SINH (BỔ SUNG KHUNG THỜI GIAN LÀM BÀI) -->
+<!-- MODAL ĐĂNG NHẬP THI HỌC SINH -->
 <!-- ========================================================= -->
 <div class="move-modal-overlay" id="student-login-modal">
     <div class="student-login-box">
@@ -443,7 +455,6 @@
             <div class="student-login-title" id="st-modal-main-title">Đăng Nhập Làm Bài Thi</div>
             <div class="student-login-sub" id="st-modal-exam-name">Hệ thống bài thi trắc nghiệm</div>
             
-            <!-- KHUNG THỜI GIAN LÀM BÀI VÀ HẠN NỘP (YÊU CẦU 2) -->
             <div class="st-modal-time-box" id="st-modal-time-box">
                 ⏳ Đang tải khung thời gian làm bài...
             </div>
@@ -517,7 +528,7 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- MODAL THAY ĐỔI THỜI GIAN THI & GIA HẠN LỊCH MỞ ĐỀ (YÊU CẦU 4) -->
+<!-- MODAL THAY ĐỔI THỜI GIAN THI & GIA HẠN LỊCH MỞ ĐỀ -->
 <!-- ========================================================= -->
 <div class="move-modal-overlay" id="exam-time-modal">
     <div class="move-modal-box" style="width: 360px;">
