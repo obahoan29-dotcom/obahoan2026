@@ -1,7 +1,6 @@
 // =========================================================
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
-// TỐI ƯU SONG SONG PROMISE.ALL - HIỂN THỊ TỨC THÌ 0.01 GIÂY
 // =========================================================
 
 let currentExamResultData = {
@@ -20,18 +19,8 @@ let tableDisplaySettings = {
 let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
 let scoreChartInstance = null;
-const _examResultsCache = {}; // Bộ nhớ đệm RAM giúp mở lại tức thì trong 0 giây
 
-// Hàm chuyển chuỗi sang dạng Title Case (Chữ thường, viết hoa chữ cái đầu)
-function toTitleCaseName(str) {
-    if (!str) return "";
-    return str.toLowerCase().split(' ').map(word => {
-        if (!word) return "";
-        return word.charAt(0).toUpperCase() + word.slice(1);
-    }).join(' ');
-}
-
-// Định dạng ngày giờ chuẩn: HH:mm:ss DD/MM/YY (VD: 20:08:26 26/09/26)
+// Định dạng ngày giờ chuẩn: HH:mm:ss DD/MM/YY (VD: 20:08:26 26/9/26)
 function formatDateTimeFull(timestamp) {
     if (!timestamp) return "---";
     let d = new Date(timestamp);
@@ -284,7 +273,6 @@ async function switchExamResult(examItem) {
     await refreshCurrentExamResults();
 }
 
-// BẬT BẢNG KẾT QUẢ THI HIỂN THỊ TỨC THÌ (ZERO-LATENCY)
 async function openExamResultModal(item, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -307,6 +295,7 @@ async function openExamResultModal(item, event) {
     if (searchInput) searchInput.value = "";
 
     const modal = document.getElementById("result-fullscreen-modal");
+    const tbody = document.getElementById("result-table-tbody");
     const headTitle = document.getElementById("result-modal-heading");
     const headSub = document.getElementById("result-modal-subheading");
     const currentExamBtnText = document.getElementById("current-selected-exam-name");
@@ -329,27 +318,20 @@ async function openExamResultModal(item, event) {
     headTitle.innerText = `📊 Kết quả: ${item.title || "Bài thi"}`;
     headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${item.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${item.title}`;
-
-    // TỐI ƯU CỰC ĐẠI: Hiển thị ngay lập tức danh sách học sinh từ bộ nhớ (0.01 giây), không có màn hình chờ!
-    const cacheKey = `${catId}_${item.firebaseId || item.id || item.title}`;
-    if (_examResultsCache[cacheKey]) {
-        const cached = _examResultsCache[cacheKey];
-        renderExamResultTable(catId, cached.submissionsMap, cached.cheatingLogsData, cached.activeSessionsData, item, cached.examMeta);
-    } else {
-        renderExamResultTable(catId, {}, {}, {}, item, { examTitle: item.title });
-    }
+    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">⏳ Đang kết nối Firebase và nạp dữ liệu ${displayCatName}...</td></tr>`;
 
     applyTableSettings();
     renderExamPickerDropdown();
     setTimeout(initTableResizable, 50);
 
-    // Tải ngầm Firebase siêu tốc và cập nhật bảng mượt mà
-    await fetchAndRenderExamResults(item, true);
+    await fetchAndRenderExamResults(item, false);
     startAutoRefreshResult();
 }
 
 async function refreshCurrentExamResults() {
     if (!currentExamResultData.item) return;
+    const tbody = document.getElementById("result-table-tbody");
+    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:35px; font-weight:700; color:#64748b;">🔄 Đang làm mới dữ liệu...</td></tr>`;
     await fetchAndRenderExamResults(currentExamResultData.item, false);
     startAutoRefreshResult();
 }
@@ -391,7 +373,6 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
     return false;
 }
 
-// NẠP FIREBASE SIÊU TỐC VỚI PROMISE.ALL SONG SONG ĐỒNG THỜI
 async function fetchAndRenderExamResults(item, isSilent = false) {
     if (!item) return;
 
@@ -434,16 +415,15 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     let activeSessionsData = {};
 
     try {
-        // TẢI SONG SONG TẤT CẢ CÁC MÃ ĐỀ CÙNG LÚC TRONG 1 ROUNDTRIP DUY NHẤT
-        const fetchTasks = Array.from(candidateCodes).map(async (code) => {
-            const [sRes, cRes, aRes] = await Promise.all([
+        for (let code of candidateCodes) {
+            let [sRes, cRes, aRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/cheating_logs.json`).catch(() => null),
                 fetch(`${FIREBASE_DB_URL}/active_sessions/${code}.json`).catch(() => null)
             ]);
 
             if (sRes && sRes.ok) {
-                let sJson = await sRes.json().catch(() => null);
+                let sJson = await sRes.json();
                 if (sJson && typeof sJson === 'object') {
                     for (let subId in sJson) {
                         let subObj = sJson[subId];
@@ -456,7 +436,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             }
 
             if (cRes && cRes.ok) {
-                let cJson = await cRes.json().catch(() => null);
+                let cJson = await cRes.json();
                 if (cJson && typeof cJson === 'object') {
                     for (let cId in cJson) {
                         let cObj = cJson[cId];
@@ -469,7 +449,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             }
 
             if (aRes && aRes.ok) {
-                let aJson = await aRes.json().catch(() => null);
+                let aJson = await aRes.json();
                 if (aJson && typeof aJson === 'object') {
                     for (let aId in aJson) {
                         let aObj = aJson[aId];
@@ -482,27 +462,15 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
                     }
                 }
             }
-        });
-
-        await Promise.all(fetchTasks);
-    } catch(e) { 
-        console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); 
-    }
+        }
+    } catch(e) { console.error("Lỗi khi nạp dữ liệu thi Firebase:", e); }
 
     const targetCatId = item.categoryId || currentExamResultData.categoryId || "them-11";
-    const examMeta = { quizId, maDe, examTitle };
-
-    // Lưu vào bộ nhớ cache để tái sử dụng ngay lập tức
-    const cacheKey = `${targetCatId}_${item.firebaseId || item.id || item.title}`;
-    _examResultsCache[cacheKey] = {
-        submissionsMap,
-        cheatingLogsData,
-        activeSessionsData,
-        examMeta
-    };
-
-    // ĐÃ SỬA LỖI: Truyền chính xác cheatingLogsData và activeSessionsData (trước đây truyền cheatingMap gây lỗi sập)
-    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData, item, examMeta);
+    renderExamResultTable(targetCatId, submissionsMap, cheatingLogsData, activeSessionsData, item, {
+        quizId,
+        maDe,
+        examTitle
+    });
 
     const searchInput = document.getElementById("result-search-input");
     if (searchInput && searchInput.value.trim() !== "") {
@@ -823,13 +791,9 @@ function updateStatsAndRenderTable(rows) {
     let sumScore = 0;
     let scoredStudents = 0;
 
-    let c_0_to_3  = 0;
-    let c_3_to_5  = 0;
-    let c_5_to_6  = 0;
-    let c_6_to_7  = 0;
-    let c_7_to_8  = 0;
-    let c_8_to_9  = 0;
-    let c_9_to_10 = 0;
+    let countUnder5 = 0;
+    let count5To7 = 0;
+    let countOver7 = 0;
 
     rows.forEach(r => {
         if (r.allAttempts.length > 0) {
@@ -840,20 +804,12 @@ function updateStatsAndRenderTable(rows) {
                     sumScore += sc;
                     scoredStudents++;
 
-                    if (sc < 3.0) {
-                        c_0_to_3++;
-                    } else if (sc < 5.0) {
-                        c_3_to_5++;
-                    } else if (sc <= 6.0) {
-                        c_5_to_6++;
+                    if (sc < 5.0) {
+                        countUnder5++;
                     } else if (sc <= 7.0) {
-                        c_6_to_7++;
-                    } else if (sc <= 8.0) {
-                        c_7_to_8++;
-                    } else if (sc <= 9.0) {
-                        c_8_to_9++;
+                        count5To7++;
                     } else {
-                        c_9_to_10++;
+                        countOver7++;
                     }
                 }
             }
@@ -862,39 +818,23 @@ function updateStatsAndRenderTable(rows) {
     
     let avg = scoredStudents > 0 ? (sumScore / scoredStudents).toFixed(1) : "0.0";
 
-    const totalEl = document.getElementById("stat-total-students");
-    if (totalEl) totalEl.innerText = total;
-
+    document.getElementById("stat-total-students").innerText = total;
     const classEl = document.getElementById("stat-class-students");
     const freeEl = document.getElementById("stat-free-students");
     if (classEl) classEl.innerText = classCount;
     if (freeEl) freeEl.innerText = freeCount;
 
-    const subEl = document.getElementById("stat-submitted-students");
-    const doingEl = document.getElementById("stat-doing-students");
-    const unsubEl = document.getElementById("stat-unsubmitted-students");
-    const avgEl = document.getElementById("stat-avg-score");
+    document.getElementById("stat-submitted-students").innerText = submittedCount;
+    document.getElementById("stat-doing-students").innerText = doingCount;
+    document.getElementById("stat-unsubmitted-students").innerText = unsubmittedCount;
+    document.getElementById("stat-avg-score").innerText = avg;
 
-    if (subEl) subEl.innerText = submittedCount;
-    if (doingEl) doingEl.innerText = doingCount;
-    if (unsubEl) unsubEl.innerText = unsubmittedCount;
-    if (avgEl) avgEl.innerText = avg;
-
-    const el_0_3 = document.getElementById("stat-score-0-to-3");
-    const el_3_5 = document.getElementById("stat-score-3-to-5");
-    const el_5_6 = document.getElementById("stat-score-5-to-6");
-    const el_6_7 = document.getElementById("stat-score-6-to-7");
-    const el_7_8 = document.getElementById("stat-score-7-to-8");
-    const el_8_9 = document.getElementById("stat-score-8-to-9");
-    const el_9_10 = document.getElementById("stat-score-9-to-10");
-
-    if (el_0_3) el_0_3.innerText = c_0_to_3;
-    if (el_3_5) el_3_5.innerText = c_3_to_5;
-    if (el_5_6) el_5_6.innerText = c_5_to_6;
-    if (el_6_7) el_6_7.innerText = c_6_to_7;
-    if (el_7_8) el_7_8.innerText = c_7_to_8;
-    if (el_8_9) el_8_9.innerText = c_8_to_9;
-    if (el_9_10) el_9_10.innerText = c_9_to_10;
+    const u5El = document.getElementById("stat-score-under-5");
+    const midEl = document.getElementById("stat-score-5-to-7");
+    const o7El = document.getElementById("stat-score-over-7");
+    if (u5El) u5El.innerText = countUnder5;
+    if (midEl) midEl.innerText = count5To7;
+    if (o7El) o7El.innerText = countOver7;
 
     renderFilteredResultTable(rows);
 
@@ -927,9 +867,9 @@ function toggleAttemptMenu(rowIndex, event) {
     }
 }
 
+// BẢNG DANH SÁCH: TÔ MÀU NỔI BẬT & DÓNG HÀNG LUÂN PHIÊN
 function renderFilteredResultTable(rows) {
     const tbody = document.getElementById("result-table-tbody");
-    if (!tbody) return;
     tbody.innerHTML = "";
 
     if (!rows || rows.length === 0) {
@@ -1080,6 +1020,9 @@ function filterResultTable() {
     renderFilteredResultTable(filtered);
 }
 
+// =========================================================
+// ĐIỀU HƯỚNG MÀN HÌNH THỐNG KÊ CHI TIẾT & BIỂU ĐỒ HÌNH CỘT
+// =========================================================
 function openDetailedStatsView() {
     window.location.hash = "#bang-ket-qua/thong-ke";
     showDetailedStatsUI();
@@ -1132,6 +1075,10 @@ function showMainResultTableUI() {
     if (breadcrumbView) breadcrumbView.innerText = "📊 Bảng kết quả";
 }
 
+// =========================================================
+// YÊU CẦU 1: VẼ BIỂU ĐỒ HÌNH CỘT VỚI CHỮ HỌ TÊN TO RÕ,
+// MỖI HỌC SINH 1 DÒNG PHỦ KÍN CỘT ĐỀU ĐẶN TỪ TRÊN XUỐNG DƯỚI
+// =========================================================
 function renderDetailedScoreChart() {
     const scores = [];
     const binStudents = Array.from({ length: 10 }, () => []);
@@ -1144,8 +1091,8 @@ function renderDetailedScoreChart() {
                 if (!isNaN(sc)) {
                     scores.push(sc);
                     let binIdx = Math.min(Math.floor(sc), 9);
-                    let rawStName = r.account.name || (curSub ? curSub.studentName : "Học sinh");
-                    binStudents[binIdx].push(toTitleCaseName(rawStName));
+                    let stName = r.account.name || (curSub ? curSub.studentName : "Học sinh");
+                    binStudents[binIdx].push(stName);
                 }
             }
         }
@@ -1157,17 +1104,11 @@ function renderDetailedScoreChart() {
     const passCount = scores.filter(s => s >= 5.0).length;
     const goodCount = scores.filter(s => s >= 7.0).length;
 
-    const maxEl = document.getElementById("kpi-max-score");
-    const minEl = document.getElementById("kpi-min-score");
-    const avgEl = document.getElementById("kpi-avg-score");
-    const passEl = document.getElementById("kpi-pass-rate");
-    const goodEl = document.getElementById("kpi-good-rate");
-
-    if (maxEl) maxEl.innerText = scores.length > 0 ? maxScore.toFixed(1) : "0.0";
-    if (minEl) minEl.innerText = scores.length > 0 ? minScore.toFixed(1) : "0.0";
-    if (avgEl) avgEl.innerText = scores.length > 0 ? avgScore.toFixed(1) : "0.0";
-    if (passEl) passEl.innerText = scores.length > 0 ? Math.round((passCount / scores.length) * 100) + "%" : "0%";
-    if (goodEl) goodEl.innerText = scores.length > 0 ? Math.round((goodCount / scores.length) * 100) + "%" : "0%";
+    document.getElementById("kpi-max-score").innerText = scores.length > 0 ? maxScore.toFixed(1) : "0.0";
+    document.getElementById("kpi-min-score").innerText = scores.length > 0 ? minScore.toFixed(1) : "0.0";
+    document.getElementById("kpi-avg-score").innerText = scores.length > 0 ? avgScore.toFixed(1) : "0.0";
+    document.getElementById("kpi-pass-rate").innerText = scores.length > 0 ? Math.round((passCount / scores.length) * 100) + "%" : "0%";
+    document.getElementById("kpi-good-rate").innerText = scores.length > 0 ? Math.round((goodCount / scores.length) * 100) + "%" : "0%";
 
     const bins = binStudents.map(arr => arr.length);
 
@@ -1179,11 +1120,12 @@ function renderDetailedScoreChart() {
         scoreChartInstance.destroy();
     }
 
-    const modernColors = [
-        '#f43f5e', '#fb7185', '#f97316', '#fb923c', '#f59e0b',
-        '#eab308', '#84cc16', '#22c55e', '#10b981', '#06b6d4'
+    const columnColors = [
+        '#ef4444', '#f87171', '#fb923c', '#fbbf24', '#facc15',
+        '#a3e635', '#4ade80', '#22c55e', '#10b981', '#06b6d4'
     ];
 
+    // PLUGIN VẼ TRỰC TIẾP HỌ VÀ TÊN HỌC SINH TO, 1 NGƯỜI 1 DÒNG PHỦ KÍN CỘT TỪ TRÊN XUỐNG DƯỚI
     const namesInsideBarsPlugin = {
         id: 'namesInsideBarsPlugin',
         afterDatasetsDraw(chart) {
@@ -1201,19 +1143,25 @@ function renderDetailedScoreChart() {
                 const barBaseY = bar.base;
                 const barWidth = bar.width;
                 const totalBarHeight = barBaseY - barTopY;
+
+                // Chia đều chiều cao cột thành N ô tương ứng với N học sinh
                 const slotHeight = totalBarHeight / n;
-                
-                const calculatedSize = Math.floor(Math.min(11, Math.max(8.5, slotHeight * 0.68, barWidth / 9.5)));
-                const fontSize = Math.max(8.5, calculatedSize);
+
+                // Cỡ chữ to rõ, tự động co dãn theo chiều cao ô và độ rộng cột
+                const calculatedSize = Math.floor(Math.min(14.5, Math.max(10.5, slotHeight * 0.72, barWidth / 7.5)));
+                const fontSize = Math.max(10, calculatedSize);
 
                 ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = `600 ${fontSize}px 'Be Vietnam Pro', Arial, sans-serif`;
+                ctx.font = `bold ${fontSize}px 'Be Vietnam Pro', Arial, sans-serif`;
 
+                // Phân bổ từng em học sinh vào 1 dòng, phủ kín cột đều đặn từ trên xuống dưới
                 students.forEach((fullName, sIdx) => {
                     const centerY = barTopY + (sIdx + 0.5) * slotHeight;
+
                     let displayName = fullName.trim();
+                    // Nếu tên quá dài so với chiều ngang cột thì rút gọn tên đệm
                     if (ctx.measureText(displayName).width > barWidth - 4) {
                         const words = displayName.split(/\s+/);
                         if (words.length >= 3) {
@@ -1230,19 +1178,22 @@ function renderDetailedScoreChart() {
                         }
                     }
 
-                    ctx.shadowColor = 'rgba(15, 23, 42, 0.9)';
-                    ctx.shadowBlur = 2.5;
+                    // Viền đen đổ bóng tương phản cao giúp chữ luôn sáng rõ trên mọi màu nền cột
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+                    ctx.shadowBlur = 3;
                     ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
-                    ctx.lineWidth = 2.2;
+                    ctx.lineWidth = 2.8;
                     ctx.strokeText(displayName, barX, centerY);
 
+                    // Chữ trắng đậm sáng nổi bật
                     ctx.fillStyle = '#ffffff';
                     ctx.fillText(displayName, barX, centerY);
                 });
 
+                // Hiển thị tổng số học sinh trên đỉnh cột
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = '#0f172a';
-                ctx.font = `bold 12px 'Be Vietnam Pro', Arial, sans-serif`;
+                ctx.font = `bold 12.5px 'Be Vietnam Pro', Arial, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
                 ctx.fillText(`${n} hs`, barX, barTopY - 4);
@@ -1262,18 +1213,20 @@ function renderDetailedScoreChart() {
             datasets: [{
                 label: 'Số lượng thí sinh',
                 data: bins,
-                backgroundColor: modernColors,
-                borderRadius: 9,
+                backgroundColor: columnColors,
+                borderRadius: 8,
                 borderSkipped: false,
                 borderWidth: 1.5,
-                borderColor: 'rgba(255, 255, 255, 0.85)'
+                borderColor: '#cbd5e1'
             }]
         },
         plugins: [namesInsideBarsPlugin],
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            layout: { padding: { top: 24 } },
+            layout: {
+                padding: { top: 24 }
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -1282,7 +1235,8 @@ function renderDetailedScoreChart() {
                             const count = ctx.parsed.y;
                             const idx = ctx.dataIndex;
                             const names = binStudents[idx] || [];
-                            return ` Có ${count} thí sinh: ` + names.join(', ');
+                            let text = ` Có ${count} thí sinh: ` + names.join(', ');
+                            return text;
                         }
                     }
                 }
@@ -1303,13 +1257,11 @@ function renderDetailedScoreChart() {
 
     const totalSubmitted = scores.length;
     const ratingGroups = [
-        { name: "Xuất sắc", range: "9.0 < Điểm ≤ 10.0", count: scores.filter(s => s > 9.0).length, note: "Nắm vững toàn diện kiến thức nâng cao", color: "#06b6d4" },
-        { name: "Giỏi", range: "8.0 < Điểm ≤ 9.0", count: scores.filter(s => s > 8.0 && s <= 9.0).length, note: "Kỹ năng làm bài rất tốt, chính xác cao", color: "#10b981" },
-        { name: "Khá giỏi", range: "7.0 < Điểm ≤ 8.0", count: scores.filter(s => s > 7.0 && s <= 8.0).length, note: "Hiểu sâu kiến thức, tư duy nhạy bén", color: "#22c55e" },
-        { name: "Khá", range: "6.0 < Điểm ≤ 7.0", count: scores.filter(s => s > 6.0 && s <= 7.0).length, note: "Vận dụng tốt các dạng bài trọng tâm", color: "#84cc16" },
-        { name: "Trung bình", range: "5.0 ≤ Điểm ≤ 6.0", count: scores.filter(s => s >= 5.0 && s <= 6.0).length, note: "Đạt chuẩn kiến thức cơ bản", color: "#eab308" },
-        { name: "Yếu", range: "3.0 ≤ Điểm < 5.0", count: scores.filter(s => s >= 3.0 && s < 5.0).length, note: "Cần củng cố thêm phần lý thuyết cơ bản", color: "#f97316" },
-        { name: "Kém", range: "0.0 ≤ Điểm < 3.0", count: scores.filter(s => s < 3.0).length, note: "Cần kế hoạch phụ đạo tăng cường", color: "#f43f5e" }
+        { name: "Giỏi - Xuất sắc", range: "8.0 - 10.0", count: scores.filter(s => s >= 8.0).length, note: "Nắm vững toàn diện kiến thức", color: "#16a34a" },
+        { name: "Khá", range: "6.5 - 7.9", count: scores.filter(s => s >= 6.5 && s < 8.0).length, note: "Hiểu bài tốt, kỹ năng vững", color: "#0284c7" },
+        { name: "Trung bình", range: "5.0 - 6.4", count: scores.filter(s => s >= 5.0 && s < 6.5).length, note: "Đạt chuẩn kiến thức cơ bản", color: "#d97706" },
+        { name: "Yếu", range: "3.5 - 4.9", count: scores.filter(s => s >= 3.5 && s < 5.0).length, note: "Cần củng cố thêm phần lý thuyết", color: "#ea580c" },
+        { name: "Kém", range: "0.0 - 3.4", count: scores.filter(s => s < 3.5).length, note: "Cần kế hoạch phụ đạo bổ trợ", color: "#dc2626" }
     ];
 
     const rTbody = document.getElementById("rating-breakdown-tbody");
@@ -1414,7 +1366,7 @@ function startAutoRefreshResult() {
         if (modal && modal.style.display === "flex" && currentExamResultData.item) {
             await fetchAndRenderExamResults(currentExamResultData.item, true);
         }
-    }, 4000);
+    }, 3500);
 }
 
 function stopAutoRefreshResult() {

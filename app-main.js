@@ -1,11 +1,8 @@
 // =========================================================
-// FILE: app-main.js
 // QUẢN TRỊ VIÊN, ĐĂNG ĐỀ, TÀI LIỆU, BADGES & LOGIN HỌC SINH
-// TỐI ƯU HIỂN THỊ TRANG CHỦ SIÊU NHANH TRONG 0.01 GIÂY
 // =========================================================
-
 let currentEditingTimeQuizId = null;
-let currentEditingTimeMode = null;
+let currentEditingTimeMode = null; // 'minutes' hoặc 'schedule'
 
 function initAvatarGrid() {
     const grid = document.getElementById("avatar-grid");
@@ -197,7 +194,7 @@ async function loadDynamicLinksFromFirebase() {
                 targetCategory.links = allLinks;
             }
         }
-    } catch (e) { console.error("Lỗi tải link Firebase:", e); }
+    } catch (e) { console.error("Lỗi tải link Firebase", e); }
 }
 
 function processUpload() {
@@ -415,6 +412,9 @@ async function confirmCopyItem() {
     } catch(e) { alert("Lỗi khi sao chép!"); }
 }
 
+// =========================================================
+// NÚT THAY ĐỔI THỜI GIAN LÀM BÀI & GIA HẠN LỊCH MỞ ĐỀ
+// =========================================================
 function extractQuizIdFromItem(item) {
     if (!item) return null;
     if (item.firebaseId && item.firebaseId.startsWith('quiz_')) return item.firebaseId;
@@ -505,13 +505,11 @@ async function saveExamTimeConfig() {
                 return;
             }
             payload.timeLimitMinutes = mins;
-            payload.timeUpdatedAt = Date.now();
         } else if (currentEditingTimeMode === 'schedule') {
             const startVal = document.getElementById("edit-start-time").value;
             const endVal = document.getElementById("edit-end-time").value;
             if (startVal) payload.examStartTimeStr = startVal;
             if (endVal) payload.examEndTimeStr = endVal;
-            payload.scheduleUpdatedAt = Date.now();
         }
 
         await fetch(`${FIREBASE_DB_URL}/quizzes/${currentEditingTimeQuizId}.json`, {
@@ -528,6 +526,9 @@ async function saveExamTimeConfig() {
     }
 }
 
+// =========================================================
+// CÔNG TẮC BẬT / TẮT THI TỰ DO SIÊU NHẠY - CÓ HIỆU LỰC NGAY LẬP TỨC
+// =========================================================
 async function toggleAllowFreeExam(categoryId, itemId, event) {
     if (event) {
         event.preventDefault();
@@ -537,15 +538,18 @@ async function toggleAllowFreeExam(categoryId, itemId, event) {
     const chk = document.getElementById(`free-toggle-${itemId}`);
     const txt = document.getElementById(`free-status-txt-${itemId}`);
 
+    // Lấy trạng thái hiện tại từ DOM
     const currentState = chk ? chk.checked : true;
     const newState = !currentState;
 
+    // 1. Phản hồi giao diện siêu nhạy (Instant UI update)
     if (chk) chk.checked = newState;
     if (txt) {
         txt.innerText = newState ? 'BẬT' : 'TẮT';
         txt.className = `free-toggle-status ${newState ? 'st-on' : 'st-off'}`;
     }
 
+    // 2. Cập nhật đối tượng đề thi trong bộ nhớ đang chạy
     let linkedQuizId = null;
     const updateLinksList = (catList) => {
         catList.forEach(c => {
@@ -561,6 +565,7 @@ async function toggleAllowFreeExam(categoryId, itemId, event) {
     updateLinksList(DAY_THEM_CATEGORIES);
     updateLinksList(CHINH_KHOA_CATEGORIES);
 
+    // 3. Ghi ngay vào localStorage để có hiệu lực lập tức
     try {
         localStorage.setItem(`exam_allow_free_${itemId}`, String(newState));
         if (linkedQuizId) {
@@ -568,6 +573,7 @@ async function toggleAllowFreeExam(categoryId, itemId, event) {
         }
     } catch(e) {}
 
+    // 4. Đồng bộ lên Firebase (chạy ngầm và lập tức)
     try {
         const payload = { allowFree: newState };
         fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
@@ -587,6 +593,7 @@ async function toggleAllowFreeExam(categoryId, itemId, event) {
     }
 }
 
+// CẬP NHẬT GIAO DIỆN TAB THÍ SINH TỰ DO TRONG MODAL ĐĂNG NHẬP
 function updateFreeStudentTabUI(allowFree) {
     const tabFree = document.getElementById("tab-st-free");
     const errBox = document.getElementById("st-login-error");
@@ -615,10 +622,14 @@ function updateFreeStudentTabUI(allowFree) {
     }
 }
 
+// =========================================================
+// LOGIC ĐĂNG NHẬP THI HỌC SINH THEO TỪNG LỚP
+// =========================================================
 function switchStudentLoginMode(mode) {
     const errBox = document.getElementById("st-login-error");
     if (errBox) { errBox.style.display = "none"; errBox.innerText = ""; }
 
+    // Kiểm tra nếu đề thi bị TẮT quyền thi tự do
     if (mode === 'free' && activeStudentLogin.allowFree === false) {
         if (errBox) {
             errBox.innerText = "⛔ Giáo viên đã TẮT chế độ thi tự do cho đề thi này! Chỉ học sinh trong danh sách lớp mới được phép thi.";
@@ -655,6 +666,7 @@ function switchStudentLoginMode(mode) {
     }
 }
 
+// HIỂN THỊ KHUNG THỜI GIAN LÀM BÀI & ÁP DỤNG TRẠNG THÁI THI TỰ DO
 async function openStudentLoginModal(targetUrl, examTitle, categoryId, item = null) {
     let allowFree = true;
     let quizId = extractQuizIdFromItem(item);
@@ -704,6 +716,7 @@ async function openStudentLoginModal(targetUrl, examTitle, categoryId, item = nu
     switchStudentLoginMode('class');
     document.getElementById("student-login-modal").style.display = "flex";
 
+    // Nạp dữ liệu cấu hình mới nhất từ Firebase
     if (quizId) {
         try {
             const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
@@ -898,6 +911,9 @@ function submitStudentLogin() {
     }
 }
 
+// =========================================================
+// RENDER GIAO DIỆN THẺ ĐỀ THI & NHÃN BADGE
+// =========================================================
 function getBadgeClass(type) {
     switch(type) {
         case 'HOT': return 'b-hot';
@@ -990,6 +1006,59 @@ function createExamCard(item) {
         card.href = item.url; 
         card.target = "_blank";
     }
+    
+    // CỤM NÚT QUẢN TRỊ TRÁI (TỰ DO BẬT/TẮT + KẾT QUẢ THI + GIA HẠN + ĐỔI GIỜ)
+    let leftResultBtnHtml = "";
+    if (isAdminLoggedIn && !item.isDoc && !isPadlet) {
+        let copyItem = { ...item, categoryId: catId };
+        let linkedQuizId = extractQuizIdFromItem(item);
+        let subTimeButtonsHtml = "";
+
+        if (linkedQuizId) {
+            subTimeButtonsHtml = `
+            <div class="left-sub-btns-row" onclick="event.preventDefault(); event.stopPropagation();">
+                <button type="button" class="btn-time-sub-action btn-time-sub-minutes" onclick="openEditMinutesModal('${linkedQuizId}', event)" title="Thay đổi thời lượng làm bài (phút)">
+                    ⏱ Đổi phút
+                </button>
+                <button type="button" class="btn-time-sub-action btn-time-sub-schedule" onclick="openEditScheduleModal('${linkedQuizId}', event)" title="Gia hạn khung ngày giờ làm bài">
+                    📅 Gia hạn lịch
+                </button>
+            </div>`;
+        }
+
+        // Kiểm tra trạng thái cho phép thí sinh tự do (ưu tiên giá trị lưu tức thì)
+        let isFreeAllowed = true;
+        const localValItem = localStorage.getItem(`exam_allow_free_${itemId}`);
+        const localValQuiz = linkedQuizId ? localStorage.getItem(`exam_allow_free_${linkedQuizId}`) : null;
+        if (localValQuiz !== null) {
+            isFreeAllowed = (localValQuiz === 'true');
+        } else if (localValItem !== null) {
+            isFreeAllowed = (localValItem === 'true');
+        } else if (item.allowFree !== undefined) {
+            isFreeAllowed = (item.allowFree !== false);
+        }
+
+        let freeToggleHtml = `
+        <div class="free-student-toggle-wrap" onclick="toggleAllowFreeExam('${catId}', '${itemId}', event)" title="Bấm để BẬT hoặc TẮT cho phép thí sinh tự do vào thi (Có hiệu lực ngay)">
+            <span class="free-toggle-lbl">🎯 Tự do:</span>
+            <span class="switch-toggle mini-switch">
+                <input type="checkbox" id="free-toggle-${itemId}" ${isFreeAllowed ? 'checked' : ''} tabindex="-1">
+                <span class="slider-toggle"></span>
+            </span>
+            <span class="free-toggle-status ${isFreeAllowed ? 'st-on' : 'st-off'}" id="free-status-txt-${itemId}">
+                ${isFreeAllowed ? 'BẬT' : 'TẮT'}
+            </span>
+        </div>`;
+
+        leftResultBtnHtml = `
+        <div class="left-admin-actions-col">
+            ${freeToggleHtml}
+            <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(copyItem).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
+                📊 Kết quả thi
+            </button>
+            ${subTimeButtonsHtml}
+        </div>`;
+    }
 
     let thumbHtml = item.avatar ? `<div class="exam-thumb-box"><img src="${item.avatar}" class="exam-thumb" alt="Avatar"></div>` : '';
     let currentBadge = item.badgeText || (item.isHot ? 'HOT' : 'NONE');
@@ -1013,116 +1082,45 @@ function createExamCard(item) {
         </div>
     `;
 
-    let docBadgeHtml = item.isDoc ? `<span class="badge-doc">TÀI LIỆU</span>` : '';
-
-    if (isAdminLoggedIn) {
-        card.classList.add("admin-card-mode");
-
-        let leftControlsHtml = "";
-        if (!item.isDoc && !isPadlet) {
-            let copyItem = { ...item, categoryId: catId };
-            let linkedQuizId = extractQuizIdFromItem(item);
-            let subTimeButtonsHtml = "";
-
-            if (linkedQuizId) {
-                subTimeButtonsHtml = `
-                <div class="left-sub-btns-row" onclick="event.preventDefault(); event.stopPropagation();">
-                    <button type="button" class="btn-time-sub-action btn-time-sub-minutes" onclick="openEditMinutesModal('${linkedQuizId}', event)" title="Thay đổi thời lượng làm bài (phút)">
-                        ⏱ Đổi phút
-                    </button>
-                    <button type="button" class="btn-time-sub-action btn-time-sub-schedule" onclick="openEditScheduleModal('${linkedQuizId}', event)" title="Gia hạn khung ngày giờ làm bài">
-                        📅 Gia hạn lịch
-                    </button>
-                </div>`;
-            }
-
-            let isFreeAllowed = true;
-            const localValItem = localStorage.getItem(`exam_allow_free_${itemId}`);
-            const localValQuiz = linkedQuizId ? localStorage.getItem(`exam_allow_free_${linkedQuizId}`) : null;
-            if (localValQuiz !== null) {
-                isFreeAllowed = (localValQuiz === 'true');
-            } else if (localValItem !== null) {
-                isFreeAllowed = (localValItem === 'true');
-            } else if (item.allowFree !== undefined) {
-                isFreeAllowed = (item.allowFree !== false);
-            }
-
-            let freeToggleHtml = `
-            <div class="free-student-toggle-wrap" onclick="toggleAllowFreeExam('${catId}', '${itemId}', event)" title="Bấm để BẬT hoặc TẮT cho phép thí sinh tự do vào thi (Có hiệu lực ngay)">
-                <span class="free-toggle-lbl">🎯 Tự do:</span>
-                <span class="switch-toggle mini-switch">
-                    <input type="checkbox" id="free-toggle-${itemId}" ${isFreeAllowed ? 'checked' : ''} tabindex="-1">
+    let adminTools = ""; 
+    let arrowHtml = `<div class="arrow">&#8250;</div>`;
+    
+    if (isAdminLoggedIn && item.firebaseId) {
+        arrowHtml = "";
+        let cleanData = { title: item.title, date: item.date, url: item.url, badgeText: currentBadge, isHot: (currentBadge==='HOT'), isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp, isShuffled: item.isShuffled, allowFree: (item.allowFree !== false), categoryId: catId };
+        let strData = encodeURIComponent(JSON.stringify(cleanData));
+        let escapedTitle = (item.title || "").replace(/'/g, "\\'"); 
+        let isDocFlag = item.isDoc ? 'true' : 'false';
+        
+        let shuffleToggleHtml = "";
+        if (!item.isDoc && item.firebaseId.startsWith('quiz_')) {
+            let isChecked = item.isShuffled !== false;
+            shuffleToggleHtml = `
+            <div style="display:flex; align-items:center; background: rgba(255,255,255,0.85); padding: 2px 6px; border-radius: 12px; border: 1px solid #cbd5e1; margin-right: 4px;" title="Gạt phải: BẬT Đảo đề | Gạt trái: TẮT Đảo đề">
+                <span class="shuffle-label">🔀</span>
+                <label class="switch-toggle" onclick="event.stopPropagation();">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleShuffle('${catId}', '${itemId}', this.checked, event)">
                     <span class="slider-toggle"></span>
-                </span>
-                <span class="free-toggle-status ${isFreeAllowed ? 'st-on' : 'st-off'}" id="free-status-txt-${itemId}">
-                    ${isFreeAllowed ? 'BẬT' : 'TẮT'}
-                </span>
-            </div>`;
-
-            leftControlsHtml = `
-            <div class="left-admin-actions-col">
-                <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(copyItem).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và chi tiết bài làm của học sinh">
-                    📊 Kết quả thi
-                </button>
-                ${freeToggleHtml}
-                ${subTimeButtonsHtml}
+                </label>
             </div>`;
         }
-
-        let rightControlsHtml = "";
-        if (item.firebaseId) {
-            let cleanData = { title: item.title, date: item.date, url: item.url, badgeText: currentBadge, isHot: (currentBadge==='HOT'), isDoc: item.isDoc, avatar: item.avatar, timestamp: item.timestamp, isShuffled: item.isShuffled, allowFree: (item.allowFree !== false), categoryId: catId };
-            let strData = encodeURIComponent(JSON.stringify(cleanData));
-            let escapedTitle = (item.title || "").replace(/'/g, "\\'"); 
-            let isDocFlag = item.isDoc ? 'true' : 'false';
-            
-            let shuffleToggleHtml = "";
-            if (!item.isDoc && item.firebaseId.startsWith('quiz_')) {
-                let isChecked = item.isShuffled !== false;
-                shuffleToggleHtml = `
-                <div style="display:flex; align-items:center; background: rgba(255,255,255,0.85); padding: 2px 6px; border-radius: 12px; border: 1px solid #cbd5e1; margin-right: 4px;" title="Gạt phải: BẬT Đảo đề | Gạt trái: TẮT Đảo đề">
-                    <span class="shuffle-label">🔀</span>
-                    <label class="switch-toggle" onclick="event.stopPropagation();">
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleShuffle('${catId}', '${itemId}', this.checked, event)">
-                        <span class="slider-toggle"></span>
-                    </label>
-                </div>`;
-            }
-            
-            rightControlsHtml = `
-            <div class="admin-link-tools" onclick="event.preventDefault(); event.stopPropagation();">
-                ${shuffleToggleHtml}
-                <button class="tool-btn tool-btn-edit" onclick="renameItem('${catId}', '${itemId}', ${isDocFlag}, '${escapedTitle}', event)" title="Sửa tên">✏️</button>
-                <button class="tool-btn tool-btn-copy" onclick="openCopyModal('${catId}', '${itemId}', '${strData}', event)" title="Sao chép sang mục khác">📋</button>
-                <button class="tool-btn tool-btn-move" onclick="openMoveModal('${catId}', '${itemId}', '${strData}', event)" title="Chuyển mục">🔄</button>
-                <button class="tool-btn tool-btn-up" onclick="moveItemOrder('${catId}', '${itemId}', 'up', event)" title="Lên trên">⬆️</button>
-                <button class="tool-btn tool-btn-down" onclick="moveItemOrder('${catId}', '${itemId}', 'down', event)" title="Xuống dưới">⬇️</button>
-                <button class="tool-btn tool-btn-delete" onclick="deleteItem('${catId}', '${itemId}', event)" title="Xóa">🗑️</button>
-            </div>`;
-        }
-
-        card.innerHTML = `
-            <div class="admin-card-top-row">
-                ${leftControlsHtml}
-                ${rightControlsHtml}
-            </div>
-            <div class="admin-card-bottom-row">
-                ${thumbHtml}
-                <div class="exam-info">
-                    <div class="exam-header-row">
-                        ${badgeWrapperHtml}
-                        ${docBadgeHtml}
-                        <div class="exam-title-text" title="${item.title}">${item.title}</div>
-                    </div>
-                    <div class="exam-date">🕒 ${item.date}</div>
-                </div>
-            </div>
-        `;
-        return card;
+        
+        adminTools = `
+        <div class="admin-link-tools" onclick="event.preventDefault(); event.stopPropagation();">
+            ${shuffleToggleHtml}
+            <button class="tool-btn tool-btn-edit" onclick="renameItem('${catId}', '${itemId}', ${isDocFlag}, '${escapedTitle}', event)" title="Sửa tên">✏️</button>
+            <button class="tool-btn tool-btn-copy" onclick="openCopyModal('${catId}', '${itemId}', '${strData}', event)" title="Sao chép sang mục khác">📋</button>
+            <button class="tool-btn tool-btn-move" onclick="openMoveModal('${catId}', '${itemId}', '${strData}', event)" title="Chuyển mục">🔄</button>
+            <button class="tool-btn tool-btn-up" onclick="moveItemOrder('${catId}', '${itemId}', 'up', event)" title="Lên trên">⬆️</button>
+            <button class="tool-btn tool-btn-down" onclick="moveItemOrder('${catId}', '${itemId}', 'down', event)" title="Xuống dưới">⬇️</button>
+            <button class="tool-btn tool-btn-delete" onclick="deleteItem('${catId}', '${itemId}', event)" title="Xóa">🗑️</button>
+        </div>`;
     }
 
-    let arrowHtml = `<div class="arrow">&#8250;</div>`;
+    let docBadgeHtml = item.isDoc ? `<span class="badge-doc">TÀI LIỆU</span>` : '';
+
     card.innerHTML = `
+        ${leftResultBtnHtml}
         ${thumbHtml}
         <div class="exam-info">
             <div class="exam-header-row">
@@ -1132,6 +1130,7 @@ function createExamCard(item) {
             </div>
             <div class="exam-date">🕒 ${item.date}</div>
         </div>
+        ${adminTools}
         ${arrowHtml}
     `;
     return card;
@@ -1391,8 +1390,8 @@ document.addEventListener("click", function(e) {
     }
 });
 
-// KHỞI CHẠY TRANG CHỦ TỨC THÌ TRONG 0.01 GIÂY
-window.onload = function() {
+// KHỞI CHẠY TRANG CHỦ VÀ GẮN SỰ KIỆN PHÍM ENTER
+window.onload = async function() {
     const savedDuration = localStorage.getItem("admin_duration_choice");
     const durSelect = document.getElementById("admin-expiry-select");
     if (savedDuration && durSelect) {
@@ -1422,16 +1421,12 @@ window.onload = function() {
     if (fClass) fClass.addEventListener("keypress", function(e) { if(e.key === 'Enter') fSbd.focus(); });
     if (fSbd) fSbd.addEventListener("keypress", function(e) { if(e.key === 'Enter') submitStudentLogin(); });
 
-    // HIỂN THỊ GIAO DIỆN TỨC THÌ (KHÔNG CHỜ MẠNG FIREBASE)
+    await loadDynamicLinksFromFirebase();
+
     renderDanTriNavBar();
     renderReminderSection();
     renderDayThemNavBar();
     renderChinhKhoaNavBar();
     renderKhoTaiLieu();
     renderNewsSection();
-
-    // NẠP FIREBASE PHÍA SAU NỀN VÀ CẬP NHẬT TỰ ĐỘNG KHÔNG LÀM CHẬM TRANG
-    loadDynamicLinksFromFirebase().then(() => {
-        refreshAllViews();
-    });
 };
