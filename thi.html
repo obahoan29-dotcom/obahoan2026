@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>HỆ THỐNG THI TRẮC NGHIỆM ONLINE</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- CSS Phòng thi trực tuyến riêng biệt -->
+    <link rel="stylesheet" href="thi.css">
+
+    <!-- 6 File danh sách tài khoản học sinh -->
+    <script src="tkthem10.js"></script>
+    <script src="tkthem11.js"></script>
+    <script src="tkthem12.js"></script>
+    <script src="tklop10p.js"></script>
+    <script src="tklop11a.js"></script>
+    <script src="tklop11c.js"></script>
+
+    <!-- Thư viện hiển thị công thức Toán MathJax -->
+    <script>
+        window.MathJax = { 
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']], processEscapes: true }, 
+            options: { enableMenu: false } 
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <!-- Các module phân tách cho phòng thi -->
+    <script src="thi-service.js"></script>
+    <script src="thi-engine.js"></script>
+</head>
+<body>
+    
+    <div id="global-loading">
+        <div class="spinner"></div>
+        <h2 style="color: #0369a1; font-weight: 800;">Đang tải dữ liệu đề thi...</h2>
+    </div>
+
+    <!-- TOAST THÔNG BÁO KHI GIÁO VIÊN ĐỔI PHÚT / GIA HẠN LỊCH -->
+    <div class="time-change-toast" id="time-change-toast">
+        <span>⏱</span> <span id="time-change-toast-msg">Giáo viên vừa cập nhật thời gian làm bài!</span>
+    </div>
+
+    <div class="network-status-bar" id="net-status-banner">⚠️ Mất kết nối Internet! Bài làm đang được lưu an toàn trên máy.</div>
+    <div class="pending-status-bar" id="pending-resend-bar">
+        <span id="pending-info-txt">📌 Đang gửi hoặc có bài làm tạm chưa nộp...</span>
+        <div style="margin-top: 6px; display: flex; gap: 8px; justify-content: center;">
+            <button onclick="retrySubmitPending()" style="background:#0284c7; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">🚀 Thử gửi lại</button>
+            <button onclick="downloadPendingSubmissionFile()" style="background:#0d9488; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">💾 Tải file</button>
+            <button onclick="dismissPendingBar()" style="background:#cbd5e1; color:#334155; border:none; padding:6px 10px; border-radius:8px; font-weight:700; font-size:0.8rem; cursor:pointer;">Đóng</button>
+        </div>
+    </div>
+    
+    <header class="top-navbar-wrapper" id="top-navbar" style="display: none;">
+        <div class="nav-solid-part">
+            <div class="navbar-container">
+                <div class="nav-top-row">
+                    <div class="user-badge">
+                        <div class="user-avatar">👤</div>
+                        <div class="user-info">
+                            <div class="u-row"><span class="u-label">Họ tên:</span> <span class="u-value" id="nav-student-name">Thí sinh</span></div>
+                            <div class="u-row"><span class="u-label">SBD:</span> <span class="u-value" id="nav-student-id">---</span> <span class="u-label" style="margin-left: 6px;">Lớp:</span> <span class="u-value" id="nav-student-class">---</span></div>
+                        </div>
+                    </div>
+                    <div class="nav-right-tools">
+                        <div class="clock-pill" id="nav-timer-box"><span class="clock-icon">⏰</span> <span class="clock-val" id="nav-timer-val">00:45:00</span></div>
+                        <button type="button" class="btn-top-submit" onclick="showSubmitConfirmModal()">📝 Nộp</button>
+                    </div>
+                </div>
+                <div class="q-nav-bar">
+                    <button type="button" class="q-nav-arrow" onclick="scrollQPalette(-100)">‹</button>
+                    <div class="q-nav-scroll" id="q-nav-scroll-container"></div>
+                    <button type="button" class="q-nav-arrow" onclick="scrollQPalette(100)">›</button>
+                </div>
+            </div>
+        </div>
+        <div class="nav-floating-part">
+            <div class="navbar-container nav-bottom-row">
+                <div class="exam-code-pill"><span style="font-size: 0.9rem;">📑</span> <span id="nav-exam-code-text">Đề: ---</span></div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <div class="progress-pill" id="nav-online-box" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-color: #1d4ed8; pointer-events: none;" title="Số học sinh đang làm bài">
+                        <span class="progress-icon">👥</span>
+                        <span class="progress-val" id="nav-online-val">1</span>
+                    </div>
+                    <div class="progress-pill" id="nav-progress-box" onclick="showSubmitConfirmModal()">
+                        <span class="progress-icon">✅</span> <span class="progress-val" id="nav-progress-val">0/0</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="error-card" class="card-panel" style="display: none; border-left: 6px solid #ef4444; background: #fff5f5;">
+            <h3 id="error-title" style="color: #dc2626; margin-bottom: 8px; font-size: 1.1rem; font-weight: 800;">⚠️ Lỗi nạp bài thi</h3>
+            <p id="error-msg" style="color: #7f1d1d; line-height: 1.5; font-size: 0.95rem; font-weight: 500;"></p>
+        </div>
+        <div id="login-box" class="card-panel" style="display: none;">
+            <h2 style="font-size: 1.2rem; font-weight: 900; color: #0284c7; margin-bottom: 16px;">🔒 Mật Khẩu Bài Thi</h2>
+            <div class="input-group"><label>Nhập mật khẩu do giáo viên cung cấp (hoặc mã học sinh):</label><input type="password" id="exam-pass-input" placeholder="Nhập mật khẩu bài thi..." onkeydown="if(event.key==='Enter') checkPassword()"></div>
+            <button class="btn-action-main" onclick="checkPassword()">Tiếp Tục</button>
+        </div>
+        <div id="student-card" class="card-panel" style="display: none;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 36px; line-height: 1; margin-bottom: 8px;">🎯⚡</div>
+                <h2 id="banner-title" style="font-size: 1.25rem; font-weight: 900; color: #0369a1; text-transform: uppercase;">BÀI THI TRẮC NGHIỆM</h2>
+                <div id="exam-time-notice" style="color: #ea580c; font-size: 0.9rem; font-weight: 700; margin-top: 8px; display: none; background: #ffedd5; padding: 6px; border-radius: 8px; display: inline-block;"></div>
+            </div>
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: #334155; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">👤 Thông Tin Học Sinh</h3>
+            <div class="input-group"><label>Số báo danh (*):</label><input type="text" id="student-id" placeholder="Ví dụ: 1001, 1016, 1137"></div>
+            <div class="input-group"><label>Họ và tên học sinh (*):</label><input type="text" id="student-name" placeholder="Ví dụ: Nguyễn Văn Nam"></div>
+            <div class="input-group"><label>Lớp (*):</label><input type="text" id="student-class" placeholder="Ví dụ: 10B, 11A"></div>
+            <button class="btn-action-main" id="btn-start-exam" onclick="startExamAction()" style="margin-top: 20px; font-size: 1.1rem;">Vào Làm Bài</button>
+        </div>
+        <div id="waiting-room-card" class="card-panel" style="display: none; text-align: center; padding: 40px 16px;">
+            <div style="font-size: 50px; margin-bottom: 16px; animation: pulseWait 1.5s infinite;">⏳</div>
+            <h2 id="waiting-title" style="font-size: 1.25rem; font-weight: 900; color: #0369a1; margin-bottom: 12px; text-transform: uppercase;">Chưa đến giờ làm bài...</h2>
+            <p style="font-size: 1rem; color: #475569; margin-bottom: 20px; font-weight: 500;">Bài thi sẽ tự động bắt đầu sau:</p>
+            <div id="waiting-countdown" style="font-size: 2.8rem; font-weight: 900; color: #ef4444; font-family: 'Courier New', Courier, monospace; background: #fef2f2; border: 2px solid #fecaca; display: inline-block; padding: 12px 24px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);">00:00:00</div>
+            <p style="font-size: 0.9rem; color: #64748b; font-style: italic; font-weight: 500;">⚠️ Vui lòng giữ nguyên màn hình, không tải lại trang để tránh gián đoạn.</p>
+        </div>
+        <div id="quiz-content" style="display: none;">
+            <form id="quiz-form">
+                <div id="dynamic-questions-container"></div>
+                <div style="margin-top: 24px;">
+                    <button type="button" class="btn-action-main" style="background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-hover)); font-size: 1.1rem; padding: 16px;" onclick="showSubmitConfirmModal()">🚀 NỘP BÀI KIỂM TRA</button>
+                </div>
+            </form>
+        </div>
+        <div id="result-view-container" style="display: none;">
+            <div class="result-summary-card">
+                <div class="result-summary-title" id="res-score-overview">Đúng 0/0 câu</div>
+                <div class="stats-cards-grid">
+                    <div class="stat-box green"><span class="stat-num" id="res-stat-correct">0</span><span class="stat-lbl">Đúng</span></div>
+                    <div class="stat-box red"><span class="stat-num" id="res-stat-wrong">0</span><span class="stat-lbl">Sai</span></div>
+                    <div class="stat-box blue"><span class="stat-num" id="res-stat-time">0</span><span class="stat-lbl">Phút</span></div>
+                </div>
+                <div class="user-details-grid">
+                    <div><b style="color: #0f172a;">Họ tên:</b> <span id="res-user-name">--</span></div>
+                    <div><b style="color: #0f172a;">Lớp:</b> <span id="res-user-class">--</span></div>
+                    <div><b style="color: #0f172a;">SBD:</b> <span id="res-user-id">--</span></div>
+                    <div><b style="color: #0f172a;">Th.gian:</b> <span id="res-spent-time">0m 0s</span></div>
+                </div>
+                <button class="btn-home-return" onclick="resetToFreshLoginScreen()">← Về đăng nhập làm lại</button>
+            </div>
+            <div class="review-banner"><span>📑</span> Xem lại đáp án</div>
+            <div class="review-container" id="review-container-body"></div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="submit-confirm-modal">
+        <div class="modal-box">
+            <div class="modal-icon" id="modal-submit-icon">📝</div>
+            <div class="modal-title" id="modal-submit-main-title">Xác nhận nộp bài?</div>
+            <div class="modal-body-text">
+                <div id="modal-normal-submit-view">
+                    <div>Thời gian còn lại:</div>
+                    <div class="modal-time-highlight" id="modal-remain-time">00:00:00</div>
+                    <div>Đã trả lời: <b id="modal-answered-count" style="color: #0f172a; font-weight: 800;">0/0</b> câu</div>
+                    <div class="modal-warning" id="modal-unanswered-warning">⚠️ Còn X câu chưa làm!</div>
+                    <div id="modal-submit-status-msg" style="margin-top: 12px; font-weight: 700; color: #1e293b;">Bạn có chắc chắn muốn kết thúc và nộp bài?</div>
+                </div>
+                <div id="modal-submitting-progress-view" style="display:none; padding:15px 0;">
+                    <div class="spinner" style="width:36px; height:36px; margin:0 auto 12px auto; border-top-color:#f97316;"></div>
+                    <div style="font-weight:800; color:#0284c7; font-size:1.05rem;" id="submit-progress-text">Đang kiểm tra kết nối với máy chủ...</div>
+                    <div style="font-size:0.85rem; color:#64748b; margin-top:6px;">Vui lòng giữ kết nối để bảo lưu bài thi thành công 100%.</div>
+                </div>
+            </div>
+            <div class="modal-actions" id="modal-actions-container">
+                <div class="modal-btn-row">
+                    <button type="button" class="btn-modal-cancel" id="btn-modal-cancel-action" onclick="closeSubmitConfirmModal()">Tiếp tục làm</button>
+                    <button type="button" class="btn-modal-confirm" id="btn-modal-submit-now" onclick="executeSubmitExam()">✓ Nộp bài</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
