@@ -2,6 +2,7 @@
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
 // ĐẢM BẢO LỚP NÀO CHỈ HIỆN ĐÚNG DANH SÁCH HỌC SINH LỚP ĐÓ
+// KHỬ TRÙNG LẶP LẦN THI & CẬP NHẬT TRẠNG THÁI ĐANG THI CHÍNH XÁC
 // =========================================================
 
 let currentExamResultData = {
@@ -127,6 +128,32 @@ function extractTabCountFromDataString(dataStr) {
     if (!dataStr) return 0;
     let m = dataStr.match(/tab\s*switch\s*:\s*(\d+)/i);
     return m ? (parseInt(m[1], 10) || 0) : 0;
+}
+
+// KHỬ TRÙNG LẶP LẦN THI DO GỬI NHIỀU LẦN HOẶC TRÙNG NODE
+function deduplicateAttempts(attempts) {
+    if (!attempts || attempts.length <= 1) return attempts || [];
+    let unique = [];
+    attempts.forEach(sub => {
+        let subTime = getSubmissionTimestamp(sub);
+        let subStrTime = String(sub.timestamp || "").trim();
+        let subScore = (sub.score10 !== undefined) ? String(sub.score10) : "";
+
+        let isDup = unique.some(existing => {
+            let exTime = getSubmissionTimestamp(existing);
+            let exStrTime = String(existing.timestamp || "").trim();
+            let exScore = (existing.score10 !== undefined) ? String(existing.score10) : "";
+
+            // Trùng mốc chuỗi thời gian nộp bài hiển thị
+            if (subStrTime && exStrTime && subStrTime === exStrTime) return true;
+            // Hoặc gửi cách nhau dưới 40 giây và cùng điểm
+            if (subTime > 0 && exTime > 0 && Math.abs(subTime - exTime) < 40000 && subScore === exScore) return true;
+            return false;
+        });
+
+        if (!isDup) unique.push(sub);
+    });
+    return unique;
 }
 
 function initTableSettings() {
@@ -431,21 +458,14 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
         } catch(e) {}
     }
 
-    let candidateCodes = new Set();
-    let normCode = extractNormalizedExamCode(examTitle || item.title);
-    if (normCode) candidateCodes.add(normCode);
-    if (maDe) candidateCodes.add(cleanExamCodeKey(maDe));
-    if (examTitle) candidateCodes.add(cleanExamCodeKey(examTitle));
-    if (item.title) candidateCodes.add(cleanExamCodeKey(item.title));
-    if (quizId) candidateCodes.add(quizId);
-    candidateCodes.add("101");
+    const candidateCodesList = getExamCandidateCodes(examTitle || item.title, maDe, quizId);
 
     let submissionsMap = {};
     let cheatingLogsData = {};
     let activeSessionsData = {};
 
     try {
-        const fetchTasks = Array.from(candidateCodes).map(async (code) => {
+        const fetchTasks = candidateCodesList.map(async (code) => {
             const [sRes, cRes, aRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/cheating_logs.json`).catch(() => null),
@@ -485,9 +505,9 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
                         let aObj = aJson[aId];
                         if (typeof aObj === 'object' && aObj !== null) {
                             aObj._nodeCode = code;
-                            activeSessionsData[aId] = aObj;
+                            activeSessionsData[`${code}_${aId}`] = aObj;
                         } else {
-                            activeSessionsData[aId] = { lastPing: aObj, _nodeCode: code };
+                            activeSessionsData[`${code}_${aId}`] = { lastPing: aObj, _nodeCode: code };
                         }
                     }
                 }
@@ -554,10 +574,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             continue;
         }
 
-        let ownerCat = getStudentOwnerCategory(log.sbd || log.studentId, log.studentName);
-        if (ownerCat && !isSameCategory(ownerCat, targetCatIdLower)) continue;
-        if (log.categoryId && !isSameCategory(log.categoryId, targetCatIdLower)) continue;
-
         let sbdKey = String(log.sbd || log.studentId || log.soBaoDanh || "").trim().toLowerCase();
         let nameKey = normalizeName(log.studentName);
         let dur = String(log.durationStr || log.duration || log.time || log.thoiGian || "").trim();
@@ -592,18 +608,42 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     }
     submissionsList.sort((a, b) => getSubmissionTimestamp(a) - getSubmissionTimestamp(b));
 
+    // XỬ LÝ PHIÊN HOẠT ĐỘNG (ĐANG THI)
     const activeUsersMap = {};
     const nowMs = Date.now();
-    for (let sId in activeSessionsMap) {
-        let sess = activeSessionsMap[sId];
-        let lastPing = (typeof sess === 'number') ? sess : (sess && sess.lastPing ? sess.lastPing : 0);
-        if (nowMs - lastPing < 120000) {
-            let owner = getStudentOwnerCategory(sess.sbd || sId, sess.name);
-            let sessCat = sess.categoryId || sess.cat;
-            if (owner && !isSameCategory(owner, targetCatIdLower)) continue;
-            if (sessCat && !isSameCategory(sessCat, targetCatIdLower)) continue;
+    for (let rawKey in activeSessionsMap) {
+        let sess = activeSessionsMap[rawKey];
+        if (!sess || typeof sess !== 'object') continue;
 
-            activeUsersMap[String(sId).trim().toLowerCase()] = sess;
+        let lastPing = (typeof sess === 'number') ? sess : (sess.lastPing || sess.startTime || sess.loginTime || 0);
+        let isRecentlyActive = (nowMs - lastPing < 300000) || (sess.startTime && (nowMs - sess.startTime < 7200000) && (nowMs - lastPing < 600000));
+
+        if (isRecentlyActive) {
+            let sessSbd = String(sess.sbd || "").trim().toLowerCase();
+            let sessName = normalizeName(sess.name);
+            let sessCat = sess.categoryId || sess.cat;
+
+            let inThisClass = classAccounts.some(acc => {
+                let aSbd = String(acc.sbd || "").trim().toLowerCase();
+                let aName = normalizeName(acc.name);
+                return (aSbd && aSbd === sessSbd) || (aName && aName === sessName);
+            });
+
+            if (!inThisClass && sessCat && !isSameCategory(sessCat, targetCatIdLower)) {
+                continue;
+            }
+
+            if (sessSbd) {
+                activeUsersMap[sessSbd] = sess;
+                activeUsersMap[sessSbd.replace(/[^a-zA-Z0-9]/g, '_')] = sess;
+            }
+            if (sessName) {
+                activeUsersMap[sessName] = sess;
+            }
+            let cleanRaw = rawKey.split('_').pop().toLowerCase();
+            if (cleanRaw) {
+                activeUsersMap[cleanRaw] = sess;
+            }
         }
     }
 
@@ -647,13 +687,17 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             }
         }
 
+        // Khử trùng lặp lần nộp bài cho học sinh
+        matchedSubs = deduplicateAttempts(matchedSubs);
+
         let isDoing = false;
         let doingStartTime = null;
         let safeSbd = accSbdLower.replace(/[^a-zA-Z0-9]/g, '_');
-        let activeSess = activeUsersMap[accSbdLower] || activeUsersMap[safeSbd];
+        let activeSess = activeUsersMap[accSbdLower] || activeUsersMap[safeSbd] || activeUsersMap[accNameNorm] || activeUsersMap[accUserNorm];
+        
         if (matchedSubs.length === 0 && activeSess) {
             isDoing = true;
-            doingStartTime = activeSess.startTime || (activeSess.lastPing ? activeSess.lastPing - 10000 : Date.now());
+            doingStartTime = activeSess.startTime || activeSess.loginTime || activeSess.lastPing || Date.now();
         }
 
         let cheatDurations = [];
@@ -698,11 +742,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let subSbd = String(sub.sbd || sub.studentId || "free").trim().toLowerCase();
         let subName = normalizeName(sub.studentName) || "free_student";
 
-        let ownerCat = getStudentOwnerCategory(sub.sbd || sub.studentId, sub.studentName);
-        if (ownerCat && !isSameCategory(ownerCat, targetCatIdLower)) {
-            continue;
-        }
-
         let subCat = sub.categoryId || sub.cat;
         if (subCat && !isSameCategory(subCat, targetCatIdLower)) {
             continue;
@@ -726,7 +765,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
 
     for (let gKey in freeGroups) {
         let group = freeGroups[gKey];
-        let atts = group.attempts;
+        let atts = deduplicateAttempts(group.attempts);
         let subSbd = String(group.account.sbd).trim().toLowerCase();
         let subNameNorm = normalizeName(group.account.name);
 
@@ -769,22 +808,25 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let sSbd = String(session.sbd || "").trim().toLowerCase();
         let sName = session.name || "";
         let sClass = session.className || "Tự do";
+        let normSName = normalizeName(sName);
 
         if (sSbd && usedSbdSet.has(sSbd)) continue;
-        if (!isSubmissionMatchingCurrentExam(session, currentExamInfo)) continue;
+        if (normSName && usedSbdSet.has(normSName)) continue;
 
-        let owner = getStudentOwnerCategory(session.sbd, sName);
-        if (owner && !isSameCategory(owner, targetCatIdLower)) continue;
-        let sessCat = session.categoryId || session.cat;
-        if (sessCat && !isSameCategory(sessCat, targetCatIdLower)) continue;
+        let inClass = classAccounts.some(acc => {
+            let aSbd = String(acc.sbd || "").trim().toLowerCase();
+            let aName = normalizeName(acc.name);
+            return (aSbd && aSbd === sSbd) || (aName && aName === normSName);
+        });
+        if (inClass) continue;
 
-        usedSbdSet.add(sSbd || normalizeName(sName));
+        usedSbdSet.add(sSbd || normSName);
 
         let sbdLower = sSbd;
         let cheatDurations = (sbdLower && cheatHistoryBySbd[sbdLower]) ? cheatHistoryBySbd[sbdLower] : [];
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
         let logTab = (sbdLower && maxCheatCountBySbd[sbdLower]) ? maxCheatCountBySbd[sbdLower] : 0;
-        let freeStart = session.startTime || session.lastPing || Date.now();
+        let freeStart = session.startTime || session.loginTime || session.lastPing || Date.now();
 
         finalRows.push({
             stt: freeCounter++,
