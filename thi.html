@@ -163,10 +163,10 @@
         .time-change-toast {
             position: fixed; top: 75px; left: 50%; transform: translateX(-50%) translateY(-20px);
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff; padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: 800;
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); z-index: 9999999;
+            color: #ffffff; padding: 10px 22px; border-radius: 30px; font-size: 0.92rem; font-weight: 800;
+            box-shadow: 0 10px 28px rgba(16, 185, 129, 0.45); z-index: 9999999;
             opacity: 0; pointer-events: none; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; gap: 8px; border: 1.5px solid rgba(255, 255, 255, 0.6);
         }
         .time-change-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
     </style>
@@ -178,7 +178,7 @@
         <h2 style="color: #0369a1; font-weight: 800;">Đang tải dữ liệu đề thi...</h2>
     </div>
 
-    <!-- TOAST THÔNG BÁO KHI GIÁO VIÊN ĐỔI PHÚT -->
+    <!-- TOAST THÔNG BÁO KHI GIÁO VIÊN ĐỔI PHÚT / GIA HẠN LỊCH -->
     <div class="time-change-toast" id="time-change-toast">
         <span>⏱</span> <span id="time-change-toast-msg">Giáo viên vừa cập nhật thời gian làm bài!</span>
     </div>
@@ -588,9 +588,12 @@
             if (!toast || !msg) return;
             msg.innerText = message;
             toast.classList.add("show");
-            setTimeout(() => { toast.classList.remove("show"); }, 4000);
+            setTimeout(() => { toast.classList.remove("show"); }, 4500);
         }
 
+        // =========================================================================
+        // REALTIME WATCHER: TỰ ĐỘNG ĐỒNG BỘ ĐỔI PHÚT & GIA HẠN LỊCH TỨC THÌ
+        // =========================================================================
         function startTimeWatcherRealtime(quizId) {
             if (!quizId) return;
             if (timeWatcherInterval) clearInterval(timeWatcherInterval);
@@ -602,8 +605,8 @@
                     const freshData = await res.json();
                     if (!freshData) return;
 
+                    // 1. CẬP NHẬT ĐỔI PHÚT (TIME LIMIT)
                     if (freshData.timeLimitMinutes && parseInt(freshData.timeLimitMinutes, 10) !== TIME_LIMIT_MINUTES) {
-                        const oldMinutes = TIME_LIMIT_MINUTES;
                         const newMinutes = parseInt(freshData.timeLimitMinutes, 10);
                         TIME_LIMIT_MINUTES = newMinutes;
                         totalTimeSeconds = TIME_LIMIT_MINUTES * 60;
@@ -616,24 +619,45 @@
                         const timerBox = document.getElementById("nav-timer-box");
                         if (timerVal) timerVal.innerText = formatHHMMSS(remainingSeconds);
                         if (timerBox) {
+                            if (remainingSeconds <= 120) timerBox.classList.add("timer-warning");
+                            else timerBox.classList.remove("timer-warning");
+
                             timerBox.classList.add("timer-updated");
                             setTimeout(() => timerBox.classList.remove("timer-updated"), 2500);
+                        }
+
+                        // Nếu timer đang dừng do hết giờ cũ thì lập tức khởi động lại
+                        if (!timerInterval && remainingSeconds > 0) {
+                            startCountdownTimer();
                         }
 
                         saveExamStateToStorage();
                         showTimeChangeToast(`⏱ Giáo viên vừa cập nhật thời gian làm bài: ${newMinutes} phút!`);
                     }
 
-                    if (freshData.examEndTimeStr && examData) {
+                    // 2. CẬP NHẬT GIA HẠN LỊCH ĐÓNG ĐỀ THI
+                    if (freshData.examEndTimeStr && examData && freshData.examEndTimeStr !== examData.examEndTimeStr) {
                         examData.examEndTimeStr = freshData.examEndTimeStr;
+                        if (freshData.examStartTimeStr) examData.examStartTimeStr = freshData.examStartTimeStr;
+
+                        const newEndFormatted = new Date(freshData.examEndTimeStr).toLocaleString("vi-VN", {
+                            hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'
+                        });
+                        showTimeChangeToast(`📅 Giáo viên vừa gia hạn lịch nộp bài đến: ${newEndFormatted}!`);
+
+                        // Nếu timer đang dừng do quá hạn cũ thì bật lại
+                        if (!timerInterval && remainingSeconds > 0) {
+                            startCountdownTimer();
+                        }
                     }
 
-                    if (freshData.allowFree !== undefined) {
+                    // 3. CẬP NHẬT TRẠNG THÁI CHO PHÉP THI TỰ DO
+                    if (freshData.allowFree !== undefined && examData) {
                         examData.allowFree = freshData.allowFree;
                         localStorage.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
                     }
                 } catch(e) {}
-            }, 2500);
+            }, 1500);
         }
 
         window.onload = async function() {
@@ -1229,7 +1253,6 @@
                 console.warn("Handshake bắt đầu bài thi:", e);
             }
 
-            // GỬI KÈM SHEET DỰ PHÒNG KHÔNG BLOCKING
             postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
 
             document.getElementById("nav-student-name").innerText = sName; 
@@ -1281,29 +1304,37 @@
             return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; 
         }
         
+        // =========================================================================
+        // BỘ ĐẾM THỜI GIAN: KIỂM TRA LỊCH ĐÓNG ĐỀ ĐỘNG THEO TỪNG NHỊP TICK (GIA HẠN KHÔNG BỊ NỘP OAN)
+        // =========================================================================
         function startCountdownTimer() { 
             const timerVal = document.getElementById("nav-timer-val"); 
             const timerBox = document.getElementById("nav-timer-box"); 
             if (timerInterval) clearInterval(timerInterval); 
             
-            let endTimeMs = Infinity; 
-            if (typeof examData !== 'undefined' && examData.examEndTimeStr) { 
-                endTimeMs = new Date(examData.examEndTimeStr).getTime(); 
-            } 
-            
             timerInterval = setInterval(() => { 
                 const now = Date.now(); 
-                if (now >= endTimeMs) { 
+
+                // Kiểm tra lịch đóng đề động theo thời gian thực (nếu giáo viên vừa gia hạn)
+                let currentEndTimeMs = Infinity; 
+                if (typeof examData !== 'undefined' && examData && examData.examEndTimeStr) { 
+                    currentEndTimeMs = new Date(examData.examEndTimeStr).getTime(); 
+                } 
+
+                if (now >= currentEndTimeMs) { 
                     clearInterval(timerInterval); 
+                    timerInterval = null;
                     timerVal.innerText = "00:00:00"; 
                     alert("⛔ Đã hết thời gian cho phép của đợt thi! Hệ thống tự động thu bài."); 
                     executeSubmitExam(true); 
                     return; 
                 } 
+
                 const elapsedTimeSec = Math.floor((now - examStartTime) / 1000); 
                 remainingSeconds = totalTimeSeconds - elapsedTimeSec; 
                 if (remainingSeconds <= 0) { 
                     clearInterval(timerInterval); 
+                    timerInterval = null;
                     timerVal.innerText = "00:00:00"; 
                     alert("⏰ Đã hết thời gian làm bài! Hệ thống tự động thu bài."); 
                     executeSubmitExam(true); 
@@ -1509,7 +1540,6 @@
                 createdAt: Date.now() 
             }; 
 
-            // LƯU CỤC BỘ DỰ PHÒNG
             try { 
                 localStorage.setItem("pending_exam_submission", JSON.stringify(payload)); 
                 localStorage.setItem(`submitted_backup_${getExamCode()}_${sId}`, JSON.stringify(payload));
@@ -1518,7 +1548,6 @@
 
             if (progressText) progressText.innerText = "🚀 Đang gửi và xác thực bài thi trên Firebase...";
 
-            // BẮT BUỘC KIỂM SOÁT PHẢN HỒI TỪ FIREBASE (GỬI ĐỒNG THỜI VÀO CẢ EXAM_CODE LẪN QUIZ_ID)
             const examCode = getExamCode();
             let firebaseConfirmed = false;
 
@@ -1553,10 +1582,7 @@
                 } catch(e2) {}
             }
 
-            // GỬI KÈM GOOGLE SHEET DỰ PHÒNG
             postToGoogleSheet(URL2_EXAM_RESULT, payload, 15000).catch(e => null);
-
-            // DỌN SẠCH ACTIVE SESSION
             clearPresence(sId);
 
             if (firebaseConfirmed) {
