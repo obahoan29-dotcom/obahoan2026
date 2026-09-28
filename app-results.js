@@ -25,10 +25,6 @@ let scoreChartInstance = null;
 const _examResultsCache = {};
 let _regradeFileParsedAnswers = null;
 
-// =========================================================
-// CÁC HÀM TIỆN ÍCH HỖ TRỢ XỬ LÝ ĐỊNH DẠNG & FILE
-// =========================================================
-
 function toTitleCaseName(str) {
     if (!str) return "";
     return str.toLowerCase().split(' ').map(word => {
@@ -160,10 +156,6 @@ function deduplicateAttempts(attempts) {
     });
     return unique;
 }
-
-// =========================================================
-// CẤU HÌNH HIỂN THỊ BẢNG
-// =========================================================
 
 function initTableSettings() {
     try {
