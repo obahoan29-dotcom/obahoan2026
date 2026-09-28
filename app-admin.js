@@ -1,20 +1,67 @@
 // =========================================================
 // FILE: app-admin.js
-// QUẢN TRỊ VIÊN: BẢO MẬT, ĐĂNG ĐỀ, TÀI LIỆU, TẢI FILE GOOGLE DRIVE,
-// SỬA/XÓA & THỜI GIAN LÀM BÀI
-// HỖ TRỢ TÍCH CHỌN ĐỒNG THỜI NHIỀU LỚP KHI TẠO ĐỀ / TẢI TÀI LIỆU
+// QUẢN TRỊ VIÊN: BẢO MẬT, ĐĂNG ĐỀ, TẢI FILE GOOGLE DRIVE,
+// SỬA/XÓA, SAO CHÉP & CẤU HÌNH THỜI GIAN LÀM BÀI
 // =========================================================
 
 let currentEditingTimeQuizId = null;
 let currentEditingTimeMode = null;
 
-// LẤY DANH SÁCH CÁC LỚP ĐƯỢC TÍCH CHỌN
+// HÀM ĐỌC NỘI DUNG TỪ BẤT KỲ FILE JS / TXT / JSON
+function parseScriptOrJson(content) {
+    if (!content) return null;
+    let clean = String(content).trim();
+    clean = clean.replace(/^\s*(?:const|let|var)\s+[a-zA-Z0-9_$]+\s*=\s*/, '').trim();
+    if (clean.endsWith(';')) clean = clean.slice(0, -1).trim();
+
+    try {
+        return JSON.parse(clean);
+    } catch (e) {
+        try {
+            return new Function("return (" + clean + ");")();
+        } catch (e2) {
+            return new Function(content + "\n; return (typeof examData !== 'undefined' ? examData : (typeof dapanData !== 'undefined' ? dapanData : null));")();
+        }
+    }
+}
+
+// GỘP CÂU HỎI VÀ ĐÁP ÁN
+function mergeQuestionsAndAnswers(examObj, answerObj) {
+    if (!examObj || !examObj.questions || !answerObj) return examObj;
+    const answersMap = answerObj.answers || answerObj.dapan || answerObj;
+
+    examObj.questions.forEach((q, idx) => {
+        const qKey = String(q.id || (idx + 1));
+        const itemAns = answersMap[qKey] || answersMap[q.id];
+
+        if (itemAns !== undefined) {
+            if (typeof itemAns === 'object' && itemAns !== null) {
+                if (itemAns.correct !== undefined) q.correct = itemAns.correct;
+                if (itemAns.correctAnswer !== undefined) q.correctAnswer = itemAns.correctAnswer;
+                if (itemAns.explanation !== undefined) q.explanation = itemAns.explanation;
+
+                if (itemAns.statements && q.statements) {
+                    q.statements.forEach(st => {
+                        if (itemAns.statements[st.id] !== undefined) {
+                            st.correct = itemAns.statements[st.id];
+                        }
+                    });
+                }
+            } else {
+                if (q.type === 'multiple_choice') q.correct = itemAns;
+                else q.correctAnswer = String(itemAns);
+            }
+        }
+    });
+
+    return examObj;
+}
+
 function getSelectedAdminCategories() {
     const checkboxes = document.querySelectorAll('input[name="admin-cat-checkbox"]:checked');
     return Array.from(checkboxes).map(cb => cb.value);
 }
 
-// BẬT / TẮT TẤT CẢ CÁC Ô TÍCH CHỌN
 function toggleAllAdminCategories(checkAll) {
     const checkboxes = document.querySelectorAll('input[name="admin-cat-checkbox"]');
     checkboxes.forEach(cb => {
@@ -27,7 +74,6 @@ function toggleAllAdminCategories(checkAll) {
     });
 }
 
-// ĐỔI TRẠNG THÁI HIỂN THỊ KHI BẤM VÀO Ô TÍCH
 function handleCatCheckboxChange(checkbox) {
     const parentLabel = checkbox.closest('.cat-checkbox-item');
     if (parentLabel) {
@@ -57,12 +103,13 @@ function initAvatarGrid() {
 function togglePasswordVisibility() {
     const input = document.getElementById("admin-pass-input");
     const btn = document.getElementById("eye-toggle-btn");
+    if (!input) return;
     if (input.type === "password") {
         input.type = "text";
-        btn.innerText = "🙈"; btn.title = "Ẩn";
+        if (btn) { btn.innerText = "🙈"; btn.title = "Ẩn"; }
     } else {
         input.type = "password";
-        btn.innerText = "👁️"; btn.title = "Hiện";
+        if (btn) { btn.innerText = "👁️"; btn.title = "Hiện"; }
     }
 }
 
@@ -73,11 +120,13 @@ function toggleAdminPanel(e) {
     const gear = document.getElementById("gear-btn");
 
     if (checkAdminSessionValidity()) {
-        if (panel.classList.contains("show")) { closeAdminPanel(); } 
-        else { panel.classList.add("show"); gear.classList.add("active-gear"); }
+        if (panel && panel.classList.contains("show")) { closeAdminPanel(); } 
+        else if (panel) { panel.classList.add("show"); if (gear) gear.classList.add("active-gear"); }
     } else {
-        authContainer.classList.toggle("show");
-        if (authContainer.classList.contains("show")) document.getElementById("admin-pass-input").focus();
+        if (authContainer) {
+            authContainer.classList.toggle("show");
+            if (authContainer.classList.contains("show")) document.getElementById("admin-pass-input").focus();
+        }
     }
 }
 
@@ -110,7 +159,7 @@ function checkAdminSessionValidity() {
                 logoutAdmin();
             }
         }
-    } catch(e) {}
+    } catch (e) {}
     isAdminLoggedIn = false;
     return false;
 }
@@ -119,7 +168,6 @@ function checkAdminPassword() {
     const pass = document.getElementById("admin-pass-input").value;
     if (pass === ADMIN_PASSWORD) {
         isAdminLoggedIn = true;
-
         const durationVal = document.getElementById("admin-expiry-select") ? document.getElementById("admin-expiry-select").value : "1d";
         const durationMs = parseExpiryDurationMs(durationVal);
         const expiresAt = Date.now() + durationMs;
@@ -129,15 +177,19 @@ function checkAdminPassword() {
             localStorage.setItem("admin_expires_at", String(expiresAt));
             localStorage.setItem("admin_duration_choice", durationVal);
             sessionStorage.setItem("adminLoggedInSession", "true");
-        } catch(e) {}
+        } catch (e) {}
 
-        document.getElementById("auth-container").classList.remove("show");
-        document.getElementById("admin-popover-panel").classList.add("show");
-        document.getElementById("gear-btn").classList.add("active-gear");
+        const authBox = document.getElementById("auth-container");
+        const popPanel = document.getElementById("admin-popover-panel");
+        const gear = document.getElementById("gear-btn");
+        if (authBox) authBox.classList.remove("show");
+        if (popPanel) popPanel.classList.add("show");
+        if (gear) gear.classList.add("active-gear");
         document.getElementById("admin-pass-input").value = "";
-        refreshAllViews();
+
+        if (typeof refreshAllViews === "function") refreshAllViews();
     } else {
-        alert("❌ Sai mật khẩu!");
+        alert("❌ Sai mật khẩu quản trị!");
     }
 }
 
@@ -148,11 +200,11 @@ function logoutAdmin(event) {
         localStorage.removeItem("adminLoggedInSession");
         localStorage.removeItem("admin_expires_at");
         sessionStorage.removeItem("adminLoggedInSession");
-    } catch(e) {}
+    } catch (e) {}
     closeAdminPanel();
     const gear = document.getElementById("gear-btn");
     if (gear) gear.classList.remove("active-gear");
-    refreshAllViews();
+    if (typeof refreshAllViews === "function") refreshAllViews();
     alert("🔒 Đã khóa quyền quản trị thành công!");
 }
 
@@ -196,79 +248,103 @@ function autoFillDriveTitle(fileInput) {
     const titleInput = document.getElementById("admin-drive-title");
     if (fileInput.files.length > 0 && titleInput && !titleInput.value.trim()) {
         let fName = fileInput.files[0].name;
-        let cleanName = fName.replace(/\.[^/.]+$/, "");
-        titleInput.value = cleanName;
+        titleInput.value = fName.replace(/\.[^/.]+$/, "");
     }
 }
 
-// TẠO ĐỀ THI VÀO CÙNG LÚC CÁC LỚP ĐƯỢC TÍCH CHỌN
-function processUpload() {
+function readFileAsTextAsync(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = err => reject(err);
+        reader.readAsText(file);
+    });
+}
+
+// TẠO ĐỀ THI VÀ ĐĂNG ĐỒNG THỜI VÀO CÁC LỚP ĐƯỢC CHỌN
+async function processUpload() {
     const fileInput = document.getElementById("admin-file-upload");
+    const answerFileInput = document.getElementById("admin-answer-file-upload");
+    const customTitleInput = document.getElementById("admin-quiz-custom-title");
     const categories = getSelectedAdminCategories();
     const btn = document.getElementById("btn-create-quiz");
 
-    if (categories.length === 0) { 
-        alert("⚠️ Vui lòng tích chọn ít nhất 1 lớp / chuyên mục để đăng đề!"); 
-        return; 
+    if (categories.length === 0) {
+        alert("⚠️ Vui lòng tích chọn ít nhất 1 lớp / chuyên mục để đăng đề!");
+        return;
     }
-    if (fileInput.files.length === 0) { 
-        alert("Vui lòng chọn file questions.js!"); 
-        return; 
+    if (!fileInput || fileInput.files.length === 0) {
+        alert("⚠️ Vui lòng chọn file đề thi (questions.js / .txt / .json)!");
+        return;
     }
 
-    const file = fileInput.files[0];
-    const reader = new FileReader();
     btn.innerText = "⏳ Đang xử lý..."; btn.disabled = true;
 
-    reader.onload = async function(e) {
-        let content = e.target.result;
-        content = content.replace(/(const|let|var)\s+examData\s*=\s*/, '').trim();
-        if (content.endsWith(';')) content = content.slice(0, -1);
+    try {
+        const qContent = await readFileAsTextAsync(fileInput.files[0]);
+        let parsedExam = parseScriptOrJson(qContent);
 
-        try {
-            const parsedData = new Function("return " + content)();
-            if (!parsedData.title || !parsedData.questions) throw new Error("File không đúng cấu trúc.");
+        if (!parsedExam || !parsedExam.questions) {
+            throw new Error("File đề thi không đúng cấu trúc (thiếu trường questions)!");
+        }
 
-            parsedData.isShuffled = true;
-            parsedData.allowFree = true;
-            const quizId = "quiz_" + Date.now();
-            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { method: 'PUT', body: JSON.stringify(parsedData) });
+        if (answerFileInput && answerFileInput.files.length > 0) {
+            const aContent = await readFileAsTextAsync(answerFileInput.files[0]);
+            let parsedAnswers = parseScriptOrJson(aContent);
+            if (parsedAnswers) {
+                parsedExam = mergeQuestionsAndAnswers(parsedExam, parsedAnswers);
+            }
+        }
 
-            const now = new Date();
-            const dateStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-            
-            const uploadTasks = categories.map(cat => {
-                const linkData = { 
-                    title: parsedData.title, 
-                    date: dateStr, 
-                    url: `./thi.html?id=${quizId}&cat=${encodeURIComponent(cat)}`, 
-                    badgeText: "HOT", 
-                    isHot: true, 
-                    isDoc: false, 
-                    avatar: selectedAvatarUrl, 
-                    timestamp: Date.now(), 
-                    isShuffled: true,
-                    allowFree: true,
-                    categoryId: cat 
-                };
-                return fetch(`${FIREBASE_DB_URL}/custom_links/${cat}/${quizId}.json`, { 
-                    method: 'PUT', 
-                    body: JSON.stringify(linkData) 
-                });
+        const customTitle = customTitleInput ? customTitleInput.value.trim() : "";
+        if (customTitle) parsedExam.title = customTitle;
+        if (!parsedExam.title) parsedExam.title = fileInput.files[0].name.replace(/\.[^/.]+$/, "");
+
+        parsedExam.isShuffled = true;
+        parsedExam.allowFree = true;
+
+        const quizId = "quiz_" + Date.now();
+        await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
+            method: 'PUT',
+            body: JSON.stringify(parsedExam)
+        });
+
+        const now = new Date();
+        const dateStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+        const uploadTasks = categories.map(cat => {
+            const linkData = {
+                title: parsedExam.title,
+                date: dateStr,
+                url: `./thi.html?id=${quizId}&cat=${encodeURIComponent(cat)}`,
+                badgeText: "HOT",
+                isHot: true,
+                isDoc: false,
+                avatar: selectedAvatarUrl,
+                timestamp: Date.now(),
+                isShuffled: true,
+                allowFree: true,
+                categoryId: cat
+            };
+            return fetch(`${FIREBASE_DB_URL}/custom_links/${cat}/${quizId}.json`, {
+                method: 'PUT',
+                body: JSON.stringify(linkData)
             });
+        });
 
-            await Promise.all(uploadTasks);
-
-            const catNames = categories.map(c => getCategoryDisplayName(c)).join(", ");
-            alert(`✨ Tạo đề thi thành công và đã đăng đồng thời vào: ${catNames}!`);
-            window.location.reload(); 
-        } catch (err) { alert("❌ Lỗi: " + err.message); } 
-        finally { btn.innerText = "✨ Đăng đề thi"; btn.disabled = false; }
-    };
-    reader.readAsText(file);
+        await Promise.all(uploadTasks);
+        const catNames = categories.map(c => getCategoryDisplayName(c)).join(", ");
+        alert(`✨ Đăng đề thi "${parsedExam.title}" thành công vào: ${catNames}!`);
+        window.location.reload();
+    } catch (err) {
+        alert("❌ Lỗi: " + err.message);
+    } finally {
+        btn.innerText = "✨ Đăng đề thi";
+        btn.disabled = false;
+    }
 }
 
-// TẢI FILE PDF / WORD LÊN GOOGLE DRIVE VÀO CÙNG LÚC CÁC LỚP ĐƯỢC TÍCH
+// TẢI FILE PDF / WORD LÊN GOOGLE DRIVE
 async function processUploadToGoogleDrive() {
     const fileInput = document.getElementById("admin-drive-file");
     const titleInput = document.getElementById("admin-drive-title");
@@ -280,29 +356,18 @@ async function processUploadToGoogleDrive() {
         alert("⚠️ Vui lòng tích chọn ít nhất 1 lớp / chuyên mục để đăng tài liệu!");
         return;
     }
-
     if (!fileInput || fileInput.files.length === 0) {
         alert("⚠️ Vui lòng chọn file PDF hoặc Word trên máy tính!");
         return;
     }
 
-    if (!GOOGLE_DRIVE_UPLOAD_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL.includes("DÁN_URL")) {
-        alert("⚠️ Bạn chưa cấu hình GOOGLE_DRIVE_UPLOAD_GAS_URL trong file app-config.js!\nVui lòng dán URL Web App triển khai từ Google Apps Script vào.");
-        return;
-    }
-
     const file = fileInput.files[0];
-
     if (file.size > 25 * 1024 * 1024) {
-        alert("⚠️ Dung lượng file quá lớn (> 25MB). Vui lòng chọn file nhẹ hơn để tải mượt mà!");
+        alert("⚠️ Dung lượng file quá lớn (> 25MB). Vui lòng chọn file nhẹ hơn!");
         return;
     }
 
-    let finalTitle = titleInput.value.trim();
-    if (!finalTitle) {
-        finalTitle = file.name;
-    }
-
+    let finalTitle = titleInput.value.trim() || file.name;
     btn.disabled = true;
     btn.innerText = "⏳ Đang chuyển đổi...";
     if (statusBox) {
@@ -312,11 +377,9 @@ async function processUploadToGoogleDrive() {
 
     try {
         const reader = new FileReader();
-
         reader.onload = async function(e) {
             try {
                 const base64Data = e.target.result;
-
                 btn.innerText = "🚀 Đang tải lên Drive...";
                 if (statusBox) statusBox.innerText = "🚀 Đang gửi file lên Google Drive...";
 
@@ -331,7 +394,6 @@ async function processUploadToGoogleDrive() {
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 });
-
                 const result = await res.json();
 
                 if (result.status === "success" && result.fileUrl) {
@@ -341,44 +403,40 @@ async function processUploadToGoogleDrive() {
                     const docId = "doc_" + Date.now();
                     const now = new Date();
                     const dateStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-                    
+
                     const saveTasks = categories.map(cat => {
-                        const linkData = { 
-                            title: finalTitle, 
-                            date: dateStr, 
-                            url: result.fileUrl, 
-                            badgeText: "MỚI", 
-                            isHot: false, 
-                            isDoc: true, 
-                            avatar: selectedAvatarUrl, 
+                        const linkData = {
+                            title: finalTitle,
+                            date: dateStr,
+                            url: result.fileUrl,
+                            badgeText: "MỚI",
+                            isHot: false,
+                            isDoc: true,
+                            avatar: selectedAvatarUrl,
                             timestamp: Date.now(),
                             categoryId: cat
                         };
-                        return fetch(`${FIREBASE_DB_URL}/custom_links/${cat}/${docId}.json`, { 
-                            method: 'PUT', 
-                            body: JSON.stringify(linkData) 
+                        return fetch(`${FIREBASE_DB_URL}/custom_links/${cat}/${docId}.json`, {
+                            method: 'PUT',
+                            body: JSON.stringify(linkData)
                         });
                     });
 
                     await Promise.all(saveTasks);
-
                     const catNames = categories.map(c => getCategoryDisplayName(c)).join(", ");
                     alert(`🎉 Tải file lên Google Drive thành công!\n📁 Tên: ${finalTitle}\n🔗 Đã thêm vào: ${catNames}`);
                     window.location.reload();
                 } else {
-                    throw new Error(result.message || "Máy chủ Google Drive không phản hồi đường dẫn file!");
+                    throw new Error(result.message || "Máy chủ Google Drive không phản hồi đường link file!");
                 }
-            } catch(uploadErr) {
-                console.error("Lỗi upload Drive:", uploadErr);
-                alert("❌ Lỗi khi tải file lên Google Drive: " + uploadErr.message);
+            } catch (uploadErr) {
+                alert("❌ Lỗi khi tải file lên Drive: " + uploadErr.message);
                 btn.disabled = false;
                 btn.innerText = "📤 Tải lên Drive";
                 if (statusBox) statusBox.style.display = "none";
             }
         };
-
         reader.readAsDataURL(file);
-
     } catch (err) {
         alert("❌ Lỗi đọc file: " + err.message);
         btn.disabled = false;
@@ -387,21 +445,20 @@ async function processUploadToGoogleDrive() {
     }
 }
 
-// ĐĂNG LINK TÀI LIỆU CÓ SẴN VÀO CÙNG LÚC CÁC LỚP ĐƯỢC TÍCH
+// ĐĂNG LINK LIÊN KẾT WEB
 async function processAddDocument() {
     const titleInput = document.getElementById("admin-doc-title").value.trim();
     const urlInput = document.getElementById("admin-doc-url").value.trim();
     const categories = getSelectedAdminCategories();
     const btn = document.getElementById("btn-create-doc");
 
-    if (categories.length === 0) { 
-        alert("⚠️ Vui lòng tích chọn ít nhất 1 lớp / chuyên mục để đăng!"); 
-        return; 
+    if (categories.length === 0) {
+        alert("⚠️ Vui lòng tích chọn ít nhất 1 lớp / chuyên mục để đăng!");
+        return;
     }
-
-    if (!titleInput || !urlInput) { 
-        alert("⚠️ Vui lòng nhập đủ tên tài liệu và đường link!"); 
-        return; 
+    if (!titleInput || !urlInput) {
+        alert("⚠️ Vui lòng nhập đủ tên tài liệu và link!");
+        return;
     }
 
     btn.innerText = "⏳ Đang đăng..."; btn.disabled = true;
@@ -410,38 +467,41 @@ async function processAddDocument() {
         const docId = "doc_" + Date.now();
         const now = new Date();
         const dateStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-        
+
         const tasks = categories.map(cat => {
-            const linkData = { 
-                title: titleInput, date: dateStr, url: urlInput, 
-                badgeText: "NONE", isHot: false, isDoc: true, 
+            const linkData = {
+                title: titleInput, date: dateStr, url: urlInput,
+                badgeText: "NONE", isHot: false, isDoc: true,
                 avatar: selectedAvatarUrl, timestamp: Date.now(),
                 categoryId: cat
             };
-            return fetch(`${FIREBASE_DB_URL}/custom_links/${cat}/${docId}.json`, { 
-                method: 'PUT', 
-                body: JSON.stringify(linkData) 
+            return fetch(`${FIREBASE_DB_URL}/custom_links/${cat}/${docId}.json`, {
+                method: 'PUT',
+                body: JSON.stringify(linkData)
             });
         });
 
         await Promise.all(tasks);
         const catNames = categories.map(c => getCategoryDisplayName(c)).join(", ");
         alert(`📤 Đăng tài liệu thành công vào: ${catNames}!`);
-        window.location.reload(); 
-    } catch (err) { alert("❌ Lỗi: " + err.message); } 
-    finally { btn.innerText = "🔗 Đăng tài liệu"; btn.disabled = false; }
+        window.location.reload();
+    } catch (err) {
+        alert("❌ Lỗi: " + err.message);
+    } finally {
+        btn.innerText = "🔗 Đăng tài liệu"; btn.disabled = false;
+    }
 }
 
 async function deleteItem(categoryId, itemId, event) {
     event.preventDefault(); event.stopPropagation();
-    if(!confirm("⚠️ Bạn có chắc chắn muốn XÓA vĩnh viễn mục này không?")) return;
+    if (!confirm("⚠️ Bạn có chắc chắn muốn XÓA vĩnh viễn mục này không?")) return;
     try {
         await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, { method: 'DELETE' });
-        if(itemId.startsWith('quiz_')) {
+        if (itemId.startsWith('quiz_')) {
             await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, { method: 'DELETE' });
         }
         window.location.reload();
-    } catch(e) { alert("Lỗi khi xóa!"); }
+    } catch (e) { alert("Lỗi khi xóa!"); }
 }
 
 async function renameItem(categoryId, itemId, isDoc, currentTitle, event) {
@@ -449,12 +509,16 @@ async function renameItem(categoryId, itemId, isDoc, currentTitle, event) {
     let newTitle = prompt("✏️ Nhập tên mới:", currentTitle);
     if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== currentTitle) {
         try {
-            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, { method: 'PATCH', body: JSON.stringify({ title: newTitle.trim() }) });
+            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+                method: 'PATCH', body: JSON.stringify({ title: newTitle.trim() })
+            });
             if (!isDoc && itemId.startsWith('quiz_')) {
-                await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, { method: 'PATCH', body: JSON.stringify({ title: newTitle.trim() }) });
+                await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, {
+                    method: 'PATCH', body: JSON.stringify({ title: newTitle.trim() })
+                });
             }
             window.location.reload();
-        } catch(e) { alert("Lỗi khi sửa tên!"); }
+        } catch (e) { alert("Lỗi khi sửa tên!"); }
     }
 }
 
@@ -463,11 +527,11 @@ async function moveItemOrder(categoryId, currentId, direction, event) {
     try {
         const res = await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}.json`);
         const data = await res.json();
-        if(!data) return;
+        if (!data) return;
 
         let arr = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-        arr.forEach(item => { if(!item.timestamp) item.timestamp = parseDateString(item.date); });
-        
+        arr.forEach(item => { if (!item.timestamp) item.timestamp = parseDateString(item.date); });
+
         arr.sort((a, b) => {
             if (b.timestamp !== a.timestamp) return b.timestamp - a.timestamp;
             return (a.title || "").localeCompare(b.title || "");
@@ -481,7 +545,6 @@ async function moveItemOrder(categoryId, currentId, direction, event) {
         if (targetIndex >= 0 && targetIndex < arr.length) {
             let currentItem = arr[currentIndex];
             let targetItem = arr[targetIndex];
-            
             let tCurrent = currentItem.timestamp;
             let tTarget = targetItem.timestamp;
 
@@ -489,18 +552,18 @@ async function moveItemOrder(categoryId, currentId, direction, event) {
                 tTarget = tCurrent + (direction === 'up' ? 10 : -10);
             }
 
-            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${currentItem.id}.json`, { 
-                method: 'PATCH', body: JSON.stringify({ timestamp: tTarget }) 
+            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${currentItem.id}.json`, {
+                method: 'PATCH', body: JSON.stringify({ timestamp: tTarget })
             });
-            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${targetItem.id}.json`, { 
-                method: 'PATCH', body: JSON.stringify({ timestamp: tCurrent }) 
+            await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${targetItem.id}.json`, {
+                method: 'PATCH', body: JSON.stringify({ timestamp: tCurrent })
             });
-            
+
             window.location.reload();
         } else {
             alert(direction === 'up' ? "Mục này đã ở trên cùng!" : "Mục này đã ở dưới cùng!");
         }
-    } catch(e) { alert("Lỗi khi đổi thứ tự!"); }
+    } catch (e) { alert("Lỗi khi đổi thứ tự!"); }
 }
 
 function openMoveModal(oldCategory, quizId, stringifiedData, event) {
@@ -513,7 +576,7 @@ function closeMoveModal() { document.getElementById("move-modal").style.display 
 
 async function confirmMoveQuiz() {
     const newCategory = document.getElementById("move-category-select").value;
-    if(newCategory === currentMoveData.oldCategory) { alert("Đã nằm ở mục này rồi!"); return; }
+    if (newCategory === currentMoveData.oldCategory) { alert("Đã nằm ở mục này rồi!"); return; }
     try {
         let itemUrl = currentMoveData.quizData.url || "";
         try {
@@ -522,13 +585,13 @@ async function confirmMoveQuiz() {
                 u.searchParams.set("cat", newCategory);
                 itemUrl = u.pathname + u.search + u.hash;
             }
-        } catch(e) {}
+        } catch (e) {}
 
         let updatedData = { ...currentMoveData.quizData, categoryId: newCategory, url: itemUrl };
         await fetch(`${FIREBASE_DB_URL}/custom_links/${newCategory}/${currentMoveData.quizId}.json`, { method: 'PUT', body: JSON.stringify(updatedData) });
         await fetch(`${FIREBASE_DB_URL}/custom_links/${currentMoveData.oldCategory}/${currentMoveData.quizId}.json`, { method: 'DELETE' });
         window.location.reload();
-    } catch(e) { alert("Lỗi khi chuyển!"); }
+    } catch (e) { alert("Lỗi khi chuyển!"); }
 }
 
 function openCopyModal(sourceCategory, itemId, stringifiedData, event) {
@@ -552,47 +615,34 @@ async function confirmCopyItem() {
         if (!isDoc) {
             let oldQuizId = extractQuizIdFromItem(currentCopyData.itemData);
             if (oldQuizId) {
-                try {
-                    const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${oldQuizId}.json`);
-                    const quizData = await res.json();
-                    if (quizData) {
-                        await fetch(`${FIREBASE_DB_URL}/quizzes/${newItemId}.json`, {
-                            method: 'PUT',
-                            body: JSON.stringify(quizData)
-                        });
-                    }
-                } catch(e) {
-                    console.error("Lỗi nhân bản quiz:", e);
+                const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${oldQuizId}.json`);
+                const quizData = await res.json();
+                if (quizData) {
+                    await fetch(`${FIREBASE_DB_URL}/quizzes/${newItemId}.json`, {
+                        method: 'PUT', body: JSON.stringify(quizData)
+                    });
                 }
             }
             itemUrl = `./thi.html?id=${newItemId}&cat=${encodeURIComponent(destCategory)}`;
-        } else {
-            try {
-                if (itemUrl.includes("thi.html")) {
-                    let u = new URL(itemUrl, window.location.href);
-                    u.searchParams.set("cat", destCategory);
-                    itemUrl = u.pathname + u.search + u.hash;
-                }
-            } catch(e) {}
         }
 
-        const copyData = { 
-            ...currentCopyData.itemData, 
+        const copyData = {
+            ...currentCopyData.itemData,
             id: newItemId,
             firebaseId: newItemId,
-            categoryId: destCategory, 
+            categoryId: destCategory,
             url: itemUrl,
-            timestamp: Date.now() 
-        }; 
+            timestamp: Date.now()
+        };
 
-        await fetch(`${FIREBASE_DB_URL}/custom_links/${destCategory}/${newItemId}.json`, { 
-            method: 'PUT', body: JSON.stringify(copyData) 
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${destCategory}/${newItemId}.json`, {
+            method: 'PUT', body: JSON.stringify(copyData)
         });
 
         alert("📋 Đã sao chép sang mục mới thành công!");
         window.location.reload();
-    } catch(e) { 
-        alert("Lỗi khi sao chép: " + e.message); 
+    } catch (e) {
+        alert("Lỗi khi sao chép: " + e.message);
     } finally {
         if (btn) { btn.disabled = false; btn.innerText = "Sao chép"; }
     }
@@ -614,7 +664,7 @@ async function openEditMinutesModal(quizId, event) {
         if (qData && qData.timeLimitMinutes !== undefined) {
             document.getElementById("edit-time-limit").value = qData.timeLimitMinutes;
         }
-    } catch(e) {}
+    } catch (e) {}
 
     document.getElementById("exam-time-modal").style.display = "flex";
 }
@@ -644,7 +694,7 @@ async function openEditScheduleModal(quizId, event) {
                 endInput.value = toLocalDatetimeString(new Date(qData.examEndTimeStr));
             }
         }
-    } catch(e) {}
+    } catch (e) {}
 
     document.getElementById("exam-time-modal").style.display = "flex";
 }
@@ -680,34 +730,13 @@ async function saveExamTimeConfig() {
         }
 
         await fetch(`${FIREBASE_DB_URL}/quizzes/${currentEditingTimeQuizId}.json`, {
-            method: 'PATCH',
-            body: JSON.stringify(payload)
+            method: 'PATCH', body: JSON.stringify(payload)
         });
 
-        await fetch(`${FIREBASE_DB_URL}/exam_configs/${currentEditingTimeQuizId}.json`, {
-            method: 'PATCH',
-            body: JSON.stringify(payload)
-        }).catch(() => null);
-
-        for (let cat of [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES]) {
-            if (cat.links) {
-                let match = cat.links.find(l => (l.firebaseId === currentEditingTimeQuizId || l.id === currentEditingTimeQuizId));
-                if (match) {
-                    if (payload.timeLimitMinutes) match.timeLimitMinutes = payload.timeLimitMinutes;
-                    if (payload.examStartTimeStr) match.examStartTimeStr = payload.examStartTimeStr;
-                    if (payload.examEndTimeStr) match.examEndTimeStr = payload.examEndTimeStr;
-
-                    fetch(`${FIREBASE_DB_URL}/custom_links/${cat.id}/${currentEditingTimeQuizId}.json`, {
-                        method: 'PATCH',
-                        body: JSON.stringify(payload)
-                    }).catch(() => null);
-                }
-            }
-        }
-
-        alert("✅ Đã cập nhật thời gian đề thi thành công! Học sinh đang làm bài sẽ nhận được ngay lập tức.");
+        alert("✅ Đã cập nhật cấu hình thời gian bài thi thành công!");
         closeExamTimeModal();
-    } catch(e) {
+        window.location.reload();
+    } catch (e) {
         alert("❌ Lỗi khi lưu cấu hình thời gian: " + e.message);
     } finally {
         btn.innerText = "Lưu cấu hình"; btn.disabled = false;
@@ -715,14 +744,10 @@ async function saveExamTimeConfig() {
 }
 
 async function toggleAllowFreeExam(categoryId, itemId, event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
+    if (event) { event.preventDefault(); event.stopPropagation(); }
 
     const chk = document.getElementById(`free-toggle-${itemId}`);
     const txt = document.getElementById(`free-status-txt-${itemId}`);
-
     const currentState = chk ? chk.checked : true;
     const newState = !currentState;
 
@@ -732,51 +757,35 @@ async function toggleAllowFreeExam(categoryId, itemId, event) {
         txt.className = `free-toggle-status ${newState ? 'st-on' : 'st-off'}`;
     }
 
-    let linkedQuizId = null;
-    const updateLinksList = (catList) => {
-        catList.forEach(c => {
-            if (c.id === categoryId && c.links) {
-                const found = c.links.find(l => (l.firebaseId === itemId || l.id === itemId));
-                if (found) {
-                    found.allowFree = newState;
-                    linkedQuizId = extractQuizIdFromItem(found);
-                }
-            }
-        });
-    };
-    updateLinksList(DAY_THEM_CATEGORIES);
-    updateLinksList(CHINH_KHOA_CATEGORIES);
-
     try {
         localStorage.setItem(`exam_allow_free_${itemId}`, String(newState));
-        if (linkedQuizId) {
-            localStorage.setItem(`exam_allow_free_${linkedQuizId}`, String(newState));
-        }
-    } catch(e) {}
-
-    try {
         const payload = { allowFree: newState };
-        fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
-            method: 'PATCH',
-            body: JSON.stringify(payload)
-        }).catch(e => console.error("Firebase custom_links patch error:", e));
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+            method: 'PATCH', body: JSON.stringify(payload)
+        });
 
-        const targetQuizId = linkedQuizId || (itemId.startsWith('quiz_') ? itemId : null);
-        if (targetQuizId) {
-            fetch(`${FIREBASE_DB_URL}/quizzes/${targetQuizId}.json`, {
-                method: 'PATCH',
-                body: JSON.stringify(payload)
-            }).catch(e => console.error("Firebase quizzes patch error:", e));
+        if (itemId.startsWith('quiz_')) {
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, {
+                method: 'PATCH', body: JSON.stringify(payload)
+            });
         }
-    } catch(err) {
-        console.error("Lỗi cập nhật trạng thái thi tự do:", err);
+    } catch (err) {
+        console.error("Lỗi cập nhật trạng thái tự do:", err);
     }
 }
 
 async function toggleShuffle(categoryId, itemId, isChecked, event) {
     event.stopPropagation();
     try {
-        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, { method: 'PATCH', body: JSON.stringify({ isShuffled: isChecked }) });
-        await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, { method: 'PATCH', body: JSON.stringify({ isShuffled: isChecked }) });
-    } catch(e) { alert("❌ Lỗi đổi trạng thái đảo đề!"); }
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+            method: 'PATCH', body: JSON.stringify({ isShuffled: isChecked })
+        });
+        if (itemId.startsWith('quiz_')) {
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, {
+                method: 'PATCH', body: JSON.stringify({ isShuffled: isChecked })
+            });
+        }
+    } catch (e) {
+        alert("❌ Lỗi đổi trạng thái đảo đề!");
+    }
 }
