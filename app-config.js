@@ -75,6 +75,7 @@ let CHINH_KHOA_CATEGORIES = [
     { id: "lop-11a", title: "🏫 Lớp 11A", row: 1, links: [ { id: "lop11a_1", firebaseId: "lop11a_1", categoryId: "lop-11a", title: "1 https://so158b-030826-toan12-ktrahk1", date: "05/08/2026 - 23:24", url: "https://so158b-030826-toan12-ktrahk1.vercel.app/", badgeText: "HOT", isDoc: false, avatar: "https://files.catbox.moe/ge1of8.png" } ] },
     { id: "lop-11c", title: "🏫 Lớp 11C", row: 1, links: [] },
     { id: "lop-10p", title: "🏫 Lớp 10P", row: 1, links: [] },
+    { id: "lop-11e", title: "🏫 Lớp 11E", row: 2, links: [] },
     { 
         id: "hsg-toan-11", title: "🏆 HSG Toán 11", isGold: true, row: 2, visibleCount: 2, 
         links: [
@@ -107,6 +108,7 @@ function getAccountsForCategory(categoryId) {
     if (!window.STUDENT_ACCOUNTS) return [];
     const cat = String(categoryId || "").toLowerCase().trim();
 
+    if (cat === "lop-11e" || cat.includes("11e")) return window.STUDENT_ACCOUNTS["lop-11e"] || window.STUDENT_ACCOUNTS["lop-11E"] || [];
     if (cat === "lop-11c" || cat.includes("11c")) return window.STUDENT_ACCOUNTS["lop-11c"] || [];
     if (cat === "lop-11a" || cat.includes("11a")) return window.STUDENT_ACCOUNTS["lop-11a"] || [];
     if (cat === "lop-10p" || cat.includes("10p")) return window.STUDENT_ACCOUNTS["lop-10p"] || [];
@@ -130,6 +132,7 @@ function getCategoryDisplayName(catId) {
         "lop-11a": "Lớp 11A",
         "lop-11c": "Lớp 11C",
         "lop-10p": "Lớp 10P",
+        "lop-11e": "Lớp 11E",
         "hsg-toan-11": "HSG Toán 11",
         "tu-luan-padlet": "Tự luận Padlet"
     };

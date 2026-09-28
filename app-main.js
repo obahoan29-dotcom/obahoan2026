@@ -463,7 +463,7 @@ function createExamCard(item) {
     let itemId = item.firebaseId || item.id || ("item_" + Date.now());
 
     const isPadlet = (catId === "tu-luan-padlet") || (item.url && item.url.includes("padlet.com"));
-    const LOGIN_CLASSES = ["them-10", "them-11", "them-12", "lop-11a", "lop-11c", "lop-10p"];
+    const LOGIN_CLASSES = ["them-10", "them-11", "them-12", "lop-11a", "lop-11c", "lop-10p", "lop-11e"];
     const requiresLogin = !item.isDoc && !isPadlet && LOGIN_CLASSES.includes(catId);
 
     if (requiresLogin) {
@@ -766,6 +766,7 @@ function renderChinhKhoaNavBar() {
         let btn = document.createElement("button");
         if (cat.isGold) btn.className = "dantri-nav-btn hsg-gold-btn";
         else if (cat.isPurple) btn.className = "dantri-nav-btn padlet-purple-btn";
+        else if (cat.id === "lop-11e") btn.className = "dantri-nav-btn lop11e-btn";
         else btn.className = "dantri-nav-btn";
 
         btn.innerHTML = `${cat.title} <span class="caret-icon">&#9660;</span>`;

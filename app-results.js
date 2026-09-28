@@ -70,7 +70,8 @@ function isSameCategory(catA, catB) {
         "them12": ["them12", "t12"],
         "lop11a": ["lop11a", "11a"],
         "lop11c": ["lop11c", "11c"],
-        "lop10p": ["lop10p", "10p"]
+        "lop10p": ["lop10p", "10p"],
+        "lop11e": ["lop11e", "11e"]
     };
     for (let key in aliases) {
         let list = aliases[key];

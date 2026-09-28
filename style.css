@@ -218,6 +218,16 @@ body {
 
 .dantri-nav-btn .caret-icon { font-size: 11px; transition: transform 0.25s ease; color: inherit; opacity: 0.75; flex-shrink: 0; }
 .dantri-nav-btn.active .caret-icon { transform: rotate(180deg); opacity: 1; }
+
+/* NÚT LỚP 11E (XANH NGỌC TEAL ĐẶC TRƯNG) */
+.dantri-nav-btn.lop11e-btn {
+    background: linear-gradient(135deg, rgba(236, 254, 255, 0.88) 0%, rgba(207, 250, 254, 0.75) 100%);
+    border: 1.5px solid rgba(45, 212, 191, 0.75); color: #0f766e; box-shadow: 0 6px 18px rgba(20, 184, 166, 0.22);
+}
+.dantri-nav-btn.lop11e-btn.active {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: #ffffff; border-color: transparent; box-shadow: 0 8px 22px rgba(13, 148, 136, 0.45);
+}
+
 .dantri-nav-btn.hsg-gold-btn { color: #ffffff; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-color: transparent; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
 .dantri-nav-btn.padlet-purple-btn { color: #ffffff; background: linear-gradient(135deg, #c084fc 0%, #8b5cf6 50%, #7c3aed 100%); border-color: transparent; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.38); }
 #dantri-nav-bar .dantri-nav-btn { min-height: 44px; padding: 6px 12px; font-size: 13px; line-height: 1.25; border-radius: 14px; gap: 4px; margin-right: 8px;}

@@ -23,13 +23,14 @@
     <!-- Thư viện Chart.js vẽ biểu đồ hình cột thống kê điểm -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- 6 FILE TÀI KHOẢN HỌC SINH TỪNG LỚP -->
+    <!-- 7 FILE TÀI KHOẢN HỌC SINH TỪNG LỚP -->
     <script src="tkthem10.js"></script>
     <script src="tkthem11.js"></script>
     <script src="tkthem12.js"></script>
     <script src="tklop10p.js"></script>
     <script src="tklop11a.js"></script>
     <script src="tklop11c.js"></script>
+    <script src="tklop11e.js"></script>
 
     <!-- CÁC MODULE JAVASCRIPT HỆ THỐNG ĐÃ ĐƯỢC CHIA TÁCH KHOA HỌC -->
     <script src="app-config.js"></script>
@@ -115,6 +116,10 @@
                         <label class="cat-checkbox-item">
                             <input type="checkbox" name="admin-cat-checkbox" value="lop-10p" onchange="handleCatCheckboxChange(this)">
                             <span>🏫 Lớp 10P</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="lop-11e" onchange="handleCatCheckboxChange(this)">
+                            <span>🏫 Lớp 11E</span>
                         </label>
                         <label class="cat-checkbox-item">
                             <input type="checkbox" name="admin-cat-checkbox" value="them-11" onchange="handleCatCheckboxChange(this)">
@@ -628,6 +633,7 @@
             <option value="lop-11a">🏫 Lớp 11A</option>
             <option value="lop-11c">🏫 Lớp 11C</option>
             <option value="lop-10p">🏫 Lớp 10P</option>
+            <option value="lop-11e">🏫 Lớp 11E</option>
             <option value="hsg-toan-11">🏆 HSG Toán 11</option>
             <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
         </select>
@@ -651,6 +657,7 @@
             <option value="lop-11a">🏫 Lớp 11A</option>
             <option value="lop-11c">🏫 Lớp 11C</option>
             <option value="lop-10p">🏫 Lớp 10P</option>
+            <option value="lop-11e">🏫 Lớp 11E</option>
             <option value="hsg-toan-11">🏆 HSG Toán 11</option>
             <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
         </select>
