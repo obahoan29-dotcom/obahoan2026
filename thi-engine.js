@@ -2,9 +2,9 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ CẬP NHẬT:
-// 4. KHI NỘP BÀI XONG XÓA HOÀN TOÀN DẤU VẾT HỌ TÊN, LỚP, SBD
-//    ĐỂ KHÔNG LƯU LẠI VẾT Ở CÁC Ô ĐĂNG NHẬP CHO LẦN SAU
+// ĐÃ SỬA:
+// KHI NỘP BÀI XONG XÓA TRIỆT ĐỂ VẾT HỌ TÊN, LỚP, SBD
+// ĐỂ LẦN ĐĂNG NHẬP SAU HOÀN TOÀN MỚI TINH TRẮNG SẠCH
 // =========================================================
 
 window.onload = async function() {
@@ -95,7 +95,6 @@ function toggleSubPadlet(qId) {
     } 
 }
 
-// 4. RESET VỀ MÀN HÌNH ĐĂNG NHẬP MỚI VÀ XÓA HẾT VẾT DỮ LIỆU
 function resetToFreshLoginScreen() { 
     try { 
         localStorage.removeItem(getStorageKey()); 
@@ -104,6 +103,7 @@ function resetToFreshLoginScreen() {
         localStorage.removeItem("saved_student_name");
         localStorage.removeItem("saved_student_class");
         localStorage.removeItem("current_exam_student");
+        localStorage.setItem("last_submission_cleared", "true");
     } catch(e) {} 
 
     const sName = document.getElementById("student-name");
@@ -724,7 +724,7 @@ function closeSubmitConfirmModal() {
     document.getElementById("submit-confirm-modal").style.display = "none"; 
 }
 
-// 4. KHI NỘP BÀI XONG: XÓA SẠCH VẾT TÊN, LỚP, SBD Ở CÁC Ô ĐĂNG NHẬP
+// NỘP BÀI THÀNH CÔNG: XÓA SẠCH VẾT TÊN, SBD, LỚP ĐỂ LẦN SAU MỚI TINH
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted) return; 
     
@@ -891,7 +891,7 @@ async function executeSubmitExam(isForceSubmit = false) {
 
     isSubmitted = true; 
 
-    // 4. XÓA SẠCH VẾT TÊN, SBD, LỚP KHỎI LOCALSTORAGE
+    // XÓA SẠCH VẾT TÊN, SBD, LỚP VÀ ĐÁNH DẤU ĐÃ NỘP BÀI XONG
     try { 
         localStorage.removeItem(getStorageKey()); 
         localStorage.removeItem(`shuffled_exam_${getExamCode()}`); 
@@ -899,6 +899,7 @@ async function executeSubmitExam(isForceSubmit = false) {
         localStorage.removeItem("saved_student_name");
         localStorage.removeItem("saved_student_class");
         localStorage.removeItem("current_exam_student");
+        localStorage.setItem("last_submission_cleared", "true");
     } catch(e) {} 
     
     if (confirmModal) confirmModal.style.display = "none"; 

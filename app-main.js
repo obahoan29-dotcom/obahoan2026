@@ -2,11 +2,10 @@
 // FILE: app-main.js
 // BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
 // NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI & ĐĂNG NHẬP HỌC SINH
-// ĐÃ CẬP NHẬT:
-// 1. ĐỔI CHỖ NÚT KẾT QUẢ LÊN TRƯỚC, NÚT TỰ DO RA SAU
-// 2. SỬA NÚT TỰ DO HOẠT ĐỘNG MƯỢT MÀ KHÔNG BỊ LIỆT
-// 3. TIÊU ĐỀ POPUP HIỆN RÕ "Đăng Nhập Làm Bài Thi: [Tên Lớp]"
-// 4. BÀI ĐĂNG MỚI NHẤT LUÔN Ở ĐẦU, MẶC ĐỊNH CÁC LỚP THU GỌN
+// ĐÃ SỬA:
+// 1. TỰ ĐỘNG THU LẠI CÁC BẢNG QUẢN TRỊ, BADGE KHI CLICK RA NGOÀI
+// 2. KHI MỞ LINK ĐĂNG NHẬP THI: NẾU LẦN TRƯỚC ĐÃ NỘP XONG
+//    THÌ XÓA SẠCH VẾT, CÁC Ô NHẬP MỚI TINH 100%
 // =========================================================
 
 let activeDayThemCatId = null;
@@ -21,10 +20,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     if (typeof initAvatarGrid === "function") initAvatarGrid();
     if (typeof checkAdminSessionValidity === "function") checkAdminSessionValidity();
 
-    // Render bộ khung giao diện ban đầu (mọi lớp đều co lại)
     refreshAllViews();
-
-    // Đồng bộ dữ liệu mới nhất từ Firebase
     await loadDataFromFirebase();
 });
 
@@ -54,7 +50,6 @@ function initBannerAndAvatars() {
     }
 }
 
-// HÀM SẮP XẾP: BÀI ĐĂNG MỚI NHẤT LUÔN Ở VỊ TRÍ ĐẦU TIÊN
 function sortLinksNewestFirst(linksArray) {
     if (!Array.isArray(linksArray)) return [];
     return linksArray.sort((a, b) => {
@@ -65,7 +60,6 @@ function sortLinksNewestFirst(linksArray) {
     });
 }
 
-// Đồng bộ danh sách liên kết từ Firebase Realtime Database
 async function loadDataFromFirebase() {
     try {
         const [linksRes, quizzesRes] = await Promise.all([
@@ -168,7 +162,6 @@ function refreshAllViews() {
     }
 }
 
-// THANH MENU DÂN TRÍ
 function renderDantriNav() {
     const bar = document.getElementById("dantri-nav-bar");
     if (!bar) return;
@@ -230,7 +223,6 @@ function renderDantriDropdown() {
     panel.classList.add("show");
 }
 
-// NHẮC NHỞ QUAN TRỌNG
 function renderReminderSection() {
     const container = document.getElementById("reminder-container");
     if (!container) return;
@@ -242,7 +234,6 @@ function renderReminderSection() {
     });
 }
 
-// DẠY THÊM (MẶC ĐỊNH CO LẠI)
 function renderDayThemSection() {
     const bar = document.getElementById("daythem-nav-bar");
     const panel = document.getElementById("daythem-dropdown-panel");
@@ -284,7 +275,6 @@ function renderDayThemSection() {
     }
 }
 
-// CHÍNH KHÓA (MẶC ĐỊNH CO LẠI)
 function renderChinhKhoaSection() {
     // HÀNG 1: 11A, 11C, 10P
     const row1Bar = document.getElementById("chinhkhoa-row1-bar");
@@ -370,7 +360,6 @@ function renderChinhKhoaSection() {
     }
 }
 
-// KHO TÀI LIỆU
 function renderKhoTaiLieuSection() {
     const container = document.getElementById("kho-tai-lieu-container");
     if (!container) return;
@@ -397,7 +386,6 @@ function renderKhoTaiLieuSection() {
     `;
 }
 
-// BẢNG TIN VÀ DẶN DÒ
 function renderNewsSection() {
     const container = document.getElementById("news-container");
     if (!container) return;
@@ -421,7 +409,6 @@ function renderNewsSection() {
     });
 }
 
-// TẠO CARD ĐỀ THI / TÀI LIỆU
 function createItemCardElement(item, categoryId) {
     const wrapper = document.createElement("div");
     wrapper.innerHTML = buildCardHtmlString(item, categoryId);
@@ -454,19 +441,16 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
-    // GIAO DIỆN KHI QUẢN TRỊ VIÊN ĐĂNG NHẬP
     if (isAdminLoggedIn) {
         return `
         <div class="exam-card admin-card-mode" id="card-${itemId}">
             <div class="admin-card-top-row">
                 <div class="left-admin-actions-col">
                     ${!isDoc ? `
-                        <!-- 1. NÚT KẾT QUẢ ĐÃ ĐƯỢC CHUYỂN LÊN TRƯỚC -->
                         <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và nhật ký thi">
                             📊 Kết quả
                         </button>
 
-                        <!-- 2. NÚT TỰ DO CHUYỂN RA SAU VÀ SỬA CHUẨN XÁC KHÔNG BỊ LIỆT -->
                         <label class="free-student-toggle-wrap" title="Bật/Tắt chế độ thí sinh tự do" onclick="event.stopPropagation()">
                             <span class="free-toggle-lbl">Tự do:</span>
                             <span class="mini-switch">
@@ -534,7 +518,6 @@ function buildCardHtmlString(item, categoryId) {
         </div>`;
     }
 
-    // GIAO DIỆN HỌC SINH XEM BÌNH THƯỜNG
     return `
     <div class="exam-card" id="card-${itemId}" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
         <div class="exam-thumb-box">
@@ -552,7 +535,6 @@ function buildCardHtmlString(item, categoryId) {
     </div>`;
 }
 
-// XỬ LÝ CLICK CARD ĐỀ THI
 function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, event) {
     if (event) {
         if (event.target.closest('.free-student-toggle-wrap') || event.target.closest('.mini-switch') || event.target.closest('.admin-link-tools') || event.target.closest('.badge-wrapper') || event.target.closest('.btn-view-results-left') || event.target.closest('.left-sub-btns-row')) {
@@ -575,6 +557,7 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
 
 // ==========================================
 // MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
+// SỬA: NẾU ĐÃ NỘP BÀI XONG THÌ MỚI TINH, XÓA TRẮNG HẾT CÁC Ô
 // ==========================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -591,7 +574,6 @@ function openStudentLoginModal(item, categoryId, event) {
     const errBox = document.getElementById("st-login-error");
     const mainTitleEl = document.getElementById("st-modal-main-title");
 
-    // 3. HIỂN THỊ RÕ TÊN LỚP TẠI TIÊU ĐỀ POPUP ĐĂNG NHẬP
     const catName = getCategoryDisplayName(activeStudentLogin.categoryId);
     if (mainTitleEl) {
         mainTitleEl.innerText = `Đăng Nhập Làm Bài Thi: ${catName}`;
@@ -604,22 +586,34 @@ function openStudentLoginModal(item, categoryId, event) {
         timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date);
     }
 
-    // ĐỌC THÔNG TIN (NẾU ĐÃ NỘP BÀI XONG SẼ HOÀN TOÀN TRẮNG SẠCH)
-    const savedSbd = localStorage.getItem("saved_student_sbd") || "";
-    const savedName = localStorage.getItem("saved_student_name") || "";
-    const savedClass = localStorage.getItem("saved_student_class") || "";
+    // KIỂM TRA XÓA VẾT: NẾU ĐÃ NỘP BÀI XONG HOẶC KHÔNG CÓ PHIÊN CŨ
+    const isCleanSession = (localStorage.getItem("last_submission_cleared") === "true") || 
+                           !localStorage.getItem("saved_student_name");
 
     const userIn = document.getElementById("st-username-input");
     const passIn = document.getElementById("st-password-input");
-    if (userIn) userIn.value = savedSbd || savedName;
-    if (passIn) passIn.value = "";
-
     const fNameIn = document.getElementById("st-free-name-input");
     const fClassIn = document.getElementById("st-free-class-input");
     const fSbdIn = document.getElementById("st-free-sbd-input");
-    if (fNameIn) fNameIn.value = savedName;
-    if (fClassIn) fClassIn.value = savedClass;
-    if (fSbdIn) fSbdIn.value = savedSbd;
+
+    if (isCleanSession) {
+        // Xóa trắng toàn bộ, mới tinh 100%
+        if (userIn) userIn.value = "";
+        if (passIn) passIn.value = "";
+        if (fNameIn) fNameIn.value = "";
+        if (fClassIn) fClassIn.value = "";
+        if (fSbdIn) fSbdIn.value = "";
+    } else {
+        const savedSbd = localStorage.getItem("saved_student_sbd") || "";
+        const savedName = localStorage.getItem("saved_student_name") || "";
+        const savedClass = localStorage.getItem("saved_student_class") || "";
+
+        if (userIn) userIn.value = savedSbd || savedName;
+        if (passIn) passIn.value = "";
+        if (fNameIn) fNameIn.value = savedName;
+        if (fClassIn) fClassIn.value = savedClass;
+        if (fSbdIn) fSbdIn.value = savedSbd;
+    }
 
     const allowFree = (item.allowFree !== false);
     const tabFree = document.getElementById("tab-st-free");
@@ -752,6 +746,7 @@ function submitStudentLogin() {
     }
 
     try {
+        localStorage.removeItem("last_submission_cleared");
         localStorage.setItem("saved_student_sbd", finalSbd);
         localStorage.setItem("saved_student_name", finalName);
         localStorage.setItem("saved_student_class", finalClass);
@@ -776,7 +771,6 @@ function submitStudentLogin() {
     }
 }
 
-// BADGE NHANH
 function toggleBadgeMenu(itemId, event) {
     if (!isAdminLoggedIn) return;
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -806,3 +800,26 @@ async function selectBadgeOption(categoryId, itemId, badgeType, event) {
         alert("Lỗi đổi badge!");
     }
 }
+
+// =========================================================
+// SỰ KIỆN TOÀN CỤC: THU LẠI ADMIN PANEL, AUTH, BADGE KHI CLICK RA NGOÀI
+// =========================================================
+document.addEventListener("click", function(event) {
+    // 1. Thu lại bảng Admin & ô mật khẩu Admin khi click ra ngoài
+    const adminWrapper = event.target.closest(".admin-controls-wrapper");
+    if (!adminWrapper) {
+        const authContainer = document.getElementById("auth-container");
+        if (authContainer && authContainer.classList.contains("show")) {
+            authContainer.classList.remove("show");
+        }
+        if (typeof closeAdminPanel === "function") {
+            closeAdminPanel();
+        }
+    }
+
+    // 2. Thu lại tất cả menu Badge khi click ra ngoài
+    const badgeWrapper = event.target.closest(".badge-wrapper");
+    if (!badgeWrapper) {
+        document.querySelectorAll(".badge-dropdown-menu.show").forEach(m => m.classList.remove("show"));
+    }
+});
