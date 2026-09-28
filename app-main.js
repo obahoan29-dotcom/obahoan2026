@@ -6,6 +6,7 @@
 // 1. TỰ ĐỘNG THU LẠI CÁC BẢNG QUẢN TRỊ, BADGE KHI CLICK RA NGOÀI
 // 2. KHI MỞ LINK ĐĂNG NHẬP THI: NẾU LẦN TRƯỚC ĐÃ NỘP XONG
 //    THÌ XÓA SẠCH VẾT, CÁC Ô NHẬP MỚI TINH 100%
+// 3. ĐẢM BẢO CHÍNH XÁC CATEGORY CHO LỚP 11E, TRUYỀN CATEGORYID VÀO MODAL KẾT QUẢ
 // =========================================================
 
 let activeDayThemCatId = null;
@@ -75,7 +76,8 @@ async function loadDataFromFirebase() {
                 const rLinks = Object.keys(customLinksData["nhac-nho"]).map(k => ({
                     id: k,
                     firebaseId: k,
-                    ...customLinksData["nhac-nho"][k]
+                    ...customLinksData["nhac-nho"][k],
+                    categoryId: "nhac-nho"
                 }));
                 if (rLinks.length > 0) REMINDER_CATEGORY.links = sortLinksNewestFirst(rLinks);
             }
@@ -85,8 +87,8 @@ async function loadDataFromFirebase() {
                     let list = Object.keys(customLinksData[cat.id]).map(k => ({
                         id: k,
                         firebaseId: k,
-                        categoryId: cat.id,
-                        ...customLinksData[cat.id][k]
+                        ...customLinksData[cat.id][k],
+                        categoryId: cat.id
                     }));
                     cat.links = sortLinksNewestFirst(list);
                 } else if (cat.links) {
@@ -99,8 +101,8 @@ async function loadDataFromFirebase() {
                     let list = Object.keys(customLinksData[cat.id]).map(k => ({
                         id: k,
                         firebaseId: k,
-                        categoryId: cat.id,
-                        ...customLinksData[cat.id][k]
+                        ...customLinksData[cat.id][k],
+                        categoryId: cat.id
                     }));
                     cat.links = sortLinksNewestFirst(list);
                 } else if (cat.links) {
@@ -112,8 +114,8 @@ async function loadDataFromFirebase() {
                 let list = Object.keys(customLinksData["kho-tai-lieu"]).map(k => ({
                     id: k,
                     firebaseId: k,
-                    categoryId: "kho-tai-lieu",
-                    ...customLinksData["kho-tai-lieu"][k]
+                    ...customLinksData["kho-tai-lieu"][k],
+                    categoryId: "kho-tai-lieu"
                 }));
                 KHO_TAI_LIEU_FOLDER.links = sortLinksNewestFirst(list);
             } else if (KHO_TAI_LIEU_FOLDER.links) {
@@ -447,7 +449,7 @@ function buildCardHtmlString(item, categoryId) {
             <div class="admin-card-top-row">
                 <div class="left-admin-actions-col">
                     ${!isDoc ? `
-                        <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, event)" title="Xem bảng điểm và nhật ký thi">
+                        <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${categoryId}', event)" title="Xem bảng điểm và nhật ký thi">
                             📊 Kết quả
                         </button>
 
@@ -564,7 +566,7 @@ function openStudentLoginModal(item, categoryId, event) {
 
     activeStudentLogin.targetUrl = item.url || "";
     activeStudentLogin.examTitle = item.title || "Bài kiểm tra";
-    activeStudentLogin.categoryId = categoryId || "them-11";
+    activeStudentLogin.categoryId = categoryId || item.categoryId || "them-11";
     activeStudentLogin.currentMode = "class";
     activeStudentLogin.item = item;
 
