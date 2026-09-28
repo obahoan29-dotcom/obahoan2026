@@ -3,6 +3,7 @@
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
 // ĐẢM BẢO LỚP NÀO CHỈ HIỆN ĐÚNG DANH SÁCH HỌC SINH LỚP ĐÓ
 // KHỬ TRÙNG LẶP LẦN THI & CẬP NHẬT TRẠNG THÁI ĐANG THI CHÍNH XÁC
+// TÍNH NĂNG MỚI: CHẤM LẠI TOÀN BỘ BÀI THI KHI GIÁO VIÊN SỬA ĐÁP ÁN
 // =========================================================
 
 let currentExamResultData = {
@@ -22,6 +23,11 @@ let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
 let scoreChartInstance = null;
 const _examResultsCache = {};
+let _regradeFileParsedAnswers = null;
+
+// =========================================================
+// CÁC HÀM TIỆN ÍCH HỖ TRỢ XỬ LÝ ĐỊNH DẠNG & FILE
+// =========================================================
 
 function toTitleCaseName(str) {
     if (!str) return "";
@@ -145,9 +151,7 @@ function deduplicateAttempts(attempts) {
             let exStrTime = String(existing.timestamp || "").trim();
             let exScore = (existing.score10 !== undefined) ? String(existing.score10) : "";
 
-            // Trùng mốc chuỗi thời gian nộp bài hiển thị
             if (subStrTime && exStrTime && subStrTime === exStrTime) return true;
-            // Hoặc gửi cách nhau dưới 40 giây và cùng điểm
             if (subTime > 0 && exTime > 0 && Math.abs(subTime - exTime) < 40000 && subScore === exScore) return true;
             return false;
         });
@@ -156,6 +160,10 @@ function deduplicateAttempts(attempts) {
     });
     return unique;
 }
+
+// =========================================================
+// CẤU HÌNH HIỂN THỊ BẢNG
+// =========================================================
 
 function initTableSettings() {
     try {
@@ -609,7 +617,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     }
     submissionsList.sort((a, b) => getSubmissionTimestamp(a) - getSubmissionTimestamp(b));
 
-    // XỬ LÝ PHIÊN HOẠT ĐỘNG (ĐANG THI)
     const activeUsersMap = {};
     const nowMs = Date.now();
     for (let rawKey in activeSessionsMap) {
@@ -688,7 +695,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             }
         }
 
-        // Khử trùng lặp lần nộp bài cho học sinh
         matchedSubs = deduplicateAttempts(matchedSubs);
 
         let isDoing = false;
@@ -1482,6 +1488,307 @@ function toggleAutoRefresh(event) {
             btn.style.borderColor = "#64748b";
         }
         stopAutoRefreshResult();
+    }
+}
+
+// =========================================================
+// KHU VỰC TÍNH NĂNG MỚI: CHẤM LẠI BÀI VỚI ĐÁP ÁN ĐÃ SỬA
+// =========================================================
+
+function openRegradeModal(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const modal = document.getElementById("regrade-exam-modal");
+    const preview = document.getElementById("regrade-file-preview-status");
+    const fileInput = document.getElementById("regrade-answer-file");
+    
+    if (fileInput) fileInput.value = "";
+    if (preview) { 
+        preview.style.display = "none"; 
+        preview.innerText = ""; 
+        preview.style.color = "#0284c7";
+        preview.style.borderColor = "#bae6fd";
+        preview.style.background = "#f0f9ff";
+    }
+    _regradeFileParsedAnswers = null;
+    if (modal) modal.style.display = "flex";
+}
+
+function closeRegradeModal() {
+    const modal = document.getElementById("regrade-exam-modal");
+    if (modal) modal.style.display = "none";
+    _regradeFileParsedAnswers = null;
+}
+
+async function previewRegradeFile(input) {
+    const preview = document.getElementById("regrade-file-preview-status");
+    if (!input.files || input.files.length === 0) {
+        if (preview) preview.style.display = "none";
+        _regradeFileParsedAnswers = null;
+        return;
+    }
+    const file = input.files[0];
+    try {
+        const text = await readFileAsTextAsync(file);
+        const parsed = parseScriptOrJson(text);
+        if (!parsed) throw new Error("Không thể phân tích cú pháp file! Vui lòng kiểm tra định dạng.");
+        const answersMap = parsed.answers || parsed.dapan || parsed;
+        const count = Object.keys(answersMap).length;
+        if (count === 0) throw new Error("File không chứa trường answers/dapan hợp lệ!");
+
+        _regradeFileParsedAnswers = parsed;
+        if (preview) {
+            preview.style.display = "block";
+            preview.style.color = "#0369a1";
+            preview.style.borderColor = "#bae6fd";
+            preview.style.background = "#f0f9ff";
+            preview.innerHTML = `✅ Đã đọc thành công file <b>${file.name}</b> (tìm thấy <b>${count}</b> câu đáp án). Sẵn sàng chấm lại toàn bộ bài làm!`;
+        }
+    } catch(err) {
+        _regradeFileParsedAnswers = null;
+        if (preview) {
+            preview.style.display = "block";
+            preview.style.color = "#dc2626";
+            preview.style.borderColor = "#fca5a5";
+            preview.style.background = "#fef2f2";
+            preview.innerText = "❌ Lỗi đọc file: " + err.message;
+        }
+    }
+}
+
+async function processRegradeWithAnswers() {
+    const btn = document.getElementById("btn-confirm-regrade");
+    const preview = document.getElementById("regrade-file-preview-status");
+    const fileInput = document.getElementById("regrade-answer-file");
+
+    if (!_regradeFileParsedAnswers) {
+        if (fileInput && fileInput.files.length > 0) {
+            await previewRegradeFile(fileInput);
+        }
+        if (!_regradeFileParsedAnswers) {
+            alert("⚠️ Vui lòng chọn file đáp án đã sửa hợp lệ trước khi bắt đầu!");
+            return;
+        }
+    }
+
+    const currentItem = currentExamResultData.item;
+    if (!currentItem) {
+        alert("⚠️ Không xác định được đề thi đang xem!");
+        return;
+    }
+
+    let quizId = extractQuizIdFromItem(currentItem);
+    if (!quizId) {
+        alert("⚠️ Đề thi này không liên kết với cơ sở dữ liệu câu hỏi quiz trực tuyến!");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "⏳ Đang nạp đề gốc...";
+
+    try {
+        // 1. Tải đề gốc từ Firebase về để cập nhật đáp án mới
+        const qRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
+        let quizObj = await qRes.json();
+        if (!quizObj || !quizObj.questions) {
+            throw new Error("Không tìm thấy cấu trúc câu hỏi của đề thi trên máy chủ!");
+        }
+
+        // Cập nhật đáp án & giải thích mới vào đề thi gốc
+        quizObj = mergeQuestionsAndAnswers(quizObj, _regradeFileParsedAnswers);
+
+        // Lưu lại đề thi với đáp án mới lên Firebase
+        await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
+            method: 'PATCH',
+            body: JSON.stringify({ questions: quizObj.questions })
+        });
+
+        // 2. Chuẩn bị bảng đáp án tra cứu chuẩn (ANSWER_KEY)
+        const newAnswerKey = {};
+        const letters = ["A", "B", "C", "D"];
+
+        quizObj.questions.forEach(q => {
+            if (q.type === "multiple_choice") {
+                if (q.correct !== undefined) {
+                    newAnswerKey[`q${q.id}`] = (typeof q.correct === 'number') ? letters[q.correct] : String(q.correct).trim().toUpperCase();
+                }
+            } else if (q.type === "true_false") {
+                if (q.statements) {
+                    q.statements.forEach(st => {
+                        newAnswerKey[`q${q.id}_${st.id}`] = st.correct ? "Đúng" : "Sai";
+                    });
+                }
+            } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") {
+                if (q.correctAnswer !== undefined) {
+                    newAnswerKey[`q${q.id}`] = String(q.correctAnswer).trim();
+                }
+            }
+        });
+
+        btn.innerText = "⏳ Đang tải bài làm học sinh...";
+
+        // 3. Quét toàn bộ bài thi đã nộp từ các node Firebase tương ứng
+        const examTitle = quizObj.title || currentItem.title || "";
+        const candidateCodes = getExamCandidateCodes(examTitle, quizObj.maDe || "", quizId);
+        
+        let allSubmissionsToUpdate = [];
+
+        for (const code of candidateCodes) {
+            try {
+                const sRes = await fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`);
+                if (sRes.ok) {
+                    const sJson = await sRes.json();
+                    if (sJson && typeof sJson === 'object') {
+                        for (let subId in sJson) {
+                            let subObj = sJson[subId];
+                            if (subObj && typeof subObj === 'object') {
+                                subObj._nodeCode = code;
+                                subObj._subId = subId;
+                                allSubmissionsToUpdate.push(subObj);
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        if (allSubmissionsToUpdate.length === 0) {
+            alert("ℹ️ Đã cập nhật đáp án cho đề thi thành công! Chưa có bài làm nào của học sinh cần chấm lại.");
+            closeRegradeModal();
+            btn.disabled = false;
+            btn.innerText = "🚀 Bắt đầu chấm lại";
+            await refreshCurrentExamResults();
+            return;
+        }
+
+        btn.innerText = `⏳ Đang chấm lại ${allSubmissionsToUpdate.length} bài làm...`;
+
+        let updatedCount = 0;
+
+        // 4. Lần lượt chấm lại từng bài thi dựa trên dataString hoặc userAnswers
+        const regradeTasks = allSubmissionsToUpdate.map(async (sub) => {
+            const userAnswersMap = {};
+
+            // Bóc tách đáp án học sinh đã chọn từ chuỗi dataString
+            if (sub.dataString) {
+                const parts = sub.dataString.split(/\s*\|\s*/);
+                parts.forEach(part => {
+                    let m = part.match(/^(\d+)([a-zA-Z]?)\s*-\s*(.*?)\s*\[(?:ĐÚNG|SAI.*?)]$/i);
+                    if (m) {
+                        let qNum = m[1];
+                        let subPart = m[2];
+                        let ansVal = m[3].trim();
+                        if (subPart) {
+                            userAnswersMap[`q${qNum}_${subPart}`] = ansVal;
+                        } else {
+                            userAnswersMap[`q${qNum}`] = ansVal;
+                        }
+                    }
+                });
+            }
+
+            // Nếu bài nộp có trường userAnswers lưu sẵn
+            if (sub.userAnswers && typeof sub.userAnswers === 'object') {
+                Object.assign(userAnswersMap, sub.userAnswers);
+            }
+
+            let correctCount = 0;
+            let wrongCount = 0;
+            let totalRawScore = 0;
+            let maxTotalScore = 0;
+            let dataDetails = [];
+
+            quizObj.questions.forEach(q => {
+                maxTotalScore += 1.0;
+
+                if (q.type === "multiple_choice") {
+                    const userVal = userAnswersMap[`q${q.id}`] || "Chưa chọn";
+                    const correctVal = newAnswerKey[`q${q.id}`];
+                    if (correctVal && userVal.toUpperCase() === correctVal.toUpperCase()) {
+                        correctCount++;
+                        totalRawScore += 1.0;
+                        dataDetails.push(`${q.id}-${userVal} [ĐÚNG]`);
+                    } else {
+                        wrongCount++;
+                        dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal || "---"}]`);
+                    }
+                } else if (q.type === "true_false") {
+                    let cSt = 0;
+                    (q.statements || []).forEach(st => {
+                        const subKey = `q${q.id}_${st.id}`;
+                        const uVal = userAnswersMap[subKey] || "Chưa chọn";
+                        const cVal = newAnswerKey[subKey];
+                        if (cVal && uVal === cVal) {
+                            cSt++;
+                            dataDetails.push(`${q.id}${st.id}-${uVal} [ĐÚNG]`);
+                        } else {
+                            dataDetails.push(`${q.id}${st.id}-${uVal} [SAI]`);
+                        }
+                    });
+                    let qScore = 0;
+                    if (cSt === 1) qScore = 0.1;
+                    else if (cSt === 2) qScore = 0.25;
+                    else if (cSt === 3) qScore = 0.5;
+                    else if (cSt === 4) qScore = 1.0;
+
+                    totalRawScore += qScore;
+                    if (cSt === (q.statements ? q.statements.length : 4)) correctCount++;
+                    else wrongCount++;
+                } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") {
+                    const uVal = String(userAnswersMap[`q${q.id}`] || "").trim().replace(',', '.');
+                    const cVal = String(newAnswerKey[`q${q.id}`] || "").trim().replace(',', '.');
+                    const isRight = (uVal !== "" && cVal !== "" && (uVal === cVal || Number(uVal) === Number(cVal)));
+
+                    if (isRight) {
+                        correctCount++;
+                        totalRawScore += 1.0;
+                        dataDetails.push(`${q.id}-${uVal} [ĐÚNG]`);
+                    } else {
+                        wrongCount++;
+                        dataDetails.push(`${q.id}-${uVal || "Trống"} [SAI: ${cVal || "---"}]`);
+                    }
+                }
+            });
+
+            const score10Scale = Math.round(((totalRawScore / (maxTotalScore || 1)) * 10) * 10) / 10;
+            const originalTab = parseInt(sub.tabSwitchCount, 10) || extractTabCountFromDataString(sub.dataString) || 0;
+            dataDetails.push(`Tab Switch: ${originalTab}`);
+
+            const patchPayload = {
+                score10: score10Scale,
+                rawScore: Math.round(totalRawScore * 100) / 100,
+                correctCount: correctCount,
+                dataString: dataDetails.join(" | "),
+                calcMetrics: {
+                    ...(sub.calcMetrics || {}),
+                    correctCount: correctCount,
+                    wrongCount: wrongCount,
+                    score10Scale: score10Scale
+                },
+                regradedAt: Date.now()
+            };
+
+            try {
+                await fetch(`${FIREBASE_DB_URL}/exams/${sub._nodeCode}/submissions/${sub._subId}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(patchPayload)
+                });
+                updatedCount++;
+            } catch(e) {}
+        });
+
+        await Promise.all(regradeTasks);
+
+        alert(`🎉 CHẤM LẠI THÀNH CÔNG!\n\n- Đã cập nhật đáp án mới vào đề thi gốc.\n- Đã tính lại điểm và cập nhật đồng bộ ${updatedCount} bài làm của học sinh.`);
+        closeRegradeModal();
+        await refreshCurrentExamResults();
+
+    } catch(err) {
+        console.error("Lỗi khi chấm lại bài:", err);
+        alert("❌ Lỗi trong quá trình chấm lại: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "🚀 Bắt đầu chấm lại";
     }
 }
 
