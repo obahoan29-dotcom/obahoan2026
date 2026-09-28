@@ -2,11 +2,11 @@ const examData = {
     maDe: "DE101TOAN11",
     title: "ĐỀ 101 GIỮA HỌC KỲ I MÔN TOÁN LỚP 11",
     password: "",
-    timeLimitMinutes: 45,
+    timeLimitMinutes: 90,
     
     // Cấu hình thời gian MỞ và ĐÓNG bài thi (Định dạng: YYYY-MM-DDTHH:mm:ss)
     examStartTimeStr: "2026-09-26T00:00:00",
-    examEndTimeStr: "2026-09-28T23:30:00",
+    examEndTimeStr: "2026-09-30T23:30:00",
     
     images: {
         "img_1": "",

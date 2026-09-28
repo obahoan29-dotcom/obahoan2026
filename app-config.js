@@ -1,11 +1,12 @@
 // ==========================================
 // FILE: app-config.js
 // CẤU HÌNH HỆ THỐNG VÀ DỮ LIỆU TĨNH DÙNG CHUNG
+// HỖ TRỢ ĐĂNG ĐỀ THI, TÀI LIỆU PDF / WORD / ẢNH GOOGLE DRIVE
 // ==========================================
 const ADMIN_PASSWORD = "Hopan130384";
 const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-// URL WEB APP GAS TẢI FILE LÊN GOOGLE DRIVE (TÀI KHOẢN MỚI)
+// URL WEB APP GAS TẢI FILE PDF / WORD / ẢNH LÊN GOOGLE DRIVE
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbygCVlYabwzwzeVL1KQY_Jv3rdkZLXVmsflazNvvI4njnz9jj9QSAqC2Yo6-t8DW53o/exec";
 
 let isAdminLoggedIn = false;
@@ -124,7 +125,7 @@ function getAccountsForCategory(categoryId) {
 
 function getCategoryDisplayName(catId) {
     const map = {
-        "kho-tai-lieu": "Kho tài liệu PDF, Word",
+        "kho-tai-lieu": "Kho tài liệu PDF, Word, Ảnh",
         "nhac-nho": "Nhắc nhở quan trọng",
         "them-10": "Thêm 10",
         "them-11": "Thêm 11",

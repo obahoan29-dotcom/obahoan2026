@@ -91,7 +91,21 @@ body {
 
 /* THANH 3 TAB QUẢN TRỊ */
 .admin-tabs { display: flex; gap: 4px; margin-bottom: 14px; background: rgba(226, 232, 240, 0.7); padding: 4px; border-radius: 14px;}
-.admin-tab-btn { flex: 1; padding: 8px 4px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.8rem; cursor: pointer; color: #475569; background: transparent; transition: 0.2s; font-family: inherit; white-space: nowrap;}
+.admin-tab-btn { 
+    flex: 1; 
+    padding: 8px 3px; 
+    border: none; 
+    border-radius: 10px; 
+    font-weight: 800; 
+    font-size: 0.78rem; 
+    cursor: pointer; 
+    color: #475569; 
+    background: transparent; 
+    transition: 0.2s; 
+    font-family: inherit; 
+    white-space: nowrap;
+    text-align: center;
+}
 .admin-tab-btn.active { background: #ffffff; color: var(--primary-blue); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
 
 .admin-input-group { margin-bottom: 12px; }

@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: app-admin.js
-// QUẢN TRỊ VIÊN: BẢO MẬT, ĐĂNG ĐỀ, TÀI LIỆU, TẢI FILE GOOGLE DRIVE,
+// QUẢN TRỊ VIÊN: BẢO MẬT, ĐĂNG ĐỀ, TÀI LIỆU, TẢI FILE GOOGLE DRIVE (PDF/WORD/ẢNH),
 // SỬA/XÓA & THỜI GIAN LÀM BÀI
 // HỖ TRỢ TÍCH CHỌN ĐỒNG THỜI NHIỀU LỚP KHI TẠO ĐỀ / TẢI TÀI LIỆU
 // NÂNG CẤP: BẬT/TẮT TỰ DO HOẠT ĐỘNG CHUẨN XÁC 100%
@@ -347,7 +347,7 @@ async function processUpload() {
     }
 }
 
-// TẢI FILE LÊN GOOGLE DRIVE
+// TẢI FILE PDF / WORD / ẢNH LÊN GOOGLE DRIVE
 async function processUploadToGoogleDrive() {
     const fileInput = document.getElementById("admin-drive-file");
     const titleInput = document.getElementById("admin-drive-title");
@@ -361,7 +361,7 @@ async function processUploadToGoogleDrive() {
     }
 
     if (!fileInput || fileInput.files.length === 0) {
-        alert("⚠️ Vui lòng chọn file PDF hoặc Word trên máy tính!");
+        alert("⚠️ Vui lòng chọn file PDF, Word hoặc Ảnh trên máy tính!");
         return;
     }
 
@@ -372,11 +372,11 @@ async function processUploadToGoogleDrive() {
 
     const file = fileInput.files[0];
     if (file.size > 25 * 1024 * 1024) {
-        alert("⚠️ Dung lượng file quá lớn (> 25MB).");
+        alert("⚠️ Dung lượng file quá lớn (> 25MB). Vui lòng nén file trước khi tải.");
         return;
     }
 
-    let finalTitle = titleInput.value.trim() || file.name;
+    let finalTitle = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : file.name;
 
     btn.disabled = true;
     btn.innerText = "⏳ Đang chuyển đổi...";
@@ -390,13 +390,35 @@ async function processUploadToGoogleDrive() {
 
         reader.onload = async function(e) {
             try {
-                const base64Data = e.target.result;
+                let rawResult = e.target.result || "";
+                let base64Data = rawResult;
+                
+                // Cắt bỏ phần đầu data url một cách an toàn tuyệt đối
+                if (rawResult.indexOf("base64,") !== -1) {
+                    base64Data = rawResult.split("base64,")[1];
+                } else if (rawResult.indexOf(",") !== -1) {
+                    base64Data = rawResult.split(",")[1];
+                }
+
                 btn.innerText = "🚀 Đang tải lên Drive...";
                 if (statusBox) statusBox.innerText = "🚀 Đang gửi file lên Google Drive...";
 
+                // Tự động suy ra mimeType chuẩn
+                let mimeType = file.type;
+                if (!mimeType) {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'].includes(ext)) {
+                        mimeType = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : `image/${ext}`;
+                    } else if (ext === 'pdf') {
+                        mimeType = 'application/pdf';
+                    } else {
+                        mimeType = 'application/octet-stream';
+                    }
+                }
+
                 const payload = {
                     filename: file.name,
-                    mimeType: file.type || "application/octet-stream",
+                    mimeType: mimeType,
                     base64: base64Data
                 };
 
@@ -787,7 +809,6 @@ async function saveExamTimeConfig() {
     }
 }
 
-// 2. SỬA NÚT TỰ DO: XỬ LÝ SỰ KIỆN GẠT SWITCH TRỰC TIẾP, KHÔNG BỊ LIỆT VÀ ĐỒNG BỘ 100%
 function handleAllowFreeToggleChange(categoryId, itemId, isChecked, event) {
     if (event) {
         event.stopPropagation();
@@ -836,7 +857,6 @@ function handleAllowFreeToggleChange(categoryId, itemId, isChecked, event) {
     }
 }
 
-// Giữ lại hàm tương thích ngược nếu gọi từ bên ngoài
 function toggleAllowFreeExam(categoryId, itemId, event) {
     const chk = document.getElementById(`free-toggle-${itemId}`);
     if (chk) {
