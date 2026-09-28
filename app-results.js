@@ -4,6 +4,7 @@
 // ĐẢM BẢO LỚP NÀO CHỈ HIỆN ĐÚNG DANH SÁCH HỌC SINH LỚP ĐÓ
 // KHỬ TRÙNG LẶP LẦN THI & CẬP NHẬT TRẠNG THÁI ĐANG THI CHÍNH XÁC
 // NÂNG CẤP: NÚT CHẤM LẠI XÒE RA MENU TẢI ĐÁP ÁN VÀ TÍNH ĐIỂM CHUẨN XÁC 100%
+// ĐÃ SỬA: LỚP 11E LẤY ĐÚNG TÀI KHOẢN TKLOP11E.JS, KHÔNG BỊ TRỘN LẪN BÀI LỚP 11C
 // =========================================================
 
 let currentExamResultData = {
@@ -330,10 +331,13 @@ async function switchExamResult(examItem) {
     await refreshCurrentExamResults();
 }
 
-async function openExamResultModal(item, event) {
+async function openExamResultModal(item, categoryIdOrEvent, maybeEvent) {
+    let event = (categoryIdOrEvent && typeof categoryIdOrEvent === 'object' && categoryIdOrEvent.preventDefault) ? categoryIdOrEvent : maybeEvent;
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
-    let catId = item.categoryId;
+    let explicitCat = (typeof categoryIdOrEvent === 'string' && categoryIdOrEvent) ? categoryIdOrEvent : "";
+    let catId = explicitCat || (typeof activeChinhKhoaRow2CatId === 'string' ? activeChinhKhoaRow2CatId : "") || (typeof activeChinhKhoaRow1CatId === 'string' ? activeChinhKhoaRow1CatId : "") || (typeof activeDayThemCatId === 'string' ? activeDayThemCatId : "") || item.categoryId || "";
+
     if (!catId) {
         for (let cat of [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES]) {
             if (cat.links && cat.links.some(l => l.id === item.id || l.firebaseId === item.firebaseId || l.title === item.title)) {
@@ -623,6 +627,11 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             let sessName = normalizeName(sess.name);
             let sessCat = sess.categoryId || sess.cat;
 
+            // Đảm bảo session đang làm bài phải thuộc lớp đang xem
+            if (sessCat && !isSameCategory(sessCat, targetCatIdLower)) {
+                continue;
+            }
+
             let inThisClass = classAccounts.some(acc => {
                 let aSbd = String(acc.sbd || "").trim().toLowerCase();
                 let aName = normalizeName(acc.name);
@@ -671,6 +680,18 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         for (let sub of submissionsList) {
             if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
 
+            // Ràng buộc nghiêm ngặt: nếu bài thi có categoryId hoặc lớp thì phải thuộc chuyên mục đang xem
+            let subCat = sub.categoryId || sub.cat;
+            if (subCat && !isSameCategory(subCat, targetCatIdLower)) {
+                continue;
+            }
+
+            let subClass = normalizeName(sub.studentClass || sub.className);
+            let accClass = normalizeName(acc.className);
+            if (subClass && accClass && subClass !== accClass && !isSameCategory(subClass, targetCatIdLower)) {
+                continue;
+            }
+
             let subSbd = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
             let subNameNorm = normalizeName(sub.studentName);
 
@@ -678,7 +699,10 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             if (accSbdLower && subSbd && subSbd === accSbdLower) {
                 isMatch = true;
             } else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
-                isMatch = true;
+                // Nếu so sánh theo họ tên, SBD không được xung đột với lớp khác (ví dụ 11C không được gán cho 11E)
+                if (!subSbd || subSbd === "---" || subSbd === "free" || subSbd === accSbdLower) {
+                    isMatch = true;
+                }
             }
 
             if (isMatch) {
@@ -738,13 +762,13 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         if (usedSubmissionKeys.has(sub._keyId)) continue;
         if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
 
-        let subSbd = String(sub.sbd || sub.studentId || "free").trim().toLowerCase();
-        let subName = normalizeName(sub.studentName) || "free_student";
-
         let subCat = sub.categoryId || sub.cat;
         if (subCat && !isSameCategory(subCat, targetCatIdLower)) {
             continue;
         }
+
+        let subSbd = String(sub.sbd || sub.studentId || "free").trim().toLowerCase();
+        let subName = normalizeName(sub.studentName) || "free_student";
 
         let groupKey = (subSbd !== "---" && subSbd !== "chuanhap" && subSbd !== "free") ? subSbd : subName;
 
