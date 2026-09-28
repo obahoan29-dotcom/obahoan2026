@@ -3,8 +3,7 @@
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
 // ĐẢM BẢO LỚP NÀO CHỈ HIỆN ĐÚNG DANH SÁCH HỌC SINH LỚP ĐÓ
 // KHỬ TRÙNG LẶP LẦN THI & CẬP NHẬT TRẠNG THÁI ĐANG THI CHÍNH XÁC
-// NÂNG CẤP: NÚT CHẤM LẠI XÒE RA MENU TẢI ĐÁP ÁN VÀ TÍNH ĐIỂM CHUẨN XÁC 100%
-// ĐÃ SỬA: LỚP 11E LẤY ĐÚNG TÀI KHOẢN TKLOP11E.JS, KHÔNG BỊ TRỘN LẪN BÀI LỚP 11C
+// BỔ SUNG: CỘT XẾP HẠNG & MENU SẮP XẾP ĐIỂM / THEO STT
 // =========================================================
 
 let currentExamResultData = {
@@ -25,6 +24,9 @@ let isAutoRefreshEnabled = true;
 let scoreChartInstance = null;
 const _examResultsCache = {};
 let _regradeFileParsedAnswers = null;
+
+// Chế độ sắp xếp bảng theo Xếp hạng / Điểm: 'default' | 'desc' | 'asc'
+let currentRankSortMode = 'default';
 
 function toTitleCaseName(str) {
     if (!str) return "";
@@ -134,7 +136,6 @@ function extractTabCountFromDataString(dataStr) {
     return m ? (parseInt(m[1], 10) || 0) : 0;
 }
 
-// KHỬ TRÙNG LẶP LẦN THI DO GỬI NHIỀU LẦN HOẶC TRÙNG NODE
 function deduplicateAttempts(attempts) {
     if (!attempts || attempts.length <= 1) return attempts || [];
     let unique = [];
@@ -275,6 +276,39 @@ function toggleExamPickerMenu(event) {
     const menu = document.getElementById("exam-picker-dropdown-list");
     if (menu) menu.classList.toggle("show");
 }
+
+// XỬ LÝ MENU DROPDOWN SẮP XẾP THEO XẾP HẠNG
+function toggleRankSortMenu(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const menu = document.getElementById("rank-sort-dropdown-menu");
+    if (menu) {
+        menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
+    }
+}
+
+function changeRankSort(mode, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    currentRankSortMode = mode;
+    const menu = document.getElementById("rank-sort-dropdown-menu");
+    if (menu) menu.style.display = "none";
+
+    const btnText = document.getElementById("rank-header-btn-text");
+    if (btnText) {
+        if (mode === 'desc') btnText.innerHTML = "🏅 Hạng: Cao ➔ Thấp";
+        else if (mode === 'asc') btnText.innerHTML = "🏅 Hạng: Thấp ➔ Cao";
+        else btnText.innerHTML = "🏅 Xếp hạng ▾";
+    }
+
+    filterResultTable();
+}
+
+// Đóng dropdown Xếp hạng khi click ra ngoài
+document.addEventListener("click", function(e) {
+    if (!e.target.closest('.rank-picker-wrapper')) {
+        const menu = document.getElementById("rank-sort-dropdown-menu");
+        if (menu) menu.style.display = "none";
+    }
+});
 
 function renderExamPickerDropdown() {
     const menu = document.getElementById("exam-picker-dropdown-list");
@@ -627,7 +661,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             let sessName = normalizeName(sess.name);
             let sessCat = sess.categoryId || sess.cat;
 
-            // Đảm bảo session đang làm bài phải thuộc lớp đang xem
             if (sessCat && !isSameCategory(sessCat, targetCatIdLower)) {
                 continue;
             }
@@ -680,7 +713,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         for (let sub of submissionsList) {
             if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
 
-            // Ràng buộc nghiêm ngặt: nếu bài thi có categoryId hoặc lớp thì phải thuộc chuyên mục đang xem
             let subCat = sub.categoryId || sub.cat;
             if (subCat && !isSameCategory(subCat, targetCatIdLower)) {
                 continue;
@@ -699,7 +731,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             if (accSbdLower && subSbd && subSbd === accSbdLower) {
                 isMatch = true;
             } else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
-                // Nếu so sánh theo họ tên, SBD không được xung đột với lớp khác (ví dụ 11C không được gán cho 11E)
                 if (!subSbd || subSbd === "---" || subSbd === "free" || subSbd === accSbdLower) {
                     isMatch = true;
                 }
@@ -869,8 +900,41 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
+    // TÍNH THỨ HẠNG (RANK) CHO TỪNG HỌC SINH ĐÃ CÓ ĐIỂM
+    calculateRanksForRows(finalRows);
+
     currentExamResultData.rawRows = finalRows;
     updateStatsAndRenderTable(finalRows);
+}
+
+// Hàm tính thứ hạng chuẩn: Cùng điểm thì đồng hạng
+function calculateRanksForRows(rows) {
+    const scores = [];
+    rows.forEach(r => {
+        if (r.allAttempts.length > 0) {
+            let curSub = r.allAttempts[r.selectedAttemptIndex] || r.allAttempts[r.allAttempts.length - 1];
+            if (curSub && curSub.score10 !== undefined) {
+                let sc = parseFloat(curSub.score10);
+                if (!isNaN(sc)) {
+                    scores.push(sc);
+                }
+            }
+        }
+    });
+
+    rows.forEach(r => {
+        r.rank = null;
+        if (r.allAttempts.length > 0) {
+            let curSub = r.allAttempts[r.selectedAttemptIndex] || r.allAttempts[r.allAttempts.length - 1];
+            if (curSub && curSub.score10 !== undefined) {
+                let sc = parseFloat(curSub.score10);
+                if (!isNaN(sc)) {
+                    // Standard ranking: 1 + số học sinh có điểm cao hơn
+                    r.rank = scores.filter(s => s > sc).length + 1;
+                }
+            }
+        }
+    });
 }
 
 function updateStatsAndRenderTable(rows) {
@@ -958,7 +1022,7 @@ function updateStatsAndRenderTable(rows) {
     if (el_8_9) el_8_9.innerText = c_8_to_9;
     if (el_9_10) el_9_10.innerText = c_9_to_10;
 
-    renderFilteredResultTable(rows);
+    filterResultTable();
 
     const detailView = document.getElementById("result-detailed-stats-view");
     if (detailView && detailView.style.display === "flex") {
@@ -970,6 +1034,7 @@ function selectStudentAttempt(rowIndex, attemptIdx, event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
     if (currentExamResultData.rawRows[rowIndex]) {
         currentExamResultData.rawRows[rowIndex].selectedAttemptIndex = attemptIdx;
+        calculateRanksForRows(currentExamResultData.rawRows);
         filterResultTable();
     }
 }
@@ -995,13 +1060,34 @@ function renderFilteredResultTable(rows) {
     tbody.innerHTML = "";
 
     if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">Không tìm thấy dữ liệu học sinh nào!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">Không tìm thấy dữ liệu học sinh nào!</td></tr>`;
         return;
     }
 
     const currentExamTitle = (currentExamResultData.item && currentExamResultData.item.title) ? currentExamResultData.item.title : "Đề thi";
 
-    rows.forEach((row, rowIdx) => {
+    // XỬ LÝ SẮP XẾP THEO YÊU CẦU:
+    let sortedRows = [...rows];
+    if (currentRankSortMode === 'desc') {
+        sortedRows.sort((a, b) => {
+            let scA = (a.rank !== null && a.rank !== undefined) ? (a.allAttempts[a.selectedAttemptIndex]?.score10 ?? -1) : -999;
+            let scB = (b.rank !== null && b.rank !== undefined) ? (b.allAttempts[b.selectedAttemptIndex]?.score10 ?? -1) : -999;
+            if (scB !== scA) return scB - scA;
+            return a.stt - b.stt;
+        });
+    } else if (currentRankSortMode === 'asc') {
+        sortedRows.sort((a, b) => {
+            let scA = (a.rank !== null && a.rank !== undefined) ? (a.allAttempts[a.selectedAttemptIndex]?.score10 ?? 999) : 9999;
+            let scB = (b.rank !== null && b.rank !== undefined) ? (b.allAttempts[b.selectedAttemptIndex]?.score10 ?? 999) : 9999;
+            if (scA !== scB) return scA - scB;
+            return a.stt - b.stt;
+        });
+    } else {
+        // Mặc định: theo STT cột thứ tự
+        sortedRows.sort((a, b) => a.stt - b.stt);
+    }
+
+    sortedRows.forEach((row, rowIdx) => {
         const tr = document.createElement("tr");
         const acc = row.account;
         const attCount = row.allAttempts.length;
@@ -1045,6 +1131,7 @@ function renderFilteredResultTable(rows) {
         let col6_status = `<span class="status-pill status-pending">Chưa thi</span>`;
         let col7_correct = `<span class="status-not-submitted">---</span>`;
         let col8_score = `<span class="status-not-submitted">---</span>`;
+        let col_rank = `<span class="status-not-submitted">---</span>`;
         let col9_tabs = `<span class="status-not-submitted">---</span>`;
         let col10_cheatTime = `<span class="status-not-submitted">---</span>`;
         let col11_details = `<span class="status-not-submitted">---</span>`;
@@ -1062,6 +1149,22 @@ function renderFilteredResultTable(rows) {
             let scNum = parseFloat(sc) || 0;
             let pillClass = scNum >= 8.0 ? 'score-pill-high' : (scNum >= 5.0 ? 'score-pill-mid' : 'score-pill-low');
             col8_score = `<span class="${pillClass}">${scNum.toFixed(1)}</span>`;
+
+            // HIỂN THỊ XẾP HẠNG
+            if (row.rank !== null && row.rank !== undefined) {
+                let rankNum = row.rank;
+                let rankBadge = "";
+                if (rankNum === 1) {
+                    rankBadge = `<span style="background: linear-gradient(135deg, #fef08a, #fde047); color: #854d0e; border: 1.5px solid #eab308; padding: 3px 8px; border-radius: 12px; font-weight: 900; font-size: 0.95em; box-shadow: 0 2px 6px rgba(234,179,8,0.25);">🥇 Hạng 1</span>`;
+                } else if (rankNum === 2) {
+                    rankBadge = `<span style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0); color: #334155; border: 1.5px solid #94a3b8; padding: 3px 8px; border-radius: 12px; font-weight: 900; font-size: 0.95em; box-shadow: 0 2px 6px rgba(148,163,184,0.2);">🥈 Hạng 2</span>`;
+                } else if (rankNum === 3) {
+                    rankBadge = `<span style="background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #9a3412; border: 1.5px solid #fb923c; padding: 3px 8px; border-radius: 12px; font-weight: 900; font-size: 0.95em; box-shadow: 0 2px 6px rgba(251,146,60,0.2);">🥉 Hạng 3</span>`;
+                } else {
+                    rankBadge = `<span style="background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1; padding: 3px 8px; border-radius: 10px; font-weight: 800; font-size: 0.92em;">Hạng ${rankNum}</span>`;
+                }
+                col_rank = rankBadge;
+            }
 
             let rawSubTab = parseInt(currentSub.tabSwitchCount, 10) || 0;
             let dataStringTab = extractTabCountFromDataString(currentSub.dataString);
@@ -1115,6 +1218,7 @@ function renderFilteredResultTable(rows) {
             <td style="text-align:center;">${col6_status}</td>
             <td style="text-align:center;">${col7_correct}</td>
             <td class="td-score">${col8_score}</td>
+            <td style="text-align:center;">${col_rank}</td>
             <td class="td-tabs">${col9_tabs}</td>
             <td class="td-tab-times td-truncate" title="${safeTitleCol10}">${col10_cheatTime}</td>
             <td class="td-truncate">${col11_details}</td>
@@ -1136,7 +1240,8 @@ function filterResultTable() {
         let sbd = String(r.account.sbd || "").toLowerCase();
         let cName = String(r.account.className || "").toLowerCase();
         let statusText = r.allAttempts.length > 0 ? "đã nộp bài" : (r.isFreeDoing ? "đang thi tự do" : (r.isDoing ? "đang làm bài" : "chưa thi"));
-        return name.includes(query) || sbd.includes(query) || cName.includes(query) || statusText.includes(query);
+        let rankText = (r.rank !== null && r.rank !== undefined) ? `hạng ${r.rank}` : "";
+        return name.includes(query) || sbd.includes(query) || cName.includes(query) || statusText.includes(query) || rankText.includes(query);
     });
 
     renderFilteredResultTable(filtered);
@@ -1414,7 +1519,7 @@ function exportResultsToExcel() {
         [
             "STT", "Số đề thi", "Số lần thi", "Thời gian vào thi", "Thời gian thi", 
             "Họ và tên", "Lớp", "SBD", "Tình trạng", "Số câu đúng", 
-            "Điểm thang 10", "Số lần chuyển tab", "Thời gian chuyển tab", "Chi tiết bài làm"
+            "Điểm thang 10", "Xếp hạng", "Số lần chuyển tab", "Thời gian chuyển tab", "Chi tiết bài làm"
         ]
     ];
 
@@ -1433,7 +1538,8 @@ function exportResultsToExcel() {
         let tinhTrang = sub ? "Đã nộp bài" : (r.isFreeDoing ? "Đang thi-tự do" : (r.isDoing ? "Đang làm bài" : "Chưa thi"));
         let correct = sub ? (sub.calcMetrics ? sub.calcMetrics.correctCount : (sub.correctCount !== undefined ? sub.correctCount : 0)) : "";
         let score = sub ? (sub.score10 !== undefined ? sub.score10 : (sub.calcMetrics ? sub.calcMetrics.score10Scale : "")) : "";
-        
+        let rankStr = (r.rank !== null && r.rank !== undefined) ? `Hạng ${r.rank}` : "---";
+
         let rawSubTab = sub ? (parseInt(sub.tabSwitchCount, 10) || 0) : 0;
         let dataStringTab = sub ? extractTabCountFromDataString(sub.dataString) : 0;
         let logTab = r.cheatLogsTabCount || 0;
@@ -1445,7 +1551,7 @@ function exportResultsToExcel() {
 
         excelData.push([
             stt, currentExamTitle, soLanThi, inTime, spent, name, lop, sbd, 
-            tinhTrang, correct, score, tabs, cheatTimes, details
+            tinhTrang, correct, score, rankStr, tabs, cheatTimes, details
         ]);
     });
 
@@ -1454,7 +1560,7 @@ function exportResultsToExcel() {
         ws['!cols'] = [
             { wch: 6 }, { wch: 28 }, { wch: 14 }, { wch: 22 }, { wch: 16 },
             { wch: 24 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 13 },
-            { wch: 14 }, { wch: 18 }, { wch: 24 }, { wch: 55 }
+            { wch: 14 }, { wch: 12 }, { wch: 18 }, { wch: 24 }, { wch: 55 }
         ];
 
         const wb = XLSX.utils.book_new();
@@ -1507,10 +1613,6 @@ function toggleAutoRefresh(event) {
         stopAutoRefreshResult();
     }
 }
-
-// =========================================================
-// KHU VỰC: CHẤM LẠI BÀI VỚI ĐÁP ÁN ĐÃ SỬA (POPOVER XÒE RA TRỰC DIỆN)
-// =========================================================
 
 function openRegradeModal(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -1607,23 +1709,19 @@ async function processRegradeWithAnswers() {
     btn.innerText = "⏳ Đang nạp đề gốc...";
 
     try {
-        // 1. Tải đề gốc từ Firebase về để cập nhật đáp án mới
         const qRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
         let quizObj = await qRes.json();
         if (!quizObj || !quizObj.questions) {
             throw new Error("Không tìm thấy cấu trúc câu hỏi của đề thi trên máy chủ!");
         }
 
-        // Cập nhật đáp án & giải thích mới vào đề thi gốc
         quizObj = mergeQuestionsAndAnswers(quizObj, _regradeFileParsedAnswers);
 
-        // Lưu lại đề thi với đáp án mới lên Firebase
         await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
             method: 'PATCH',
             body: JSON.stringify({ questions: quizObj.questions })
         });
 
-        // 2. Chuẩn bị bảng đáp án tra cứu chuẩn (ANSWER_KEY)
         const newAnswerKey = {};
         const letters = ["A", "B", "C", "D"];
 
@@ -1647,7 +1745,6 @@ async function processRegradeWithAnswers() {
 
         btn.innerText = "⏳ Đang tải bài làm...";
 
-        // 3. Quét toàn bộ bài thi đã nộp từ các node Firebase tương ứng
         const examTitle = quizObj.title || currentItem.title || "";
         const candidateCodes = getExamCandidateCodes(examTitle, quizObj.maDe || "", quizId);
         
@@ -1685,11 +1782,9 @@ async function processRegradeWithAnswers() {
 
         let updatedCount = 0;
 
-        // 4. Lần lượt chấm lại từng bài thi dựa trên dataString hoặc userAnswers
         const regradeTasks = allSubmissionsToUpdate.map(async (sub) => {
             const userAnswersMap = {};
 
-            // Bóc tách đáp án học sinh đã chọn từ chuỗi dataString
             if (sub.dataString) {
                 const parts = sub.dataString.split(/\s*\|\s*/);
                 parts.forEach(part => {
@@ -1707,7 +1802,6 @@ async function processRegradeWithAnswers() {
                 });
             }
 
-            // Nếu bài nộp có trường userAnswers lưu sẵn
             if (sub.userAnswers && typeof sub.userAnswers === 'object') {
                 Object.assign(userAnswersMap, sub.userAnswers);
             }
