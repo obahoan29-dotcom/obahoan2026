@@ -87,9 +87,11 @@
                     <button type="button" class="admin-logout-btn" onclick="logoutAdmin(event)" title="Khóa quyền quản trị ngay lập tức">🔒 Khóa lại</button>
                 </div>
                 
+                <!-- 3 TAB ĐIỀU KHIỂN: ĐỀ THI, LINK WEB, VÀ TẢI PDF/WORD TRỰC TIẾP LÊN GOOGLE DRIVE -->
                 <div class="admin-tabs">
-                    <button class="admin-tab-btn active" id="tab-btn-quiz" onclick="switchAdminTab('quiz')">📝 Đăng đề thi (JS)</button>
-                    <button class="admin-tab-btn" id="tab-btn-doc" onclick="switchAdminTab('doc')">📁 Đăng link tài liệu</button>
+                    <button class="admin-tab-btn active" id="tab-btn-quiz" onclick="switchAdminTab('quiz')">📝 Đề thi (JS)</button>
+                    <button class="admin-tab-btn" id="tab-btn-drive" onclick="switchAdminTab('drive')">📤 Tải PDF/Word</button>
+                    <button class="admin-tab-btn" id="tab-btn-doc" onclick="switchAdminTab('doc')">🔗 Link web</button>
                 </div>
 
                 <div class="admin-input-group">
@@ -113,7 +115,7 @@
                     <div class="avatar-picker-grid" id="avatar-grid"></div>
                 </div>
 
-                <!-- TAB 1: ĐĂNG ĐỀ THI -->
+                <!-- TAB 1: ĐĂNG ĐỀ THI (JS) -->
                 <div id="admin-tab-quiz">
                     <div class="admin-input-group">
                         <label>Tải lên file đề thi (questions.js):</label>
@@ -125,7 +127,24 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: ĐĂNG LINK TÀI LIỆU -->
+                <!-- TAB 2: TẢI FILE PDF / WORD TRỰC TIẾP LÊN GOOGLE DRIVE (MỚI) -->
+                <div id="admin-tab-drive" style="display: none;">
+                    <div class="admin-input-group">
+                        <label>Chọn file PDF / Word / Excel từ máy tính:</label>
+                        <input type="file" id="admin-drive-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" onchange="autoFillDriveTitle(this)">
+                    </div>
+                    <div class="admin-input-group">
+                        <label>Tên hiển thị tài liệu (để trống sẽ tự lấy tên file):</label>
+                        <input type="text" id="admin-drive-title" placeholder="VD: Đề cương ôn tập Toán 11 GK1...">
+                    </div>
+                    <div id="drive-upload-status" style="display: none; margin-bottom: 10px; font-size: 12.5px; font-weight: 700; color: #0284c7; text-align: center;"></div>
+                    <div class="admin-btn-row">
+                        <button class="btn-admin btn-cancel" onclick="closeAdminPanel()">Thoát</button>
+                        <button class="btn-admin btn-submit" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);" id="btn-upload-drive" onclick="processUploadToGoogleDrive()">📤 Tải lên Drive</button>
+                    </div>
+                </div>
+
+                <!-- TAB 3: ĐĂNG LINK TÀI LIỆU CÓ SẴN -->
                 <div id="admin-tab-doc" style="display: none;">
                     <div class="admin-input-group">
                         <label>Tên tài liệu / Video:</label>
@@ -137,7 +156,7 @@
                     </div>
                     <div class="admin-btn-row">
                         <button class="btn-admin btn-cancel" onclick="closeAdminPanel()">Thoát</button>
-                        <button class="btn-admin btn-submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" id="btn-create-doc" onclick="processAddDocument()">📤 Đăng tài liệu</button>
+                        <button class="btn-admin btn-submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" id="btn-create-doc" onclick="processAddDocument()">🔗 Đăng tài liệu</button>
                     </div>
                 </div>
 

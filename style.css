@@ -74,7 +74,7 @@ body {
 /* BẢNG QUẢN TRỊ POPOVER */
 .admin-popover-panel { 
     position: absolute; top: calc(100% + 10px); right: 0; 
-    width: min(420px, calc(100vw - 24px)); 
+    width: min(440px, calc(100vw - 24px)); 
     max-height: calc(100vh - 180px);
     overflow-y: auto;
     background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
@@ -88,9 +88,12 @@ body {
 .admin-popover-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 .admin-popover-panel.show { visibility: visible; opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
 .admin-popover-title { font-size: 1.15rem; font-weight: 900; color: transparent; background-clip: text; -webkit-background-clip: text; background-image: linear-gradient(135deg, #0284c7 0%, #be123c 100%); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;}
-.admin-tabs { display: flex; gap: 6px; margin-bottom: 14px; background: rgba(226, 232, 240, 0.7); padding: 4px; border-radius: 14px;}
-.admin-tab-btn { flex: 1; padding: 9px 6px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.88rem; cursor: pointer; color: #475569; background: transparent; transition: 0.2s; font-family: inherit;}
+
+/* THANH 3 TAB QUẢN TRỊ */
+.admin-tabs { display: flex; gap: 4px; margin-bottom: 14px; background: rgba(226, 232, 240, 0.7); padding: 4px; border-radius: 14px;}
+.admin-tab-btn { flex: 1; padding: 8px 4px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.8rem; cursor: pointer; color: #475569; background: transparent; transition: 0.2s; font-family: inherit; white-space: nowrap;}
 .admin-tab-btn.active { background: #ffffff; color: var(--primary-blue); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
+
 .admin-input-group { margin-bottom: 12px; }
 .admin-input-group label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.88rem; color: #1e293b; }
 .admin-input-group select, .admin-input-group input[type="text"], .admin-input-group input[type="file"], .admin-input-group input[type="number"], .admin-input-group input[type="datetime-local"] { width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; background: #ffffff; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #0f172a;}
@@ -458,15 +461,12 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 }
 .result-search-input:focus { border-color: #8b5cf6; width: 200px; }
 
-/* ========================================================= */
-/* CÁC NÚT CÔNG CỤ: TỰ ĐỘNG, CẬP NHẬT, TẢI EXCEL (LÚN XUỐNG & XOAY) */
-/* ========================================================= */
+/* CÁC NÚT CÔNG CỤ */
 @keyframes spinRefresh {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* 1. NÚT TỰ ĐỘNG BẬT/TẮT */
 #btn-toggle-autorefresh {
     transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, filter 0.16s ease !important;
     user-select: none;
@@ -482,7 +482,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     filter: brightness(0.9);
 }
 
-/* 2. NÚT CẬP NHẬT (KÈM ICON XOAY TRÒN MINH HỌA) */
 .btn-refresh-result {
     background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
     color: white; border: none; border-radius: 20px; padding: 8px 14px;
@@ -517,13 +516,11 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
     filter: brightness(0.92);
 }
-/* Hiệu ứng xoay tròn minh họa cập nhật khi ấn vào nút */
 .btn-refresh-result:active::before,
 .btn-refresh-result:focus::before {
     animation: spinRefresh 0.75s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
-/* 3. NÚT TẢI EXCEL */
 .btn-export-excel {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white; border: none; border-radius: 20px; padding: 8px 13px;
@@ -543,7 +540,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     filter: brightness(0.92);
 }
 
-/* NÚT QUAY LẠI, CÀI ĐẶT & ĐÓNG MODAL - CÙNG HIỆU ỨNG LÚN XUỐNG ĐỒNG BỘ */
 #btn-result-back-action {
     transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease !important;
     user-select: none;

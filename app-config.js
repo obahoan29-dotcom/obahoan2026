@@ -5,6 +5,9 @@
 const ADMIN_PASSWORD = "Hopan130384";
 const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
 
+// URL WEB APP GAS TẢI FILE LÊN GOOGLE DRIVE (TÀI KHOẢN MỚI)
+const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbygCVlYabwzwzeVL1KQY_Jv3rdkZLXVmsflazNvvI4njnz9jj9QSAqC2Yo6-t8DW53o/exec";
+
 let isAdminLoggedIn = false;
 let selectedAvatarUrl = "";
 let currentMoveData = { oldCategory: null, quizId: null, quizData: null };
@@ -119,6 +122,8 @@ function getAccountsForCategory(categoryId) {
 
 function getCategoryDisplayName(catId) {
     const map = {
+        "kho-tai-lieu": "Kho tài liệu PDF, Word",
+        "nhac-nho": "Nhắc nhở quan trọng",
         "them-10": "Thêm 10",
         "them-11": "Thêm 11",
         "them-12": "Thêm 12",

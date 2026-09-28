@@ -1,6 +1,7 @@
 // =========================================================
 // FILE: app-admin.js
-// QUẢN TRỊ VIÊN: BẢO MẬT, ĐĂNG ĐỀ, TÀI LIỆU, SỬA/XÓA & THỜI GIAN LÀM BÀI
+// QUẢN TRỊ VIÊN: BẢO MẬT, ĐĂNG ĐỀ, TÀI LIỆU, TẢI FILE GOOGLE DRIVE,
+// SỬA/XÓA & THỜI GIAN LÀM BÀI
 // =========================================================
 
 let currentEditingTimeQuizId = null;
@@ -134,17 +135,41 @@ function closeAdminPanel() {
 }
 
 function switchAdminTab(tabName) {
-    document.getElementById("tab-btn-quiz").classList.remove("active");
-    document.getElementById("tab-btn-doc").classList.remove("active");
-    document.getElementById("admin-tab-quiz").style.display = "none";
-    document.getElementById("admin-tab-doc").style.display = "none";
+    const tabQuiz = document.getElementById("tab-btn-quiz");
+    const tabDoc = document.getElementById("tab-btn-doc");
+    const tabDrive = document.getElementById("tab-btn-drive");
 
-    if(tabName === 'quiz') {
-        document.getElementById("tab-btn-quiz").classList.add("active");
-        document.getElementById("admin-tab-quiz").style.display = "block";
+    const contentQuiz = document.getElementById("admin-tab-quiz");
+    const contentDoc = document.getElementById("admin-tab-doc");
+    const contentDrive = document.getElementById("admin-tab-drive");
+
+    if (tabQuiz) tabQuiz.classList.remove("active");
+    if (tabDoc) tabDoc.classList.remove("active");
+    if (tabDrive) tabDrive.classList.remove("active");
+
+    if (contentQuiz) contentQuiz.style.display = "none";
+    if (contentDoc) contentDoc.style.display = "none";
+    if (contentDrive) contentDrive.style.display = "none";
+
+    if (tabName === 'quiz') {
+        if (tabQuiz) tabQuiz.classList.add("active");
+        if (contentQuiz) contentQuiz.style.display = "block";
+    } else if (tabName === 'drive') {
+        if (tabDrive) tabDrive.classList.add("active");
+        if (contentDrive) contentDrive.style.display = "block";
     } else {
-        document.getElementById("tab-btn-doc").classList.add("active");
-        document.getElementById("admin-tab-doc").style.display = "block";
+        if (tabDoc) tabDoc.classList.add("active");
+        if (contentDoc) contentDoc.style.display = "block";
+    }
+}
+
+function autoFillDriveTitle(fileInput) {
+    const titleInput = document.getElementById("admin-drive-title");
+    if (fileInput.files.length > 0 && titleInput && !titleInput.value.trim()) {
+        let fName = fileInput.files[0].name;
+        // Bỏ đuôi mở rộng hiển thị đẹp hơn
+        let cleanName = fName.replace(/\.[^/.]+$/, "");
+        titleInput.value = cleanName;
     }
 }
 
@@ -200,6 +225,118 @@ function processUpload() {
     reader.readAsText(file);
 }
 
+// HÀM MỚI: TẢI FILE PDF / WORD LÊN GOOGLE DRIVE THÔNG QUA GAS TÀI KHOẢN MỚI
+async function processUploadToGoogleDrive() {
+    const fileInput = document.getElementById("admin-drive-file");
+    const titleInput = document.getElementById("admin-drive-title");
+    const category = document.getElementById("admin-category-select").value;
+    const btn = document.getElementById("btn-upload-drive");
+    const statusBox = document.getElementById("drive-upload-status");
+
+    if (!fileInput || fileInput.files.length === 0) {
+        alert("⚠️ Vui lòng chọn file PDF hoặc Word trên máy tính!");
+        return;
+    }
+
+    if (!GOOGLE_DRIVE_UPLOAD_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL.includes("DÁN_URL")) {
+        alert("⚠️ Bạn chưa cấu hình GOOGLE_DRIVE_UPLOAD_GAS_URL trong file app-config.js!\nVui lòng dán URL Web App triển khai từ Google Apps Script vào.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+
+    // Giới hạn 25MB tránh vượt quá payload của GAS
+    if (file.size > 25 * 1024 * 1024) {
+        alert("⚠️ Dung lượng file quá lớn (> 25MB). Vui lòng chọn file nhẹ hơn để tải mượt mà!");
+        return;
+    }
+
+    let finalTitle = titleInput.value.trim();
+    if (!finalTitle) {
+        finalTitle = file.name;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "⏳ Đang chuyển đổi...";
+    if (statusBox) {
+        statusBox.style.display = "block";
+        statusBox.innerText = `⏳ Đang đọc file "${file.name}"...`;
+    }
+
+    try {
+        const reader = new FileReader();
+
+        reader.onload = async function(e) {
+            try {
+                const base64Data = e.target.result;
+
+                btn.innerText = "🚀 Đang tải lên Drive...";
+                if (statusBox) statusBox.innerText = "🚀 Đang gửi file lên Google Drive...";
+
+                const payload = {
+                    filename: file.name,
+                    mimeType: file.type || "application/octet-stream",
+                    base64: base64Data
+                };
+
+                // Dùng text/plain để tránh preflight OPTIONS CORS của Google Apps Script
+                const res = await fetch(GOOGLE_DRIVE_UPLOAD_GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await res.json();
+
+                if (result.status === "success" && result.fileUrl) {
+                    btn.innerText = "💾 Đang lưu hệ thống...";
+                    if (statusBox) statusBox.innerText = "💾 Đang tạo mục liên kết trên website...";
+
+                    const docId = "doc_" + Date.now();
+                    const now = new Date();
+                    const dateStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                    
+                    const linkData = { 
+                        title: finalTitle, 
+                        date: dateStr, 
+                        url: result.fileUrl, 
+                        badgeText: "MỚI", 
+                        isHot: false, 
+                        isDoc: true, 
+                        avatar: selectedAvatarUrl, 
+                        timestamp: Date.now(),
+                        categoryId: category
+                    };
+
+                    await fetch(`${FIREBASE_DB_URL}/custom_links/${category}/${docId}.json`, { 
+                        method: 'PUT', 
+                        body: JSON.stringify(linkData) 
+                    });
+
+                    alert(`🎉 Tải file lên Google Drive thành công!\n📁 Tên: ${finalTitle}\n🔗 Đã thêm vào chuyên mục: ${getCategoryDisplayName(category)}`);
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message || "Máy chủ Google Drive không phản hồi đường dẫn file!");
+                }
+            } catch(uploadErr) {
+                console.error("Lỗi upload Drive:", uploadErr);
+                alert("❌ Lỗi khi tải file lên Google Drive: " + uploadErr.message);
+                btn.disabled = false;
+                btn.innerText = "📤 Tải lên Drive";
+                if (statusBox) statusBox.style.display = "none";
+            }
+        };
+
+        reader.readAsDataURL(file);
+
+    } catch (err) {
+        alert("❌ Lỗi đọc file: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "📤 Tải lên Drive";
+        if (statusBox) statusBox.style.display = "none";
+    }
+}
+
 async function processAddDocument() {
     const titleInput = document.getElementById("admin-doc-title").value.trim();
     const urlInput = document.getElementById("admin-doc-url").value.trim();
@@ -226,7 +363,7 @@ async function processAddDocument() {
         alert("📤 Đăng tài liệu thành công!");
         window.location.reload(); 
     } catch (err) { alert("❌ Lỗi: " + err.message); } 
-    finally { btn.innerText = "📤 Đăng tài liệu"; btn.disabled = false; }
+    finally { btn.innerText = "🔗 Đăng tài liệu"; btn.disabled = false; }
 }
 
 async function deleteItem(categoryId, itemId, event) {
