@@ -3,7 +3,7 @@
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
 // ĐẢM BẢO LỚP NÀO CHỈ HIỆN ĐÚNG DANH SÁCH HỌC SINH LỚP ĐÓ
 // KHỬ TRÙNG LẶP LẦN THI & CẬP NHẬT TRẠNG THÁI ĐANG THI CHÍNH XÁC
-// TÍNH NĂNG MỚI: CHẤM LẠI TOÀN BỘ BÀI THI KHI GIÁO VIÊN SỬA ĐÁP ÁN
+// NÂNG CẤP: NÚT CHẤM LẠI XÒE RA MENU TẢI ĐÁP ÁN VÀ TÍNH ĐIỂM CHUẨN XÁC 100%
 // =========================================================
 
 let currentExamResultData = {
@@ -1371,6 +1371,7 @@ function closeResultModal(triggerHistoryBack = true) {
     stopAutoRefreshResult();
     const modal = document.getElementById("result-fullscreen-modal");
     if (modal) modal.style.display = "none";
+    closeRegradeModal();
 
     if (triggerHistoryBack && window.location.hash.startsWith("#bang-ket-qua")) {
         window.history.back();
@@ -1484,30 +1485,35 @@ function toggleAutoRefresh(event) {
 }
 
 // =========================================================
-// KHU VỰC TÍNH NĂNG MỚI: CHẤM LẠI BÀI VỚI ĐÁP ÁN ĐÃ SỬA
+// KHU VỰC: CHẤM LẠI BÀI VỚI ĐÁP ÁN ĐÃ SỬA (POPOVER XÒE RA TRỰC DIỆN)
 // =========================================================
 
 function openRegradeModal(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    const modal = document.getElementById("regrade-exam-modal");
+    const dropdown = document.getElementById("regrade-inline-dropdown");
     const preview = document.getElementById("regrade-file-preview-status");
     const fileInput = document.getElementById("regrade-answer-file");
-    
+
+    if (!dropdown) return;
+
+    if (dropdown.style.display === "block") {
+        dropdown.style.display = "none";
+        return;
+    }
+
     if (fileInput) fileInput.value = "";
     if (preview) { 
         preview.style.display = "none"; 
         preview.innerText = ""; 
-        preview.style.color = "#0284c7";
-        preview.style.borderColor = "#bae6fd";
-        preview.style.background = "#f0f9ff";
     }
     _regradeFileParsedAnswers = null;
-    if (modal) modal.style.display = "flex";
+    dropdown.style.display = "block";
 }
 
-function closeRegradeModal() {
-    const modal = document.getElementById("regrade-exam-modal");
-    if (modal) modal.style.display = "none";
+function closeRegradeModal(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById("regrade-inline-dropdown");
+    if (dropdown) dropdown.style.display = "none";
     _regradeFileParsedAnswers = null;
 }
 
@@ -1522,10 +1528,10 @@ async function previewRegradeFile(input) {
     try {
         const text = await readFileAsTextAsync(file);
         const parsed = parseScriptOrJson(text);
-        if (!parsed) throw new Error("Không thể phân tích cú pháp file! Vui lòng kiểm tra định dạng.");
+        if (!parsed) throw new Error("Không thể phân tích file! Vui lòng kiểm tra định dạng.");
         const answersMap = parsed.answers || parsed.dapan || parsed;
         const count = Object.keys(answersMap).length;
-        if (count === 0) throw new Error("File không chứa trường answers/dapan hợp lệ!");
+        if (count === 0) throw new Error("File không chứa trường answers / dapan hợp lệ!");
 
         _regradeFileParsedAnswers = parsed;
         if (preview) {
@@ -1533,7 +1539,7 @@ async function previewRegradeFile(input) {
             preview.style.color = "#0369a1";
             preview.style.borderColor = "#bae6fd";
             preview.style.background = "#f0f9ff";
-            preview.innerHTML = `✅ Đã đọc thành công file <b>${file.name}</b> (tìm thấy <b>${count}</b> câu đáp án). Sẵn sàng chấm lại toàn bộ bài làm!`;
+            preview.innerHTML = `✅ Đã đọc thành công <b>${file.name}</b> (tìm thấy <b>${count}</b> câu đáp án). Sẵn sàng chấm lại!`;
         }
     } catch(err) {
         _regradeFileParsedAnswers = null;
@@ -1549,7 +1555,6 @@ async function previewRegradeFile(input) {
 
 async function processRegradeWithAnswers() {
     const btn = document.getElementById("btn-confirm-regrade");
-    const preview = document.getElementById("regrade-file-preview-status");
     const fileInput = document.getElementById("regrade-answer-file");
 
     if (!_regradeFileParsedAnswers) {
@@ -1616,7 +1621,7 @@ async function processRegradeWithAnswers() {
             }
         });
 
-        btn.innerText = "⏳ Đang tải bài làm học sinh...";
+        btn.innerText = "⏳ Đang tải bài làm...";
 
         // 3. Quét toàn bộ bài thi đã nộp từ các node Firebase tương ứng
         const examTitle = quizObj.title || currentItem.title || "";
@@ -1644,15 +1649,15 @@ async function processRegradeWithAnswers() {
         }
 
         if (allSubmissionsToUpdate.length === 0) {
-            alert("ℹ️ Đã cập nhật đáp án cho đề thi thành công! Chưa có bài làm nào của học sinh cần chấm lại.");
+            alert("ℹ️ Đã cập nhật đáp án mới vào đề thi thành công! Chưa có bài làm nào của học sinh cần tính lại điểm.");
             closeRegradeModal();
             btn.disabled = false;
-            btn.innerText = "🚀 Bắt đầu chấm lại";
+            btn.innerText = "🚀 Chấm lại ngay";
             await refreshCurrentExamResults();
             return;
         }
 
-        btn.innerText = `⏳ Đang chấm lại ${allSubmissionsToUpdate.length} bài làm...`;
+        btn.innerText = `⏳ Đang chấm lại ${allSubmissionsToUpdate.length} bài...`;
 
         let updatedCount = 0;
 
@@ -1780,7 +1785,7 @@ async function processRegradeWithAnswers() {
         alert("❌ Lỗi trong quá trình chấm lại: " + err.message);
     } finally {
         btn.disabled = false;
-        btn.innerText = "🚀 Bắt đầu chấm lại";
+        btn.innerText = "🚀 Chấm lại ngay";
     }
 }
 

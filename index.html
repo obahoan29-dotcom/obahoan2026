@@ -104,8 +104,8 @@
                         </div>
                     </div>
                     <div class="category-checkbox-grid" id="admin-category-checkbox-list">
-                        <label class="cat-checkbox-item checked">
-                            <input type="checkbox" name="admin-cat-checkbox" value="lop-11a" checked onchange="handleCatCheckboxChange(this)">
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="lop-11a" onchange="handleCatCheckboxChange(this)">
                             <span>🏫 Lớp 11A</span>
                         </label>
                         <label class="cat-checkbox-item">
@@ -120,8 +120,8 @@
                             <input type="checkbox" name="admin-cat-checkbox" value="lop-11e" onchange="handleCatCheckboxChange(this)">
                             <span>🏫 Lớp 11E</span>
                         </label>
-                        <label class="cat-checkbox-item">
-                            <input type="checkbox" name="admin-cat-checkbox" value="them-11" onchange="handleCatCheckboxChange(this)">
+                        <label class="cat-checkbox-item checked">
+                            <input type="checkbox" name="admin-cat-checkbox" value="them-11" checked onchange="handleCatCheckboxChange(this)">
                             <span>✍️ Thêm 11</span>
                         </label>
                         <label class="cat-checkbox-item">
@@ -158,7 +158,6 @@
 
                 <!-- TAB 1: ĐĂNG ĐỀ THI (JS) -->
                 <div id="admin-tab-quiz">
-                    <!-- YÊU CẦU 1: Ô NHẬP TÊN ĐỀ THI -->
                     <div class="admin-input-group">
                         <label>Đặt tên đề thi (để trống sẽ tự lấy tên trong file questions):</label>
                         <input type="text" id="admin-quiz-custom-title" placeholder="VD: ĐỀ 101 GIỮA HỌC KỲ I TOÁN 11...">
@@ -169,7 +168,6 @@
                         <input type="file" id="admin-file-upload" accept="*/*">
                     </div>
 
-                    <!-- YÊU CẦU 1: Ô CHOOSE FILE NHẬP ĐÁP ÁN (DAPAN.JS) -->
                     <div class="admin-input-group">
                         <label>Tải lên file đáp án & giải thích (dapan.js / .txt / .json - nếu tách riêng):</label>
                         <input type="file" id="admin-answer-file-upload" accept="*/*">
@@ -236,7 +234,7 @@
         <div class="link-list" style="padding:0; background:transparent;" id="reminder-container"></div>
     </div>
 
-    <!-- DẠY THÊM -->
+    <!-- DẠY THÊM (MẶC ĐỊNH CO LẠI) -->
     <div class="section-header-title red-title">🔴 Các lớp dạy thêm</div>
     <div class="dantri-nav-container">
         <div class="full-width-nav-row" id="daythem-nav-bar"></div>
@@ -245,7 +243,7 @@
         </div>
     </div>
 
-    <!-- CHÍNH KHÓA -->
+    <!-- CHÍNH KHÓA (MẶC ĐỊNH CO LẠI) -->
     <div class="section-header-title blue-title">🔵 Các lớp chính khóa</div>
     <div class="dantri-nav-container">
         <div class="full-width-nav-row" id="chinhkhoa-row1-bar"></div>
@@ -309,10 +307,29 @@
 
             <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
             
-            <!-- YÊU CẦU 4: NÚT CHẤM LẠI BÀI VỚI ĐÁP ÁN SỬA ĐẶT Ở GIỮA CẬP NHẬT VÀ TẢI EXCEL -->
-            <button type="button" class="btn-regrade-exam" id="btn-regrade-exam" onclick="openRegradeModal(event)" title="Tải file đáp án đã sửa để chấm lại toàn bộ bài thi của học sinh">
-                ⚖️ Chấm lại bài
-            </button>
+            <!-- NÚT CHẤM LẠI BÀI VỚI ĐÁP ÁN SỬA ĐẶT Ở GIỮA CẬP NHẬT VÀ TẢI EXCEL -->
+            <div class="regrade-action-wrapper" style="position: relative; display: inline-block;">
+                <button type="button" class="btn-regrade-exam" id="btn-regrade-exam" onclick="openRegradeModal(event)" title="Tải file đáp án đã sửa để chấm lại toàn bộ bài thi của học sinh">
+                    ⚖️ Chấm lại bài ▾
+                </button>
+                
+                <!-- POPUP XÒE RA TRỰC TIẾP TẠI CHỖ KHI BẤM NÚT CHẤM LẠI -->
+                <div class="regrade-inline-dropdown" id="regrade-inline-dropdown" style="display:none; position:absolute; top:calc(100% + 8px); right:0; width:340px; background:#ffffff; border-radius:14px; box-shadow:0 14px 35px rgba(15,23,42,0.25); border:1.5px solid #fde68a; padding:14px; z-index:9999999; animation:popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:6px;">
+                        <span style="font-weight:900; color:#b45309; font-size:13px; display:flex; align-items:center; gap:5px;">⚖️ Tải file đáp án đã sửa</span>
+                        <button type="button" onclick="closeRegradeModal()" style="background:none; border:none; font-size:15px; font-weight:900; color:#94a3b8; cursor:pointer;">✕</button>
+                    </div>
+                    <div style="font-size:11.5px; color:#475569; margin-bottom:8px; line-height:1.4;">
+                        Chọn file <b>dapan.js / .txt / .json</b> mới. Hệ thống sẽ tự động tính lại điểm và cập nhật đồng bộ các bài đã nộp.
+                    </div>
+                    <input type="file" id="regrade-answer-file" accept="*/*" onchange="previewRegradeFile(this)" style="width:100%; padding:6px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:12px; margin-bottom:8px; background:#f8fafc;">
+                    <div id="regrade-file-preview-status" style="font-size:11.5px; font-weight:700; color:#0284c7; margin-bottom:8px; display:none; background:#f0f9ff; padding:6px 10px; border-radius:8px; border:1px solid #bae6fd; line-height:1.3;"></div>
+                    <div style="display:flex; gap:6px;">
+                        <button type="button" onclick="closeRegradeModal()" style="flex:1; padding:7px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; font-weight:800; color:#475569; cursor:pointer;">Đóng</button>
+                        <button type="button" id="btn-confirm-regrade" onclick="processRegradeWithAnswers()" style="flex:1.5; padding:7px; background:linear-gradient(135deg, #f59e0b, #d97706); border:none; border-radius:8px; font-size:12px; font-weight:800; color:#fff; cursor:pointer; box-shadow:0 2px 6px rgba(245,158,11,0.3);">🚀 Chấm lại ngay</button>
+                    </div>
+                </div>
+            </div>
 
             <button class="btn-export-excel" onclick="exportResultsToExcel()" title="Tải file Excel (.xlsx)">📥 Tải Excel (.xlsx)</button>
             
@@ -523,32 +540,6 @@
                     <tbody id="rating-breakdown-tbody"></tbody>
                 </table>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- ========================================================= -->
-<!-- MODAL TIỆN DỤNG: TẢI ĐÁP ÁN ĐÃ SỬA ĐỂ CHẤM LẠI BÀI THI -->
-<!-- ========================================================= -->
-<div class="move-modal-overlay" id="regrade-exam-modal">
-    <div class="move-modal-box" style="width: 440px; max-width: 95vw;">
-        <h4 style="color:#d97706; display:flex; align-items:center; gap:8px;">
-            <span>⚖️</span> <span>Chấm lại bài với đáp án đã sửa</span>
-        </h4>
-        <div style="font-size:12.5px; color:#475569; margin-bottom:12px; line-height:1.5;">
-            Tải lên file đáp án mới (<b>dapan.js / .txt / .json</b>). Hệ thống sẽ đọc lại toàn bộ bài nộp của học sinh, tính lại số câu đúng, điểm số thang 10 và cập nhật đồng bộ lên máy chủ.
-        </div>
-
-        <div class="admin-input-group">
-            <label>Chọn file đáp án đã sửa:</label>
-            <input type="file" id="regrade-answer-file" accept="*/*" onchange="previewRegradeFile(this)">
-        </div>
-
-        <div id="regrade-file-preview-status" style="font-size:12.5px; font-weight:700; color:#0284c7; margin-bottom:12px; display:none; background:#f0f9ff; padding:8px 12px; border-radius:10px; border:1px solid #bae6fd;"></div>
-
-        <div class="move-btn-row">
-            <button class="move-btn-cancel" onclick="closeRegradeModal()">Hủy bỏ</button>
-            <button class="move-btn-submit" id="btn-confirm-regrade" style="background:linear-gradient(135deg, #d97706, #b45309);" onclick="processRegradeWithAnswers()">🚀 Bắt đầu chấm lại</button>
         </div>
     </div>
 </div>
