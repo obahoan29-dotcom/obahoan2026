@@ -1,9 +1,10 @@
 // =========================================================
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
-// ĐẢM BẢO LỚP NÀO CHỈ HIỆN ĐÚNG DANH SÁCH HỌC SINH LỚP ĐÓ
-// KHỬ TRÙNG LẶP LẦN THI & CẬP NHẬT TRẠNG THÁI ĐANG THI CHÍNH XÁC
-// BỔ SUNG: CỘT XẾP HẠNG & MENU SẮP XẾP ĐIỂM / THEO STT
+// - HIỆN ĐÚNG DANH SÁCH HỌC SINH CỦA ĐÚNG LỚP ĐANG XEM
+// - THÍ SINH TỰ DO THI ĐỀ NÀO THÌ CHỈ HIỆN Ở ĐÚNG ĐỀ ĐÓ
+// - LỌC CHÍNH XÁC SUBMISSIONS THEO ĐỀ, CHƯA THI THÌ ĐỂ TRỐNG PHẦN ĐIỂM
+// - GIỮ NGUYÊN TOÀN BỘ GIAO DIỆN VÀ TÍNH NĂNG ĐÃ CÓ
 // =========================================================
 
 let currentExamResultData = {
@@ -277,7 +278,6 @@ function toggleExamPickerMenu(event) {
     if (menu) menu.classList.toggle("show");
 }
 
-// XỬ LÝ MENU DROPDOWN SẮP XẾP THEO XẾP HẠNG
 function toggleRankSortMenu(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const menu = document.getElementById("rank-sort-dropdown-menu");
@@ -302,7 +302,6 @@ function changeRankSort(mode, event) {
     filterResultTable();
 }
 
-// Đóng dropdown Xếp hạng khi click ra ngoài
 document.addEventListener("click", function(e) {
     if (!e.target.closest('.rank-picker-wrapper')) {
         const menu = document.getElementById("rank-sort-dropdown-menu");
@@ -369,8 +368,9 @@ async function openExamResultModal(item, categoryIdOrEvent, maybeEvent) {
     let event = (categoryIdOrEvent && typeof categoryIdOrEvent === 'object' && categoryIdOrEvent.preventDefault) ? categoryIdOrEvent : maybeEvent;
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
+    // XÁC ĐỊNH CHÍNH XÁC DANH MỤC LỚP ĐƯỢC MỞ
     let explicitCat = (typeof categoryIdOrEvent === 'string' && categoryIdOrEvent) ? categoryIdOrEvent : "";
-    let catId = explicitCat || (typeof activeChinhKhoaRow2CatId === 'string' ? activeChinhKhoaRow2CatId : "") || (typeof activeChinhKhoaRow1CatId === 'string' ? activeChinhKhoaRow1CatId : "") || (typeof activeDayThemCatId === 'string' ? activeDayThemCatId : "") || item.categoryId || "";
+    let catId = explicitCat || item.categoryId || "";
 
     if (!catId) {
         for (let cat of [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES]) {
@@ -435,35 +435,58 @@ async function refreshCurrentExamResults() {
     startAutoRefreshResult();
 }
 
+// HÀM SO KHỚP CHẶT CHẼ: BÀI NỘP / PHIÊN THI CÓ ĐÚNG LÀ CỦA ĐỀ THI NÀY KHÔNG
 function isSubmissionMatchingCurrentExam(sub, examInfo) {
     if (!sub || typeof sub !== 'object') return false;
 
-    if (sub.quizId && examInfo.quizId) {
-        if (String(sub.quizId).trim() === String(examInfo.quizId).trim()) return true;
+    const subQuizId = String(sub.quizId || sub.id || "").trim();
+    const curQuizId = String(examInfo.quizId || "").trim();
+
+    // 1. Nếu cả 2 đều có quizId: Bắt buộc phải trùng quizId
+    if (subQuizId && curQuizId) {
+        return subQuizId === curQuizId;
     }
 
-    if (sub._nodeCode && (sub._nodeCode === examInfo.quizId || sub._nodeCode === examInfo.maDe || sub._nodeCode === examInfo.normCode)) {
+    // 2. Nếu sub có lưu _nodeCode và trùng với curQuizId
+    if (sub._nodeCode && curQuizId && sub._nodeCode === curQuizId) {
         return true;
     }
 
-    let subMaDe = cleanExamCodeKey(sub.maDe || "");
-    if (subMaDe && examInfo.maDe && subMaDe !== "101" && examInfo.maDe !== "101") {
-        if (subMaDe === examInfo.maDe) return true;
-    }
+    // 3. So khớp theo tên đề thi (chuẩn hóa tên)
+    const subTitle = sub.examName || sub.examTitle || sub.title || "";
+    const curTitle = examInfo.title || examInfo.itemTitle || "";
 
-    let subTitle = sub.examName || sub.examTitle || sub.title || "";
-    let subNormTitle = normalizeName(subTitle);
-    let subNormCode = extractNormalizedExamCode(subTitle || sub.maDe || "");
+    const subNormTitle = normalizeName(subTitle);
+    const curNormTitle = normalizeName(curTitle);
+    const curNormItemTitle = normalizeName(examInfo.itemTitle || "");
 
-    if (subNormCode && examInfo.normCode && subNormCode === examInfo.normCode) {
-        return true;
-    }
-
-    if (subNormTitle && (examInfo.normTitle || examInfo.normItemTitle)) {
-        if (subNormTitle === examInfo.normTitle || subNormTitle === examInfo.normItemTitle) return true;
-        if (subNormTitle.length >= 8 && examInfo.normTitle.length >= 8) {
-            if (subNormTitle.includes(examInfo.normTitle) || examInfo.normTitle.includes(subNormTitle)) return true;
+    if (subNormTitle && (curNormTitle || curNormItemTitle)) {
+        if (subNormTitle === curNormTitle || subNormTitle === curNormItemTitle) {
+            return true;
         }
+
+        const subNormCode = extractNormalizedExamCode(subTitle || sub.maDe || "");
+        const curNormCode = examInfo.normCode || extractNormalizedExamCode(curTitle || examInfo.maDe || "");
+
+        if (subNormCode && curNormCode) {
+            return subNormCode === curNormCode;
+        }
+
+        if (subNormTitle.length >= 8 && curNormTitle.length >= 8) {
+            const subNums = subTitle.match(/\d+/g) || [];
+            const curNums = curTitle.match(/\d+/g) || [];
+            const numsMatch = subNums.length === curNums.length && subNums.every((v, i) => v === curNums[i]);
+            if (numsMatch && (subNormTitle.includes(curNormTitle) || curNormTitle.includes(subNormTitle))) {
+                return true;
+            }
+        }
+    }
+
+    // 4. So khớp theo maDe riêng biệt (nếu không phải 101 chung chung)
+    const subMaDe = cleanExamCodeKey(sub.maDe || "");
+    const curMaDe = examInfo.maDe || "";
+    if (subMaDe && curMaDe && subMaDe !== "101" && curMaDe !== "101") {
+        return subMaDe === curMaDe;
     }
 
     return false;
@@ -481,6 +504,9 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     }
     if (!quizId && item.firebaseId && item.firebaseId.startsWith("quiz_")) {
         quizId = item.firebaseId;
+    }
+    if (!quizId && item.id && String(item.id).startsWith("quiz_")) {
+        quizId = item.id;
     }
 
     let maDe = "";
@@ -592,7 +618,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     const targetCatIdLower = (categoryId || "").toLowerCase().trim();
 
     const currentExamInfo = {
-        quizId: examMeta.quizId || "",
+        quizId: examMeta.quizId || (examItem && (examItem.firebaseId || examItem.id)) || "",
         maDe: cleanExamCodeKey(examMeta.maDe || ""),
         title: examMeta.examTitle || (examItem && examItem.title) || "",
         itemTitle: (examItem && examItem.title) || "",
@@ -609,7 +635,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let log = cheatingMap[k];
         if (!log || typeof log !== 'object') continue;
 
-        if ((log.examName || log.quizId) && !isSubmissionMatchingCurrentExam(log, currentExamInfo)) {
+        if (!isSubmissionMatchingCurrentExam(log, currentExamInfo)) {
             continue;
         }
 
@@ -647,11 +673,22 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     }
     submissionsList.sort((a, b) => getSubmissionTimestamp(a) - getSubmissionTimestamp(b));
 
+    // LỌC DANH SÁCH THÍ SINH ĐANG THI (CHỈ LẤY ĐÚNG ĐỀ HIỆN TẠI VÀ ĐÚNG LỚP)
     const activeUsersMap = {};
     const nowMs = Date.now();
     for (let rawKey in activeSessionsMap) {
         let sess = activeSessionsMap[rawKey];
         if (!sess || typeof sess !== 'object') continue;
+
+        // BẮT BUỘC: Kiểm tra phiên thi này có đúng là của đề thi đang xem hay không!
+        if (!isSubmissionMatchingCurrentExam(sess, currentExamInfo)) {
+            continue;
+        }
+
+        let sessCat = sess.categoryId || sess.cat;
+        if (sessCat && !isSameCategory(sessCat, targetCatIdLower)) {
+            continue;
+        }
 
         let lastPing = (typeof sess === 'number') ? sess : (sess.lastPing || sess.startTime || sess.loginTime || 0);
         let isRecentlyActive = (nowMs - lastPing < 300000) || (sess.startTime && (nowMs - sess.startTime < 7200000) && (nowMs - lastPing < 600000));
@@ -659,21 +696,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         if (isRecentlyActive) {
             let sessSbd = String(sess.sbd || "").trim().toLowerCase();
             let sessName = normalizeName(sess.name);
-            let sessCat = sess.categoryId || sess.cat;
-
-            if (sessCat && !isSameCategory(sessCat, targetCatIdLower)) {
-                continue;
-            }
-
-            let inThisClass = classAccounts.some(acc => {
-                let aSbd = String(acc.sbd || "").trim().toLowerCase();
-                let aName = normalizeName(acc.name);
-                return (aSbd && aSbd === sessSbd) || (aName && aName === sessName);
-            });
-
-            if (!inThisClass && sessCat && !isSameCategory(sessCat, targetCatIdLower)) {
-                continue;
-            }
 
             if (sessSbd) {
                 activeUsersMap[sessSbd] = sess;
@@ -701,6 +723,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
+    // 1. DUYỆT DANH SÁCH HỌC SINH CHÍNH THỨC CỦA LỚP
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -786,6 +809,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     });
 
+    // 2. DUYỆT THÍ SINH TỰ DO (CHỈ LẤY THÍ SINH CỦA ĐÚNG ĐỀ HIỆN TẠI VÀ LỚP HIỆN TẠI)
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
@@ -855,6 +879,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
+    // 3. THÍ SINH TỰ DO ĐANG LÀM BÀI TRỰC TIẾP
     for (let aKey in activeUsersMap) {
         let session = activeUsersMap[aKey];
         if (!session || typeof session !== 'object') continue;
@@ -900,14 +925,11 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // TÍNH THỨ HẠNG (RANK) CHO TỪNG HỌC SINH ĐÃ CÓ ĐIỂM
     calculateRanksForRows(finalRows);
-
     currentExamResultData.rawRows = finalRows;
     updateStatsAndRenderTable(finalRows);
 }
 
-// Hàm tính thứ hạng chuẩn: Cùng điểm thì đồng hạng
 function calculateRanksForRows(rows) {
     const scores = [];
     rows.forEach(r => {
@@ -929,7 +951,6 @@ function calculateRanksForRows(rows) {
             if (curSub && curSub.score10 !== undefined) {
                 let sc = parseFloat(curSub.score10);
                 if (!isNaN(sc)) {
-                    // Standard ranking: 1 + số học sinh có điểm cao hơn
                     r.rank = scores.filter(s => s > sc).length + 1;
                 }
             }
@@ -1066,7 +1087,6 @@ function renderFilteredResultTable(rows) {
 
     const currentExamTitle = (currentExamResultData.item && currentExamResultData.item.title) ? currentExamResultData.item.title : "Đề thi";
 
-    // XỬ LÝ SẮP XẾP THEO YÊU CẦU:
     let sortedRows = [...rows];
     if (currentRankSortMode === 'desc') {
         sortedRows.sort((a, b) => {
@@ -1083,7 +1103,6 @@ function renderFilteredResultTable(rows) {
             return a.stt - b.stt;
         });
     } else {
-        // Mặc định: theo STT cột thứ tự
         sortedRows.sort((a, b) => a.stt - b.stt);
     }
 
@@ -1126,6 +1145,7 @@ function renderFilteredResultTable(rows) {
             `;
         }
 
+        // MẶC ĐỊNH CHO HỌC SINH CHƯA THI: ĐỂ TRỐNG TOÀN BỘ PHẦN ĐIỂM
         let col2_inTime = `<span class="status-not-submitted">---</span>`;
         let col3_spentTime = `<span class="status-not-submitted">---</span>`;
         let col6_status = `<span class="status-pill status-pending">Chưa thi</span>`;
@@ -1137,6 +1157,7 @@ function renderFilteredResultTable(rows) {
         let col11_details = `<span class="status-not-submitted">---</span>`;
 
         if (currentSub) {
+            // ĐÃ NỘP BÀI: HIỂN THỊ ĐẦY ĐỦ KẾT QUẢ
             let subDateMs = getSubmissionTimestamp(currentSub);
             col2_inTime = `<span style="font-family:monospace; font-weight:700; color:#0369a1;">${subDateMs ? formatDateTimeFull(subDateMs) : (currentSub.timestamp || "---")}</span>`;
             col3_spentTime = `<span style="color:#0f766e; font-weight:700;">${currentSub.completionTime || (currentSub.calcMetrics && currentSub.calcMetrics.completionTimeStr) || `${currentSub.spentMins||0} phút`}</span>`;
@@ -1150,7 +1171,6 @@ function renderFilteredResultTable(rows) {
             let pillClass = scNum >= 8.0 ? 'score-pill-high' : (scNum >= 5.0 ? 'score-pill-mid' : 'score-pill-low');
             col8_score = `<span class="${pillClass}">${scNum.toFixed(1)}</span>`;
 
-            // HIỂN THỊ XẾP HẠNG
             if (row.rank !== null && row.rank !== undefined) {
                 let rankNum = row.rank;
                 let rankBadge = "";
@@ -1179,6 +1199,7 @@ function renderFilteredResultTable(rows) {
                 col11_details = `<span class="td-details" title="${safeText}" onclick="alert('📋 CHI TIẾT BÀI LÀM:\\n\\n' + this.title.replace(/ \\| /g, '\\n'))">${currentSub.dataString}</span>`;
             }
         } else if (row.isDoing) {
+            // ĐANG LÀM BÀI: CHỈ HIỂN THỊ THỜI GIAN VÀO VÀ THỜI GIAN THI, ĐIỂM ĐỂ TRỐNG
             let formattedIn = formatDateTimeFull(row.doingStartTime);
             let liveDuration = formatElapsedDuration(row.doingStartTime);
 
