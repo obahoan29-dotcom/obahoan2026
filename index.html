@@ -94,20 +94,57 @@
                     <button class="admin-tab-btn" id="tab-btn-doc" onclick="switchAdminTab('doc')">🔗 Link web</button>
                 </div>
 
+                <!-- KHU VỰC Ô VUÔNG TÍCH CHỌN NHIỀU LỚP CÙNG LÚC -->
                 <div class="admin-input-group">
-                    <label>Lớp / Chuyên mục đăng vào:</label>
-                    <select id="admin-category-select">
-                        <option value="kho-tai-lieu">📚 Kho tài liệu PDF, Word, Ảnh...</option>
-                        <option value="nhac-nho">📌 Nhắc nhở quan trọng</option>
-                        <option value="them-10">📐 Thêm 10</option>
-                        <option value="them-11">✍️ Thêm 11</option>
-                        <option value="them-12">🎓 Thêm 12</option>
-                        <option value="lop-11a">🏫 Lớp 11A</option>
-                        <option value="lop-11c">🏫 Lớp 11C</option>
-                        <option value="lop-10p">🏫 Lớp 10P</option>
-                        <option value="hsg-toan-11">🏆 HSG Toán 11</option>
-                        <option value="tu-luan-padlet">💜 Nộp tự luận Padlet</option>
-                    </select>
+                    <div class="cat-quick-actions">
+                        <label style="margin-bottom:0;">Lớp / Chuyên mục đăng vào:</label>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" class="btn-cat-quick" onclick="toggleAllAdminCategories(true)">Tất cả</button>
+                            <button type="button" class="btn-cat-quick" onclick="toggleAllAdminCategories(false)">Bỏ chọn</button>
+                        </div>
+                    </div>
+                    <div class="category-checkbox-grid" id="admin-category-checkbox-list">
+                        <label class="cat-checkbox-item checked">
+                            <input type="checkbox" name="admin-cat-checkbox" value="lop-11a" checked onchange="handleCatCheckboxChange(this)">
+                            <span>🏫 Lớp 11A</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="lop-11c" onchange="handleCatCheckboxChange(this)">
+                            <span>🏫 Lớp 11C</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="lop-10p" onchange="handleCatCheckboxChange(this)">
+                            <span>🏫 Lớp 10P</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="them-11" onchange="handleCatCheckboxChange(this)">
+                            <span>✍️ Thêm 11</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="them-10" onchange="handleCatCheckboxChange(this)">
+                            <span>📐 Thêm 10</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="them-12" onchange="handleCatCheckboxChange(this)">
+                            <span>🎓 Thêm 12</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="hsg-toan-11" onchange="handleCatCheckboxChange(this)">
+                            <span>🏆 HSG Toán 11</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="kho-tai-lieu" onchange="handleCatCheckboxChange(this)">
+                            <span>📚 Kho tài liệu</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="nhac-nho" onchange="handleCatCheckboxChange(this)">
+                            <span>📌 Nhắc nhở</span>
+                        </label>
+                        <label class="cat-checkbox-item">
+                            <input type="checkbox" name="admin-cat-checkbox" value="tu-luan-padlet" onchange="handleCatCheckboxChange(this)">
+                            <span>💜 Nộp Padlet</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="admin-input-group">
@@ -127,7 +164,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: TẢI FILE PDF / WORD TRỰC TIẾP LÊN GOOGLE DRIVE (MỚI) -->
+                <!-- TAB 2: TẢI FILE PDF / WORD TRỰC TIẾP LÊN GOOGLE DRIVE -->
                 <div id="admin-tab-drive" style="display: none;">
                     <div class="admin-input-group">
                         <label>Chọn file PDF / Word / Excel từ máy tính:</label>
