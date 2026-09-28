@@ -1,7 +1,10 @@
 // =========================================================
 // FILE: thi-engine.js
-// BỘ MÁY ĐIỀU KHIỂN BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
+// BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
+// ĐÃ CẬP NHẬT:
+// 4. KHI NỘP BÀI XONG XÓA HOÀN TOÀN DẤU VẾT HỌ TÊN, LỚP, SBD
+//    ĐỂ KHÔNG LƯU LẠI VẾT Ở CÁC Ô ĐĂNG NHẬP CHO LẦN SAU
 // =========================================================
 
 window.onload = async function() {
@@ -92,11 +95,24 @@ function toggleSubPadlet(qId) {
     } 
 }
 
+// 4. RESET VỀ MÀN HÌNH ĐĂNG NHẬP MỚI VÀ XÓA HẾT VẾT DỮ LIỆU
 function resetToFreshLoginScreen() { 
     try { 
         localStorage.removeItem(getStorageKey()); 
         localStorage.removeItem(`shuffled_exam_${getExamCode()}`);
+        localStorage.removeItem("saved_student_sbd");
+        localStorage.removeItem("saved_student_name");
+        localStorage.removeItem("saved_student_class");
+        localStorage.removeItem("current_exam_student");
     } catch(e) {} 
+
+    const sName = document.getElementById("student-name");
+    const sId = document.getElementById("student-id");
+    const sClass = document.getElementById("student-class");
+    if (sName) sName.value = "";
+    if (sId) sId.value = "";
+    if (sClass) sClass.value = "";
+
     window.location.reload(); 
 }
 
@@ -708,7 +724,7 @@ function closeSubmitConfirmModal() {
     document.getElementById("submit-confirm-modal").style.display = "none"; 
 }
 
-// SỬA: CHỈ GỬI 1 LẦN DUY NHẤT LÊN FIREBASE ĐỂ KHÔNG BỊ TRÙNG THỜI GIAN
+// 4. KHI NỘP BÀI XONG: XÓA SẠCH VẾT TÊN, LỚP, SBD Ở CÁC Ô ĐĂNG NHẬP
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted) return; 
     
@@ -851,7 +867,6 @@ async function executeSubmitExam(isForceSubmit = false) {
         return false;
     };
 
-    // Chỉ gửi 1 lần duy nhất vào node examCode chính
     try {
         firebaseConfirmed = await sendToFirebaseEndpoint(examCode);
     } catch(err) {
@@ -875,9 +890,15 @@ async function executeSubmitExam(isForceSubmit = false) {
     await new Promise(r => setTimeout(r, 400));
 
     isSubmitted = true; 
+
+    // 4. XÓA SẠCH VẾT TÊN, SBD, LỚP KHỎI LOCALSTORAGE
     try { 
         localStorage.removeItem(getStorageKey()); 
         localStorage.removeItem(`shuffled_exam_${getExamCode()}`); 
+        localStorage.removeItem("saved_student_sbd");
+        localStorage.removeItem("saved_student_name");
+        localStorage.removeItem("saved_student_class");
+        localStorage.removeItem("current_exam_student");
     } catch(e) {} 
     
     if (confirmModal) confirmModal.style.display = "none"; 

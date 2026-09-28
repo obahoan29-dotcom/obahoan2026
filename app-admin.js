@@ -3,13 +3,12 @@
 // QUẢN TRỊ VIÊN: BẢO MẬT, ĐĂNG ĐỀ, TÀI LIỆU, TẢI FILE GOOGLE DRIVE,
 // SỬA/XÓA & THỜI GIAN LÀM BÀI
 // HỖ TRỢ TÍCH CHỌN ĐỒNG THỜI NHIỀU LỚP KHI TẠO ĐỀ / TẢI TÀI LIỆU
-// NÂNG CẤP: ĐẶT TÊN ĐỀ TÙY CHỈNH & TẢI RIÊNG FILE ĐÁP ÁN DAPAN.JS
+// NÂNG CẤP: BẬT/TẮT TỰ DO HOẠT ĐỘNG CHUẨN XÁC 100%
 // =========================================================
 
 let currentEditingTimeQuizId = null;
 let currentEditingTimeMode = null;
 
-// HÀM HỖ TRỢ ĐỌC NỘI DUNG TỪ BẤT KỲ ĐUÔI FILE NÀO (JS, TXT, JSON...)
 function parseScriptOrJson(content) {
     if (!content) return null;
     let clean = String(content).trim();
@@ -27,7 +26,6 @@ function parseScriptOrJson(content) {
     }
 }
 
-// HÀM GỘP FILE CÂU HỎI VÀ FILE ĐÁP ÁN LẠI VỚI NHAU
 function mergeQuestionsAndAnswers(examObj, answerObj) {
     if (!examObj || !examObj.questions) return examObj;
     if (!answerObj) return examObj;
@@ -44,7 +42,6 @@ function mergeQuestionsAndAnswers(examObj, answerObj) {
                 if (itemAns.correctAnswer !== undefined) q.correctAnswer = itemAns.correctAnswer;
                 if (itemAns.explanation !== undefined) q.explanation = itemAns.explanation;
 
-                // Với câu đúng sai (true_false)
                 if (itemAns.statements && q.statements) {
                     q.statements.forEach(st => {
                         if (itemAns.statements[st.id] !== undefined) {
@@ -53,7 +50,6 @@ function mergeQuestionsAndAnswers(examObj, answerObj) {
                     });
                 }
             } else {
-                // Nếu chỉ gán trực tiếp đáp án (số hoặc chuỗi)
                 if (q.type === 'multiple_choice') q.correct = itemAns;
                 else q.correctAnswer = String(itemAns);
             }
@@ -63,13 +59,11 @@ function mergeQuestionsAndAnswers(examObj, answerObj) {
     return examObj;
 }
 
-// LẤY DANH SÁCH CÁC LỚP ĐƯỢC TÍCH CHỌN
 function getSelectedAdminCategories() {
     const checkboxes = document.querySelectorAll('input[name="admin-cat-checkbox"]:checked');
     return Array.from(checkboxes).map(cb => cb.value);
 }
 
-// BẬT / TẮT TẤT CẢ CÁC Ô TÍCH CHỌN
 function toggleAllAdminCategories(checkAll) {
     const checkboxes = document.querySelectorAll('input[name="admin-cat-checkbox"]');
     checkboxes.forEach(cb => {
@@ -82,7 +76,6 @@ function toggleAllAdminCategories(checkAll) {
     });
 }
 
-// ĐỔI TRẠNG THÁI HIỂN THỊ KHI BẤM VÀO Ô TÍCH
 function handleCatCheckboxChange(checkbox) {
     const parentLabel = checkbox.closest('.cat-checkbox-item');
     if (parentLabel) {
@@ -256,7 +249,6 @@ function autoFillDriveTitle(fileInput) {
     }
 }
 
-// ĐỌC FILE BẰNG PROMISE BẤT CHẤP ĐUÔI FILE
 function readFileAsTextAsync(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -266,7 +258,7 @@ function readFileAsTextAsync(file) {
     });
 }
 
-// TẠO ĐỀ THI VÀO CÙNG LÚC CÁC LỚP ĐƯỢC TÍCH CHỌN (HỖ TRỢ TÊN ĐỀ RIÊNG & FILE ĐÁP ÁN RIÊNG)
+// TẠO ĐỀ THI VÀO CÙNG LÚC CÁC LỚP ĐƯỢC TÍCH CHỌN
 async function processUpload() {
     const fileInput = document.getElementById("admin-file-upload");
     const answerFileInput = document.getElementById("admin-answer-file-upload");
@@ -293,7 +285,6 @@ async function processUpload() {
             throw new Error("File đề thi không đúng cấu trúc (thiếu trường questions)!");
         }
 
-        // Nếu có chọn thêm file đáp án riêng
         if (answerFileInput && answerFileInput.files.length > 0) {
             const aContent = await readFileAsTextAsync(answerFileInput.files[0]);
             let parsedAnswers = parseScriptOrJson(aContent);
@@ -302,7 +293,6 @@ async function processUpload() {
             }
         }
 
-        // Tùy chỉnh tên đề thi nếu người dùng nhập
         const customTitle = customTitleInput ? customTitleInput.value.trim() : "";
         if (customTitle) {
             parsedExam.title = customTitle;
@@ -357,7 +347,7 @@ async function processUpload() {
     }
 }
 
-// TẢI FILE PDF / WORD LÊN GOOGLE DRIVE
+// TẢI FILE LÊN GOOGLE DRIVE
 async function processUploadToGoogleDrive() {
     const fileInput = document.getElementById("admin-drive-file");
     const titleInput = document.getElementById("admin-drive-title");
@@ -376,21 +366,17 @@ async function processUploadToGoogleDrive() {
     }
 
     if (!GOOGLE_DRIVE_UPLOAD_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL.includes("DÁN_URL")) {
-        alert("⚠️ Bạn chưa cấu hình GOOGLE_DRIVE_UPLOAD_GAS_URL trong file app-config.js!\nVui lòng dán URL Web App triển khai từ Google Apps Script vào.");
+        alert("⚠️ Bạn chưa cấu hình GOOGLE_DRIVE_UPLOAD_GAS_URL trong file app-config.js!");
         return;
     }
 
     const file = fileInput.files[0];
-
     if (file.size > 25 * 1024 * 1024) {
-        alert("⚠️ Dung lượng file quá lớn (> 25MB). Vui lòng chọn file nhẹ hơn để tải mượt mà!");
+        alert("⚠️ Dung lượng file quá lớn (> 25MB).");
         return;
     }
 
-    let finalTitle = titleInput.value.trim();
-    if (!finalTitle) {
-        finalTitle = file.name;
-    }
+    let finalTitle = titleInput.value.trim() || file.name;
 
     btn.disabled = true;
     btn.innerText = "⏳ Đang chuyển đổi...";
@@ -405,7 +391,6 @@ async function processUploadToGoogleDrive() {
         reader.onload = async function(e) {
             try {
                 const base64Data = e.target.result;
-
                 btn.innerText = "🚀 Đang tải lên Drive...";
                 if (statusBox) statusBox.innerText = "🚀 Đang gửi file lên Google Drive...";
 
@@ -476,7 +461,7 @@ async function processUploadToGoogleDrive() {
     }
 }
 
-// ĐĂNG LINK TÀI LIỆU CÓ SẴN
+// ĐĂNG LINK TÀI LIỆU
 async function processAddDocument() {
     const titleInput = document.getElementById("admin-doc-title").value.trim();
     const urlInput = document.getElementById("admin-doc-url").value.trim();
@@ -487,7 +472,6 @@ async function processAddDocument() {
         alert("⚠️ Vui lòng tích chọn ít nhất 1 lớp / chuyên mục để đăng!"); 
         return; 
     }
-
     if (!titleInput || !urlInput) { 
         alert("⚠️ Vui lòng nhập đủ tên tài liệu và đường link!"); 
         return; 
@@ -803,22 +787,16 @@ async function saveExamTimeConfig() {
     }
 }
 
-async function toggleAllowFreeExam(categoryId, itemId, event) {
+// 2. SỬA NÚT TỰ DO: XỬ LÝ SỰ KIỆN GẠT SWITCH TRỰC TIẾP, KHÔNG BỊ LIỆT VÀ ĐỒNG BỘ 100%
+function handleAllowFreeToggleChange(categoryId, itemId, isChecked, event) {
     if (event) {
-        event.preventDefault();
         event.stopPropagation();
     }
 
-    const chk = document.getElementById(`free-toggle-${itemId}`);
     const txt = document.getElementById(`free-status-txt-${itemId}`);
-
-    const currentState = chk ? chk.checked : true;
-    const newState = !currentState;
-
-    if (chk) chk.checked = newState;
     if (txt) {
-        txt.innerText = newState ? 'BẬT' : 'TẮT';
-        txt.className = `free-toggle-status ${newState ? 'st-on' : 'st-off'}`;
+        txt.innerText = isChecked ? 'BẬT' : 'TẮT';
+        txt.className = `free-toggle-status ${isChecked ? 'st-on' : 'st-off'}`;
     }
 
     let linkedQuizId = null;
@@ -827,7 +805,7 @@ async function toggleAllowFreeExam(categoryId, itemId, event) {
             if (c.id === categoryId && c.links) {
                 const found = c.links.find(l => (l.firebaseId === itemId || l.id === itemId));
                 if (found) {
-                    found.allowFree = newState;
+                    found.allowFree = isChecked;
                     linkedQuizId = extractQuizIdFromItem(found);
                 }
             }
@@ -837,28 +815,33 @@ async function toggleAllowFreeExam(categoryId, itemId, event) {
     updateLinksList(CHINH_KHOA_CATEGORIES);
 
     try {
-        localStorage.setItem(`exam_allow_free_${itemId}`, String(newState));
+        localStorage.setItem(`exam_allow_free_${itemId}`, String(isChecked));
         if (linkedQuizId) {
-            localStorage.setItem(`exam_allow_free_${linkedQuizId}`, String(newState));
+            localStorage.setItem(`exam_allow_free_${linkedQuizId}`, String(isChecked));
         }
     } catch(e) {}
 
-    try {
-        const payload = { allowFree: newState };
-        fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+    const payload = { allowFree: isChecked };
+    fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+    }).catch(e => console.error("Firebase custom_links patch error:", e));
+
+    const targetQuizId = linkedQuizId || (itemId.startsWith('quiz_') ? itemId : null);
+    if (targetQuizId) {
+        fetch(`${FIREBASE_DB_URL}/quizzes/${targetQuizId}.json`, {
             method: 'PATCH',
             body: JSON.stringify(payload)
-        }).catch(e => console.error("Firebase custom_links patch error:", e));
+        }).catch(e => console.error("Firebase quizzes patch error:", e));
+    }
+}
 
-        const targetQuizId = linkedQuizId || (itemId.startsWith('quiz_') ? itemId : null);
-        if (targetQuizId) {
-            fetch(`${FIREBASE_DB_URL}/quizzes/${targetQuizId}.json`, {
-                method: 'PATCH',
-                body: JSON.stringify(payload)
-            }).catch(e => console.error("Firebase quizzes patch error:", e));
-        }
-    } catch(err) {
-        console.error("Lỗi cập nhật trạng thái thi tự do:", err);
+// Giữ lại hàm tương thích ngược nếu gọi từ bên ngoài
+function toggleAllowFreeExam(categoryId, itemId, event) {
+    const chk = document.getElementById(`free-toggle-${itemId}`);
+    if (chk) {
+        chk.checked = !chk.checked;
+        handleAllowFreeToggleChange(categoryId, itemId, chk.checked, event);
     }
 }
 
