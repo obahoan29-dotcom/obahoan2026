@@ -215,10 +215,177 @@ body {
 .dantri-nav-btn.padlet-purple-btn { color: #ffffff; background: linear-gradient(135deg, #c084fc 0%, #8b5cf6 50%, #7c3aed 100%); border-color: transparent; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.38); }
 #dantri-nav-bar .dantri-nav-btn { min-height: 44px; padding: 6px 12px; font-size: 13px; line-height: 1.25; border-radius: 14px; gap: 4px; margin-right: 8px;}
 
-/* NÚT XEM TIẾP CÁC BÀI CÒN LẠI */
-.expand-toggle-wrapper {
-    display: flex; justify-content: center; width: 100%; margin-top: 6px;
+/* DROPDOWN BẢN TIN / DANH MỤC */
+.dantri-dropdown-panel {
+    display: none; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 14px;
+    border: 1px solid rgba(226, 232, 240, 0.85); box-shadow: var(--shadow-md);
+    margin-bottom: 12px; animation: popInBadge 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.dantri-dropdown-panel.show { display: block; }
+.dantri-sub-header { font-size: 14px; font-weight: 800; color: #0284c7; margin-bottom: 10px; }
+
+/* THẺ ĐỀ THI & TÀI LIỆU (CỰC KỲ QUAN TRỌNG: CỐ ĐỊNH KÍCH THƯỚC ICON) */
+.link-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.exam-card { 
+    background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px; 
+    padding: 10px 14px; display: flex; align-items: center; gap: 12px; 
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04); position: relative; width: 100%;
+}
+.exam-card:hover { transform: translateY(-2px); border-color: #38bdf8; box-shadow: 0 6px 18px rgba(2, 132, 199, 0.12); }
+
+/* KHỐI ẢNH ĐẠI DIỆN THẺ - BẮT BUỘC CỐ ĐỊNH KHÔNG ĐƯỢC PHÓNG TO */
+.exam-thumb-box { 
+    width: 48px; height: 48px; min-width: 48px; max-width: 48px; 
+    border-radius: 12px; background: #f1f5f9; display: flex; 
+    align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; 
+    border: 1px solid #e2e8f0;
+}
+.exam-thumb { 
+    width: 100% !important; height: 100% !important; max-width: 48px !important; 
+    max-height: 48px !important; object-fit: contain !important; display: block;
+}
+
+.exam-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.exam-header-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.exam-title-text { font-size: 14.5px; font-weight: 800; color: #1e293b; line-height: 1.35; word-break: break-word; }
+.exam-date { font-size: 11.5px; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.arrow { font-size: 20px; font-weight: 800; color: #94a3b8; margin-left: auto; flex-shrink: 0; }
+
+/* CHẾ ĐỘ THẺ ADMIN */
+.exam-card.admin-card-mode {
+    flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px;
+}
+.admin-card-top-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; flex-wrap: wrap;
+}
+.left-admin-actions-col { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.btn-view-results-left {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff; border: none; border-radius: 8px; padding: 5px 9px;
+    font-size: 11.5px; font-weight: 800; cursor: pointer; transition: 0.15s;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3); display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-view-results-left:hover { transform: scale(1.04); }
+
+.free-student-toggle-wrap {
+    display: inline-flex; align-items: center; gap: 5px; background: #f8fafc;
+    border: 1px solid #cbd5e1; border-radius: 20px; padding: 2px 8px 2px 6px; cursor: pointer;
+}
+.free-toggle-lbl { font-size: 11px; font-weight: 800; color: #475569; }
+.free-toggle-status { font-size: 10.5px; font-weight: 900; }
+.free-toggle-status.st-on { color: #16a34a; }
+.free-toggle-status.st-off { color: #ef4444; }
+
+.mini-switch { position: relative; width: 28px; height: 16px; display: inline-block; }
+.mini-switch input { opacity: 0; width: 0; height: 0; }
+.slider-toggle {
+    position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1;
+    border-radius: 20px; transition: .25s;
+}
+.slider-toggle:before {
+    position: absolute; content: ""; height: 12px; width: 12px; left: 2px; bottom: 2px;
+    background-color: white; border-radius: 50%; transition: .25s;
+}
+.mini-switch input:checked + .slider-toggle { background-color: #10b981; }
+.mini-switch input:checked + .slider-toggle:before { transform: translateX(12px); }
+
+.left-sub-btns-row { display: flex; gap: 4px; }
+.btn-time-sub-action {
+    background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px;
+    padding: 3px 6px; font-size: 10.5px; font-weight: 700; color: #334155; cursor: pointer;
+}
+.btn-time-sub-action:hover { background: #e2e8f0; color: #0f172a; }
+
+.admin-link-tools { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.shuffle-label { font-size: 11px; font-weight: 800; color: #475569; }
+.switch-toggle { position: relative; width: 28px; height: 16px; display: inline-block; }
+.switch-toggle input { opacity: 0; width: 0; height: 0; }
+.switch-toggle input:checked + .slider-toggle { background-color: #3b82f6; }
+.switch-toggle input:checked + .slider-toggle:before { transform: translateX(12px); }
+
+.tool-btn {
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid #cbd5e1;
+    background: #ffffff; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; cursor: pointer; transition: 0.15s;
+}
+.tool-btn:hover { background: #f1f5f9; transform: scale(1.08); }
+.tool-btn-delete:hover { background: #fee2e2; border-color: #fca5a5; }
+
+.admin-card-bottom-row {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+}
+
+/* KHỐI MENU BADGE - BẮT BUỘC DISPLAY: NONE KHI CHƯA CLICK */
+.badge-wrapper { position: relative; display: inline-block; }
+.badge-item {
+    font-size: 10.5px; font-weight: 900; padding: 2px 7px; border-radius: 6px;
+    letter-spacing: 0.3px; text-transform: uppercase; user-select: none;
+}
+.badge-item.b-hot { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+.badge-item.b-new { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+.badge-item.b-moi { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.badge-item.b-lamngay { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+.badge-item.b-warning { background: #ffedd5; color: #ea580c; border: 1px solid #fed7aa; }
+.badge-item.b-start { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+.badge-item.badge-empty { background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; }
+
+.badge-dropdown-menu {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0;
+    background: #ffffff; border-radius: 10px; border: 1.5px solid #cbd5e1;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 5px; z-index: 1000;
+    flex-direction: column; gap: 4px; min-width: 100px;
+}
+.badge-dropdown-menu.show { display: flex; animation: popInBadge 0.15s ease-out; }
+@keyframes popInBadge { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+.b-item-btn {
+    padding: 4px 8px; font-size: 11px; font-weight: 800; border-radius: 6px;
+    cursor: pointer; text-align: center;
+}
+.b-item-btn:hover { filter: brightness(0.95); transform: scale(1.02); }
+.b-none-btn { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; font-size: 10.5px; }
+
+/* KHỐI THỜI GIAN TRONG THẺ */
+.st-modal-time-box {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 6px 10px; font-size: 11.5px; color: #334155; margin-top: 4px;
+}
+.time-row-limit { font-weight: 700; color: #0284c7; }
+.time-row-schedule { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+/* KHO TÀI LIỆU FOLDER */
+.folder-section { background: #ffffff; border-radius: 16px; border: 1.5px solid #e2e8f0; margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
+.folder-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; list-style: none; user-select: none; background: #ffffff; }
+.folder-header::-webkit-details-marker { display: none; }
+.folder-avatar { width: 32px; height: 32px; object-fit: contain; }
+.folder-title { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; flex: 1; }
+.folder-arrow { font-size: 14px; color: #94a3b8; transition: transform 0.2s ease; }
+.folder-section[open] .folder-arrow { transform: rotate(90deg); }
+.folder-section .link-list { padding: 8px 12px 14px 12px; }
+.empty-folder { padding: 14px; text-align: center; color: #94a3b8; font-style: italic; font-size: 13px; }
+
+/* BẢNG TIN VÀ DẶN DÒ */
+.news-section { background: #ffffff; border-radius: 16px; border: 1.5px solid #e2e8f0; padding: 14px; margin-bottom: 14px; box-shadow: var(--shadow-sm); }
+.news-header-title { margin: 0 0 10px 0; font-size: 15px; font-weight: 800; color: #0f172a; }
+.news-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; text-decoration: none; color: inherit; }
+.news-item:last-child { border-bottom: none; }
+.news-item:hover .news-title { color: #0284c7; }
+.news-content { flex: 1; min-width: 0; }
+.news-title { font-size: 13.5px; font-weight: 700; color: #1e293b; line-height: 1.4; }
+.news-date { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.news-img-box { width: 80px; height: 52px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+.news-img { width: 100%; height: 100%; object-fit: cover; }
+
+/* BANNER CHÂN TRANG */
+.bottom-banner-box { width: 100%; height: 130px; border-radius: 16px; overflow: hidden; margin: 16px 0 10px 0; box-shadow: var(--shadow-sm); border: 1.5px solid #e2e8f0;}
+.bottom-banner-img { width: 100%; height: 100%; object-fit: cover; }
+footer { text-align: center; font-size: 12.5px; font-weight: 700; color: #64748b; padding: 12px 0 24px 0; }
+
+/* NÚT XEM TIẾP CÁC BÀI CÒN LẠI */
+.expand-toggle-wrapper { display: flex; justify-content: center; width: 100%; margin-top: 6px; }
 .btn-expand-more {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     width: 100%; padding: 10px 16px; border-radius: 12px;
@@ -233,10 +400,7 @@ body {
     border-color: #0369a1; color: #0369a1; transform: translateY(-1.5px);
     box-shadow: 0 4px 14px rgba(2, 132, 199, 0.22);
 }
-.btn-expand-more.is-expanded {
-    background: #f1f5f9; border-color: #94a3b8; color: #475569;
-}
-.btn-expand-more:active { transform: translateY(1px); }
+.btn-expand-more.is-expanded { background: #f1f5f9; border-color: #94a3b8; color: #475569; }
 
 /* ĐÈN TRUNG THU */
 .mid-autumn-badge {
@@ -259,182 +423,159 @@ body {
     100% { filter: drop-shadow(0 0 22px rgba(253, 224, 71, 1)) drop-shadow(0 0 38px rgba(249, 115, 22, 0.95)) drop-shadow(0 0 50px rgba(239, 68, 68, 0.8)); }
 }
 
-/* KHỐI NỔI 3D THỐNG KÊ TRUY CẬP WEBSITE (GÓC PHẢI DƯỚI) */
-.visitor-floating-widget-wrap {
-    position: fixed; bottom: 18px; right: 18px; z-index: 99999;
-    user-select: none;
-}
+/* KHỐI NỔI 3D THỐNG KÊ TRUY CẬP WEBSITE */
+.visitor-floating-widget-wrap { position: fixed; bottom: 18px; right: 18px; z-index: 99999; user-select: none; }
 .visitor-badge-3d {
-    display: flex; align-items: center; gap: 8px;
-    background: linear-gradient(145deg, #ffffff, #f1f5f9);
-    border: 2px solid #ffffff;
-    border-radius: 20px;
-    padding: 7px 14px 7px 10px;
-    cursor: pointer;
-    box-shadow: 
-        5px 5px 15px rgba(15, 23, 42, 0.18),
-        -3px -3px 10px rgba(255, 255, 255, 0.9),
-        inset 0 1px 2px rgba(255, 255, 255, 1);
+    display: flex; align-items: center; gap: 8px; background: linear-gradient(145deg, #ffffff, #f1f5f9);
+    border: 2px solid #ffffff; border-radius: 20px; padding: 7px 14px 7px 10px; cursor: pointer;
+    box-shadow: 5px 5px 15px rgba(15, 23, 42, 0.18), -3px -3px 10px rgba(255, 255, 255, 0.9);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
-.visitor-badge-3d:hover {
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 
-        7px 9px 22px rgba(2, 132, 199, 0.28),
-        -4px -4px 12px rgba(255, 255, 255, 1);
-    border-color: #7dd3fc;
-}
-.visitor-badge-3d:active {
-    transform: translateY(1px) scale(0.97);
-    box-shadow: 
-        inset 2px 2px 6px rgba(15, 23, 42, 0.15),
-        inset -2px -2px 6px rgba(255, 255, 255, 0.8);
-}
+.visitor-badge-3d:hover { transform: translateY(-3px) scale(1.03); border-color: #7dd3fc; }
 .visitor-badge-icon {
-    font-size: 18px; line-height: 1;
-    width: 28px; height: 28px; border-radius: 50%;
-    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+    font-size: 18px; line-height: 1; width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%); display: flex;
+    align-items: center; justify-content: center; color: #fff;
 }
-.visitor-badge-info {
-    display: flex; flex-direction: column; line-height: 1.15;
-}
-.visitor-badge-info .v-label {
-    font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px;
-}
-.visitor-badge-info .v-number {
-    font-size: 15px; font-weight: 900; color: #0284c7; font-family: 'Be Vietnam Pro', sans-serif;
-}
-.visitor-badge-3d .v-arrow {
-    font-size: 14px; opacity: 0.85; margin-left: 2px;
-}
+.visitor-badge-info { display: flex; flex-direction: column; line-height: 1.15; }
+.visitor-badge-info .v-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+.visitor-badge-info .v-number { font-size: 15px; font-weight: 900; color: #0284c7; }
+.visitor-badge-3d .v-arrow { font-size: 14px; opacity: 0.85; margin-left: 2px; }
 
-/* POPUP THỐNG KÊ CHI TIẾT THEO GIỜ */
 .visitor-stats-popover {
     display: none; position: absolute; bottom: calc(100% + 12px); right: 0;
     width: 320px; max-width: calc(100vw - 32px); max-height: 480px;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px; padding: 16px;
+    background: rgba(255, 255, 255, 0.98); border-radius: 20px; padding: 16px;
     box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28), 0 0 0 1.5px #cbd5e1;
-    z-index: 100000; animation: popInBadge 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-    flex-direction: column; overflow: hidden;
+    z-index: 100000; flex-direction: column; overflow: hidden;
 }
 .visitor-stats-popover.show { display: flex; }
-.v-pop-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 8px;
-}
-.v-pop-title {
-    font-size: 14px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 6px;
-}
-.v-pop-close {
-    background: none; border: none; font-size: 16px; font-weight: 900;
-    color: #94a3b8; cursor: pointer; padding: 0 4px; line-height: 1;
-}
-.v-pop-close:hover { color: #ef4444; }
-
-.v-summary-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
-}
-.v-card-metric {
-    border-radius: 12px; padding: 10px; text-align: center;
-}
-.v-card-metric.card-blue {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border: 1.5px solid #bae6fd;
-}
-.v-card-metric.card-purple {
-    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-    border: 1.5px solid #e9d5ff;
-}
-.v-metric-title {
-    font-size: 10.5px; font-weight: 800; color: #475569; letter-spacing: 0.3px;
-}
-.v-metric-num {
-    font-size: 19px; font-weight: 900; color: #0284c7; margin-top: 2px;
-}
+.v-pop-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 8px; }
+.v-pop-title { font-size: 14px; font-weight: 900; color: #0f172a; }
+.v-pop-close { background: none; border: none; font-size: 16px; font-weight: 900; color: #94a3b8; cursor: pointer; }
+.v-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.v-card-metric { border-radius: 12px; padding: 10px; text-align: center; }
+.v-card-metric.card-blue { background: #f0f9ff; border: 1.5px solid #bae6fd; }
+.v-card-metric.card-purple { background: #faf5ff; border: 1.5px solid #e9d5ff; }
+.v-metric-title { font-size: 10.5px; font-weight: 800; color: #475569; }
+.v-metric-num { font-size: 19px; font-weight: 900; color: #0284c7; margin-top: 2px; }
 .card-purple .v-metric-num { color: #7e22ce; }
+.v-hourly-section-title { font-size: 11.5px; font-weight: 800; color: #334155; margin-bottom: 6px; }
+.hourly-list-container { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+.hourly-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700; color: #475569; background: #f8fafc; }
+.hourly-item.has-visits { background: #f0fdf4; color: #166534; }
+.hourly-item.current-hour { border: 1.5px solid #38bdf8; background: #e0f2fe; color: #0369a1; font-weight: 900; }
+.hourly-time { width: 62px; flex-shrink: 0; font-family: monospace; }
+.hourly-bar-wrap { flex: 1; height: 6px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+.hourly-bar-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #0284c7); border-radius: 4px; }
+.hourly-val { width: 32px; text-align: right; font-weight: 900; font-family: monospace; }
 
-.v-hourly-section-title {
-    font-size: 11.5px; font-weight: 800; color: #334155; margin-bottom: 6px;
+/* MODAL BẢNG KẾT QUẢ THI TOÀN MÀN HÌNH */
+.result-fullscreen-modal {
+    position: fixed; inset: 0; background: #ffffff; z-index: 99999;
+    display: none; flex-direction: column; overflow: hidden;
 }
-.hourly-list-container {
-    display: flex; flex-direction: column; gap: 4px; max-height: 220px;
-    overflow-y: auto; padding-right: 4px;
+.result-modal-header {
+    background: #ffffff; border-bottom: 1.5px solid #e2e8f0; padding: 10px 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0;
 }
-.hourly-list-container::-webkit-scrollbar { width: 4px; }
-.hourly-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.result-modal-title-box { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.result-modal-icon { font-size: 26px; }
+.result-modal-heading { font-size: 17px; font-weight: 900; color: #0f172a; }
+.result-modal-subheading { font-size: 12px; color: #64748b; font-weight: 600; }
+.result-modal-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.result-search-input {
+    padding: 7px 12px; border: 1.5px solid #cbd5e1; border-radius: 20px;
+    font-size: 13px; font-weight: 600; outline: none; width: 160px;
+}
+.result-search-input:focus { border-color: #0284c7; width: 200px; }
+.btn-refresh-result, .btn-regrade-exam, .btn-export-excel {
+    padding: 7px 12px; border-radius: 10px; font-size: 12.5px; font-weight: 800; cursor: pointer; border: none;
+}
+.btn-refresh-result { background: #e0f2fe; color: #0284c7; }
+.btn-regrade-exam { background: #fef3c7; color: #b45309; }
+.btn-export-excel { background: #ecfdf5; color: #059669; }
+.btn-close-result-modal {
+    background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%;
+    font-size: 16px; font-weight: 900; color: #64748b; cursor: pointer;
+}
+.btn-close-result-modal:hover { background: #fee2e2; color: #ef4444; }
 
-.hourly-item {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    padding: 4px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
-    color: #475569; background: #f8fafc;
+.result-modal-body { flex: 1; padding: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.result-table-card { flex: 1; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.result-table-scroll-wrap { flex: 1; overflow: auto; }
+.result-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--table-font-size); }
+.result-table thead th {
+    position: sticky; top: 0; background: #f8fafc; color: #334155; font-weight: 800;
+    padding: 10px 8px; border-bottom: 2px solid #cbd5e1; z-index: 5; text-align: left;
+    white-space: nowrap; border-right: 1px solid #f1f5f9;
 }
-.hourly-item.has-visits {
-    background: #f0fdf4; color: #166534;
+.result-table tbody td {
+    padding: var(--table-row-padding-y) var(--table-row-padding-x);
+    border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f8fafc;
+    vertical-align: middle; white-space: nowrap;
 }
-.hourly-item.current-hour {
-    border: 1.5px solid #38bdf8; background: #e0f2fe; color: #0369a1; font-weight: 900;
-}
-.hourly-time { width: 62px; flex-shrink: 0; font-family: monospace; font-size: 11px;}
-.hourly-bar-wrap {
-    flex: 1; height: 6px; background: #e2e8f0; border-radius: 4px; overflow: hidden;
-}
-.hourly-bar-fill {
-    height: 100%; background: linear-gradient(90deg, #38bdf8, #0284c7); border-radius: 4px;
-}
-.hourly-val {
-    width: 32px; text-align: right; font-weight: 900; font-family: monospace;
-}
+.result-table tbody tr:hover { background: #f0f9ff; }
 
-/* RESPONSIVE MOBILE FIX */
+.status-pill { padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 800; display: inline-block; }
+.status-pill.status-done { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.status-pill.status-doing { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.status-pill.status-pending { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+.score-pill-high { background: #dbeafe; color: #1d4ed8; padding: 3px 8px; border-radius: 8px; font-weight: 900; }
+.score-pill-mid { background: #fef9c3; color: #854d0e; padding: 3px 8px; border-radius: 8px; font-weight: 900; }
+.score-pill-low { background: #fee2e2; color: #b91c1c; padding: 3px 8px; border-radius: 8px; font-weight: 900; }
+
+.tabs-warn { color: #dc2626; font-weight: 800; }
+.tabs-ok { color: #16a34a; font-weight: 700; }
+.tag-free-student { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; font-size: 10px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-left: 4px; }
+.class-badge { background: #f1f5f9; color: #334155; font-weight: 800; padding: 2px 6px; border-radius: 6px; }
+
+/* MODAL OVERLAY CHUNG (ĐĂNG NHẬP THI / CHUYỂN LỚP / SAO CHÉP / THỜI GIAN) */
+.move-modal-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 100000; display: none; align-items: center; justify-content: center; padding: 16px;
+}
+.student-login-box, .move-modal-box {
+    background: #ffffff; border-radius: 20px; padding: 22px; width: 100%;
+    max-width: 420px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); border: 1.5px solid #e2e8f0;
+    animation: popInBadge 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.student-login-header { text-align: center; margin-bottom: 16px; }
+.student-login-icon { font-size: 34px; margin-bottom: 4px; }
+.student-login-title { font-size: 17px; font-weight: 900; color: #0284c7; }
+.student-login-sub { font-size: 12.5px; color: #64748b; font-weight: 600; margin-top: 2px; }
+
+.student-type-tabs { display: flex; gap: 6px; margin-bottom: 14px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
+.st-tab-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; color: #475569; background: transparent; }
+.st-tab-btn.active { background: #ffffff; color: #0284c7; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+.st-tab-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+
+.st-error-box { background: #fef2f2; border: 1.5px solid #fecaca; color: #dc2626; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; margin-bottom: 12px; display: none; }
+.st-input-group { margin-bottom: 12px; }
+.st-input-group label { display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 5px; }
+.st-input-wrapper { position: relative; display: flex; align-items: center; }
+.st-input-icon { position: absolute; left: 12px; font-size: 15px; color: #94a3b8; }
+.st-input-field { width: 100%; padding: 10px 36px 10px 36px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13.5px; font-weight: 600; outline: none; }
+.st-input-field:focus { border-color: #0284c7; }
+.st-eye-btn { position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 15px; }
+.switch-mode-hint { font-size: 11.5px; color: #64748b; text-align: center; margin-top: 8px; }
+.switch-mode-link { color: #0284c7; font-weight: 800; cursor: pointer; text-decoration: underline; }
+
+.st-btn-row, .move-btn-row { display: flex; gap: 8px; margin-top: 18px; }
+.st-btn, .move-btn-cancel, .move-btn-submit { flex: 1; padding: 11px; border-radius: 10px; border: none; font-size: 13px; font-weight: 800; cursor: pointer; text-align: center; }
+.st-btn-cancel, .move-btn-cancel { background: #f1f5f9; color: #475569; }
+.st-btn-submit, .move-btn-submit { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; }
+
+/* RESPONSIVE MOBILE */
 @media (max-width: 640px) {
     body { font-size: 14px; }
-    
-    .admin-popover-panel { 
-        position: fixed; 
-        top: 60px; 
-        left: 8px; 
-        right: 8px; 
-        width: auto; 
-        max-width: none;
-        max-height: calc(100vh - 80px); 
-        border-radius: 18px; 
-        padding: 14px 12px;
-        transform: translateY(-10px) scale(0.98);
-        transform-origin: top center;
-    }
-    .admin-popover-panel.show { transform: translateY(0) scale(1); }
-
     .banner-title { font-size: 12px; padding: 5px 12px; }
-    .banner-watermark { font-size: 17px; letter-spacing: 1.5px; }
-    #dantri-nav-bar .dantri-nav-btn { min-height: 40px; padding: 5px 9px; font-size: 12px; }
-    .full-width-nav-row .dantri-nav-btn { font-size: 13px; padding: 8px 4px; min-height: 44px; }
+    .banner-watermark { font-size: 17px; }
     .news-img-box { width: 68px; height: 46px; }
-    .exam-thumb-box { width: 38px; height: 44px; }
+    .exam-thumb-box { width: 42px; height: 42px; min-width: 42px; }
     .auth-input { width: 100px; }
-    .admin-duration-select { font-size: 11.5px; padding: 6px 6px; }
-    
-    .admin-card-top-row { gap: 6px; }
-    .admin-link-tools { gap: 3px; }
-    .tool-btn { width: 26px; height: 26px; font-size: 11px; }
-    .btn-view-results-left { font-size: 10.5px; padding: 4px 6px; }
-    
-    .exam-title-text { font-size: 13.5px; }
+    .admin-duration-select { font-size: 11.5px; }
     .result-search-input { width: 110px; }
-    .result-search-input:focus { width: 140px; }
-    .btn-regrade-exam { font-size: 11px; padding: 6px 10px; }
-    .table-settings-popover { width: 280px; right: -50px; }
-    
-    .mid-autumn-badge { right: 2px; }
-    .lantern-stick { width: 34px; height: 3.5px; }
-    .lantern-string { height: 12px; }
-    .mid-autumn-icon { font-size: 34px; }
-
     .visitor-floating-widget-wrap { bottom: 12px; right: 12px; }
-    .visitor-badge-3d { padding: 6px 10px; }
-    .visitor-stats-popover { width: calc(100vw - 24px); right: -6px; max-height: 420px; }
 }
