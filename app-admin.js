@@ -393,6 +393,7 @@ async function processUploadToGoogleDrive() {
                 let rawResult = e.target.result || "";
                 let base64Data = rawResult;
                 
+                // Cắt bỏ phần đầu data url một cách an toàn tuyệt đối
                 if (rawResult.indexOf("base64,") !== -1) {
                     base64Data = rawResult.split("base64,")[1];
                 } else if (rawResult.indexOf(",") !== -1) {
@@ -402,6 +403,7 @@ async function processUploadToGoogleDrive() {
                 btn.innerText = "🚀 Đang tải lên Drive...";
                 if (statusBox) statusBox.innerText = "🚀 Đang gửi file lên Google Drive...";
 
+                // Tự động suy ra mimeType chuẩn
                 let mimeType = file.type;
                 if (!mimeType) {
                     const ext = file.name.split('.').pop().toLowerCase();
