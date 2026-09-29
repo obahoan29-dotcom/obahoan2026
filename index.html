@@ -47,6 +47,15 @@
     <span class="mid-autumn-icon">🏮</span>
 </div>
 
+<!-- NÚT NỔI HIỂN THỊ SỐ LƯỢT TRUY CẬP HÔM NAY (GÓC DƯỚI BÊN TRÁI) -->
+<div class="site-visit-badge" id="site-visit-badge" onclick="toggleVisitStatsModal(event)" title="Nhấn để xem chi tiết thống kê lượt truy cập theo giờ và 7 ngày">
+    <div class="visit-pulse-dot"></div>
+    <span class="visit-icon">👁️</span>
+    <span class="visit-label">Hôm nay:</span>
+    <b class="visit-number" id="visit-today-count">...</b>
+    <span class="visit-arrow">📈</span>
+</div>
+
 <div class="container" id="app">
     <!-- BANNER ĐẦU TRANG -->
     <div class="top-banner-box">
@@ -272,6 +281,80 @@
     </div>
 
     <footer>Copyright &copy; 2026 Phạm Công Hoan</footer>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL THỐNG KÊ CHI TIẾT LƯỢT TRUY CẬP (THEO GIỜ & 7 NGÀY) -->
+<!-- ========================================================= -->
+<div class="visit-stats-modal-overlay" id="visit-stats-modal">
+    <div class="visit-stats-modal-box">
+        <div class="visit-modal-header">
+            <div class="visit-modal-title">
+                <span class="vm-icon">📊</span>
+                <div>
+                    <h3 style="margin:0; font-size:16px; font-weight:900; color:#0f172a;">Thống Kê Lượt Truy Cập</h3>
+                    <p style="margin:2px 0 0 0; font-size:12px; color:#64748b; font-weight:600;">Hệ thống tự động theo dõi theo thời gian thực</p>
+                </div>
+            </div>
+            <button type="button" class="btn-close-visit-modal" onclick="closeVisitStatsModal(event)">✕</button>
+        </div>
+
+        <!-- 4 Ô CHỈ SỐ KPI -->
+        <div class="visit-kpi-grid">
+            <div class="visit-kpi-card kpi-today">
+                <div class="kpi-label">Hôm nay</div>
+                <div class="kpi-val" id="kpi-visit-today">0</div>
+                <div class="kpi-sub">Lượt xem trang</div>
+            </div>
+            <div class="visit-kpi-card kpi-yesterday">
+                <div class="kpi-label">Hôm qua</div>
+                <div class="kpi-val" id="kpi-visit-yesterday">0</div>
+                <div class="kpi-sub">Lượt xem trang</div>
+            </div>
+            <div class="visit-kpi-card kpi-week">
+                <div class="kpi-label">7 ngày qua</div>
+                <div class="kpi-val" id="kpi-visit-7days">0</div>
+                <div class="kpi-sub">Tổng trong tuần</div>
+            </div>
+            <div class="visit-kpi-card kpi-total">
+                <div class="kpi-label">Tổng truy cập</div>
+                <div class="kpi-val" id="kpi-visit-alltime">0</div>
+                <div class="kpi-sub">Toàn thời gian</div>
+            </div>
+        </div>
+
+        <!-- TAB CHUYỂN ĐỔI: THEO GIỜ HÔM NAY / THEO 7 NGÀY -->
+        <div class="visit-tabs-row">
+            <button type="button" class="visit-tab-btn active" id="tab-btn-hours" onclick="switchVisitStatsTab('hours')">⏱ Theo giờ hôm nay</button>
+            <button type="button" class="visit-tab-btn" id="tab-btn-week" onclick="switchVisitStatsTab('week')">📅 Theo 7 ngày trong tuần</button>
+        </div>
+
+        <!-- NỘI DUNG 1: PHÂN TÍCH THEO GIỜ (0h - 23h) -->
+        <div id="visit-tab-content-hours" class="visit-tab-content" style="display:block;">
+            <div class="chart-header-hint">
+                <span>🕒 Phân bổ lượt truy cập 24 giờ ngày hôm nay (giờ vàng làm bài):</span>
+                <span id="current-hour-badge" style="font-weight:800; color:#0284c7; background:#e0f2fe; padding:2px 8px; border-radius:12px; font-size:11.5px;">--:--</span>
+            </div>
+            <div class="hourly-bars-scroll-container" id="hourly-bars-container">
+                <!-- Sẽ được render tự động qua JS -->
+            </div>
+        </div>
+
+        <!-- NỘI DUNG 2: PHÂN TÍCH THEO 7 NGÀY TRONG TUẦN -->
+        <div id="visit-tab-content-week" class="visit-tab-content" style="display:none;">
+            <div class="chart-header-hint">
+                <span>📆 Thống kê lượt truy cập các ngày gần nhất:</span>
+            </div>
+            <div class="weekly-list-container" id="weekly-bars-container">
+                <!-- Sẽ được render tự động qua JS -->
+            </div>
+        </div>
+
+        <div class="visit-modal-footer">
+            <span style="font-size:11.5px; color:#64748b; font-style:italic;">* Dữ liệu tự động làm mới và đồng bộ an toàn qua máy chủ.</span>
+            <button type="button" class="btn-refresh-visits" onclick="refreshVisitStatsData()">🔄 Cập nhật</button>
+        </div>
+    </div>
 </div>
 
 <!-- ========================================================= -->
