@@ -1,7 +1,8 @@
 // =========================================================
 // FILE: thi-service.js
 // QUẢN LÝ KẾT NỐI MẠNG, FIREBASE REALTIME, PRESENCE, 
-// THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
+// XÁC THỰC 2 THÔNG SỐ (USERNAME & PASS), THEO DÕI THỜI GIAN
+// VÀ ĐẢM BẢO NHẬN ĐƯỢC PHẢN HỒI TỪ FIREBASE SIÊU NHANH
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
@@ -36,6 +37,15 @@ let pendingSubmissionPayload = null;
 let presenceInterval = null;
 let onlineCountInterval = null;
 
+function normalizeName(str) {
+    if (!str) return "";
+    return String(str).toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/[^a-z0-9]/g, "")
+        .trim();
+}
+
 function getExamCategory() {
     const urlParams = new URLSearchParams(window.location.search);
     let cat = urlParams.get('cat');
@@ -50,50 +60,64 @@ function getExamCategory() {
     return "them-11";
 }
 
-function findStudentFromDatabase(query, preferredCat = null) {
-    if (!query || !window.STUDENT_ACCOUNTS) return null;
-    const q = String(query).trim().toLowerCase();
+// XÁC THỰC 2 THÔNG SỐ: USERNAME & PASS THEO LỚP
+function verifyStudentByUsernameAndPass(inputUsername, inputPass, preferredCat = null) {
+    if (!inputUsername || !inputPass || !window.STUDENT_ACCOUNTS) return null;
+    const normUser = normalizeName(inputUsername);
+    const passTrim = String(inputPass).trim();
+
+    const searchInList = (list) => {
+        if (!Array.isArray(list)) return null;
+        return list.find(acc => {
+            const accUser = String(acc.username || "").trim();
+            const accSbd = String(acc.sbd || "").trim();
+            const accPass = String(acc.pass || "").trim();
+
+            const isUserMatch = (accUser.toLowerCase() === inputUsername.toLowerCase()) || 
+                                (normalizeName(accUser) === normUser) ||
+                                (accSbd.toLowerCase() === inputUsername.toLowerCase());
+            const isPassMatch = (accPass === passTrim);
+            return isUserMatch && isPassMatch;
+        });
+    };
 
     if (preferredCat && window.STUDENT_ACCOUNTS[preferredCat]) {
-        const list = window.STUDENT_ACCOUNTS[preferredCat];
-        const matched = list.find(acc => 
-            (String(acc.sbd).trim().toLowerCase() === q) ||
-            (acc.username && acc.username.trim().toLowerCase() === q) ||
-            (acc.name && acc.name.trim().toLowerCase() === q)
-        );
+        const matched = searchInList(window.STUDENT_ACCOUNTS[preferredCat]);
         if (matched) return matched;
     }
 
     for (const cat in window.STUDENT_ACCOUNTS) {
-        const list = window.STUDENT_ACCOUNTS[cat];
-        if (Array.isArray(list)) {
-            const matched = list.find(acc => 
-                (String(acc.sbd).trim().toLowerCase() === q) ||
-                (acc.username && acc.username.trim().toLowerCase() === q) ||
-                (acc.name && acc.name.trim().toLowerCase() === q)
-            );
-            if (matched) return matched;
-        }
+        const matched = searchInList(window.STUDENT_ACCOUNTS[cat]);
+        if (matched) return matched;
     }
+
     return null;
 }
 
-function findStudentByPassword(passQuery, preferredCat = null) {
-    if (!passQuery || !window.STUDENT_ACCOUNTS) return null;
-    const p = String(passQuery).trim().toLowerCase();
-    
+function findStudentFromDatabase(query, preferredCat = null) {
+    if (!query || !window.STUDENT_ACCOUNTS) return null;
+    const q = String(query).trim().toLowerCase();
+    const normQ = normalizeName(query);
+
+    const searchList = (list) => {
+        if (!Array.isArray(list)) return null;
+        return list.find(acc => 
+            (String(acc.sbd).trim().toLowerCase() === q) ||
+            (acc.username && acc.username.trim().toLowerCase() === q) ||
+            (acc.username && normalizeName(acc.username) === normQ) ||
+            (acc.name && acc.name.trim().toLowerCase() === q) ||
+            (acc.name && normalizeName(acc.name) === normQ)
+        );
+    };
+
     if (preferredCat && window.STUDENT_ACCOUNTS[preferredCat]) {
-        const list = window.STUDENT_ACCOUNTS[preferredCat];
-        const matched = list.find(acc => String(acc.pass).trim().toLowerCase() === p);
+        const matched = searchList(window.STUDENT_ACCOUNTS[preferredCat]);
         if (matched) return matched;
     }
 
     for (const cat in window.STUDENT_ACCOUNTS) {
-        const list = window.STUDENT_ACCOUNTS[cat];
-        if (Array.isArray(list)) {
-            const matched = list.find(acc => String(acc.pass).trim().toLowerCase() === p);
-            if (matched) return matched;
-        }
+        const matched = searchList(window.STUDENT_ACCOUNTS[cat]);
+        if (matched) return matched;
     }
     return null;
 }

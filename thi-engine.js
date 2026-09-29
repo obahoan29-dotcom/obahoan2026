@@ -2,9 +2,10 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ SỬA:
-// KHI NỘP BÀI XONG XÓA TRIỆT ĐỂ VẾT HỌ TÊN, LỚP, SBD
-// ĐỂ LẦN ĐĂNG NHẬP SAU HOÀN TOÀN MỚI TINH TRẮNG SẠCH
+// CẬP NHẬT:
+// 1. BẮT BUỘC NHẬN PHẢN HỒI FIREBASE TRƯỚC KHI MỞ BÀI THI (SIÊU NHANH)
+// 2. SO SÁNH 2 THÔNG SỐ (USERNAME & PASS) CHÍNH XÁC KHI XÁC THỰC
+// 3. XÓA SẠCH DẤU VẾT HỌ TÊN, SBD KHI NỘP BÀI XONG
 // =========================================================
 
 window.onload = async function() {
@@ -207,6 +208,7 @@ function showError(title, msg) {
     errCard.style.display = "block"; 
 }
 
+// XÁC THỰC MẬT KHẨU / USERNAME
 function checkPassword() { 
     const val = document.getElementById("exam-pass-input").value.trim(); 
     if (!val) {
@@ -215,7 +217,7 @@ function checkPassword() {
     }
 
     const currentCat = getExamCategory();
-    const matchedStudent = findStudentFromDatabase(val, currentCat) || findStudentByPassword(val, currentCat);
+    const matchedStudent = findStudentFromDatabase(val, currentCat);
     if (matchedStudent) {
         applyStudentToUI(matchedStudent);
         document.getElementById("login-box").style.display = "none";
@@ -467,6 +469,7 @@ function updateProgress() {
     return answeredCount; 
 }
 
+// BẮT ĐẦU BÀI THI: NHẬN ĐƯỢC PHẢN HỒI FIREBASE SIÊU NHANH
 async function startExamAction() { 
     let sId = document.getElementById("student-id").value.trim(); 
     let sName = document.getElementById("student-name").value.trim(); 
@@ -534,6 +537,7 @@ function startWaitingCountdown(startTimeMs, sId, sName, sClass) {
     }, 1000); 
 }
 
+// BẮT BUỘC CHỜ FIREBASE PHẢN HỒI TRƯỚC KHI CHO VÀO THI
 async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
     const currentCat = getExamCategory();
     const urlParams = new URLSearchParams(window.location.search);
@@ -581,35 +585,55 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         createdAt: Date.now() 
     }; 
 
+    let isServerReady = false;
+
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3500);
 
         const pushNodes = [examCode];
         if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
-        let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
-        if (numMatch) {
-            pushNodes.push(numMatch[1]);
-            pushNodes.push("DE" + numMatch[1]);
-            pushNodes.push("DE" + numMatch[1] + "TOAN11");
-        }
 
         const tasks = pushNodes.map(n => 
             fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
                 method: 'PUT', body: JSON.stringify(presencePayload), signal: controller.signal
-            }).catch(() => null)
+            }).then(r => r.ok).catch(() => false)
         );
 
         tasks.push(
             fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
                 method: 'POST', body: JSON.stringify(logPayload), signal: controller.signal
-            }).catch(() => null)
+            }).then(r => r.ok).catch(() => false)
         );
 
-        await Promise.all(tasks);
+        const results = await Promise.all(tasks);
         clearTimeout(timeoutId);
+
+        if (results.some(r => r === true)) {
+            isServerReady = true;
+        }
     } catch(e) {
         console.warn("Handshake bắt đầu bài thi:", e);
+    }
+
+    if (!isServerReady) {
+        // Dự phòng ping nhanh 1 lần nữa để đảm bảo máy chủ đã phản hồi
+        try {
+            const fallbackRes = await fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}/lastPing.json`, {
+                method: 'PUT',
+                body: JSON.stringify(Date.now())
+            });
+            if (fallbackRes.ok) isServerReady = true;
+        } catch(e2) {}
+    }
+
+    if (!isServerReady) {
+        alert("⚠️ Không nhận được phản hồi xác thực từ máy chủ thi! Vui lòng kiểm tra lại mạng Internet và bấm lại.");
+        if (startBtn) {
+            startBtn.disabled = false;
+            startBtn.innerText = "Vào Làm Bài";
+        }
+        return;
     }
 
     postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
@@ -821,15 +845,15 @@ async function executeSubmitExam(isForceSubmit = false) {
         maDe: getMaDe(), 
         completionTime: completionTimeStr, 
         examName: EXAM_NAME, 
-        examTitle: EXAM_NAME,
-        categoryId: currentCat,
-        cat: currentCat,
+        examTitle: EXAM_NAME, 
+        categoryId: currentCat, 
+        cat: currentCat, 
         studentId: sId, 
         sbd: sId, 
         studentName: sName, 
         studentClass: sClass, 
-        className: sClass,
-        isFree: isFreeStudent,
+        className: sClass, 
+        isFree: isFreeStudent, 
         rawScore: Math.round(totalRawScore * 100) / 100, 
         score10: score10Scale, 
         tabSwitchCount: `${tabSwitchCount} lần`, 

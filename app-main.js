@@ -2,17 +2,20 @@
 // FILE: app-main.js
 // BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
 // NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI & ĐĂNG NHẬP HỌC SINH
-// ĐÃ SỬA:
-// 1. TỰ ĐỘNG THU LẠI CÁC BẢNG QUẢN TRỊ, BADGE KHI CLICK RA NGOÀI
-// 2. KHI MỞ LINK ĐĂNG NHẬP THI: NẾU LẦN TRƯỚC ĐÃ NỘP XONG
-//    THÌ XÓA SẠCH VẾT, CÁC Ô NHẬP MỚI TINH 100%
-// 3. ĐẢM BẢO CHÍNH XÁC CATEGORY CHO LỚP 11E, TRUYỀN CATEGORYID VÀO MODAL KẾT QUẢ
+// CẬP NHẬT:
+// 1. ĐĂNG NHẬP THEO LỚP: SO SÁNH CHUẨN XÁC 2 THÔNG SỐ (USERNAME & PASS)
+// 2. CHỜ PHẢN HỒI FIREBASE SIÊU NHANH TRƯỚC KHI CHO VÀO THI
+// 3. WIDGET 3D NỔI KHỐI ĐẾM TRUY CẬP HÔM NAY, THEO GIỜ & TỔNG TRUY CẬP
+// 4. MỖI LỚP HIỆN 2 BÀI ĐẦU TIÊN, DƯỚI CÓ MŨI TÊN XEM TIẾP CÁC BÀI CÒN LẠI
 // =========================================================
 
 let activeDayThemCatId = null;
 let activeChinhKhoaRow1CatId = null;
 let activeChinhKhoaRow2CatId = null;
 let activeDantriCatId = null;
+
+// Quản lý trạng thái mở rộng (> 2 bài) cho từng danh mục
+let expandedCategoriesMap = {};
 
 // Khởi chạy khi DOM sẵn sàng
 document.addEventListener("DOMContentLoaded", async function() {
@@ -23,6 +26,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     refreshAllViews();
     await loadDataFromFirebase();
+    initSiteVisitorTracking();
 });
 
 // Gán ảnh Banner & Avatar
@@ -236,6 +240,65 @@ function renderReminderSection() {
     });
 }
 
+// =========================================================
+// HÀM HIỂN THỊ DANH SÁCH BÀI CÓ THU GỌN: MẶC ĐỊNH HIỆN 2 BÀI ĐẦU TIÊN
+// CÒN LẠI HIỆN NÚT "XEM TIẾP X BÀI CÒN LẠI"
+// =========================================================
+function renderPaginatedItemsList(containerEl, itemsArray, categoryId, contextType) {
+    containerEl.innerHTML = "";
+    if (!itemsArray || itemsArray.length === 0) {
+        containerEl.innerHTML = `<div class="empty-folder">Chưa có bài kiểm tra nào trong mục này.</div>`;
+        return;
+    }
+
+    const sorted = sortLinksNewestFirst(itemsArray);
+    const total = sorted.length;
+    const isExpanded = !!expandedCategoriesMap[categoryId];
+
+    // Luôn hiển thị 2 bài đầu
+    const firstTwo = sorted.slice(0, 2);
+    firstTwo.forEach(item => {
+        containerEl.appendChild(createItemCardElement(item, categoryId));
+    });
+
+    // Nếu có trên 2 bài
+    if (total > 2) {
+        const remainingItems = sorted.slice(2);
+        const extraWrap = document.createElement("div");
+        extraWrap.id = `extra-items-${categoryId}`;
+        extraWrap.className = "extra-items-wrapper" + (isExpanded ? " show" : "");
+        extraWrap.style.display = isExpanded ? "flex" : "none";
+        extraWrap.style.flexDirection = "column";
+        extraWrap.style.gap = "8px";
+        extraWrap.style.width = "100%";
+
+        remainingItems.forEach(item => {
+            extraWrap.appendChild(createItemCardElement(item, categoryId));
+        });
+        containerEl.appendChild(extraWrap);
+
+        const btnWrap = document.createElement("div");
+        btnWrap.className = "expand-toggle-wrapper";
+        btnWrap.innerHTML = `
+            <button type="button" class="btn-expand-more ${isExpanded ? 'is-expanded' : ''}" onclick="toggleExpandCategoryItems('${categoryId}', '${contextType}', event)">
+                <span>${isExpanded ? `▲ Thu gọn (đang xem ${total}/${total} bài)` : `▼ Xem tiếp ${remainingItems.length} bài tập còn lại`}</span>
+            </button>
+        `;
+        containerEl.appendChild(btnWrap);
+    }
+}
+
+function toggleExpandCategoryItems(categoryId, contextType, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    expandedCategoriesMap[categoryId] = !expandedCategoriesMap[categoryId];
+
+    if (contextType === "daythem") {
+        renderDayThemSection();
+    } else if (contextType === "chinhkhoa") {
+        renderChinhKhoaSection();
+    }
+}
+
 function renderDayThemSection() {
     const bar = document.getElementById("daythem-nav-bar");
     const panel = document.getElementById("daythem-dropdown-panel");
@@ -257,22 +320,14 @@ function renderDayThemSection() {
         bar.appendChild(btn);
     });
 
-    list.innerHTML = "";
-
     if (!activeDayThemCatId) {
         panel.classList.remove("show");
         return;
     }
 
     const activeCat = DAY_THEM_CATEGORIES.find(c => c.id === activeDayThemCatId);
-    if (activeCat && activeCat.links && activeCat.links.length > 0) {
-        const sorted = sortLinksNewestFirst(activeCat.links);
-        sorted.forEach(item => {
-            list.appendChild(createItemCardElement(item, activeCat.id));
-        });
-        panel.classList.add("show");
-    } else {
-        list.innerHTML = `<div class="empty-folder">Chưa có bài kiểm tra nào trong mục này.</div>`;
+    if (activeCat) {
+        renderPaginatedItemsList(list, activeCat.links || [], activeCat.id, "daythem");
         panel.classList.add("show");
     }
 }
@@ -299,19 +354,12 @@ function renderChinhKhoaSection() {
             row1Bar.appendChild(btn);
         });
 
-        row1List.innerHTML = "";
         if (!activeChinhKhoaRow1CatId) {
             row1Panel.classList.remove("show");
         } else {
             const activeCat1 = row1Cats.find(c => c.id === activeChinhKhoaRow1CatId);
-            if (activeCat1 && activeCat1.links && activeCat1.links.length > 0) {
-                const sorted = sortLinksNewestFirst(activeCat1.links);
-                sorted.forEach(item => {
-                    row1List.appendChild(createItemCardElement(item, activeCat1.id));
-                });
-                row1Panel.classList.add("show");
-            } else {
-                row1List.innerHTML = `<div class="empty-folder">Chưa có bài tập cho lớp này.</div>`;
+            if (activeCat1) {
+                renderPaginatedItemsList(row1List, activeCat1.links || [], activeCat1.id, "chinhkhoa");
                 row1Panel.classList.add("show");
             }
         }
@@ -343,19 +391,12 @@ function renderChinhKhoaSection() {
             row2Bar.appendChild(btn);
         });
 
-        row2List.innerHTML = "";
         if (!activeChinhKhoaRow2CatId) {
             row2Panel.classList.remove("show");
         } else {
             const activeCat2 = row2Cats.find(c => c.id === activeChinhKhoaRow2CatId);
-            if (activeCat2 && activeCat2.links && activeCat2.links.length > 0) {
-                const sorted = sortLinksNewestFirst(activeCat2.links);
-                sorted.forEach(item => {
-                    row2List.appendChild(createItemCardElement(item, activeCat2.id));
-                });
-                row2Panel.classList.add("show");
-            } else {
-                row2List.innerHTML = `<div class="empty-folder">Chưa có nội dung trong chuyên mục này.</div>`;
+            if (activeCat2) {
+                renderPaginatedItemsList(row2List, activeCat2.links || [], activeCat2.id, "chinhkhoa");
                 row2Panel.classList.add("show");
             }
         }
@@ -559,7 +600,6 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
 
 // ==========================================
 // MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
-// SỬA: NẾU ĐÃ NỘP BÀI XONG THÌ MỚI TINH, XÓA TRẮNG HẾT CÁC Ô
 // ==========================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -588,7 +628,7 @@ function openStudentLoginModal(item, categoryId, event) {
         timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date);
     }
 
-    // KIỂM TRA XÓA VẾT: NẾU ĐÃ NỘP BÀI XONG HOẶC KHÔNG CÓ PHIÊN CŨ
+    // XÓA TRẮNG HOÀN TOÀN CÁC Ô NHẬP NẾU LẦN TRƯỚC ĐÃ NỘP BÀI
     const isCleanSession = (localStorage.getItem("last_submission_cleared") === "true") || 
                            !localStorage.getItem("saved_student_name");
 
@@ -599,7 +639,6 @@ function openStudentLoginModal(item, categoryId, event) {
     const fSbdIn = document.getElementById("st-free-sbd-input");
 
     if (isCleanSession) {
-        // Xóa trắng toàn bộ, mới tinh 100%
         if (userIn) userIn.value = "";
         if (passIn) passIn.value = "";
         if (fNameIn) fNameIn.value = "";
@@ -680,14 +719,24 @@ function toggleStudentPassVisibility() {
     }
 }
 
-function submitStudentLogin() {
+// =========================================================
+// QUY TRÌNH ĐĂNG NHẬP THEO LỚP: SO SÁNH CHUẨN XÁC 2 THÔNG SỐ (USERNAME & PASS)
+// VÀ CHỜ PHẢN HỒI FIREBASE SIÊU TỐC TRƯỚC KHI CHO VÀO THI
+// =========================================================
+async function submitStudentLogin() {
     const errBox = document.getElementById("st-login-error");
+    const submitBtn = document.getElementById("st-submit-btn");
+
     const showErr = (msg) => {
         if (errBox) {
             errBox.innerText = msg;
             errBox.style.display = "block";
         } else {
             alert(msg);
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Vào thi 🚀";
         }
     };
 
@@ -701,29 +750,34 @@ function submitStudentLogin() {
     let finalName = "";
     let finalClass = "";
 
+    // 1. KIỂM TRA SO SÁNH 2 THÔNG SỐ: USERNAME VÀ PASS
     if (activeStudentLogin.currentMode === "class") {
         const usernameVal = (document.getElementById("st-username-input").value || "").trim();
         const passVal = (document.getElementById("st-password-input").value || "").trim();
 
         if (!usernameVal || !passVal) {
-            showErr("⚠️ Vui lòng nhập đầy đủ Tên đăng nhập (hoặc SBD) và Mật khẩu!");
+            showErr("⚠️ Vui lòng nhập đầy đủ 2 thông số: Tên đăng nhập (username) và Mật khẩu (pass)!");
             return;
         }
 
         const accounts = getAccountsForCategory(activeStudentLogin.categoryId);
-        const normUser = normalizeName(usernameVal);
-        const matched = accounts.find(acc => {
-            const accSbd = String(acc.sbd || "").trim().toLowerCase();
-            const accUser = normalizeName(acc.username);
-            const accName = normalizeName(acc.name);
-            const passOk = String(acc.pass || "").trim() === passVal;
+        const normInputUser = normalizeName(usernameVal);
 
-            const isUserMatch = (accSbd === usernameVal.toLowerCase()) || (normUser && (accUser === normUser || accName === normUser));
-            return isUserMatch && passOk;
+        // So sánh chính xác 2 thông số: username & pass
+        const matched = accounts.find(acc => {
+            const accUser = String(acc.username || "").trim();
+            const accPass = String(acc.pass || "").trim();
+
+            const isUserMatch = (accUser.toLowerCase() === usernameVal.toLowerCase()) || 
+                                (normalizeName(accUser) === normInputUser) ||
+                                (String(acc.sbd || "").trim().toLowerCase() === usernameVal.toLowerCase());
+            
+            const isPassMatch = (accPass === passVal);
+            return isUserMatch && isPassMatch;
         });
 
         if (!matched) {
-            showErr("❌ Tên đăng nhập hoặc mật khẩu không chính xác cho lớp này!");
+            showErr("❌ Tên đăng nhập (username) hoặc Mật khẩu (pass) không chính xác cho lớp này!");
             return;
         }
 
@@ -732,6 +786,7 @@ function submitStudentLogin() {
         finalClass = matched.className || "Lớp học";
 
     } else {
+        // Thí sinh tự do
         if (activeStudentLogin.item && activeStudentLogin.item.allowFree === false) {
             showErr("⛔ Giáo viên đã tắt chế độ thi tự do đối với đề thi này!");
             return;
@@ -747,6 +802,65 @@ function submitStudentLogin() {
         }
     }
 
+    // 2. GỬI HANDSHAKE XÁC THỰC VÀ CHỜ PHẢN HỒI FIREBASE SIÊU NHANH
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "⏳ Đang kết nối máy chủ thi...";
+    }
+
+    const quizId = extractQuizIdFromItem(activeStudentLogin.item) || activeStudentLogin.categoryId;
+    const safeSbd = String(finalSbd).replace(/[^a-zA-Z0-9]/g, '_');
+    const handshakePayload = {
+        sbd: finalSbd,
+        name: finalName,
+        className: finalClass,
+        cat: activeStudentLogin.categoryId,
+        categoryId: activeStudentLogin.categoryId,
+        examTitle: activeStudentLogin.examTitle,
+        quizId: quizId,
+        loginHandshakeTime: Date.now(),
+        clientStatus: "ready_to_start"
+    };
+
+    let isFirebaseConfirmed = false;
+
+    try {
+        // Timeout 3.5s đảm bảo nếu mạng chập chờn vẫn không bị treo mà phản hồi ngay
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        const fbResponse = await fetch(`${FIREBASE_DB_URL}/active_sessions/${quizId}/${safeSbd}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(handshakePayload),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (fbResponse.ok) {
+            isFirebaseConfirmed = true;
+        } else {
+            throw new Error(`Máy chủ từ chối kết nối (Mã lỗi: ${fbResponse.status})`);
+        }
+    } catch (fbErr) {
+        console.warn("Lỗi bắt tay Firebase:", fbErr);
+        // Nếu timeout do mạng lag cục bộ, thử gửi dự phòng kênh test nhanh 1.5s
+        try {
+            const fbRetry = await fetch(`${FIREBASE_DB_URL}/active_sessions/${quizId}/${safeSbd}/lastPing.json`, {
+                method: 'PUT',
+                body: JSON.stringify(Date.now())
+            });
+            if (fbRetry.ok) isFirebaseConfirmed = true;
+        } catch(e) {}
+
+        if (!isFirebaseConfirmed) {
+            showErr("⚠️ Chưa nhận được xác nhận từ máy chủ Firebase! Vui lòng kiểm tra lại kết nối mạng và thử lại.");
+            return;
+        }
+    }
+
+    // 3. KHI FIREBASE PHẢN HỒI THÀNH CÔNG: LƯU TRỮ VÀ VÀO THI
     try {
         localStorage.removeItem("last_submission_cleared");
         localStorage.setItem("saved_student_sbd", finalSbd);
@@ -804,7 +918,127 @@ async function selectBadgeOption(categoryId, itemId, badgeType, event) {
 }
 
 // =========================================================
-// SỰ KIỆN TOÀN CỤC: THU LẠI ADMIN PANEL, AUTH, BADGE KHI CLICK RA NGOÀI
+// HỆ THỐNG THỐNG KÊ TRUY CẬP WEBSITE 3D NỔI KHỐI (HÔM NAY, THEO GIỜ & TỔNG)
+// =========================================================
+let currentVisitorStatsData = {
+    todayCount: 0,
+    totalCount: 0,
+    hourlyMap: {}
+};
+
+function getFormattedDateKey() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+async function initSiteVisitorTracking() {
+    const dateKey = getFormattedDateKey();
+    const currentHour = new Date().getHours();
+    const sessionVisitedKey = `visited_site_${dateKey}_h${currentHour}`;
+
+    const isCountedThisHour = sessionStorage.getItem(sessionVisitedKey) === "true";
+
+    try {
+        // Tải dữ liệu thống kê từ Firebase
+        const [todayRes, totalRes] = await Promise.all([
+            fetch(`${FIREBASE_DB_URL}/site_analytics/days/${dateKey}.json`).catch(() => null),
+            fetch(`${FIREBASE_DB_URL}/site_analytics/total.json`).catch(() => null)
+        ]);
+
+        let todayData = todayRes && todayRes.ok ? await todayRes.json() : null;
+        let totalVal = totalRes && totalRes.ok ? await totalRes.json() : 0;
+        if (typeof totalVal !== 'number') totalVal = parseInt(totalVal, 10) || 0;
+
+        let todayTotal = (todayData && todayData.total) ? parseInt(todayData.total, 10) : 0;
+        let hourly = (todayData && todayData.hours) ? todayData.hours : {};
+
+        // Nếu người dùng mới truy cập trong khung giờ này, tăng biến đếm
+        if (!isCountedThisHour) {
+            todayTotal++;
+            totalVal++;
+            hourly[currentHour] = (hourly[currentHour] || 0) + 1;
+
+            sessionStorage.setItem(sessionVisitedKey, "true");
+
+            // Cập nhật Firebase ngầm siêu nhanh
+            fetch(`${FIREBASE_DB_URL}/site_analytics/days/${dateKey}/total.json`, { method: 'PUT', body: JSON.stringify(todayTotal) }).catch(() => null);
+            fetch(`${FIREBASE_DB_URL}/site_analytics/days/${dateKey}/hours/${currentHour}.json`, { method: 'PUT', body: JSON.stringify(hourly[currentHour]) }).catch(() => null);
+            fetch(`${FIREBASE_DB_URL}/site_analytics/total.json`, { method: 'PUT', body: JSON.stringify(totalVal) }).catch(() => null);
+        }
+
+        currentVisitorStatsData.todayCount = todayTotal;
+        currentVisitorStatsData.totalCount = totalVal;
+        currentVisitorStatsData.hourlyMap = hourly;
+
+        renderVisitorStatsBadge();
+    } catch (e) {
+        console.warn("Lỗi thống kê truy cập:", e);
+        renderVisitorStatsBadge();
+    }
+}
+
+function renderVisitorStatsBadge() {
+    const todayEl = document.getElementById("widget-today-visits");
+    if (todayEl) {
+        todayEl.innerText = Number(currentVisitorStatsData.todayCount || 0).toLocaleString("vi-VN");
+    }
+}
+
+function toggleVisitorPopover(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const pop = document.getElementById("visitor-stats-popover");
+    if (!pop) return;
+
+    if (pop.classList.contains("show")) {
+        pop.classList.remove("show");
+    } else {
+        renderVisitorPopoverContent();
+        pop.classList.add("show");
+    }
+}
+
+function closeVisitorPopover(event) {
+    if (event) event.stopPropagation();
+    const pop = document.getElementById("visitor-stats-popover");
+    if (pop) pop.classList.remove("show");
+}
+
+function renderVisitorPopoverContent() {
+    const popTotal = document.getElementById("pop-total-visits");
+    const popToday = document.getElementById("pop-today-visits");
+    const grid = document.getElementById("pop-hourly-grid");
+    if (!grid) return;
+
+    if (popTotal) popTotal.innerText = Number(currentVisitorStatsData.totalCount || 0).toLocaleString("vi-VN");
+    if (popToday) popToday.innerText = Number(currentVisitorStatsData.todayCount || 0).toLocaleString("vi-VN");
+
+    const curH = new Date().getHours();
+    let maxHourly = 1;
+    for (let h = 0; h < 24; h++) {
+        const v = currentVisitorStatsData.hourlyMap[h] || 0;
+        if (v > maxHourly) maxHourly = v;
+    }
+
+    grid.innerHTML = "";
+    for (let h = 0; h < 24; h++) {
+        const count = currentVisitorStatsData.hourlyMap[h] || 0;
+        const isCurrent = (h === curH);
+        const item = document.createElement("div");
+        item.className = "hourly-item" + (isCurrent ? " current-hour" : "") + (count > 0 ? " has-visits" : "");
+        item.innerHTML = `
+            <span class="hourly-time">${h}h - ${h+1}h</span>
+            <div class="hourly-bar-wrap">
+                <div class="hourly-bar-fill" style="width: ${Math.round((count / maxHourly) * 100)}%;"></div>
+            </div>
+            <span class="hourly-val">${count}</span>
+        `;
+        grid.appendChild(item);
+    }
+}
+
+// =========================================================
+// SỰ KIỆN TOÀN CỤC: THU LẠI ADMIN PANEL, AUTH, BADGE, POPOVER
 // =========================================================
 document.addEventListener("click", function(event) {
     // 1. Thu lại bảng Admin & ô mật khẩu Admin khi click ra ngoài
@@ -823,5 +1057,11 @@ document.addEventListener("click", function(event) {
     const badgeWrapper = event.target.closest(".badge-wrapper");
     if (!badgeWrapper) {
         document.querySelectorAll(".badge-dropdown-menu.show").forEach(m => m.classList.remove("show"));
+    }
+
+    // 3. Thu lại popover thống kê người truy cập khi click ra ngoài
+    const visitorWidget = event.target.closest(".visitor-floating-widget-wrap");
+    if (!visitorWidget) {
+        closeVisitorPopover();
     }
 });

@@ -234,7 +234,7 @@
         <div class="link-list" style="padding:0; background:transparent;" id="reminder-container"></div>
     </div>
 
-    <!-- DẠY THÊM (MẶC ĐỊNH CO LẠI) -->
+    <!-- DẠY THÊM (MẶC ĐỊNH CO LẠI, HIỆN 2 BÀI ĐẦU TIÊN) -->
     <div class="section-header-title red-title">🔴 Các lớp dạy thêm</div>
     <div class="dantri-nav-container">
         <div class="full-width-nav-row" id="daythem-nav-bar"></div>
@@ -243,7 +243,7 @@
         </div>
     </div>
 
-    <!-- CHÍNH KHÓA (MẶC ĐỊNH CO LẠI) -->
+    <!-- CHÍNH KHÓA (MẶC ĐỊNH CO LẠI, HIỆN 2 BÀI ĐẦU TIÊN) -->
     <div class="section-header-title blue-title">🔵 Các lớp chính khóa</div>
     <div class="dantri-nav-container">
         <div class="full-width-nav-row" id="chinhkhoa-row1-bar"></div>
@@ -272,6 +272,42 @@
     </div>
 
     <footer>Copyright &copy; 2026 Phạm Công Hoan</footer>
+</div>
+
+<!-- ========================================================= -->
+<!-- KHU VỰC NỔI KHỐI 3D: ĐẾM SỐ LƯỢNG TRUY CẬP WEBSITE -->
+<!-- ========================================================= -->
+<div class="visitor-floating-widget-wrap">
+    <div class="visitor-badge-3d" onclick="toggleVisitorPopover(event)" title="Bấm vào để xem phân tích số lượt truy cập theo từng giờ trong ngày!">
+        <div class="visitor-badge-icon">👁️</div>
+        <div class="visitor-badge-info">
+            <span class="v-label">Hôm nay</span>
+            <span class="v-number" id="widget-today-visits">0</span>
+        </div>
+        <span class="v-arrow">📊</span>
+    </div>
+
+    <!-- POPUP XÒE RA KHI BẤM: CHI TIẾT THEO TỪNG GIỜ & TỔNG SỐ LƯỢT TRUY CẬP -->
+    <div class="visitor-stats-popover" id="visitor-stats-popover">
+        <div class="v-pop-header">
+            <div class="v-pop-title">📈 Thống kê truy cập website</div>
+            <button type="button" class="v-pop-close" onclick="closeVisitorPopover(event)">✕</button>
+        </div>
+        
+        <div class="v-summary-grid">
+            <div class="v-card-metric card-blue">
+                <div class="v-metric-title">HÔM NAY</div>
+                <div class="v-metric-num" id="pop-today-visits">0</div>
+            </div>
+            <div class="v-card-metric card-purple">
+                <div class="v-metric-title">TỔNG TRUY CẬP</div>
+                <div class="v-metric-num" id="pop-total-visits">0</div>
+            </div>
+        </div>
+
+        <div class="v-hourly-section-title">⏱️ Phân bố lượt truy cập theo giờ hôm nay:</div>
+        <div class="hourly-list-container" id="pop-hourly-grid"></div>
+    </div>
 </div>
 
 <!-- ========================================================= -->
@@ -307,13 +343,11 @@
 
             <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
             
-            <!-- NÚT CHẤM LẠI BÀI VỚI ĐÁP ÁN SỬA ĐẶT Ở GIỮA CẬP NHẬT VÀ TẢI EXCEL -->
             <div class="regrade-action-wrapper" style="position: relative; display: inline-block;">
                 <button type="button" class="btn-regrade-exam" id="btn-regrade-exam" onclick="openRegradeModal(event)" title="Tải file đáp án đã sửa để chấm lại toàn bộ bài thi của học sinh">
                     ⚖️ Chấm lại bài ▾
                 </button>
                 
-                <!-- POPUP XÒE RA TRỰC TIẾP TẠI CHỖ KHI BẤM NÚT CHẤM LẠI -->
                 <div class="regrade-inline-dropdown" id="regrade-inline-dropdown" style="display:none; position:absolute; top:calc(100% + 8px); right:0; width:340px; background:#ffffff; border-radius:14px; box-shadow:0 14px 35px rgba(15,23,42,0.25); border:1.5px solid #fde68a; padding:14px; z-index:9999999; animation:popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:6px;">
                         <span style="font-weight:900; color:#b45309; font-size:13px; display:flex; align-items:center; gap:5px;">⚖️ Tải file đáp án đã sửa</span>
@@ -589,18 +623,18 @@
 
         <div id="st-login-mode-class">
             <div class="st-input-group">
-                <label>Tên đăng nhập / Số báo danh:</label>
+                <label>Tên đăng nhập (username) / SBD (*):</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">👤</span>
-                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập tên đăng nhập hoặc SBD..." autocomplete="username">
+                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập username hoặc SBD của bạn..." autocomplete="username">
                 </div>
             </div>
 
             <div class="st-input-group">
-                <label>Mật khẩu:</label>
+                <label>Mật khẩu (pass) (*):</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🔑</span>
-                    <input type="password" id="st-password-input" class="st-input-field" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+                    <input type="password" id="st-password-input" class="st-input-field" placeholder="Nhập mật khẩu được cấp..." autocomplete="current-password">
                     <button type="button" class="st-eye-btn" id="st-eye-btn" onclick="toggleStudentPassVisibility()">👁️</button>
                 </div>
             </div>
