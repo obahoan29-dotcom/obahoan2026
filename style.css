@@ -316,12 +316,21 @@ body {
 }
 .visit-icon { font-size: 14px; line-height: 1; }
 .visit-label { color: #cbd5e1; font-weight: 700; }
+
+/* CHỮ ĐẾM SỐ LẦN TRUY CẬP: IN ĐẬM, MÀU VÀNG TƯƠI, VIỀN ĐỎ DỄ NHÌN */
 .visit-number {
-    color: #38bdf8;
+    color: #ffe600;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 900;
     letter-spacing: 0.5px;
+    -webkit-text-stroke: 0.8px #dc2626;
+    text-shadow: 
+        -1px -1px 0 #dc2626,  
+         1px -1px 0 #dc2626,
+        -1px  1px 0 #dc2626,
+         1px  1px 0 #dc2626,
+         0 0 4px rgba(220, 38, 38, 0.9);
 }
 .visit-arrow { font-size: 13px; opacity: 0.9; }
 
