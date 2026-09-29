@@ -275,68 +275,6 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- KHU VỰC THỐNG KÊ LƯỢT TRUY CẬP (GÓC DƯỚI BÊN PHẢI TRANG WEB) -->
-<!-- ========================================================= -->
-<div class="visitor-counter-wrapper" id="visitor-counter-wrapper">
-    <!-- Nút nhỏ hiển thị số người hôm nay -->
-    <div class="visitor-counter-badge" id="visitor-counter-badge" onclick="toggleVisitorStatsPopover(event)" title="Bấm xem chi tiết lượt truy cập website">
-        <span class="visitor-led"></span>
-        <span class="visitor-icon">👥</span>
-        <span class="visitor-text">Hôm nay: <b id="stat-today-visitors">...</b></span>
-        <span class="visitor-caret">▲</span>
-    </div>
-
-    <!-- POPUP XÒE LÊN CHI TIẾT THEO GIỜ, THEO TUẦN VÀ CỘNG DỒN -->
-    <div class="visitor-stats-popover" id="visitor-stats-popover">
-        <div class="visitor-popover-header">
-            <div class="visitor-popover-title">
-                <span>📈 Thống Kê Truy Cập Website</span>
-            </div>
-            <button type="button" class="btn-close-visitor-popover" onclick="closeVisitorStatsPopover(event)">✕</button>
-        </div>
-
-        <!-- 3 Ô CHỈ SỐ TỔNG QUAN -->
-        <div class="visitor-kpi-grid">
-            <div class="visitor-kpi-card kpi-today">
-                <div class="kpi-title">Hôm nay</div>
-                <div class="kpi-num" id="popover-today-count">0</div>
-                <div class="kpi-sub">Lượt truy cập</div>
-            </div>
-            <div class="visitor-kpi-card kpi-week">
-                <div class="kpi-title">7 ngày qua</div>
-                <div class="kpi-num" id="popover-week-count">0</div>
-                <div class="kpi-sub">Lượt tuần này</div>
-            </div>
-            <div class="visitor-kpi-card kpi-all">
-                <div class="kpi-title">Cộng dồn</div>
-                <div class="kpi-num" id="popover-total-count">0</div>
-                <div class="kpi-sub">Tổng tích lũy</div>
-            </div>
-        </div>
-
-        <!-- CHI TIẾT THEO CÁC NGÀY TRONG TUẦN -->
-        <div class="visitor-section-box">
-            <div class="visitor-section-header">
-                <span>🗓️ Lượt truy cập theo các ngày gần đây</span>
-            </div>
-            <div class="visitor-bars-container" id="visitor-week-bars-container">
-                <div style="font-size:12px; color:#64748b; text-align:center; padding:10px;">Đang nạp dữ liệu tuần...</div>
-            </div>
-        </div>
-
-        <!-- CHI TIẾT THEO CÁC KHUNG GIỜ HÔM NAY -->
-        <div class="visitor-section-box">
-            <div class="visitor-section-header">
-                <span>⏱️ Lượt truy cập theo khung giờ hôm nay</span>
-            </div>
-            <div class="visitor-hours-scroll" id="visitor-hours-container">
-                <div style="font-size:12px; color:#64748b; text-align:center; padding:10px;">Đang nạp dữ liệu khung giờ...</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ========================================================= -->
 <!-- MODAL TOÀN MÀN HÌNH: XEM BẢNG KẾT QUẢ THI ĐẦY ĐỦ CHO ADMIN -->
 <!-- ========================================================= -->
 <div class="result-fullscreen-modal" id="result-fullscreen-modal">
