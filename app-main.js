@@ -2,17 +2,18 @@
 // FILE: app-main.js
 // BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
 // NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI, ĐĂNG NHẬP HỌC SINH
-// VÀ BỘ MÁY ĐẾM LƯỢT TRUY CẬP WEBSITE THỜI GIAN THỰC (THEO GIỜ & 7 NGÀY)
-// - ĐÃ TÍCH HỢP ĐẾM LƯỢT XEM CHỐNG SPAM RELOAD TRÊN FIREBASE
-// - HIỆN SỐ LƯỢT TRUY CẬP HÔM NAY TẠI NÚT NỔI GÓC DƯỚI BÊN TRÁI
-// - BẤM VÀO HIỆN CHI TIẾT THEO 24 KHUNG GIỜ VÀ 7 NGÀY GẦN NHẤT
-// - GIỮ NGUYÊN 100% CẤU TRÚC VÀ TÍNH NĂNG CŨ CỦA HỆ THỐNG
+// - MỖI LỚP CHỈ HIỆN 2 MỤC MỚI NHẤT, CÒN LẠI GOM VÀO NÚT MỞ RỘNG
+// - GHIM CHẶT CATEGORYID CHO THÍ SINH TỰ DO ĐỂ KHÔNG BỊ LẪN LỚP
+// - BỘ MÁY ĐẾM LƯỢT TRUY CẬP WEBSITE THỜI GIAN THỰC (GIỜ & 7 NGÀY)
 // =========================================================
 
 let activeDayThemCatId = null;
 let activeChinhKhoaRow1CatId = null;
 let activeChinhKhoaRow2CatId = null;
 let activeDantriCatId = null;
+
+// Quản lý trạng thái mở/đóng gom gọn của từng lớp
+const categoryExpandedState = {};
 
 // Bộ nhớ đệm thống kê lượt truy cập
 let siteVisitStatsCache = {
@@ -244,9 +245,90 @@ function renderReminderSection() {
     container.innerHTML = "";
 
     const links = sortLinksNewestFirst(REMINDER_CATEGORY.links || []);
-    links.forEach(item => {
-        container.appendChild(createItemCardElement(item, "nhac-nho"));
+    renderLinksWithFold(container, links, "nhac-nho", 2);
+}
+
+// =========================================================
+// HÀM RENDER DANH SÁCH CÓ TÍNH NĂNG GOM GỌN: CHỈ HIỆN 2 MỤC ĐẦU
+// =========================================================
+function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!links || links.length === 0) {
+        container.innerHTML = `<div class="empty-folder">Chưa có bài tập hoặc tài liệu nào trong mục này.</div>`;
+        return;
+    }
+
+    const sortedLinks = sortLinksNewestFirst(links);
+    const total = sortedLinks.length;
+
+    // 1. Hiển thị tối đa visibleLimit mục mới nhất (mặc định là 2)
+    const firstTwo = sortedLinks.slice(0, visibleLimit);
+    firstTwo.forEach(item => {
+        container.appendChild(createItemCardElement(item, categoryId));
     });
+
+    // 2. Nếu có nhiều hơn 2 mục, gom các mục còn lại vào khối mở rộng
+    if (total > visibleLimit) {
+        const remainingCount = total - visibleLimit;
+        const remainingLinks = sortedLinks.slice(visibleLimit);
+        const isExpanded = !!categoryExpandedState[categoryId];
+
+        const foldWrapper = document.createElement("div");
+        foldWrapper.className = "category-fold-wrapper";
+        foldWrapper.style.width = "100%";
+
+        const hiddenBox = document.createElement("div");
+        hiddenBox.id = `fold-hidden-box-${categoryId}`;
+        hiddenBox.className = "category-hidden-links";
+        hiddenBox.style.display = isExpanded ? "flex" : "none";
+        hiddenBox.style.flexDirection = "column";
+        hiddenBox.style.gap = "8px";
+        hiddenBox.style.marginTop = "8px";
+        hiddenBox.style.width = "100%";
+
+        remainingLinks.forEach(item => {
+            hiddenBox.appendChild(createItemCardElement(item, categoryId));
+        });
+
+        const toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.id = `fold-btn-${categoryId}`;
+        toggleBtn.className = "load-more-btn category-expand-toggle-btn";
+        toggleBtn.style.display = "flex";
+        toggleBtn.style.alignItems = "center";
+        toggleBtn.style.justifyContent = "center";
+        toggleBtn.style.gap = "6px";
+        toggleBtn.style.margin = "8px 0 0 0";
+        toggleBtn.style.padding = "9px 14px";
+        toggleBtn.style.borderRadius = "12px";
+        toggleBtn.style.border = "1.5px dashed #0284c7";
+        toggleBtn.style.background = "#f0f9ff";
+        toggleBtn.style.color = "#0369a1";
+        toggleBtn.style.fontWeight = "800";
+        toggleBtn.style.fontSize = "13px";
+        toggleBtn.style.cursor = "pointer";
+        toggleBtn.style.transition = "all 0.2s ease";
+
+        toggleBtn.innerHTML = isExpanded 
+            ? `▲ Thu gọn lại (${remainingCount} mục)` 
+            : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
+
+        toggleBtn.onclick = (e) => {
+            e.stopPropagation();
+            categoryExpandedState[categoryId] = !categoryExpandedState[categoryId];
+            const nowExpanded = categoryExpandedState[categoryId];
+            hiddenBox.style.display = nowExpanded ? "flex" : "none";
+            toggleBtn.innerHTML = nowExpanded 
+                ? `▲ Thu gọn lại (${remainingCount} mục)` 
+                : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
+        };
+
+        foldWrapper.appendChild(hiddenBox);
+        foldWrapper.appendChild(toggleBtn);
+        container.appendChild(foldWrapper);
+    }
 }
 
 function renderDayThemSection() {
@@ -279,10 +361,7 @@ function renderDayThemSection() {
 
     const activeCat = DAY_THEM_CATEGORIES.find(c => c.id === activeDayThemCatId);
     if (activeCat && activeCat.links && activeCat.links.length > 0) {
-        const sorted = sortLinksNewestFirst(activeCat.links);
-        sorted.forEach(item => {
-            list.appendChild(createItemCardElement(item, activeCat.id));
-        });
+        renderLinksWithFold(list, activeCat.links, activeCat.id, 2);
         panel.classList.add("show");
     } else {
         list.innerHTML = `<div class="empty-folder">Chưa có bài kiểm tra nào trong mục này.</div>`;
@@ -318,10 +397,7 @@ function renderChinhKhoaSection() {
         } else {
             const activeCat1 = row1Cats.find(c => c.id === activeChinhKhoaRow1CatId);
             if (activeCat1 && activeCat1.links && activeCat1.links.length > 0) {
-                const sorted = sortLinksNewestFirst(activeCat1.links);
-                sorted.forEach(item => {
-                    row1List.appendChild(createItemCardElement(item, activeCat1.id));
-                });
+                renderLinksWithFold(row1List, activeCat1.links, activeCat1.id, 2);
                 row1Panel.classList.add("show");
             } else {
                 row1List.innerHTML = `<div class="empty-folder">Chưa có bài tập cho lớp này.</div>`;
@@ -362,10 +438,7 @@ function renderChinhKhoaSection() {
         } else {
             const activeCat2 = row2Cats.find(c => c.id === activeChinhKhoaRow2CatId);
             if (activeCat2 && activeCat2.links && activeCat2.links.length > 0) {
-                const sorted = sortLinksNewestFirst(activeCat2.links);
-                sorted.forEach(item => {
-                    row2List.appendChild(createItemCardElement(item, activeCat2.id));
-                });
+                renderLinksWithFold(row2List, activeCat2.links, activeCat2.id, 2);
                 row2Panel.classList.add("show");
             } else {
                 row2List.innerHTML = `<div class="empty-folder">Chưa có nội dung trong chuyên mục này.</div>`;
@@ -379,16 +452,6 @@ function renderKhoTaiLieuSection() {
     const container = document.getElementById("kho-tai-lieu-container");
     if (!container) return;
 
-    let linksHtml = "";
-    const sorted = sortLinksNewestFirst(KHO_TAI_LIEU_FOLDER.links || []);
-    sorted.forEach(item => {
-        linksHtml += buildCardHtmlString(item, "kho-tai-lieu");
-    });
-
-    if (!linksHtml) {
-        linksHtml = `<div class="empty-folder">Kho tài liệu đang được cập nhật...</div>`;
-    }
-
     container.innerHTML = `
         <details class="folder-section" open>
             <summary class="folder-header">
@@ -396,9 +459,14 @@ function renderKhoTaiLieuSection() {
                 <h3 class="folder-title">${KHO_TAI_LIEU_FOLDER.folderName}</h3>
                 <span class="folder-arrow">▶</span>
             </summary>
-            <div class="link-list">${linksHtml}</div>
+            <div class="link-list" id="kho-tai-lieu-links-list"></div>
         </details>
     `;
+
+    const subList = document.getElementById("kho-tai-lieu-links-list");
+    if (subList) {
+        renderLinksWithFold(subList, KHO_TAI_LIEU_FOLDER.links || [], "kho-tai-lieu", 2);
+    }
 }
 
 function renderNewsSection() {
@@ -576,9 +644,10 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
+    const targetCatId = categoryId || item.categoryId || "them-11";
     activeStudentLogin.targetUrl = item.url || "";
     activeStudentLogin.examTitle = item.title || "Bài kiểm tra";
-    activeStudentLogin.categoryId = categoryId || item.categoryId || "them-11";
+    activeStudentLogin.categoryId = targetCatId;
     activeStudentLogin.currentMode = "class";
     activeStudentLogin.item = item;
 
@@ -588,7 +657,7 @@ function openStudentLoginModal(item, categoryId, event) {
     const errBox = document.getElementById("st-login-error");
     const mainTitleEl = document.getElementById("st-modal-main-title");
 
-    const catName = getCategoryDisplayName(activeStudentLogin.categoryId);
+    const catName = getCategoryDisplayName(targetCatId);
     if (mainTitleEl) {
         mainTitleEl.innerText = `Đăng Nhập Làm Bài Thi: ${catName}`;
     }
@@ -710,6 +779,7 @@ function submitStudentLogin() {
     let finalSbd = "";
     let finalName = "";
     let finalClass = "";
+    const activeCat = activeStudentLogin.categoryId || "them-11";
 
     if (activeStudentLogin.currentMode === "class") {
         const usernameVal = (document.getElementById("st-username-input").value || "").trim();
@@ -720,7 +790,7 @@ function submitStudentLogin() {
             return;
         }
 
-        const accounts = getAccountsForCategory(activeStudentLogin.categoryId);
+        const accounts = getAccountsForCategory(activeCat);
         const normUser = normalizeName(usernameVal);
         const matched = accounts.find(acc => {
             const accSbd = String(acc.sbd || "").trim().toLowerCase();
@@ -762,24 +832,25 @@ function submitStudentLogin() {
         localStorage.setItem("saved_student_sbd", finalSbd);
         localStorage.setItem("saved_student_name", finalName);
         localStorage.setItem("saved_student_class", finalClass);
+        // Lưu kèm chính xác thuộc tính categoryId của lớp đang vào thi
         localStorage.setItem("current_exam_student", JSON.stringify({
             sbd: finalSbd,
             name: finalName,
             className: finalClass,
-            categoryId: activeStudentLogin.categoryId
+            categoryId: activeCat
         }));
     } catch (e) {}
 
     try {
         let u = new URL(targetUrl, window.location.href);
-        u.searchParams.set("cat", activeStudentLogin.categoryId);
+        u.searchParams.set("cat", activeCat);
         u.searchParams.set("sbd", finalSbd);
         u.searchParams.set("name", finalName);
         u.searchParams.set("class", finalClass);
         u.searchParams.set("autostart", "1");
         window.location.href = u.toString();
     } catch (e) {
-        window.location.href = `${targetUrl}&cat=${encodeURIComponent(activeStudentLogin.categoryId)}&sbd=${encodeURIComponent(finalSbd)}&name=${encodeURIComponent(finalName)}&class=${encodeURIComponent(finalClass)}&autostart=1`;
+        window.location.href = `${targetUrl}&cat=${encodeURIComponent(activeCat)}&sbd=${encodeURIComponent(finalSbd)}&name=${encodeURIComponent(finalName)}&class=${encodeURIComponent(finalClass)}&autostart=1`;
     }
 }
 
@@ -855,7 +926,6 @@ async function initSiteVisitTracker() {
     const todayKey = getVNDateKey();
     const currentHour = getVNHour();
 
-    // 1. Kiểm tra session để tránh đếm trùng khi học sinh F5 liên tục
     const sessionKey = `site_visit_logged_${todayKey}`;
     const isLoggedThisSession = sessionStorage.getItem(sessionKey);
 
@@ -864,7 +934,6 @@ async function initSiteVisitTracker() {
         await recordSiteVisit(todayKey, currentHour);
     }
 
-    // 2. Tải và hiển thị số liệu thống kê lượt truy cập
     await fetchAndRenderVisitStats(true);
 }
 
@@ -872,7 +941,6 @@ async function recordSiteVisit(todayKey, hour) {
     try {
         const hourStr = String(hour).padStart(2, '0');
 
-        // Lấy dữ liệu ngày hiện tại
         const dayRes = await fetch(`${FIREBASE_DB_URL}/site_visits/days/${todayKey}.json`).catch(() => null);
         let dayData = (dayRes && dayRes.ok) ? await dayRes.json() : null;
 
@@ -884,12 +952,10 @@ async function recordSiteVisit(todayKey, hour) {
         dayData.total = (parseInt(dayData.total, 10) || 0) + 1;
         dayData.hours[hourStr] = (parseInt(dayData.hours[hourStr], 10) || 0) + 1;
 
-        // Lấy tổng toàn thời gian
         const sumRes = await fetch(`${FIREBASE_DB_URL}/site_visits/summary/allTimeTotal.json`).catch(() => null);
         let allTime = (sumRes && sumRes.ok) ? await sumRes.json() : 0;
         allTime = (parseInt(allTime, 10) || 0) + 1;
 
-        // Cập nhật lại Firebase
         await Promise.all([
             fetch(`${FIREBASE_DB_URL}/site_visits/days/${todayKey}.json`, {
                 method: 'PATCH',
@@ -941,7 +1007,6 @@ async function fetchAndRenderVisitStats(isSilent = false) {
                 yesterdayCount = parseInt(daysObj[yesterdayKey].total, 10) || 0;
             }
 
-            // Tính 7 ngày gần nhất (từ 6 ngày trước đến hôm nay)
             for (let i = 6; i >= 0; i--) {
                 const targetD = new Date(Date.now() - i * 24 * 3600 * 1000);
                 const dKey = getVNDateKey(targetD);
@@ -960,7 +1025,6 @@ async function fetchAndRenderVisitStats(isSilent = false) {
             allTimeTotal = (data.summary && data.summary.allTimeTotal) ? parseInt(data.summary.allTimeTotal, 10) : weekCount;
         }
 
-        // Đảm bảo logic: tổng toàn thời gian không nhỏ hơn tổng tuần
         if (allTimeTotal < weekCount) allTimeTotal = weekCount;
 
         siteVisitStatsCache = {
@@ -972,13 +1036,11 @@ async function fetchAndRenderVisitStats(isSilent = false) {
             dailyCounts
         };
 
-        // 1. Cập nhật Badge góc màn hình
         const badgeNumber = document.getElementById("visit-today-count");
         if (badgeNumber) {
             badgeNumber.innerText = todayCount.toLocaleString("vi-VN");
         }
 
-        // 2. Cập nhật 4 ô KPI trong modal
         const kpiToday = document.getElementById("kpi-visit-today");
         const kpiYest = document.getElementById("kpi-visit-yesterday");
         const kpiWeek = document.getElementById("kpi-visit-7days");
@@ -989,7 +1051,6 @@ async function fetchAndRenderVisitStats(isSilent = false) {
         if (kpiWeek) kpiWeek.innerText = weekCount.toLocaleString("vi-VN");
         if (kpiTotal) kpiTotal.innerText = allTimeTotal.toLocaleString("vi-VN");
 
-        // 3. Render biểu đồ giờ & ngày
         const currentHour = getVNHour();
         const curBadge = document.getElementById("current-hour-badge");
         if (curBadge) curBadge.innerText = `Hiện tại: ${currentHour}:00 - ${currentHour}:59`;
@@ -1027,7 +1088,6 @@ function renderHourlyBars(hourlyCounts, currentHour) {
         container.appendChild(col);
     });
 
-    // Tự động cuộn đến giờ hiện tại
     setTimeout(() => {
         const curEl = container.querySelector(".hourly-bar-col.is-current");
         if (curEl) {
@@ -1109,7 +1169,6 @@ async function refreshVisitStatsData() {
 // SỰ KIỆN TOÀN CỤC: THU LẠI CÁC POPUP KHI CLICK RA NGOÀI
 // =========================================================
 document.addEventListener("click", function(event) {
-    // 1. Thu lại bảng Admin & ô mật khẩu Admin khi click ra ngoài
     const adminWrapper = event.target.closest(".admin-controls-wrapper");
     if (!adminWrapper) {
         const authContainer = document.getElementById("auth-container");
@@ -1121,13 +1180,11 @@ document.addEventListener("click", function(event) {
         }
     }
 
-    // 2. Thu lại tất cả menu Badge khi click ra ngoài
     const badgeWrapper = event.target.closest(".badge-wrapper");
     if (!badgeWrapper) {
         document.querySelectorAll(".badge-dropdown-menu.show").forEach(m => m.classList.remove("show"));
     }
 
-    // 3. Đóng modal thống kê truy cập khi click vào vùng phủ mờ bên ngoài
     const visitModal = document.getElementById("visit-stats-modal");
     if (visitModal && visitModal.style.display === "flex") {
         if (event.target === visitModal) {
