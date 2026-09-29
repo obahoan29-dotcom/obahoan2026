@@ -1,10 +1,9 @@
 // =========================================================
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
-// - HIỆN ĐÚNG DANH SÁCH HỌC SINH CỦA ĐÚNG LỚP ĐANG XEM
-// - THÍ SINH TỰ DO THI ĐỀ NÀO THÌ CHỈ HIỆN Ở ĐÚNG ĐỀ ĐÓ
-// - LỌC CHÍNH XÁC SUBMISSIONS THEO ĐỀ, CHƯA THI THÌ ĐỂ TRỐNG PHẦN ĐIỂM
-// - GIỮ NGUYÊN TOÀN BỘ GIAO DIỆN VÀ TÍNH NĂNG ĐÃ CÓ
+// - HIỆN CHUẨN XÁC DANH SÁCH HỌC SINH CỦA ĐÚNG LỚP ĐANG XEM
+// - THÍ SINH TỰ DO THI Ở LỚP NÀO THÌ CHỈ HIỆN Ở KẾT QUẢ CỦA LỚP ĐÓ
+// - KHÓA CHẶT SO KHỚP CATEGORYID CỦA LỚP VÀ ĐÚNG ĐỀ THI
 // =========================================================
 
 let currentExamResultData = {
@@ -64,26 +63,18 @@ function formatElapsedDuration(startTimeMs) {
     return `${mins} phút ${secs} giây`;
 }
 
-function isSameCategory(catA, catB) {
+// Chuẩn hóa mã lớp để so sánh chính xác tuyệt đối
+function normalizeCategoryKey(cat) {
+    if (!cat) return "";
+    return String(cat).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// So khớp nghiêm ngặt thuộc tính lớp: Không cho phép lớp này lẫn sang lớp khác
+function isStrictSameCategory(catA, catB) {
     if (!catA || !catB) return false;
-    let a = String(catA).toLowerCase().replace(/[^a-z0-9]/g, '');
-    let b = String(catB).toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (a === b) return true;
-    
-    const aliases = {
-        "them10": ["them10", "t10"],
-        "them11": ["them11", "t11"],
-        "them12": ["them12", "t12"],
-        "lop11a": ["lop11a", "11a"],
-        "lop11c": ["lop11c", "11c"],
-        "lop10p": ["lop10p", "10p"],
-        "lop11e": ["lop11e", "11e"]
-    };
-    for (let key in aliases) {
-        let list = aliases[key];
-        if (list.includes(a) && list.includes(b)) return true;
-    }
-    return false;
+    let a = normalizeCategoryKey(catA);
+    let b = normalizeCategoryKey(catB);
+    return a === b;
 }
 
 function getStudentOwnerCategory(sbd, name) {
@@ -435,24 +426,21 @@ async function refreshCurrentExamResults() {
     startAutoRefreshResult();
 }
 
-// HÀM SO KHỚP CHẶT CHẼ: BÀI NỘP / PHIÊN THI CÓ ĐÚNG LÀ CỦA ĐỀ THI NÀY KHÔNG
+// SO KHỚP BÀI NỘP / PHIÊN THI CÓ ĐÚNG LÀ CỦA ĐỀ THI NÀY KHÔNG
 function isSubmissionMatchingCurrentExam(sub, examInfo) {
     if (!sub || typeof sub !== 'object') return false;
 
     const subQuizId = String(sub.quizId || sub.id || "").trim();
     const curQuizId = String(examInfo.quizId || "").trim();
 
-    // 1. Nếu cả 2 đều có quizId: Bắt buộc phải trùng quizId
     if (subQuizId && curQuizId) {
         return subQuizId === curQuizId;
     }
 
-    // 2. Nếu sub có lưu _nodeCode và trùng với curQuizId
     if (sub._nodeCode && curQuizId && sub._nodeCode === curQuizId) {
         return true;
     }
 
-    // 3. So khớp theo tên đề thi (chuẩn hóa tên)
     const subTitle = sub.examName || sub.examTitle || sub.title || "";
     const curTitle = examInfo.title || examInfo.itemTitle || "";
 
@@ -482,7 +470,6 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
         }
     }
 
-    // 4. So khớp theo maDe riêng biệt (nếu không phải 101 chung chung)
     const subMaDe = cleanExamCodeKey(sub.maDe || "");
     const curMaDe = examInfo.maDe || "";
     if (subMaDe && curMaDe && subMaDe !== "101" && curMaDe !== "101") {
@@ -615,7 +602,7 @@ function getSubmissionTimestamp(sub) {
 
 function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap, examItem, examMeta = {}) {
     const classAccounts = getAccountsForCategory(categoryId);
-    const targetCatIdLower = (categoryId || "").toLowerCase().trim();
+    const targetCatId = String(categoryId || "").trim();
 
     const currentExamInfo = {
         quizId: examMeta.quizId || (examItem && (examItem.firebaseId || examItem.id)) || "",
@@ -625,7 +612,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         normTitle: normalizeName(examMeta.examTitle || (examItem && examItem.title) || ""),
         normItemTitle: normalizeName((examItem && examItem.title) || ""),
         normCode: extractNormalizedExamCode(examMeta.examTitle || (examItem && examItem.title) || ""),
-        categoryId: targetCatIdLower
+        categoryId: targetCatId
     };
 
     const cheatHistoryBySbd = {};
@@ -673,20 +660,21 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     }
     submissionsList.sort((a, b) => getSubmissionTimestamp(a) - getSubmissionTimestamp(b));
 
-    // LỌC DANH SÁCH THÍ SINH ĐANG THI (CHỈ LẤY ĐÚNG ĐỀ HIỆN TẠI VÀ ĐÚNG LỚP)
+    // LỌC DANH SÁCH THÍ SINH ĐANG THI TRỰC TIẾP
     const activeUsersMap = {};
     const nowMs = Date.now();
     for (let rawKey in activeSessionsMap) {
         let sess = activeSessionsMap[rawKey];
         if (!sess || typeof sess !== 'object') continue;
 
-        // BẮT BUỘC: Kiểm tra phiên thi này có đúng là của đề thi đang xem hay không!
+        // Bắt buộc trùng đề thi
         if (!isSubmissionMatchingCurrentExam(sess, currentExamInfo)) {
             continue;
         }
 
+        // Bắt buộc trùng đúng chuyên mục / lớp đang xem
         let sessCat = sess.categoryId || sess.cat;
-        if (sessCat && !isSameCategory(sessCat, targetCatIdLower)) {
+        if (sessCat && !isStrictSameCategory(sessCat, targetCatId)) {
             continue;
         }
 
@@ -723,7 +711,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // 1. DUYỆT DANH SÁCH HỌC SINH CHÍNH THỨC CỦA LỚP
+    // 1. DUYỆT DANH SÁCH HỌC SINH CHÍNH THỨC CỦA LỚP ĐANG XEM
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -737,13 +725,13 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
 
             let subCat = sub.categoryId || sub.cat;
-            if (subCat && !isSameCategory(subCat, targetCatIdLower)) {
+            if (subCat && !isStrictSameCategory(subCat, targetCatId)) {
                 continue;
             }
 
             let subClass = normalizeName(sub.studentClass || sub.className);
             let accClass = normalizeName(acc.className);
-            if (subClass && accClass && subClass !== accClass && !isSameCategory(subClass, targetCatIdLower)) {
+            if (subClass && accClass && subClass !== accClass && !isStrictSameCategory(subClass, targetCatId)) {
                 continue;
             }
 
@@ -809,7 +797,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     });
 
-    // 2. DUYỆT THÍ SINH TỰ DO (CHỈ LẤY THÍ SINH CỦA ĐÚNG ĐỀ HIỆN TẠI VÀ LỚP HIỆN TẠI)
+    // 2. DUYỆT THÍ SINH TỰ DO: CHỈ LẤY THÍ SINH ĐĂNG KÝ VÀ LÀM BÀI Ở ĐÚNG LỚP NÀY
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
@@ -817,8 +805,9 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         if (usedSubmissionKeys.has(sub._keyId)) continue;
         if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
 
+        // BẮT BUỘC: Thí sinh tự do phải nộp vào đúng thuộc tính lớp categoryId của lớp đang xem
         let subCat = sub.categoryId || sub.cat;
-        if (subCat && !isSameCategory(subCat, targetCatIdLower)) {
+        if (!subCat || !isStrictSameCategory(subCat, targetCatId)) {
             continue;
         }
 
@@ -879,10 +868,15 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // 3. THÍ SINH TỰ DO ĐANG LÀM BÀI TRỰC TIẾP
+    // 3. THÍ SINH TỰ DO ĐANG THI TRỰC TIẾP TẠI ĐÚNG LỚP NÀY
     for (let aKey in activeUsersMap) {
         let session = activeUsersMap[aKey];
         if (!session || typeof session !== 'object') continue;
+
+        let sessCat = session.categoryId || session.cat;
+        if (!sessCat || !isStrictSameCategory(sessCat, targetCatId)) {
+            continue;
+        }
 
         let sSbd = String(session.sbd || "").trim().toLowerCase();
         let sName = session.name || "";
@@ -1145,7 +1139,6 @@ function renderFilteredResultTable(rows) {
             `;
         }
 
-        // MẶC ĐỊNH CHO HỌC SINH CHƯA THI: ĐỂ TRỐNG TOÀN BỘ PHẦN ĐIỂM
         let col2_inTime = `<span class="status-not-submitted">---</span>`;
         let col3_spentTime = `<span class="status-not-submitted">---</span>`;
         let col6_status = `<span class="status-pill status-pending">Chưa thi</span>`;
@@ -1157,7 +1150,6 @@ function renderFilteredResultTable(rows) {
         let col11_details = `<span class="status-not-submitted">---</span>`;
 
         if (currentSub) {
-            // ĐÃ NỘP BÀI: HIỂN THỊ ĐẦY ĐỦ KẾT QUẢ
             let subDateMs = getSubmissionTimestamp(currentSub);
             col2_inTime = `<span style="font-family:monospace; font-weight:700; color:#0369a1;">${subDateMs ? formatDateTimeFull(subDateMs) : (currentSub.timestamp || "---")}</span>`;
             col3_spentTime = `<span style="color:#0f766e; font-weight:700;">${currentSub.completionTime || (currentSub.calcMetrics && currentSub.calcMetrics.completionTimeStr) || `${currentSub.spentMins||0} phút`}</span>`;
@@ -1199,7 +1191,6 @@ function renderFilteredResultTable(rows) {
                 col11_details = `<span class="td-details" title="${safeText}" onclick="alert('📋 CHI TIẾT BÀI LÀM:\\n\\n' + this.title.replace(/ \\| /g, '\\n'))">${currentSub.dataString}</span>`;
             }
         } else if (row.isDoing) {
-            // ĐANG LÀM BÀI: CHỈ HIỂN THỊ THỜI GIAN VÀO VÀ THỜI GIAN THI, ĐIỂM ĐỂ TRỐNG
             let formattedIn = formatDateTimeFull(row.doingStartTime);
             let liveDuration = formatElapsedDuration(row.doingStartTime);
 
