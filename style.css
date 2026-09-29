@@ -266,6 +266,215 @@ body {
     100% { filter: drop-shadow(0 0 22px rgba(253, 224, 71, 1)) drop-shadow(0 0 38px rgba(249, 115, 22, 0.95)) drop-shadow(0 0 50px rgba(239, 68, 68, 0.8)); }
 }
 
+/* ========================================================= */
+/* WIDGET NỔI ĐẾM LƯỢT TRUY CẬP WEBSITE CHÍNH */
+/* ========================================================= */
+.site-visit-badge {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    z-index: 9998;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(56, 189, 248, 0.5);
+    border-radius: 30px;
+    padding: 7px 14px;
+    color: #ffffff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.28), 0 0 14px rgba(56, 189, 248, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+.site-visit-badge:hover {
+    transform: translateY(-2px) scale(1.04);
+    background: rgba(15, 23, 42, 0.96);
+    border-color: #38bdf8;
+    box-shadow: 0 12px 28px rgba(2, 132, 199, 0.35), 0 0 18px rgba(56, 189, 248, 0.4);
+}
+.site-visit-badge:active {
+    transform: translateY(1px) scale(0.96);
+}
+.visit-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+    animation: visitDotPulse 1.6s infinite alternate;
+}
+@keyframes visitDotPulse {
+    0% { transform: scale(0.85); opacity: 0.7; }
+    100% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 12px #22c55e; }
+}
+.visit-icon { font-size: 14px; line-height: 1; }
+.visit-label { color: #94a3b8; font-weight: 700; }
+.visit-number {
+    color: #38bdf8;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+.visit-arrow { font-size: 13px; opacity: 0.9; }
+
+/* MODAL THỐNG KÊ CHI TIẾT TRUY CẬP */
+.visit-stats-modal-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 999999; display: none; align-items: center; justify-content: center;
+    padding: 14px; animation: fadeInModal 0.2s ease-out;
+}
+.visit-stats-modal-box {
+    background: #ffffff; border-radius: 20px;
+    max-width: 580px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35);
+    border: 1px solid #cbd5e1; padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 14px;
+    animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.visit-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px;
+}
+.visit-modal-title { display: flex; align-items: center; gap: 10px; }
+.vm-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    color: #fff; font-size: 20px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3);
+}
+.btn-close-visit-modal {
+    background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 50%;
+    width: 32px; height: 32px; font-size: 15px; font-weight: 900; color: #64748b;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: 0.15s; line-height: 1;
+}
+.btn-close-visit-modal:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+/* 4 CARD KPI TRUY CẬP */
+.visit-kpi-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.visit-kpi-card {
+    padding: 12px 10px; border-radius: 14px; text-align: center;
+    border: 1px solid transparent; display: flex; flex-direction: column; justify-content: center;
+}
+.kpi-today { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-color: #bae6fd; }
+.kpi-today .kpi-label { color: #0369a1; }
+.kpi-today .kpi-val { color: #0284c7; }
+
+.kpi-yesterday { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: #bbf7d0; }
+.kpi-yesterday .kpi-label { color: #166534; }
+.kpi-yesterday .kpi-val { color: #16a34a; }
+
+.kpi-week { background: linear-gradient(135deg, #faf5ff, #f3e8ff); border-color: #e9d5ff; }
+.kpi-week .kpi-label { color: #6b21a8; }
+.kpi-week .kpi-val { color: #9333ea; }
+
+.kpi-total { background: linear-gradient(135deg, #fff7ed, #ffedd5); border-color: #fed7aa; }
+.kpi-total .kpi-label { color: #9a3412; }
+.kpi-total .kpi-val { color: #ea580c; }
+
+.kpi-label { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px; }
+.kpi-val { font-size: 22px; font-weight: 900; font-family: 'Courier New', Courier, monospace; line-height: 1.2; }
+.kpi-sub { font-size: 10px; color: #64748b; font-weight: 600; margin-top: 2px; }
+
+/* TABS MODAL */
+.visit-tabs-row {
+    display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 12px;
+}
+.visit-tab-btn {
+    flex: 1; padding: 8px 10px; border: none; border-radius: 9px;
+    background: transparent; color: #475569; font-weight: 800; font-size: 12.5px;
+    cursor: pointer; transition: 0.2s; font-family: inherit;
+}
+.visit-tab-btn.active {
+    background: #ffffff; color: #0284c7; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.chart-header-hint {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 8px;
+}
+
+/* BIỂU ĐỒ 24 GIỜ TRONG NGÀY */
+.hourly-bars-scroll-container {
+    display: flex; align-items: flex-end; gap: 6px;
+    height: 180px; overflow-x: auto; padding: 10px 4px 6px 4px;
+    background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0;
+}
+.hourly-bar-col {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    min-width: 22px; flex: 1; height: 100%; position: relative;
+}
+.hourly-bar-track {
+    width: 14px; height: 130px; display: flex; align-items: flex-end;
+    background: #e2e8f0; border-radius: 6px; overflow: hidden; position: relative;
+}
+.hourly-bar-fill {
+    width: 100%; border-radius: 6px;
+    background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+    transition: height 0.4s ease; min-height: 2px;
+}
+.hourly-bar-col.is-current .hourly-bar-fill {
+    background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+}
+.hourly-bar-val {
+    font-size: 9.5px; font-weight: 800; color: #0f172a; margin-bottom: 3px; line-height: 1;
+}
+.hourly-bar-hour {
+    font-size: 10px; font-weight: 700; color: #64748b; margin-top: 5px;
+}
+.hourly-bar-col.is-current .hourly-bar-hour {
+    color: #d97706; font-weight: 900;
+}
+
+/* BIỂU ĐỒ 7 NGÀY TRONG TUẦN */
+.weekly-list-container {
+    display: flex; flex-direction: column; gap: 8px;
+    background: #f8fafc; padding: 12px; border-radius: 14px; border: 1px solid #e2e8f0;
+}
+.weekly-row-item {
+    display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700;
+}
+.weekly-row-day {
+    width: 80px; color: #334155; white-space: nowrap; flex-shrink: 0;
+}
+.weekly-row-day.is-today {
+    color: #0284c7; font-weight: 900;
+}
+.weekly-row-bar-wrap {
+    flex: 1; height: 16px; background: #e2e8f0; border-radius: 8px; overflow: hidden; position: relative;
+}
+.weekly-row-bar-fill {
+    height: 100%; background: linear-gradient(90deg, #38bdf8, #0284c7); border-radius: 8px;
+    transition: width 0.4s ease; min-width: 4px;
+}
+.weekly-row-item.is-today .weekly-row-bar-fill {
+    background: linear-gradient(90deg, #34d399, #059669);
+}
+.weekly-row-count {
+    width: 55px; text-align: right; color: #0f172a; font-weight: 800; font-family: monospace;
+}
+
+.visit-modal-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1.5px solid #f1f5f9; padding-top: 10px; margin-top: 4px;
+}
+.btn-refresh-visits {
+    background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;
+    border-radius: 10px; padding: 5px 12px; font-size: 12px; font-weight: 800;
+    cursor: pointer; transition: 0.15s;
+}
+.btn-refresh-visits:hover { background: #0284c7; color: #fff; }
+
 /* BẢNG XÒE & CONTAINER */
 .dantri-dropdown-panel { 
     display: none; padding: 14px; 
@@ -957,4 +1166,18 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .lantern-stick { width: 34px; height: 3.5px; }
     .lantern-string { height: 12px; }
     .mid-autumn-icon { font-size: 34px; }
+
+    /* Responsive cho modal & badge truy cập */
+    .site-visit-badge {
+        bottom: 12px; left: 10px;
+        padding: 6px 11px; font-size: 11.5px;
+    }
+    .visit-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .visit-stats-modal-box {
+        padding: 16px; border-radius: 16px;
+    }
+    .kpi-val { font-size: 19px; }
 }
