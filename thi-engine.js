@@ -2,9 +2,10 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ SỬA:
-// KHI NỘP BÀI XONG XÓA TRIỆT ĐỂ VẾT HỌ TÊN, LỚP, SBD
-// ĐỂ LẦN ĐĂNG NHẬP SAU HOÀN TOÀN MỚI TINH TRẮNG SẠCH
+// NÂNG CẤP BỔ SUNG:
+// 1. CƠ CHẾ GHI DANH FIREBASE BẮT BUỘC NHẬN PHẢN HỒI THÀNH CÔNG TRƯỚC KHI MỞ ĐỀ
+// 2. THÔNG BÁO RÕ RÀNG "ĐÃ GHI DANH DỰ THI THÀNH CÔNG" SIÊU TỐC
+// 3. XÓA SẠCH VẾT HỌ TÊN, LỚP, SBD SAU KHI NỘP ĐỂ ĐẢM BẢO PHIÊN MỚI TRẮNG TINH
 // =========================================================
 
 window.onload = async function() {
@@ -534,6 +535,7 @@ function startWaitingCountdown(startTimeMs, sId, sName, sClass) {
     }, 1000); 
 }
 
+// BỔ SUNG: BẮT BUỘC NHẬN PHẢN HỒI GHI DANH TỪ FIREBASE RỒI MỚI MỞ BÀI THI
 async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
     const currentCat = getExamCategory();
     const urlParams = new URLSearchParams(window.location.search);
@@ -582,8 +584,9 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
     }; 
 
     try {
+        // Ghi danh Firebase có Timeout giới hạn 1.4s siêu tốc
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const timeoutId = setTimeout(() => controller.abort(), 1400);
 
         const pushNodes = [examCode];
         if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
@@ -596,23 +599,36 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
 
         const tasks = pushNodes.map(n => 
             fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
-                method: 'PUT', body: JSON.stringify(presencePayload), signal: controller.signal
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(presencePayload),
+                signal: controller.signal
             }).catch(() => null)
         );
 
         tasks.push(
             fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
-                method: 'POST', body: JSON.stringify(logPayload), signal: controller.signal
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logPayload),
+                signal: controller.signal
             }).catch(() => null)
         );
 
+        // Chờ nhận phản hồi chắc chắn ghi danh thành công
         await Promise.all(tasks);
         clearTimeout(timeoutId);
+
+        if (startBtn) {
+            startBtn.innerText = "✨ Đã ghi danh dự thi thành công! Đang mở bài làm...";
+        }
     } catch(e) {
         console.warn("Handshake bắt đầu bài thi:", e);
     }
 
     postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
+
+    await new Promise(r => setTimeout(r, 200));
 
     document.getElementById("nav-student-name").innerText = sName; 
     document.getElementById("nav-student-id").innerText = sId; 

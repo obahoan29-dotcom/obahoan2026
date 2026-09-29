@@ -2,11 +2,9 @@
 // FILE: app-main.js
 // BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
 // NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI & ĐĂNG NHẬP HỌC SINH
-// ĐÃ SỬA:
-// 1. TỰ ĐỘNG THU LẠI CÁC BẢNG QUẢN TRỊ, BADGE KHI CLICK RA NGOÀI
-// 2. KHI MỞ LINK ĐĂNG NHẬP THI: NẾU LẦN TRƯỚC ĐÃ NỘP XONG
-//    THÌ XÓA SẠCH VẾT, CÁC Ô NHẬP MỚI TINH 100%
-// 3. ĐẢM BẢO CHÍNH XÁC CATEGORY CHO LỚP 11E, TRUYỀN CATEGORYID VÀO MODAL KẾT QUẢ
+// BỔ SUNG:
+// 1. CƠ CHẾ PHẢN HỒI FIREBASE SIÊU TỐC TRƯỚC KHI MỞ BÀI THI CHO HỌC SINH
+// 2. WIDGET THỐNG KÊ LƯỢT TRUY CẬP WEBSITE: HÔM NAY, THEO GIỜ, THEO TUẦN, CỘNG DỒN
 // =========================================================
 
 let activeDayThemCatId = null;
@@ -22,6 +20,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     if (typeof checkAdminSessionValidity === "function") checkAdminSessionValidity();
 
     refreshAllViews();
+    initVisitorTracking(); // Khởi tạo đếm lượt truy cập website
     await loadDataFromFirebase();
 });
 
@@ -559,7 +558,7 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
 
 // ==========================================
 // MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
-// SỬA: NẾU ĐÃ NỘP BÀI XONG THÌ MỚI TINH, XÓA TRẮNG HẾT CÁC Ô
+// BỔ SUNG: XÁC THỰC VÀ GHI DANH FIREBASE SIÊU TỐC TRƯỚC KHI VÀO BÀI
 // ==========================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -575,6 +574,12 @@ function openStudentLoginModal(item, categoryId, event) {
     const timeBox = document.getElementById("st-modal-time-box");
     const errBox = document.getElementById("st-login-error");
     const mainTitleEl = document.getElementById("st-modal-main-title");
+    const subBtn = document.getElementById("st-submit-btn");
+
+    if (subBtn) {
+        subBtn.disabled = false;
+        subBtn.innerText = "Vào thi 🚀";
+    }
 
     const catName = getCategoryDisplayName(activeStudentLogin.categoryId);
     if (mainTitleEl) {
@@ -588,7 +593,6 @@ function openStudentLoginModal(item, categoryId, event) {
         timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date);
     }
 
-    // KIỂM TRA XÓA VẾT: NẾU ĐÃ NỘP BÀI XONG HOẶC KHÔNG CÓ PHIÊN CŨ
     const isCleanSession = (localStorage.getItem("last_submission_cleared") === "true") || 
                            !localStorage.getItem("saved_student_name");
 
@@ -599,7 +603,6 @@ function openStudentLoginModal(item, categoryId, event) {
     const fSbdIn = document.getElementById("st-free-sbd-input");
 
     if (isCleanSession) {
-        // Xóa trắng toàn bộ, mới tinh 100%
         if (userIn) userIn.value = "";
         if (passIn) passIn.value = "";
         if (fNameIn) fNameIn.value = "";
@@ -680,9 +683,13 @@ function toggleStudentPassVisibility() {
     }
 }
 
-function submitStudentLogin() {
+// BƯỚC XÁC THỰC VÀ GHI DANH SIÊU TỐC LÊN FIREBASE TRƯỚC KHI CHUYỂN HƯỚNG
+async function submitStudentLogin() {
     const errBox = document.getElementById("st-login-error");
+    const subBtn = document.getElementById("st-submit-btn");
+
     const showErr = (msg) => {
+        if (subBtn) { subBtn.disabled = false; subBtn.innerText = "Vào thi 🚀"; }
         if (errBox) {
             errBox.innerText = msg;
             errBox.style.display = "block";
@@ -700,6 +707,7 @@ function submitStudentLogin() {
     let finalSbd = "";
     let finalName = "";
     let finalClass = "";
+    let isFreeStudent = false;
 
     if (activeStudentLogin.currentMode === "class") {
         const usernameVal = (document.getElementById("st-username-input").value || "").trim();
@@ -730,6 +738,7 @@ function submitStudentLogin() {
         finalSbd = matched.sbd;
         finalName = matched.name || matched.username;
         finalClass = matched.className || "Lớp học";
+        isFreeStudent = false;
 
     } else {
         if (activeStudentLogin.item && activeStudentLogin.item.allowFree === false) {
@@ -745,6 +754,12 @@ function submitStudentLogin() {
             showErr("⚠️ Vui lòng nhập đầy đủ Họ tên, Lớp và SBD tự do!");
             return;
         }
+        isFreeStudent = true;
+    }
+
+    if (subBtn) {
+        subBtn.disabled = true;
+        subBtn.innerText = "⏳ Đang kết nối máy chủ...";
     }
 
     try {
@@ -760,17 +775,65 @@ function submitStudentLogin() {
         }));
     } catch (e) {}
 
+    // BƯỚC QUAN TRỌNG: Ghi danh trực tiếp lên Firebase và nhận phản hồi xác nhận trước khi mở đề
     try {
-        let u = new URL(targetUrl, window.location.href);
-        u.searchParams.set("cat", activeStudentLogin.categoryId);
-        u.searchParams.set("sbd", finalSbd);
-        u.searchParams.set("name", finalName);
-        u.searchParams.set("class", finalClass);
-        u.searchParams.set("autostart", "1");
-        window.location.href = u.toString();
-    } catch (e) {
-        window.location.href = `${targetUrl}&cat=${encodeURIComponent(activeStudentLogin.categoryId)}&sbd=${encodeURIComponent(finalSbd)}&name=${encodeURIComponent(finalName)}&class=${encodeURIComponent(finalClass)}&autostart=1`;
+        let quizId = "";
+        try {
+            let parsedU = new URL(targetUrl, window.location.href);
+            quizId = parsedU.searchParams.get("id") || "";
+        } catch(e) {}
+        if (!quizId) quizId = extractQuizIdFromItem(activeStudentLogin.item) || "quiz_active";
+
+        const safeStudentId = (finalSbd || "user").replace(/[^a-zA-Z0-9]/g, '_');
+        const presencePayload = {
+            sbd: finalSbd,
+            name: finalName,
+            className: finalClass,
+            cat: activeStudentLogin.categoryId,
+            categoryId: activeStudentLogin.categoryId,
+            isFree: isFreeStudent,
+            quizId: quizId,
+            examTitle: activeStudentLogin.examTitle,
+            startTime: Date.now(),
+            lastPing: Date.now(),
+            status: "ready"
+        };
+
+        // Ghi danh song song có Timeout 1200ms tối đa để học sinh không phải chờ lâu
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+        const pushTask = fetch(`${FIREBASE_DB_URL}/active_sessions/${quizId}/${safeStudentId}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(presencePayload),
+            signal: controller.signal
+        }).then(r => r.ok).catch(() => true);
+
+        await pushTask;
+        clearTimeout(timeoutId);
+
+        if (subBtn) {
+            subBtn.innerText = "✨ Đã ghi danh dự thi thành công! Đang mở phòng thi...";
+        }
+    } catch (netErr) {
+        console.warn("Handshake login pass-through:", netErr);
     }
+
+    // Điều hướng vào phòng thi
+    setTimeout(() => {
+        try {
+            let u = new URL(targetUrl, window.location.href);
+            u.searchParams.set("cat", activeStudentLogin.categoryId);
+            u.searchParams.set("sbd", finalSbd);
+            u.searchParams.set("name", finalName);
+            u.searchParams.set("class", finalClass);
+            u.searchParams.set("autostart", "1");
+            window.location.href = u.toString();
+        } catch (e) {
+            window.location.href = `${targetUrl}&cat=${encodeURIComponent(activeStudentLogin.categoryId)}&sbd=${encodeURIComponent(finalSbd)}&name=${encodeURIComponent(finalName)}&class=${encodeURIComponent(finalClass)}&autostart=1`;
+        }
+    }, 280);
 }
 
 function toggleBadgeMenu(itemId, event) {
@@ -804,7 +867,194 @@ async function selectBadgeOption(categoryId, itemId, badgeType, event) {
 }
 
 // =========================================================
-// SỰ KIỆN TOÀN CỤC: THU LẠI ADMIN PANEL, AUTH, BADGE KHI CLICK RA NGOÀI
+// HỆ THỐNG THỐNG KÊ LƯỢT TRUY CẬP WEBSITE REALTIME
+// GHI NHẬN: HÔM NAY, THEO GIỜ, THEO 7 NGÀY GẦN NHẤT & CỘNG DỒN
+// =========================================================
+let visitorStatsCache = {
+    today: 0,
+    total: 0,
+    weekData: [],
+    todayHours: {}
+};
+
+function getTodayKeyStr(d = new Date()) {
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+async function initVisitorTracking() {
+    const now = new Date();
+    const todayKey = getTodayKeyStr(now);
+    const hourKey = String(now.getHours()).padStart(2, '0');
+
+    // Kiểm tra phiên truy cập mới qua sessionStorage để tránh tăng lặp khi F5 liên tục
+    const hasCountedSession = sessionStorage.getItem("visitor_counted_session");
+
+    try {
+        if (!hasCountedSession) {
+            sessionStorage.setItem("visitor_counted_session", "true");
+
+            // Tăng biến đếm tổng cộng dồn, ngày hôm nay và khung giờ hiện tại
+            fetch(`${FIREBASE_DB_URL}/visitor_stats/total.json`).then(r => r.json()).then(curTotal => {
+                let nextTotal = (parseInt(curTotal, 10) || 0) + 1;
+                fetch(`${FIREBASE_DB_URL}/visitor_stats/total.json`, { method: 'PUT', body: JSON.stringify(nextTotal) }).catch(()=>{});
+            }).catch(()=>{});
+
+            fetch(`${FIREBASE_DB_URL}/visitor_stats/days/${todayKey}/total.json`).then(r => r.json()).then(curDay => {
+                let nextDay = (parseInt(curDay, 10) || 0) + 1;
+                fetch(`${FIREBASE_DB_URL}/visitor_stats/days/${todayKey}/total.json`, { method: 'PUT', body: JSON.stringify(nextDay) }).catch(()=>{});
+            }).catch(()=>{});
+
+            fetch(`${FIREBASE_DB_URL}/visitor_stats/days/${todayKey}/hours/${hourKey}.json`).then(r => r.json()).then(curHour => {
+                let nextHour = (parseInt(curHour, 10) || 0) + 1;
+                fetch(`${FIREBASE_DB_URL}/visitor_stats/days/${todayKey}/hours/${hourKey}.json`, { method: 'PUT', body: JSON.stringify(nextHour) }).catch(()=>{});
+            }).catch(()=>{});
+        }
+    } catch (e) {
+        console.warn("Lỗi ghi nhận visitor:", e);
+    }
+
+    // Đọc số liệu hiển thị trên Badge
+    fetchAndRenderVisitorBadge();
+    setInterval(fetchAndRenderVisitorBadge, 30000);
+}
+
+async function fetchAndRenderVisitorBadge() {
+    const todayKey = getTodayKeyStr();
+    try {
+        const [todayRes, totalRes] = await Promise.all([
+            fetch(`${FIREBASE_DB_URL}/visitor_stats/days/${todayKey}/total.json`).catch(() => null),
+            fetch(`${FIREBASE_DB_URL}/visitor_stats/total.json`).catch(() => null)
+        ]);
+
+        let todayCount = todayRes && todayRes.ok ? await todayRes.json() : 0;
+        let totalCount = totalRes && totalRes.ok ? await totalRes.json() : 0;
+
+        todayCount = parseInt(todayCount, 10) || 1;
+        totalCount = parseInt(totalCount, 10) || todayCount;
+
+        visitorStatsCache.today = todayCount;
+        visitorStatsCache.total = totalCount;
+
+        const badgeNum = document.getElementById("stat-today-visitors");
+        if (badgeNum) badgeNum.innerText = todayCount.toLocaleString("vi-VN");
+
+        const popToday = document.getElementById("popover-today-count");
+        const popTotal = document.getElementById("popover-total-count");
+        if (popToday) popToday.innerText = todayCount.toLocaleString("vi-VN");
+        if (popTotal) popTotal.innerText = totalCount.toLocaleString("vi-VN");
+    } catch(e) {}
+}
+
+function toggleVisitorStatsPopover(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const popover = document.getElementById("visitor-stats-popover");
+    const badge = document.getElementById("visitor-counter-badge");
+    if (!popover) return;
+
+    if (popover.classList.contains("show")) {
+        closeVisitorStatsPopover();
+    } else {
+        popover.classList.add("show");
+        if (badge) badge.classList.add("active");
+        loadAndRenderVisitorDetailedStats();
+    }
+}
+
+function closeVisitorStatsPopover(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const popover = document.getElementById("visitor-stats-popover");
+    const badge = document.getElementById("visitor-counter-badge");
+    if (popover) popover.classList.remove("show");
+    if (badge) badge.classList.remove("active");
+}
+
+async function loadAndRenderVisitorDetailedStats() {
+    const todayKey = getTodayKeyStr();
+    const weekContainer = document.getElementById("visitor-week-bars-container");
+    const hoursContainer = document.getElementById("visitor-hours-container");
+
+    // 1. Tạo danh sách 7 ngày gần nhất (từ 6 ngày trước đến hôm nay)
+    const dayKeys = [];
+    const dayLabels = [];
+    for (let i = 6; i >= 0; i--) {
+        let d = new Date();
+        d.setDate(d.getDate() - i);
+        let k = getTodayKeyStr(d);
+        dayKeys.push(k);
+        let weekdayNames = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+        let label = (i === 0) ? "Hôm nay" : `${weekdayNames[d.getDay()]} (${d.getDate()}/${d.getMonth()+1})`;
+        dayLabels.push({ key: k, label: label, isToday: (i === 0) });
+    }
+
+    try {
+        const [allDaysRes, hoursRes] = await Promise.all([
+            fetch(`${FIREBASE_DB_URL}/visitor_stats/days.json`).catch(() => null),
+            fetch(`${FIREBASE_DB_URL}/visitor_stats/days/${todayKey}/hours.json`).catch(() => null)
+        ]);
+
+        const allDays = (allDaysRes && allDaysRes.ok) ? await allDaysRes.json() : {};
+        const hoursData = (hoursRes && hoursRes.ok) ? await hoursRes.json() : {};
+
+        // Tính tổng 7 ngày gần đây
+        let weekTotal = 0;
+        let dayStats = dayLabels.map(item => {
+            let dayObj = allDays && allDays[item.key] ? allDays[item.key] : null;
+            let count = dayObj ? (parseInt(dayObj.total, 10) || 0) : 0;
+            if (item.isToday && count === 0) count = visitorStatsCache.today || 1;
+            weekTotal += count;
+            return {
+                label: item.label,
+                count: count,
+                isToday: item.isToday
+            };
+        });
+
+        const popWeek = document.getElementById("popover-week-count");
+        if (popWeek) popWeek.innerText = weekTotal.toLocaleString("vi-VN");
+
+        // Vẽ biểu đồ thanh 7 ngày
+        if (weekContainer) {
+            let maxDay = Math.max(...dayStats.map(d => d.count), 1);
+            weekContainer.innerHTML = dayStats.map(d => {
+                let percent = Math.min(100, Math.max(8, Math.round((d.count / maxDay) * 100)));
+                return `
+                    <div class="visitor-bar-row">
+                        <span class="visitor-bar-label" title="${d.label}">${d.isToday ? '<b>' + d.label + '</b>' : d.label}</span>
+                        <div class="visitor-bar-track">
+                            <div class="visitor-bar-fill ${d.isToday ? 'today-bar' : ''}" style="width: ${percent}%;"></div>
+                        </div>
+                        <span class="visitor-bar-val">${d.count}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Vẽ danh sách 24 khung giờ hôm nay
+        if (hoursContainer) {
+            const currentHourNum = new Date().getHours();
+            let hoursHtml = "";
+            for (let h = 0; h < 24; h++) {
+                let hKey = String(h).padStart(2, '0');
+                let count = hoursData && hoursData[hKey] ? (parseInt(hoursData[hKey], 10) || 0) : 0;
+                let isCurrentHour = (h === currentHourNum);
+                hoursHtml += `
+                    <div class="hour-badge-pill ${isCurrentHour ? 'active-hour' : ''}" title="${hKey}:00 - ${hKey}:59">
+                        <span class="h-time">${hKey}h</span>
+                        <span class="h-val">${count}</span>
+                    </div>
+                `;
+            }
+            hoursContainer.innerHTML = hoursHtml;
+        }
+
+    } catch (e) {
+        console.warn("Lỗi nạp chi tiết visitor:", e);
+    }
+}
+
+// =========================================================
+// SỰ KIỆN TOÀN CỤC: THU LẠI ADMIN PANEL, AUTH, BADGE, VISITOR POPOVER KHI CLICK RA NGOÀI
 // =========================================================
 document.addEventListener("click", function(event) {
     // 1. Thu lại bảng Admin & ô mật khẩu Admin khi click ra ngoài
@@ -823,5 +1073,11 @@ document.addEventListener("click", function(event) {
     const badgeWrapper = event.target.closest(".badge-wrapper");
     if (!badgeWrapper) {
         document.querySelectorAll(".badge-dropdown-menu.show").forEach(m => m.classList.remove("show"));
+    }
+
+    // 3. Thu lại popover thống kê truy cập khi click ra ngoài
+    const visitorWrapper = event.target.closest(".visitor-counter-wrapper");
+    if (!visitorWrapper) {
+        closeVisitorStatsPopover();
     }
 });
