@@ -1,12 +1,9 @@
 // ==========================================
 // FILE: app-config.js
 // CẤU HÌNH HỆ THỐNG VÀ DỮ LIỆU TĨNH DÙNG CHUNG
-// HỖ TRỢ ĐĂNG ĐỀ THI, TÀI LIỆU PDF / WORD / ẢNH GOOGLE DRIVE
 // ==========================================
 const ADMIN_PASSWORD = "Hopan130384";
 const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
-
-// URL WEB APP GAS TẢI FILE PDF / WORD / ẢNH LÊN GOOGLE DRIVE
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbygCVlYabwzwzeVL1KQY_Jv3rdkZLXVmsflazNvvI4njnz9jj9QSAqC2Yo6-t8DW53o/exec";
 
 let isAdminLoggedIn = false;
@@ -18,7 +15,8 @@ let activeStudentLogin = {
     targetUrl: "",
     examTitle: "",
     categoryId: "them-11",
-    currentMode: "class"
+    currentMode: "class",
+    item: null
 };
 
 const PRESET_AVATARS = [
@@ -44,8 +42,8 @@ const WEB_AVATAR_URL = "https://images.unsplash.com/photo-1509062522246-37559779
 const BOTTOM_BANNER_URL = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
 
 const DANTRI_NAV_CATEGORIES = [
-    { id: "vui-vui", title: "🤣 Vui<br>vui", subTitle: "🎉 Thư giãn & Bản tin vui vẻ học đường", news: [ { tag: "GIẢI TRÍ", title: "Góc thư giãn: Những câu nói bất hủ của học sinh trong giờ kiểm tra Toán", date: "22/08/2026 - 10:00", url: "https://dantri.com.vn" }, { tag: "CƯỜI MẮT", title: "Chuyện lạ lớp học: Khi thầy giáo ra đề toán bằng thơ lục bát cực chất", date: "21/08/2026 - 18:20", url: "https://dantri.com.vn" }, { tag: "MEME MATH", title: "Tổng hợp Meme Toán học giúp xả stress cực hiệu quả cho các sĩ tử 2026", date: "20/08/2026 - 15:30", url: "https://dantri.com.vn" } ] },
-    { id: "thoi-su", title: "🔴 Thời<br>sự", subTitle: "📢 Thời sự & Sự kiện giáo dục nổi bật", news: [ { tag: "MỚI NHẤT", title: "Bộ GD&ĐT ban hành hướng dẫn cấu trúc đề thi Tốt nghiệp THPT 2026", date: "22/08/2026 - 08:30", url: "https://dantri.com.vn" }, { tag: "THỜI SỰ", title: "Lịch kiểm tra đánh giá năng lực định kỳ học kỳ 1 trên toàn tỉnh", date: "21/08/2026 - 14:15", url: "https://dantri.com.vn" }, { tag: "SỰ KIỆN", title: "Tăng cường ứng dụng công nghệ thông tin và AI trong tự học Toán", date: "20/08/2026 - 10:00", url: "https://dantri.com.vn" } ] },
+    { id: "vui-vui", title: "🤣 Vui<br>vui", subTitle: "🎉 Thư giãn & Bản tin vui vẻ học đường", news: [ { tag: "GIẢI TRÍ", title: "Góc thư giãn: Những câu nói bất hủ của học sinh trong giờ kiểm tra Toán", date: "22/08/2026 - 10:00", url: "https://dantri.com.vn" }, { tag: "CƯỜI MẮT", title: "Chuyện lạ lớp học: Khi thầy giáo ra đề toán bằng thơ lục bát cực chất", date: "21/08/2026 - 18:20", url: "https://dantri.com.vn" } ] },
+    { id: "thoi-su", title: "🔴 Thời<br>sự", subTitle: "📢 Thời sự & Sự kiện giáo dục nổi bật", news: [ { tag: "MỚI NHẤT", title: "Bộ GD&ĐT ban hành hướng dẫn cấu trúc đề thi Tốt nghiệp THPT 2026", date: "22/08/2026 - 08:30", url: "https://dantri.com.vn" } ] },
     { id: "giao-duc", title: "🏫 Giáo<br>đục", subTitle: "📚 Bản tin giáo dục & Trường học", news: [ { tag: "TIÊU ĐIỂM", title: "Phụ huynh chuẩn bị SGK và tài liệu ôn thi đầu năm học", date: "22/08/2026 - 07:45", url: "https://dantri.com.vn/giao-duc.htm" } ] },
     { id: "the-thao", title: "⚽ Thể<br>thao", subTitle: "🏆 Thể thao trong nước & Quốc tế", news: [ { tag: "BÓNG ĐÁ", title: "Tổng hợp các giải thể thao học sinh, sinh viên toàn quốc", date: "22/08/2026 - 10:15", url: "https://dantri.com.vn/the-thao.htm" } ] },
     { id: "me-xe", title: "🚗 Mê<br>xe", subTitle: "🚘 Thế giới xe & Công nghệ bốn bánh", news: [ { tag: "ĐÁNH GIÁ", title: "Phân tích các dòng xe gia đình 5 chỗ", date: "22/08/2026 - 08:20", url: "https://dantri.com.vn/o-to-xe-may.htm" } ] },
@@ -105,17 +103,39 @@ const NEWS_DATA = [
     { title: "Xem đáp án và điểm bài kiểm tra của em", date: "03/08/2026 - 12:00", image: "https://files.catbox.moe/jum4by.png", url: "#" }
 ];
 
+function isSameCategory(catA, catB) {
+    if (!catA || !catB) return false;
+    let a = String(catA).toLowerCase().replace(/[^a-z0-9]/g, '');
+    let b = String(catB).toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (a === b) return true;
+    
+    const aliases = {
+        "them10": ["them10", "t10"],
+        "them11": ["them11", "t11"],
+        "them12": ["them12", "t12"],
+        "lop11a": ["lop11a", "11a"],
+        "lop11c": ["lop11c", "11c"],
+        "lop10p": ["lop10p", "10p"],
+        "lop11e": ["lop11e", "11e"]
+    };
+    for (let key in aliases) {
+        let list = aliases[key];
+        if (list.includes(a) && list.includes(b)) return true;
+    }
+    return false;
+}
+
 function getAccountsForCategory(categoryId) {
     if (!window.STUDENT_ACCOUNTS) return [];
     const cat = String(categoryId || "").toLowerCase().trim();
 
-    if (cat === "lop-11e" || cat.includes("11e")) return window.STUDENT_ACCOUNTS["lop-11e"] || window.STUDENT_ACCOUNTS["lop-11E"] || [];
-    if (cat === "lop-11c" || cat.includes("11c")) return window.STUDENT_ACCOUNTS["lop-11c"] || [];
-    if (cat === "lop-11a" || cat.includes("11a")) return window.STUDENT_ACCOUNTS["lop-11a"] || [];
-    if (cat === "lop-10p" || cat.includes("10p")) return window.STUDENT_ACCOUNTS["lop-10p"] || [];
-    if (cat === "them-11" || cat.includes("them-11") || cat.includes("them 11")) return window.STUDENT_ACCOUNTS["them-11"] || [];
-    if (cat === "them-10" || cat.includes("them-10") || cat.includes("them 10")) return window.STUDENT_ACCOUNTS["them-10"] || [];
-    if (cat === "them-12" || cat.includes("them-12") || cat.includes("them 12")) return window.STUDENT_ACCOUNTS["them-12"] || [];
+    if (isSameCategory(cat, "lop-11e")) return window.STUDENT_ACCOUNTS["lop-11e"] || window.STUDENT_ACCOUNTS["lop-11E"] || [];
+    if (isSameCategory(cat, "lop-11c")) return window.STUDENT_ACCOUNTS["lop-11c"] || [];
+    if (isSameCategory(cat, "lop-11a")) return window.STUDENT_ACCOUNTS["lop-11a"] || [];
+    if (isSameCategory(cat, "lop-10p")) return window.STUDENT_ACCOUNTS["lop-10p"] || [];
+    if (isSameCategory(cat, "them-11")) return window.STUDENT_ACCOUNTS["them-11"] || [];
+    if (isSameCategory(cat, "them-10")) return window.STUDENT_ACCOUNTS["them-10"] || [];
+    if (isSameCategory(cat, "them-12")) return window.STUDENT_ACCOUNTS["them-12"] || [];
 
     if (window.STUDENT_ACCOUNTS[cat]) return window.STUDENT_ACCOUNTS[cat];
     if (window.STUDENT_ACCOUNTS[categoryId]) return window.STUDENT_ACCOUNTS[categoryId];
