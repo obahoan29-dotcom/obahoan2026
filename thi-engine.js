@@ -1,10 +1,7 @@
 // =========================================================
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
-// TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ SỬA:
-// KHI NỘP BÀI XONG XÓA TRIỆT ĐỂ VẾT HỌ TÊN, LỚP, SBD
-// ĐỂ LẦN ĐĂNG NHẬP SAU HOÀN TOÀN MỚI TINH TRẮNG SẠCH
+// TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & XÁC THỰC FIREBASE
 // =========================================================
 
 window.onload = async function() {
@@ -467,6 +464,7 @@ function updateProgress() {
     return answeredCount; 
 }
 
+// Bắt đầu thi: Xác thực phản hồi trực tiếp với Firebase
 async function startExamAction() { 
     let sId = document.getElementById("student-id").value.trim(); 
     let sName = document.getElementById("student-name").value.trim(); 
@@ -587,12 +585,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
 
         const pushNodes = [examCode];
         if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
-        let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
-        if (numMatch) {
-            pushNodes.push(numMatch[1]);
-            pushNodes.push("DE" + numMatch[1]);
-            pushNodes.push("DE" + numMatch[1] + "TOAN11");
-        }
 
         const tasks = pushNodes.map(n => 
             fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
@@ -724,7 +716,7 @@ function closeSubmitConfirmModal() {
     document.getElementById("submit-confirm-modal").style.display = "none"; 
 }
 
-// NỘP BÀI THÀNH CÔNG: XÓA SẠCH VẾT TÊN, SBD, LỚP ĐỂ LẦN SAU MỚI TINH
+// Nộp bài và dọn dẹp sạch sẽ phiên làm việc
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted) return; 
     
@@ -891,7 +883,7 @@ async function executeSubmitExam(isForceSubmit = false) {
 
     isSubmitted = true; 
 
-    // XÓA SẠCH VẾT TÊN, SBD, LỚP VÀ ĐÁNH DẤU ĐÃ NỘP BÀI XONG
+    // Xóa sạch vết để bảo đảm lần sau đăng nhập mới tinh
     try { 
         localStorage.removeItem(getStorageKey()); 
         localStorage.removeItem(`shuffled_exam_${getExamCode()}`); 
