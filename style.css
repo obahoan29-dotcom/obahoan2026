@@ -267,72 +267,75 @@ body {
 }
 
 /* ========================================================= */
-/* WIDGET NỔI ĐẾM LƯỢT TRUY CẬP WEBSITE CHÍNH (ĐÃ THU NHỎ 60%, TRONG SUỐT, GÓC TRÊN TRÁI) */
+/* WIDGET NỔI ĐẾM LƯỢT TRUY CẬP WEBSITE CHÍNH (ĐÃ PHÓNG TO GẤP ĐÔI, PHÔNG CHỮ RÕ NÉT NỔI BẬT) */
 /* ========================================================= */
 .site-visit-badge {
     position: fixed;
-    top: 8px;
-    left: 8px;
+    top: 10px;
+    left: 10px;
     z-index: 9998;
-    background: rgba(15, 23, 42, 0.25);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 30px;
-    padding: 7px 14px;
+    background: rgba(15, 23, 42, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(56, 189, 248, 0.65);
+    border-radius: 36px;
+    padding: 7px 15px;
     color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 16px rgba(2, 132, 199, 0.3);
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     cursor: pointer;
     user-select: none;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    font-size: 12.5px;
-    font-weight: 700;
-    transform: scale(0.6);
+    font-size: 13.5px;
+    font-weight: 800;
+    transform: scale(1.2);
     transform-origin: top left;
 }
 .site-visit-badge:hover {
-    transform: scale(0.64);
-    background: rgba(15, 23, 42, 0.45);
-    border-color: rgba(56, 189, 248, 0.5);
-    box-shadow: 0 6px 18px rgba(2, 132, 199, 0.25);
+    transform: scale(1.26);
+    background: rgba(15, 23, 42, 0.92);
+    border-color: #38bdf8;
+    box-shadow: 0 10px 28px rgba(2, 132, 199, 0.45), 0 0 20px rgba(56, 189, 248, 0.5);
 }
 .site-visit-badge:active {
-    transform: scale(0.58);
+    transform: scale(1.16);
 }
 .visit-pulse-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background-color: #22c55e;
-    box-shadow: 0 0 8px #22c55e;
-    animation: visitDotPulse 1.6s infinite alternate;
+    box-shadow: 0 0 10px #22c55e;
+    animation: visitDotPulse 1.5s infinite alternate;
 }
 @keyframes visitDotPulse {
-    0% { transform: scale(0.85); opacity: 0.7; }
-    100% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 12px #22c55e; }
+    0% { transform: scale(0.85); opacity: 0.75; }
+    100% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 14px #22c55e; }
 }
-.visit-icon { font-size: 14px; line-height: 1; }
-.visit-label { color: #cbd5e1; font-weight: 700; }
+.visit-icon { font-size: 16px; line-height: 1; }
+.visit-label { color: #f1f5f9; font-weight: 800; font-size: 13px; }
 
-/* CHỮ ĐẾM SỐ LẦN TRUY CẬP: IN ĐẬM, MÀU VÀNG TƯƠI, VIỀN ĐỎ DỄ NHÌN */
+/* CHỮ ĐẾM SỐ LẦN TRUY CẬP: ĐỔI PHÔNG CHỮ SẮC NÉT, ĐẬM ĐÀ, TO RÕ, NỔI BẬT NỀN VÀNG RỰC */
 .visit-number {
-    color: #ffe600;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 15px;
+    color: #ffea00;
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-size: 18px;
     font-weight: 900;
-    letter-spacing: 0.5px;
-    -webkit-text-stroke: 0.8px #dc2626;
+    letter-spacing: 0.8px;
+    line-height: 1;
+    -webkit-text-stroke: 0.9px #b91c1c;
     text-shadow: 
-        -1px -1px 0 #dc2626,  
-         1px -1px 0 #dc2626,
-        -1px  1px 0 #dc2626,
-         1px  1px 0 #dc2626,
-         0 0 4px rgba(220, 38, 38, 0.9);
+        -1.2px -1.2px 0 #b91c1c,  
+         1.2px -1.2px 0 #b91c1c,
+        -1.2px  1.2px 0 #b91c1c,
+         1.2px  1.2px 0 #b91c1c,
+         0 0 10px rgba(250, 204, 21, 0.85),
+         0 2px 4px rgba(0, 0, 0, 0.6);
 }
-.visit-arrow { font-size: 13px; opacity: 0.9; }
+.visit-arrow { font-size: 14px; opacity: 0.95; }
 
 /* MODAL THỐNG KÊ CHI TIẾT TRUY CẬP */
 .visit-stats-modal-overlay {
@@ -394,7 +397,7 @@ body {
 .kpi-total .kpi-val { color: #ea580c; }
 
 .kpi-label { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px; }
-.kpi-val { font-size: 22px; font-weight: 900; font-family: 'Courier New', Courier, monospace; line-height: 1.2; }
+.kpi-val { font-size: 22px; font-weight: 900; font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .kpi-sub { font-size: 10px; color: #64748b; font-weight: 600; margin-top: 2px; }
 
 /* TABS MODAL */
@@ -472,7 +475,7 @@ body {
     background: linear-gradient(90deg, #34d399, #059669);
 }
 .weekly-row-count {
-    width: 55px; text-align: right; color: #0f172a; font-weight: 800; font-family: monospace;
+    width: 55px; text-align: right; color: #0f172a; font-weight: 800; font-family: 'Be Vietnam Pro', monospace;
 }
 
 .visit-modal-footer {
@@ -1178,10 +1181,10 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .lantern-string { height: 12px; }
     .mid-autumn-icon { font-size: 34px; }
 
-    /* Responsive cho modal & badge truy cập (vẫn giữ scale 60% ở góc trên cùng bên trái) */
+    /* Responsive cho modal & badge truy cập trên điện thoại (đảm bảo to rõ, không che mất các phần tử khác) */
     .site-visit-badge {
-        top: 6px; left: 6px;
-        transform: scale(0.6);
+        top: 8px; left: 8px;
+        transform: scale(1.05);
         transform-origin: top left;
     }
     .visit-kpi-grid {
