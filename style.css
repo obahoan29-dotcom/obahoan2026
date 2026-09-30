@@ -267,44 +267,44 @@ body {
 }
 
 /* ========================================================= */
-/* WIDGET NỔI ĐẾM LƯỢT TRUY CẬP WEBSITE CHÍNH (ĐÃ PHÓNG TO GẤP ĐÔI, PHÔNG CHỮ RÕ NÉT NỔI BẬT) */
+/* WIDGET NỔI ĐẾM LƯỢT TRUY CẬP WEBSITE CHÍNH (ĐÃ THU NHỎ 70%, TRONG SUỐT HIỆN ĐẠI, CHỮ SỐ NỔI BẬT) */
 /* ========================================================= */
 .site-visit-badge {
     position: fixed;
-    top: 10px;
-    left: 10px;
+    top: 8px;
+    left: 8px;
     z-index: 9998;
-    background: rgba(15, 23, 42, 0.78);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1.5px solid rgba(56, 189, 248, 0.65);
-    border-radius: 36px;
-    padding: 7px 15px;
+    background: rgba(15, 23, 42, 0.32);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 30px;
+    padding: 6px 14px;
     color: #ffffff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 16px rgba(2, 132, 199, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.08);
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     cursor: pointer;
     user-select: none;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 800;
-    transform: scale(1.2);
+    transform: scale(0.7);
     transform-origin: top left;
 }
 .site-visit-badge:hover {
-    transform: scale(1.26);
-    background: rgba(15, 23, 42, 0.92);
-    border-color: #38bdf8;
-    box-shadow: 0 10px 28px rgba(2, 132, 199, 0.45), 0 0 20px rgba(56, 189, 248, 0.5);
+    transform: scale(0.75);
+    background: rgba(15, 23, 42, 0.52);
+    border-color: rgba(56, 189, 248, 0.7);
+    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35), inset 0 0 12px rgba(56, 189, 248, 0.2);
 }
 .site-visit-badge:active {
-    transform: scale(1.16);
+    transform: scale(0.68);
 }
 .visit-pulse-dot {
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background-color: #22c55e;
     box-shadow: 0 0 10px #22c55e;
@@ -314,28 +314,28 @@ body {
     0% { transform: scale(0.85); opacity: 0.75; }
     100% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 14px #22c55e; }
 }
-.visit-icon { font-size: 16px; line-height: 1; }
-.visit-label { color: #f1f5f9; font-weight: 800; font-size: 13px; }
+.visit-icon { font-size: 15px; line-height: 1; }
+.visit-label { color: #f1f5f9; font-weight: 800; font-size: 13px; letter-spacing: -0.1px; }
 
-/* CHỮ ĐẾM SỐ LẦN TRUY CẬP: ĐỔI PHÔNG CHỮ SẮC NÉT, ĐẬM ĐÀ, TO RÕ, NỔI BẬT NỀN VÀNG RỰC */
+/* CHỮ ĐẾM SỐ LẦN TRUY CẬP: SẮC NÉT, ĐẬM ĐÀ, NỔI BẬT NỀN VÀNG RỰC RỠ TRÊN NỀN KÍNH TRONG SUỐT */
 .visit-number {
-    color: #ffea00;
+    color: #ffe600;
     font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
     font-variant-numeric: tabular-nums;
-    font-size: 18px;
+    font-size: 17.5px;
     font-weight: 900;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     line-height: 1;
-    -webkit-text-stroke: 0.9px #b91c1c;
+    -webkit-text-stroke: 0.8px #b91c1c;
     text-shadow: 
         -1.2px -1.2px 0 #b91c1c,  
          1.2px -1.2px 0 #b91c1c,
         -1.2px  1.2px 0 #b91c1c,
          1.2px  1.2px 0 #b91c1c,
-         0 0 10px rgba(250, 204, 21, 0.85),
-         0 2px 4px rgba(0, 0, 0, 0.6);
+         0 0 10px rgba(250, 204, 21, 0.95),
+         0 2px 5px rgba(0, 0, 0, 0.7);
 }
-.visit-arrow { font-size: 14px; opacity: 0.95; }
+.visit-arrow { font-size: 13.5px; opacity: 0.95; }
 
 /* MODAL THỐNG KÊ CHI TIẾT TRUY CẬP */
 .visit-stats-modal-overlay {
@@ -1181,10 +1181,10 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .lantern-string { height: 12px; }
     .mid-autumn-icon { font-size: 34px; }
 
-    /* Responsive cho modal & badge truy cập trên điện thoại (đảm bảo to rõ, không che mất các phần tử khác) */
+    /* Responsive cho modal & badge truy cập trên điện thoại (giữ tỷ lệ scale 0.7 gọn đẹp) */
     .site-visit-badge {
-        top: 8px; left: 8px;
-        transform: scale(1.05);
+        top: 6px; left: 6px;
+        transform: scale(0.7);
         transform-origin: top left;
     }
     .visit-kpi-grid {
