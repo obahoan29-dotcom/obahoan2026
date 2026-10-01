@@ -4,6 +4,7 @@
 // - HIỆN CHUẨN XÁC DANH SÁCH HỌC SINH CỦA ĐÚNG LỚP ĐANG XEM
 // - THÍ SINH TỰ DO THI Ở LỚP NÀO THÌ CHỈ HIỆN Ở KẾT QUẢ CỦA LỚP ĐÓ
 // - KHÓA CHẶT SO KHỚP CATEGORYID CỦA LỚP VÀ ĐÚNG ĐỀ THI
+// - HỖ TRỢ NÚT XÓA HÀNG TRÊN MÀN HÌNH (KHÔNG ẢNH HƯỞNG FIREBASE, TẢI LẠI SẼ HIỆN LẠI)
 // =========================================================
 
 let currentExamResultData = {
@@ -784,6 +785,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         }
 
         finalRows.push({
+            _rowUid: 'row_cls_' + (acc.sbd || idx) + '_' + Math.random().toString(36).substring(2, 7),
             stt: acc.stt || (idx + 1),
             isClassStudent: true,
             account: acc,
@@ -855,6 +857,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         }
 
         finalRows.push({
+            _rowUid: 'row_free_' + gKey + '_' + Math.random().toString(36).substring(2, 7),
             stt: freeCounter++,
             isClassStudent: false,
             account: group.account,
@@ -902,6 +905,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let freeStart = session.startTime || session.loginTime || session.lastPing || Date.now();
 
         finalRows.push({
+            _rowUid: 'row_live_' + (sSbd || normSName) + '_' + Math.random().toString(36).substring(2, 7),
             stt: freeCounter++,
             isClassStudent: false,
             account: {
@@ -1045,19 +1049,20 @@ function updateStatsAndRenderTable(rows) {
     }
 }
 
-function selectStudentAttempt(rowIndex, attemptIdx, event) {
+function selectStudentAttempt(rowUid, attemptIdx, event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
-    if (currentExamResultData.rawRows[rowIndex]) {
-        currentExamResultData.rawRows[rowIndex].selectedAttemptIndex = attemptIdx;
+    const row = currentExamResultData.rawRows.find(r => r._rowUid === rowUid);
+    if (row) {
+        row.selectedAttemptIndex = attemptIdx;
         calculateRanksForRows(currentExamResultData.rawRows);
         filterResultTable();
     }
 }
 
-function toggleAttemptMenu(rowIndex, event) {
+function toggleAttemptMenu(rowUid, event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
-    const menu = document.getElementById(`attempt-menu-${rowIndex}`);
-    const btn = document.getElementById(`attempt-btn-${rowIndex}`);
+    const menu = document.getElementById(`attempt-menu-${rowUid}`);
+    const btn = document.getElementById(`attempt-btn-${rowUid}`);
     const isShown = menu && menu.classList.contains("show");
 
     document.querySelectorAll('.attempt-dropdown-menu.show').forEach(m => m.classList.remove('show'));
@@ -1069,13 +1074,50 @@ function toggleAttemptMenu(rowIndex, event) {
     }
 }
 
+// XÓA TẠM THỜI MỘT HÀNG TRÊN MÀN HÌNH (KHÔNG ẢNH HƯỞNG FIREBASE)
+function deleteLocalResultRow(rowUid, event) {
+    if (event) { event.stopPropagation(); event.preventDefault(); }
+    const rIdx = currentExamResultData.rawRows.findIndex(r => r._rowUid === rowUid);
+    if (rIdx === -1) return;
+
+    const rowObj = currentExamResultData.rawRows[rIdx];
+    const sName = rowObj.account?.name || "thí sinh này";
+
+    if (!confirm(`Bạn có chắc chắn muốn xóa tạm thời hàng của "${sName}" khỏi màn hình?\n\n(Lưu ý: Thao tác này KHÔNG xóa dữ liệu trên Firebase, khi ấn "Cập nhật" sẽ hiện lại)`)) {
+        return;
+    }
+
+    currentExamResultData.rawRows.splice(rIdx, 1);
+    calculateRanksForRows(currentExamResultData.rawRows);
+    updateStatsAndRenderTable(currentExamResultData.rawRows);
+}
+
+// TỰ ĐỘNG ĐẢM BẢO TIÊU ĐỀ BẢNG CÓ CỘT XÓA HÀNG
+function ensureDeleteColumnHeader() {
+    const table = document.getElementById("admin-result-table");
+    if (!table) return;
+    const theadTr = table.querySelector("thead tr");
+    if (!theadTr) return;
+
+    if (!theadTr.querySelector(".th-row-action-col")) {
+        const th = document.createElement("th");
+        th.className = "th-row-action-col";
+        th.style.width = "75px";
+        th.style.textAlign = "center";
+        th.innerText = "Xóa";
+        theadTr.appendChild(th);
+    }
+}
+
 function renderFilteredResultTable(rows) {
+    ensureDeleteColumnHeader();
+
     const tbody = document.getElementById("result-table-tbody");
     if (!tbody) return;
     tbody.innerHTML = "";
 
     if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">Không tìm thấy dữ liệu học sinh nào!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16" style="text-align:center; padding:30px; font-weight:700; color:#64748b;">Không tìm thấy dữ liệu học sinh nào!</td></tr>`;
         return;
     }
 
@@ -1105,6 +1147,7 @@ function renderFilteredResultTable(rows) {
         const acc = row.account;
         const attCount = row.allAttempts.length;
         const currentSub = attCount > 0 ? row.allAttempts[row.selectedAttemptIndex] : null;
+        const uid = row._rowUid || `row_${rowIdx}`;
 
         let col1_stt = row.stt;
         let col_examName = `<div class="td-exam-text" title="${currentExamTitle}">${currentExamTitle}</div>`;
@@ -1119,7 +1162,7 @@ function renderFilteredResultTable(rows) {
                 let tm = at.timestamp ? at.timestamp.split(' - ')[1] || at.timestamp : `Lần ${aIdx+1}`;
                 let isSel = aIdx === row.selectedAttemptIndex;
                 menuItemsHtml += `
-                    <div class="attempt-menu-item ${isSel ? 'selected' : ''}" onclick="selectStudentAttempt(${rowIdx}, ${aIdx}, event)">
+                    <div class="attempt-menu-item ${isSel ? 'selected' : ''}" onclick="selectStudentAttempt('${uid}', ${aIdx}, event)">
                         <span>${isSel ? '✓ ' : ''}<b>Lần ${aIdx + 1}</b> (${tm})</span>
                         <span style="color:#0284c7; font-weight:800;">${sc}đ</span>
                     </div>
@@ -1128,10 +1171,10 @@ function renderFilteredResultTable(rows) {
 
             col_attemptCount = `
                 <div class="td-attempt-cell">
-                    <button type="button" class="btn-attempt-trigger" id="attempt-btn-${rowIdx}" onclick="toggleAttemptMenu(${rowIdx}, event)" title="Bấm để chọn xem lần thi khác">
+                    <button type="button" class="btn-attempt-trigger" id="attempt-btn-${uid}" onclick="toggleAttemptMenu('${uid}', event)" title="Bấm để chọn xem lần thi khác">
                         ${attCount} lần ▾
                     </button>
-                    <div class="attempt-dropdown-menu" id="attempt-menu-${rowIdx}">
+                    <div class="attempt-dropdown-menu" id="attempt-menu-${uid}">
                         <div style="font-size:11px; font-weight:800; color:#64748b; padding:4px 8px; border-bottom:1px solid #f1f5f9;">CHỌN LẦN THI:</div>
                         ${menuItemsHtml}
                     </div>
@@ -1218,6 +1261,12 @@ function renderFilteredResultTable(rows) {
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
         let safeTitleCol10 = stripHtml(col10_cheatTime);
 
+        let col_action = `
+            <button type="button" class="btn-delete-result-row" onclick="deleteLocalResultRow('${uid}', event)" title="Xóa dòng này khỏi màn hình (ấn Cập nhật sẽ hiện lại)" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:3px 8px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:2px; transition:0.15s; box-shadow:0 1px 3px rgba(239,68,68,0.15);">
+                🗑️ Xóa
+            </button>
+        `;
+
         tr.innerHTML = `
             <td class="td-stt">${col1_stt}</td>
             <td class="td-exam-col" title="${currentExamTitle}">${col_examName}</td>
@@ -1234,6 +1283,7 @@ function renderFilteredResultTable(rows) {
             <td class="td-tabs">${col9_tabs}</td>
             <td class="td-tab-times td-truncate" title="${safeTitleCol10}">${col10_cheatTime}</td>
             <td class="td-truncate">${col11_details}</td>
+            <td style="text-align:center;">${col_action}</td>
         `;
 
         tbody.appendChild(tr);
