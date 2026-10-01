@@ -2,9 +2,9 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ SỬA:
-// KHI NỘP BÀI XONG XÓA TRIỆT ĐỂ VẾT HỌ TÊN, LỚP, SBD
-// ĐỂ LẦN ĐĂNG NHẬP SAU HOÀN TOÀN MỚI TINH TRẮNG SẠCH
+// ĐÃ TỐI ƯU:
+// BẮT BUỘC FIREBASE PHẢN HỒI GHI DỮ LIỆU THÀNH CÔNG (HTTP 200)
+// MỚI MỞ ĐỀ THI CHO HỌC SINH (CHẠY SONG SONG SIÊU TỐC ~0.1s)
 // =========================================================
 
 window.onload = async function() {
@@ -519,12 +519,12 @@ async function startExamAction() {
 function startWaitingCountdown(startTimeMs, sId, sName, sClass) { 
     const countdownEl = document.getElementById("waiting-countdown"); 
     if (waitingInterval) clearInterval(waitingInterval); 
-    waitingInterval = setInterval(() => { 
+    waitingInterval = setInterval(async () => { 
         const diff = startTimeMs - Date.now(); 
         if (diff <= 0) { 
             clearInterval(waitingInterval); 
             countdownEl.innerText = "00:00:00"; 
-            executeStartExamAPI(sId, sName, sClass, false); 
+            await executeStartExamAPI(sId, sName, sClass, false); 
         } else { 
             const h = Math.floor(diff / 3600000); 
             const m = Math.floor((diff % 3600000) / 60000); 
@@ -534,6 +534,7 @@ function startWaitingCountdown(startTimeMs, sId, sName, sClass) {
     }, 1000); 
 }
 
+// BẮT BUỘC FIREBASE PHẢN HỒI GHI DỮ LIỆU THÀNH CÔNG RỒI MỚI MỞ ĐỀ
 async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
     const currentCat = getExamCategory();
     const urlParams = new URLSearchParams(window.location.search);
@@ -581,9 +582,11 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         createdAt: Date.now() 
     }; 
 
+    let isFirebaseConfirmed = false;
+
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // Tối đa 5s cho mạng yếu
 
         const pushNodes = [examCode];
         if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
@@ -594,26 +597,76 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
             pushNodes.push("DE" + numMatch[1] + "TOAN11");
         }
 
-        const tasks = pushNodes.map(n => 
-            fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
-                method: 'PUT', body: JSON.stringify(presencePayload), signal: controller.signal
-            }).catch(() => null)
-        );
+        // Tác vụ chính: Ghi vào active_sessions của examCode (Bắt buộc kiểm tra phản hồi res.ok)
+        const primarySessionTask = fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(presencePayload),
+            signal: controller.signal
+        });
 
-        tasks.push(
+        // Các tác vụ đồng bộ song song khác
+        const otherTasks = [];
+        pushNodes.forEach(n => {
+            if (n !== examCode) {
+                otherTasks.push(
+                    fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(presencePayload),
+                        signal: controller.signal
+                    }).catch(() => null)
+                );
+            }
+        });
+
+        otherTasks.push(
             fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
-                method: 'POST', body: JSON.stringify(logPayload), signal: controller.signal
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logPayload),
+                signal: controller.signal
             }).catch(() => null)
         );
 
-        await Promise.all(tasks);
+        // Chạy song song tất cả các request để đạt tốc độ tối đa (~100ms)
+        const [primaryRes] = await Promise.all([primarySessionTask, ...otherTasks]);
         clearTimeout(timeoutId);
+
+        if (primaryRes && primaryRes.ok) {
+            isFirebaseConfirmed = true;
+        }
     } catch(e) {
-        console.warn("Handshake bắt đầu bài thi:", e);
+        console.warn("Lỗi kết nối Firebase khi bắt đầu bài thi:", e);
     }
 
+    // NẾU FIREBASE CHƯA XÁC NHẬN GHI DỮ LIỆU: CHẶN LẠI VÀ THÔNG BÁO NGAY
+    if (!isFirebaseConfirmed) {
+        if (startBtn) {
+            startBtn.disabled = false;
+            startBtn.innerText = "Vào Làm Bài";
+        }
+        document.getElementById("student-card").style.display = "block";
+        const waitingCard = document.getElementById("waiting-room-card");
+        if (waitingCard) waitingCard.style.display = "none";
+
+        // Xóa tham số autostart để tránh lỗi vòng lặp tải trang
+        try {
+            const u = new URL(window.location.href);
+            if (u.searchParams.has('autostart')) {
+                u.searchParams.delete('autostart');
+                window.history.replaceState({}, '', u.toString());
+            }
+        } catch(e) {}
+
+        alert("⚠️ CHƯA THỂ MỞ ĐỀ THI!\n\nMáy chủ thi (Firebase) chưa phản hồi xác nhận ghi danh sách do mạng Internet của bạn bị chập chờn hoặc gián đoạn.\n\nVui lòng kiểm tra lại kết nối mạng và bấm nút 'Vào Làm Bài' lại để hệ thống bảo lưu kết quả chuẩn xác!");
+        return; // DỪNG LẠI, TUYỆT ĐỐI KHÔNG MỞ ĐỀ
+    }
+
+    // Gửi log phụ về Google Sheet ở chế độ nền (không làm trễ mở đề)
     postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
 
+    // KHI FIREBASE ĐÃ PHẢN HỒI THÀNH CÔNG: MỞ ĐỀ THI NGAY LẬP TỨC
     document.getElementById("nav-student-name").innerText = sName; 
     document.getElementById("nav-student-id").innerText = sId; 
     document.getElementById("nav-student-class").innerText = sClass; 
