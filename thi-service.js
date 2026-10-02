@@ -2,11 +2,19 @@
 // FILE: thi-service.js
 // QUẢN LÝ KẾT NỐI MẠNG, FIREBASE REALTIME, PRESENCE, 
 // THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
+// ĐÃ BẢO VỆ CHỐNG LỖI LOCALSTORAGE TRÊN IPHONE SAFARI / ZALO
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
 const URL2_EXAM_RESULT  = "https://script.google.com/macros/s/AKfycbx4ezz_9YOZKt9-idYUKz8N1dXg-LeIG-_UknLYKBVZJpxCJRx3yNHwfdWEQp-yhOISog/exec";
 const FIREBASE_DB_URL   = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+// BỘ ĐỆM BẢO VỆ LƯU TRỮ TRÊN IPHONE (SAFARI PRIVATE BROWSING / IN-APP WEBVIEW)
+const safeLocal = {
+    getItem(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
+    setItem(k, v) { try { localStorage.setItem(k, v); } catch(e) {} },
+    removeItem(k) { try { localStorage.removeItem(k); } catch(e) {} }
+};
 
 let examData = null;
 let EXAM_NAME = "ĐỀ THI TRẮC NGHIỆM";
@@ -41,7 +49,7 @@ function getExamCategory() {
     let cat = urlParams.get('cat');
     if (cat) return cat;
     try {
-        const raw = localStorage.getItem("current_exam_student");
+        const raw = safeLocal.getItem("current_exam_student");
         if (raw) {
             const parsed = JSON.parse(raw);
             if (parsed && parsed.categoryId) return parsed.categoryId;
@@ -118,11 +126,9 @@ function applyStudentToUI(student) {
     if (navId) navId.innerText = sId;
     if (navClass) navClass.innerText = sClass;
 
-    try {
-        localStorage.setItem("saved_student_name", sName);
-        localStorage.setItem("saved_student_sbd", sId);
-        localStorage.setItem("saved_student_class", sClass);
-    } catch(e) {}
+    safeLocal.setItem("saved_student_name", sName);
+    safeLocal.setItem("saved_student_sbd", sId);
+    safeLocal.setItem("saved_student_class", sClass);
 }
 
 function syncStudentFromParamsAndStorage() {
@@ -139,7 +145,7 @@ function syncStudentFromParamsAndStorage() {
 
     if (!sbd || !name) {
         try {
-            const rawSaved = localStorage.getItem("current_exam_student");
+            const rawSaved = safeLocal.getItem("current_exam_student");
             if (rawSaved) {
                 const parsed = JSON.parse(rawSaved);
                 if (parsed && (parsed.sbd || parsed.name)) {
@@ -152,9 +158,9 @@ function syncStudentFromParamsAndStorage() {
     }
 
     if (!sbd && !name) {
-        sbd = localStorage.getItem("saved_student_sbd");
-        name = localStorage.getItem("saved_student_name");
-        className = localStorage.getItem("saved_student_class");
+        sbd = safeLocal.getItem("saved_student_sbd");
+        name = safeLocal.getItem("saved_student_name");
+        className = safeLocal.getItem("saved_student_class");
     }
 
     if (sbd || name) {
@@ -171,7 +177,7 @@ function isCurrentExamAllowFree() {
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('id');
     if (quizId) {
-        const localVal = localStorage.getItem(`exam_allow_free_${quizId}`);
+        const localVal = safeLocal.getItem(`exam_allow_free_${quizId}`);
         if (localVal !== null) {
             return (localVal === 'true');
         }
@@ -367,7 +373,7 @@ function startTimeWatcherRealtime(quizId) {
 
             if (freshData.allowFree !== undefined && examData) {
                 examData.allowFree = freshData.allowFree;
-                localStorage.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
+                safeLocal.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
             }
         } catch(e) {}
     }, 1500);
@@ -412,19 +418,19 @@ function saveExamStateToStorage() {
         studentClass: document.getElementById("student-class").value.trim(), 
         isStarted: true 
     }; 
-    try { localStorage.setItem(getStorageKey(), JSON.stringify(dataToSave)); } catch(e) {} 
+    safeLocal.setItem(getStorageKey(), JSON.stringify(dataToSave)); 
 }
 
 function restoreExamStateFromStorage() { 
     try { 
-        const raw = localStorage.getItem(getStorageKey()); 
+        const raw = safeLocal.getItem(getStorageKey()); 
         if (!raw) return false; 
         const parsed = JSON.parse(raw); 
         
         const urlParams = new URLSearchParams(window.location.search);
         const currentUrlSbd = urlParams.get('sbd');
         if (currentUrlSbd && parsed.studentId && currentUrlSbd.toLowerCase() !== String(parsed.studentId).toLowerCase()) {
-            localStorage.removeItem(getStorageKey());
+            safeLocal.removeItem(getStorageKey());
             return false;
         }
 
@@ -448,7 +454,7 @@ function restoreExamStateFromStorage() {
 
 function checkPendingSubmissionOnLoad() { 
     try { 
-        const raw = localStorage.getItem("pending_exam_submission"); 
+        const raw = safeLocal.getItem("pending_exam_submission"); 
         if (raw) { 
             const parsed = JSON.parse(raw); 
             if (parsed && parsed.studentName) { 
@@ -516,7 +522,7 @@ function sendTabSwitchLog(switchCount, durationStr, durationSec = 0) {
 
 function savePendingSubmissionToFile() { 
     if (!pendingSubmissionPayload) return; 
-    try { localStorage.setItem("pending_exam_submission", JSON.stringify(pendingSubmissionPayload)); } catch(e) {} 
+    safeLocal.setItem("pending_exam_submission", JSON.stringify(pendingSubmissionPayload)); 
     const blob = new Blob([JSON.stringify(pendingSubmissionPayload, null, 2)], { type: "application/json;charset=utf-8" }); 
     const url = URL.createObjectURL(blob); 
     const a = document.createElement("a"); 
@@ -534,7 +540,7 @@ function downloadPendingSubmissionFile() { savePendingSubmissionToFile(); }
 function retrySubmitPending() { 
     if (!pendingSubmissionPayload) { 
         try { 
-            const raw = localStorage.getItem("pending_exam_submission"); 
+            const raw = safeLocal.getItem("pending_exam_submission"); 
             if (raw) pendingSubmissionPayload = JSON.parse(raw); 
         } catch(e) {} 
     } 
@@ -553,10 +559,8 @@ function retrySubmitPending() {
             body: JSON.stringify(pendingSubmissionPayload)
         })
     ]).then(() => { 
-        try { 
-            localStorage.removeItem("pending_exam_submission"); 
-            pendingSubmissionPayload = null;
-        } catch(e) {} 
+        safeLocal.removeItem("pending_exam_submission"); 
+        pendingSubmissionPayload = null;
         document.getElementById("pending-resend-bar").style.display = "none"; 
         alert("✅ Đã gửi lại dữ liệu thành công!"); 
     }).catch((err) => { 
