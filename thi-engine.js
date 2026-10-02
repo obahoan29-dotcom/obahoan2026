@@ -2,23 +2,46 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ TỐI ƯU:
-// BẮT BUỘC FIREBASE PHẢN HỒI GHI DỮ LIỆU THÀNH CÔNG (HTTP 200)
-// MỚI MỞ ĐỀ THI CHO HỌC SINH (CHẠY SONG SONG SIÊU TỐC ~0.1s)
+// ĐÃ SỬA TRIỆT ĐỂ: BỘ ĐỆM TIMEOUT CHỐNG TRẮNG MÀN HÌNH TRÊN IPHONE
 // =========================================================
 
-window.onload = async function() {
+let hasInitExamEngine = false;
+
+async function initExamEngine() {
+    if (hasInitExamEngine) return;
+    hasInitExamEngine = true;
+
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('id');
 
+    const hideLoading = () => {
+        const gl = document.getElementById('global-loading');
+        if (gl) gl.style.display = 'none';
+    };
+
     if (!quizId) {
-        document.getElementById('global-loading').style.display = 'none';
+        hideLoading();
         showError("Lỗi đường dẫn", "Không tìm thấy mã đề thi (thiếu tham số ?id=...)");
         return;
     }
 
+    // CƠ CHẾ PHÒNG THỦ: NẾU MẠNG QUÁ NGHẼN/TREO TRÊN IPHONE, TỰ BỎ LỚP CHỜ SAU 8 GIÂY
+    const failsafeTimer = setTimeout(() => {
+        const gl = document.getElementById('global-loading');
+        if (gl && gl.style.display !== 'none') {
+            hideLoading();
+            showError("Kết nối chậm", "Máy chủ phản hồi chậm hoặc mạng Internet 4G/Wifi bị gián đoạn. Vui lòng kiểm tra lại mạng và tải lại trang!");
+        }
+    }, 8000);
+
     try {
-        const response = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
+        const controller = new AbortController();
+        const fetchTimer = setTimeout(() => controller.abort(), 7500);
+
+        const response = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { signal: controller.signal });
+        clearTimeout(fetchTimer);
+        clearTimeout(failsafeTimer);
+
         examData = await response.json();
         
         if (!examData) {
@@ -26,10 +49,10 @@ window.onload = async function() {
         }
         
         if (examData.allowFree !== undefined) {
-            localStorage.setItem(`exam_allow_free_${quizId}`, String(examData.allowFree !== false));
+            safeLocal.setItem(`exam_allow_free_${quizId}`, String(examData.allowFree !== false));
         }
 
-        document.getElementById('global-loading').style.display = 'none';
+        hideLoading();
         
         fetchExamQuestions();
         setupBackPrevention();
@@ -48,10 +71,21 @@ window.onload = async function() {
             });
         }
     } catch (error) {
-        document.getElementById('global-loading').style.display = 'none';
-        showError("Lỗi hệ thống", error.message);
+        clearTimeout(failsafeTimer);
+        hideLoading();
+        showError("Lỗi tải đề thi", error.name === 'AbortError' 
+            ? "Mạng Internet của bạn bị chập chờn, đã hết thời gian chờ máy chủ. Vui lòng bấm làm mới (F5) trang lại!" 
+            : error.message);
     }
-};
+}
+
+// Khởi chạy an toàn ngay khi DOM sẵn sàng hoặc khi cửa sổ load xong
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initExamEngine);
+} else {
+    initExamEngine();
+}
+window.addEventListener("load", initExamEngine);
 
 function shuffleArray(arr) {
     let array = [...arr];
@@ -96,15 +130,13 @@ function toggleSubPadlet(qId) {
 }
 
 function resetToFreshLoginScreen() { 
-    try { 
-        localStorage.removeItem(getStorageKey()); 
-        localStorage.removeItem(`shuffled_exam_${getExamCode()}`);
-        localStorage.removeItem("saved_student_sbd");
-        localStorage.removeItem("saved_student_name");
-        localStorage.removeItem("saved_student_class");
-        localStorage.removeItem("current_exam_student");
-        localStorage.setItem("last_submission_cleared", "true");
-    } catch(e) {} 
+    safeLocal.removeItem(getStorageKey()); 
+    safeLocal.removeItem(`shuffled_exam_${getExamCode()}`);
+    safeLocal.removeItem("saved_student_sbd");
+    safeLocal.removeItem("saved_student_name");
+    safeLocal.removeItem("saved_student_class");
+    safeLocal.removeItem("current_exam_student");
+    safeLocal.setItem("last_submission_cleared", "true");
 
     const sName = document.getElementById("student-name");
     const sId = document.getElementById("student-id");
@@ -179,22 +211,24 @@ function fetchExamQuestions() {
         let shouldShuffle = (examData.isShuffled !== false); 
 
         if (shouldShuffle) {
-            const cachedShuffle = localStorage.getItem(shuffleKey);
+            const cachedShuffle = safeLocal.getItem(shuffleKey);
             if (cachedShuffle) {
                 examData.questions = JSON.parse(cachedShuffle);
             } else {
                 shuffleExamData(examData);
-                localStorage.setItem(shuffleKey, JSON.stringify(examData.questions));
+                safeLocal.setItem(shuffleKey, JSON.stringify(examData.questions));
             }
         } else {
-            localStorage.removeItem(shuffleKey);
+            safeLocal.removeItem(shuffleKey);
         }
 
         if (EXAM_PASSWORD !== "") document.getElementById("login-box").style.display = "block"; 
         else document.getElementById("student-card").style.display = "block"; 
         
         renderQuizLayout(examData.questions || [], examData.images || {}); 
-        if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); 
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise().catch(() => {});
+        }
     } catch (err) { showError("Lỗi", err.message); } 
 }
 
@@ -500,9 +534,15 @@ async function startExamAction() {
     const now = Date.now(); 
     let startTimeMs = 0; 
     let endTimeMs = Infinity; 
-    if (typeof examData !== 'undefined') { 
-        if (examData.examStartTimeStr) startTimeMs = new Date(examData.examStartTimeStr).getTime(); 
-        if (examData.examEndTimeStr) endTimeMs = new Date(examData.examEndTimeStr).getTime(); 
+    if (typeof examData !== 'undefined' && examData) { 
+        if (examData.examStartTimeStr) {
+            let t = new Date(examData.examStartTimeStr).getTime();
+            if (!isNaN(t)) startTimeMs = t;
+        } 
+        if (examData.examEndTimeStr) {
+            let t = new Date(examData.examEndTimeStr).getTime();
+            if (!isNaN(t)) endTimeMs = t;
+        } 
     } 
     
     if (now > endTimeMs) { alert("⛔ BÀI THI ĐÃ ĐÓNG!\nThời gian được phép làm bài đã kết thúc."); return; } 
@@ -597,7 +637,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
             pushNodes.push("DE" + numMatch[1] + "TOAN11");
         }
 
-        // Tác vụ chính: Ghi vào active_sessions của examCode (Bắt buộc kiểm tra phản hồi res.ok)
         const primarySessionTask = fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -605,7 +644,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
             signal: controller.signal
         });
 
-        // Các tác vụ đồng bộ song song khác
         const otherTasks = [];
         pushNodes.forEach(n => {
             if (n !== examCode) {
@@ -629,7 +667,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
             }).catch(() => null)
         );
 
-        // Chạy song song tất cả các request để đạt tốc độ tối đa (~100ms)
         const [primaryRes] = await Promise.all([primarySessionTask, ...otherTasks]);
         clearTimeout(timeoutId);
 
@@ -640,7 +677,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         console.warn("Lỗi kết nối Firebase khi bắt đầu bài thi:", e);
     }
 
-    // NẾU FIREBASE CHƯA XÁC NHẬN GHI DỮ LIỆU: CHẶN LẠI VÀ THÔNG BÁO NGAY
     if (!isFirebaseConfirmed) {
         if (startBtn) {
             startBtn.disabled = false;
@@ -650,7 +686,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         const waitingCard = document.getElementById("waiting-room-card");
         if (waitingCard) waitingCard.style.display = "none";
 
-        // Xóa tham số autostart để tránh lỗi vòng lặp tải trang
         try {
             const u = new URL(window.location.href);
             if (u.searchParams.has('autostart')) {
@@ -660,13 +695,11 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         } catch(e) {}
 
         alert("⚠️ CHƯA THỂ MỞ ĐỀ THI!\n\nMáy chủ thi (Firebase) chưa phản hồi xác nhận ghi danh sách do mạng Internet của bạn bị chập chờn hoặc gián đoạn.\n\nVui lòng kiểm tra lại kết nối mạng và bấm nút 'Vào Làm Bài' lại để hệ thống bảo lưu kết quả chuẩn xác!");
-        return; // DỪNG LẠI, TUYỆT ĐỐI KHÔNG MỞ ĐỀ
+        return;
     }
 
-    // Gửi log phụ về Google Sheet ở chế độ nền (không làm trễ mở đề)
     postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
 
-    // KHI FIREBASE ĐÃ PHẢN HỒI THÀNH CÔNG: MỞ ĐỀ THI NGAY LẬP TỨC
     document.getElementById("nav-student-name").innerText = sName; 
     document.getElementById("nav-student-id").innerText = sId; 
     document.getElementById("nav-student-class").innerText = sClass; 
@@ -726,7 +759,8 @@ function startCountdownTimer() {
 
         let currentEndTimeMs = Infinity; 
         if (typeof examData !== 'undefined' && examData && examData.examEndTimeStr) { 
-            currentEndTimeMs = new Date(examData.examEndTimeStr).getTime(); 
+            let t = new Date(examData.examEndTimeStr).getTime();
+            if (!isNaN(t)) currentEndTimeMs = t;
         } 
 
         if (now >= currentEndTimeMs) { 
@@ -777,7 +811,6 @@ function closeSubmitConfirmModal() {
     document.getElementById("submit-confirm-modal").style.display = "none"; 
 }
 
-// NỘP BÀI THÀNH CÔNG: XÓA SẠCH VẾT TÊN, SBD, LỚP ĐỂ LẦN SAU MỚI TINH
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted) return; 
     
@@ -892,10 +925,8 @@ async function executeSubmitExam(isForceSubmit = false) {
         createdAt: Date.now() 
     }; 
 
-    try { 
-        localStorage.setItem("pending_exam_submission", JSON.stringify(payload)); 
-        localStorage.setItem(`submitted_backup_${getExamCode()}_${sId}`, JSON.stringify(payload));
-    } catch(e) {} 
+    safeLocal.setItem("pending_exam_submission", JSON.stringify(payload)); 
+    safeLocal.setItem(`submitted_backup_${getExamCode()}_${sId}`, JSON.stringify(payload));
     pendingSubmissionPayload = payload; 
 
     if (progressText) progressText.innerText = "🚀 Đang gửi bài thi lên máy chủ...";
@@ -933,7 +964,7 @@ async function executeSubmitExam(isForceSubmit = false) {
     clearPresence(sId);
 
     if (firebaseConfirmed) {
-        try { localStorage.removeItem("pending_exam_submission"); } catch(e) {}
+        safeLocal.removeItem("pending_exam_submission");
         if (progressText) progressText.innerText = "✅ Máy chủ đã xác nhận lưu bài thành công!";
     } else {
         if (progressText) progressText.innerText = "⚠️ Đã lưu trữ bài an toàn vào hàng đợi máy chủ.";
@@ -944,16 +975,13 @@ async function executeSubmitExam(isForceSubmit = false) {
 
     isSubmitted = true; 
 
-    // XÓA SẠCH VẾT TÊN, SBD, LỚP VÀ ĐÁNH DẤU ĐÃ NỘP BÀI XONG
-    try { 
-        localStorage.removeItem(getStorageKey()); 
-        localStorage.removeItem(`shuffled_exam_${getExamCode()}`); 
-        localStorage.removeItem("saved_student_sbd");
-        localStorage.removeItem("saved_student_name");
-        localStorage.removeItem("saved_student_class");
-        localStorage.removeItem("current_exam_student");
-        localStorage.setItem("last_submission_cleared", "true");
-    } catch(e) {} 
+    safeLocal.removeItem(getStorageKey()); 
+    safeLocal.removeItem(`shuffled_exam_${getExamCode()}`); 
+    safeLocal.removeItem("saved_student_sbd");
+    safeLocal.removeItem("saved_student_name");
+    safeLocal.removeItem("saved_student_class");
+    safeLocal.removeItem("current_exam_student");
+    safeLocal.setItem("last_submission_cleared", "true");
     
     if (confirmModal) confirmModal.style.display = "none"; 
     renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, score10Scale); 
@@ -1009,6 +1037,8 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
         idx++; 
     }); 
     document.getElementById("review-container-body").innerHTML = revHTML; 
-    if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); 
+    if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise().catch(() => {});
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
 }
