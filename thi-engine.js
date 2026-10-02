@@ -3,6 +3,7 @@
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
 // ĐÃ SỬA TRIỆT ĐỂ: BỘ ĐỆM TIMEOUT CHỐNG TRẮNG MÀN HÌNH TRÊN IPHONE
+// ĐÃ TỐI ƯU CƠ CHẾ XÁC NHẬN GHI DỮ LIỆU FIREBASE TRƯỚC KHI MỞ ĐỀ
 // =========================================================
 
 let hasInitExamEngine = false;
@@ -575,6 +576,7 @@ function startWaitingCountdown(startTimeMs, sId, sName, sClass) {
 }
 
 // BẮT BUỘC FIREBASE PHẢN HỒI GHI DỮ LIỆU THÀNH CÔNG RỒI MỚI MỞ ĐỀ
+// ĐÃ NÂNG CẤP KIỂM TRA CHẶT CHẼ DỮ LIỆU JSON PHẢN HỒI TỪ FIREBASE
 async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
     const currentCat = getExamCategory();
     const urlParams = new URLSearchParams(window.location.search);
@@ -670,8 +672,12 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         const [primaryRes] = await Promise.all([primarySessionTask, ...otherTasks]);
         clearTimeout(timeoutId);
 
+        // KIỂM TRA CHẶT CHẼ PHẢN HỒI THÀNH CÔNG VÀ JSON TRẢ VỀ TỪ FIREBASE
         if (primaryRes && primaryRes.ok) {
-            isFirebaseConfirmed = true;
+            const resData = await primaryRes.json().catch(() => null);
+            if (resData && !resData.error && resData.sbd) {
+                isFirebaseConfirmed = true;
+            }
         }
     } catch(e) {
         console.warn("Lỗi kết nối Firebase khi bắt đầu bài thi:", e);
