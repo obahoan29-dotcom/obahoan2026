@@ -2,10 +2,21 @@
 // FILE: app-main.js
 // BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
 // NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI, ĐĂNG NHẬP HỌC SINH
-// - MỖI LỚP CHỈ HIỆN 2 MỤC MỚI NHẤT, CÒN LẠI GOM VÀO NÚT MỞ RỘNG
-// - GHIM CHẶT CATEGORYID CHO THÍ SINH TỰ DO ĐỂ KHÔNG BỊ LẪN LỚP
-// - BỘ MÁY ĐẾM LƯỢT TRUY CẬP WEBSITE THỜI GIAN THỰC (GIỜ & 7 NGÀY)
+// ĐÃ BẢO VỆ CHỐNG LỖI MÀN HÌNH TRẮNG TRÊN IPHONE (SAFARI PRIVATE / ZALO)
 // =========================================================
+
+// BỘ ĐỆM BẢO VỆ LƯU TRỮ TRÊN IPHONE
+const safeLocal = {
+    getItem(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
+    setItem(k, v) { try { localStorage.setItem(k, v); } catch(e) {} },
+    removeItem(k) { try { localStorage.removeItem(k); } catch(e) {} }
+};
+
+const safeSession = {
+    getItem(k) { try { return sessionStorage.getItem(k); } catch(e) { return null; } },
+    setItem(k, v) { try { sessionStorage.setItem(k, v); } catch(e) {} },
+    removeItem(k) { try { sessionStorage.removeItem(k); } catch(e) {} }
+};
 
 let activeDayThemCatId = null;
 let activeChinhKhoaRow1CatId = null;
@@ -248,9 +259,6 @@ function renderReminderSection() {
     renderLinksWithFold(container, links, "nhac-nho", 2);
 }
 
-// =========================================================
-// HÀM RENDER DANH SÁCH CÓ TÍNH NĂNG GOM GỌN: CHỈ HIỆN 2 MỤC ĐẦU
-// =========================================================
 function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
     if (!container) return;
     container.innerHTML = "";
@@ -263,13 +271,11 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
     const sortedLinks = sortLinksNewestFirst(links);
     const total = sortedLinks.length;
 
-    // 1. Hiển thị tối đa visibleLimit mục mới nhất (mặc định là 2)
     const firstTwo = sortedLinks.slice(0, visibleLimit);
     firstTwo.forEach(item => {
         container.appendChild(createItemCardElement(item, categoryId));
     });
 
-    // 2. Nếu có nhiều hơn 2 mục, gom các mục còn lại vào khối mở rộng
     if (total > visibleLimit) {
         const remainingCount = total - visibleLimit;
         const remainingLinks = sortedLinks.slice(visibleLimit);
@@ -370,7 +376,6 @@ function renderDayThemSection() {
 }
 
 function renderChinhKhoaSection() {
-    // HÀNG 1: 11A, 11C, 10P
     const row1Bar = document.getElementById("chinhkhoa-row1-bar");
     const row1Panel = document.getElementById("chinhkhoa-row1-dropdown");
     const row1List = document.getElementById("chinhkhoa-row1-links");
@@ -406,7 +411,6 @@ function renderChinhKhoaSection() {
         }
     }
 
-    // HÀNG 2: 11E, HSG 11, Padlet
     const row2Bar = document.getElementById("chinhkhoa-row2-bar");
     const row2Panel = document.getElementById("chinhkhoa-row2-dropdown");
     const row2List = document.getElementById("chinhkhoa-row2-links");
@@ -669,8 +673,8 @@ function openStudentLoginModal(item, categoryId, event) {
         timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date);
     }
 
-    const isCleanSession = (localStorage.getItem("last_submission_cleared") === "true") || 
-                           !localStorage.getItem("saved_student_name");
+    const isCleanSession = (safeLocal.getItem("last_submission_cleared") === "true") || 
+                           !safeLocal.getItem("saved_student_name");
 
     const userIn = document.getElementById("st-username-input");
     const passIn = document.getElementById("st-password-input");
@@ -685,9 +689,9 @@ function openStudentLoginModal(item, categoryId, event) {
         if (fClassIn) fClassIn.value = "";
         if (fSbdIn) fSbdIn.value = "";
     } else {
-        const savedSbd = localStorage.getItem("saved_student_sbd") || "";
-        const savedName = localStorage.getItem("saved_student_name") || "";
-        const savedClass = localStorage.getItem("saved_student_class") || "";
+        const savedSbd = safeLocal.getItem("saved_student_sbd") || "";
+        const savedName = safeLocal.getItem("saved_student_name") || "";
+        const savedClass = safeLocal.getItem("saved_student_class") || "";
 
         if (userIn) userIn.value = savedSbd || savedName;
         if (passIn) passIn.value = "";
@@ -827,19 +831,16 @@ function submitStudentLogin() {
         }
     }
 
-    try {
-        localStorage.removeItem("last_submission_cleared");
-        localStorage.setItem("saved_student_sbd", finalSbd);
-        localStorage.setItem("saved_student_name", finalName);
-        localStorage.setItem("saved_student_class", finalClass);
-        // Lưu kèm chính xác thuộc tính categoryId của lớp đang vào thi
-        localStorage.setItem("current_exam_student", JSON.stringify({
-            sbd: finalSbd,
-            name: finalName,
-            className: finalClass,
-            categoryId: activeCat
-        }));
-    } catch (e) {}
+    safeLocal.removeItem("last_submission_cleared");
+    safeLocal.setItem("saved_student_sbd", finalSbd);
+    safeLocal.setItem("saved_student_name", finalName);
+    safeLocal.setItem("saved_student_class", finalClass);
+    safeLocal.setItem("current_exam_student", JSON.stringify({
+        sbd: finalSbd,
+        name: finalName,
+        className: finalClass,
+        categoryId: activeCat
+    }));
 
     try {
         let u = new URL(targetUrl, window.location.href);
@@ -889,7 +890,7 @@ async function selectBadgeOption(categoryId, itemId, badgeType, event) {
 // =========================================================
 
 function getVNDateKey(d = new Date()) {
-    const tzOffset = 7 * 60; // GMT+7 tính bằng phút
+    const tzOffset = 7 * 60;
     const localTime = d.getTime();
     const localOffset = d.getTimezoneOffset() * 60000;
     const vnTime = new Date(localTime + localOffset + (tzOffset * 60000));
@@ -927,10 +928,10 @@ async function initSiteVisitTracker() {
     const currentHour = getVNHour();
 
     const sessionKey = `site_visit_logged_${todayKey}`;
-    const isLoggedThisSession = sessionStorage.getItem(sessionKey);
+    const isLoggedThisSession = safeSession.getItem(sessionKey);
 
     if (!isLoggedThisSession) {
-        sessionStorage.setItem(sessionKey, "true");
+        safeSession.setItem(sessionKey, "true");
         await recordSiteVisit(todayKey, currentHour);
     }
 
@@ -1165,9 +1166,7 @@ async function refreshVisitStatsData() {
     if (btn) { btn.innerText = "🔄 Cập nhật"; btn.disabled = false; }
 }
 
-// =========================================================
 // SỰ KIỆN TOÀN CỤC: THU LẠI CÁC POPUP KHI CLICK RA NGOÀI
-// =========================================================
 document.addEventListener("click", function(event) {
     const adminWrapper = event.target.closest(".admin-controls-wrapper");
     if (!adminWrapper) {
