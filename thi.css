@@ -134,8 +134,13 @@ mjx-container { word-wrap: break-word; }
 @keyframes pulseWait { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 @media(max-width: 600px) { .container { padding: 8px; } .card-panel, .question-card { padding: 16px; border-radius: 12px;} .q-content-text { font-size: 1rem; } .opt-text { font-size: 0.95rem; } .short-input-box { font-size: 1rem; padding: 12px; } .tf-table th { font-size: 0.8rem; } .tf-table td { font-size: 0.9rem; } .q-num-badge { min-width: 28px; height: 28px; font-size: 0.85rem; } .opt-circle { width: 26px; height: 26px; font-size: 0.85rem; } .explanation-box { font-size: 0.9rem; } }
 
-#global-loading { position: fixed; inset: 0; background: #fff; z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
-.spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #0284c7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+/* LỚP PHỦ CHỜ NẠP ĐỀ: NỀN XÁM NHẸ DỊU MẮT, KHÔNG BAO GIỜ BỊ TRẮNG TINH */
+#global-loading { 
+    position: fixed; inset: 0; background: #f8fafc; z-index: 999999; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    font-family: 'Inter', sans-serif; transition: opacity 0.25s ease;
+}
+.spinner { width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top: 5px solid #0284c7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
 
 .time-change-toast {
     position: fixed; top: 75px; left: 50%; transform: translateX(-50%) translateY(-20px);
