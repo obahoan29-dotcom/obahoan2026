@@ -13,7 +13,7 @@ window.STUDENT_ACCOUNTS["them-12"] = [
     { stt: 6, pass: "6", sbd: "1206", username: "Phạm Ngọc Huynh", name: "Phạm Ngọc Huynh", className: "12B" },
     { stt: 7, pass: "7", sbd: "1207", username: "Trịnh thị quỳnh anh", name: "Trịnh t quỳnh anh", className: "12g" },
     { stt: 8, pass: "8", sbd: "1208", username: "Tuấn Linh", name: "Tuấn Linh", className: "12E-GDTX" },
-    { stt: 9, pass: "9", sbd: "1209", username: "Đạt", name: "Đạt", className: "trung tâm 12d" },
+    { stt: 9, pass: "9", sbd: "1236", username: "Trường Vũ", name: "Trường Vũ", className: "12b" },
     { stt: 10, pass: "10", sbd: "1210", username: "Đinh Quốc Phú", name: "Đinh Quốc Phú", className: "12C" },
     { stt: 11, pass: "11", sbd: "1211", username: "Phạm Đức Trường", name: "Phạm Đức Trường", className: "12B" },
     { stt: 12, pass: "12", sbd: "1212", username: "Bùi Diệu Chăm", name: "Bùi Diệu Chăm", className: "12m" },
@@ -25,7 +25,7 @@ window.STUDENT_ACCOUNTS["them-12"] = [
     { stt: 18, pass: "18", sbd: "1218", username: "Vũ thị ngọc mai", name: "Vũ t ngọc mai", className: "12m" },
     { stt: 19, pass: "19", sbd: "1219", username: "Tạ Đình Phong", name: "Tạ Đình Phong", className: "12e" },
     { stt: 20, pass: "20", sbd: "1220", username: "Thúy Thu", name: "Thúy Thu", className: "12g" },
-    { stt: 21, pass: "21", sbd: "1221", username: "Tạ Ngọc Hiếu", name: "Tạ Ngọc Hiếu", className: "12d" },
+    { stt: 21, pass: "21", sbd: "1235", username: "Hoàng Long", name: "Hoàng Long", className: "12b" },
     { stt: 22, pass: "22", sbd: "1222", username: "Xuân Cường", name: "Xuân Cường", className: "12h" },
     { stt: 23, pass: "23", sbd: "1223", username: "Hà", name: "Hà", className: "12e" },
     { stt: 24, pass: "24", sbd: "1224", username: "Nguyễn Đăng Trình", name: "Nguyễn Đăng Trình", className: "12b" },
@@ -38,8 +38,5 @@ window.STUDENT_ACCOUNTS["them-12"] = [
     { stt: 31, pass: "31", sbd: "1231", username: "Hùng sỹ nguyễn", name: "Hùng sỹ nguyễn", className: "12m" },
     { stt: 32, pass: "32", sbd: "1232", username: "Phạm Đình Minh", name: "Phạm Đình Minh", className: "12G" },
     { stt: 33, pass: "33", sbd: "1233", username: "Vũ Anh Khoa", name: "Vũ Anh Khoa", className: "12b" },
-    { stt: 34, pass: "34", sbd: "1234", username: "Thành Dũng", name: "Thành Dũng", className: "12h" },
-    { stt: 35, pass: "35", sbd: "1235", username: "Long", name: "Long", className: "12b" },
-    { stt: 36, pass: "36", sbd: "1236", username: "Trường Vũ", name: "Trường Vũ", className: "12b" },
-    { stt: 37, pass: "37", sbd: "1237", username: "Phúc", name: "Phúc", className: "12b" }
+    { stt: 34, pass: "34", sbd: "1234", username: "Thành Dũng", name: "Thành Dũng", className: "12h" }
 ];
