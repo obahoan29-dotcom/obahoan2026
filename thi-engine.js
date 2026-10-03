@@ -432,7 +432,9 @@ function scrollQPalette(offset) {
 function scrollToQuestion(qId) { 
     const target = document.getElementById(`q-card-${qId}`); 
     if (target) { 
-        const headerOffset = 110; 
+        // ĐÃ SỬA: Động tay trừ hao khoảng offset trên điện thoại và máy tính để banner k đè
+        const headerOffset = window.innerWidth <= 640 ? 115 : 135; 
+        
         const elementPosition = target.getBoundingClientRect().top; 
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset; 
         window.scrollTo({ top: offsetPosition, behavior: "smooth" }); 
@@ -468,7 +470,8 @@ function setupScrollObserver() {
     if (window._qCardObserver) {
         window._qCardObserver.disconnect();
     }
-    const options = { root: null, rootMargin: '-120px 0px -50% 0px', threshold: 0.1 }; 
+    // ĐÃ SỬA: Thay margin từ -120px thành -145px khớp với headerOffset
+    const options = { root: null, rootMargin: '-145px 0px -50% 0px', threshold: 0.1 }; 
     window._qCardObserver = new IntersectionObserver((entries) => { 
         let bestEntry = null;
         entries.forEach(entry => { 
