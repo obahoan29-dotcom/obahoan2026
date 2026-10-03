@@ -30,8 +30,11 @@ html, body {
 
 /* ========================================================= */
 /* SỬA LỖI CÔNG THỨC TOÁN MATHJAX THẲNG HÀNG VỚI VĂN BẢN     */
+/* ĐÃ SỬA: Bỏ ép cứng line-height = 0 để dấu căn không bị vỡ */
 /* ========================================================= */
+
 /* Chỉ cho phép cuộn ngang đối với công thức dạng khối riêng biệt */
+mjx-container[jax="SVG"][display="true"],
 mjx-container[jax="CHTML"][display="true"] { 
     max-width: 100% !important; 
     overflow-x: auto !important; 
@@ -41,14 +44,10 @@ mjx-container[jax="CHTML"][display="true"] {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Công thức trong dòng (inline math): Căn chỉnh baseline thẳng tắp với chữ tiếng Việt */
+/* Công thức trong dòng (inline math) an toàn, mượt mà */
 mjx-container:not([display="true"]) { 
-    display: inline !important;
-    vertical-align: -0.15ex !important;
-    line-height: 0 !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    max-width: none !important;
+    display: inline-block !important; /* Dùng inline-block để giữ chuẩn box-model */
+    white-space: nowrap !important;
 }
 
 .network-status-bar { 
@@ -433,7 +432,7 @@ mjx-container:not([display="true"]) {
     margin-top: 2px;
 }
 
-/* NỘI DUNG ĐỀ CÂU HỎI: CỠ CHỮ TO HƠN, RÕ NÉT */
+/* ĐÃ SỬA: Nội dung câu hỏi căn dãn đều 2 lề (justify) */
 .q-content-text { 
     font-size: 1.18rem; 
     line-height: 1.7; 
@@ -446,6 +445,9 @@ mjx-container:not([display="true"]) {
     min-width: 0;
     flex: 1; 
     letter-spacing: -0.15px;
+    text-align: justify;       /* Căn lề 2 bên */
+    text-justify: inter-word;  /* Phân bổ khoảng cách từ đẹp mắt */
+    hyphens: auto;             /* Hạn chế rớt dòng xấu */
 }
 
 .options-list { 
@@ -506,6 +508,7 @@ mjx-container:not([display="true"]) {
 }
 .opt-label input[type="radio"] { display: none; }
 
+/* ĐÃ SỬA: Nội dung đáp án căn dãn đều 2 lề (justify) */
 .opt-text { 
     font-size: 1.1rem; 
     color: #1e293b; 
@@ -515,6 +518,7 @@ mjx-container:not([display="true"]) {
     word-break: break-word;
     min-width: 0;
     flex: 1;
+    text-align: justify;
 }
 
 /* BẢNG ĐÚNG SAI (PHẦN II) */
@@ -575,7 +579,7 @@ mjx-container:not([display="true"]) {
 .btn-modal-confirm:hover { transform: translateY(-1.5px); box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45); }
 
 /* ========================================================= */
-/* MÀN HÌNH BÁO ĐIỂM SAU KHI NỘP BÀI (CÓ HIỂN THỊ TÊN ĐỀ THI)  */
+/* MÀN HÌNH TỔNG KẾT ĐIỂM SAU KHI NỘP (CÓ TÊN ĐỀ THI)         */
 /* ========================================================= */
 .result-summary-card { 
     background: #ffffff; 
