@@ -2,8 +2,8 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ SỬA TRIỆT ĐỂ: BỘ ĐỆM TIMEOUT CHỐNG TRẮNG MÀN HÌNH TRÊN IPHONE
-// ĐÃ TỐI ƯU CƠ CHẾ XÁC NHẬN GHI DỮ LIỆU FIREBASE TRƯỚC KHI MỞ ĐỀ
+// - ĐÃ KHẮC PHỤC TRIỆT ĐỂ: KHÔNG CHỚP/NHÁY MÀN HÌNH ĐĂNG NHẬP THỨ 2
+// - ĐÃ KHÓA CHẶT VÙNG CUỘN ĐỂ KHÔNG BỊ TRÀN/LỆCH TRANG SANG TRÁI
 // =========================================================
 
 let hasInitExamEngine = false;
@@ -14,10 +14,19 @@ async function initExamEngine() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('id');
+    const isAutostart = (urlParams.get('autostart') === "1");
 
     const hideLoading = () => {
         const gl = document.getElementById('global-loading');
         if (gl) gl.style.display = 'none';
+    };
+
+    const updateLoadingText = (txt) => {
+        const gl = document.getElementById('global-loading');
+        if (gl) {
+            const h2 = gl.querySelector("h2");
+            if (h2) h2.innerText = txt;
+        }
     };
 
     if (!quizId) {
@@ -26,14 +35,18 @@ async function initExamEngine() {
         return;
     }
 
-    // CƠ CHẾ PHÒNG THỦ: NẾU MẠNG QUÁ NGHẼN/TREO TRÊN IPHONE, TỰ BỎ LỚP CHỜ SAU 8 GIÂY
+    if (isAutostart) {
+        updateLoadingText("Đang kết nối phòng thi và tải đề...");
+    }
+
+    // Cơ chế phòng thủ: Timeout chống treo trắng màn hình trên iPhone
     const failsafeTimer = setTimeout(() => {
         const gl = document.getElementById('global-loading');
         if (gl && gl.style.display !== 'none') {
             hideLoading();
             showError("Kết nối chậm", "Máy chủ phản hồi chậm hoặc mạng Internet 4G/Wifi bị gián đoạn. Vui lòng kiểm tra lại mạng và tải lại trang!");
         }
-    }, 8000);
+    }, 8500);
 
     try {
         const controller = new AbortController();
@@ -53,13 +66,14 @@ async function initExamEngine() {
             safeLocal.setItem(`exam_allow_free_${quizId}`, String(examData.allowFree !== false));
         }
 
-        hideLoading();
-        
-        fetchExamQuestions();
+        fetchExamQuestions(isAutostart);
         setupBackPrevention();
         requestWakeLock();
         checkPendingSubmissionOnLoad();
-        checkSessionStatus();
+        
+        // Tiến hành vào thi ngay nếu có cờ autostart, ẩn hẳn màn hình đăng nhập thứ 2
+        await checkSessionStatus(isAutostart);
+        
         startTimeWatcherRealtime(quizId);
 
         const sbdInput = document.getElementById("student-id");
@@ -80,7 +94,7 @@ async function initExamEngine() {
     }
 }
 
-// Khởi chạy an toàn ngay khi DOM sẵn sàng hoặc khi cửa sổ load xong
+// Khởi chạy an toàn ngay khi DOM sẵn sàng
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initExamEngine);
 } else {
@@ -149,8 +163,13 @@ function resetToFreshLoginScreen() {
     window.location.reload(); 
 }
 
-function checkSessionStatus() { 
+async function checkSessionStatus(isAutostart = false) { 
     syncStudentFromParamsAndStorage();
+
+    const hideLoading = () => {
+        const gl = document.getElementById('global-loading');
+        if (gl) gl.style.display = 'none';
+    };
 
     if (restoreExamStateFromStorage()) { 
         const elapsedTimeSec = Math.floor((Date.now() - examStartTime) / 1000); 
@@ -163,11 +182,14 @@ function checkSessionStatus() {
             document.getElementById("nav-student-id").innerText = sId; 
             document.getElementById("nav-student-class").innerText = sClass; 
             document.getElementById("nav-exam-code-text").innerText = `Đề: ${getMaDe()}`; 
+            
             document.getElementById("login-box").style.display = "none"; 
             document.getElementById("student-card").style.display = "none"; 
             document.getElementById("waiting-room-card").style.display = "none"; 
             document.getElementById("top-navbar").style.display = "block"; 
             document.getElementById("quiz-content").style.display = "block"; 
+            
+            hideLoading();
             remainingSeconds = timeRemaining; 
             reapplySavedAnswers(); 
             updateProgress(); 
@@ -177,19 +199,22 @@ function checkSessionStatus() {
         } 
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('autostart') === "1") {
+    if (isAutostart) {
         const sId = document.getElementById("student-id").value.trim();
         const sName = document.getElementById("student-name").value.trim();
-        const sClass = document.getElementById("student-class").value.trim();
         if (sId && sName) {
             document.getElementById("login-box").style.display = "none";
-            startExamAction();
+            document.getElementById("student-card").style.display = "none";
+            await startExamAction(true);
+            hideLoading();
+            return;
         }
     }
+
+    hideLoading();
 }
 
-function fetchExamQuestions() { 
+function fetchExamQuestions(isAutostart = false) { 
     try { 
         if (typeof examData === 'undefined' || !examData) { showError("Lỗi", "Không tìm thấy dữ liệu đề thi!"); return; } 
         if (examData.title) { EXAM_NAME = examData.title; document.getElementById("banner-title").innerText = EXAM_NAME; } 
@@ -223,8 +248,14 @@ function fetchExamQuestions() {
             safeLocal.removeItem(shuffleKey);
         }
 
-        if (EXAM_PASSWORD !== "") document.getElementById("login-box").style.display = "block"; 
-        else document.getElementById("student-card").style.display = "block"; 
+        // NẾU LÀ AUTOSTART THÌ TUYỆT ĐỐI KHÔNG BẬT STUDENT-CARD HAY LOGIN-BOX
+        if (!isAutostart) {
+            if (EXAM_PASSWORD !== "") document.getElementById("login-box").style.display = "block"; 
+            else document.getElementById("student-card").style.display = "block"; 
+        } else {
+            document.getElementById("login-box").style.display = "none";
+            document.getElementById("student-card").style.display = "none";
+        }
         
         renderQuizLayout(examData.questions || [], examData.images || {}); 
         if (window.MathJax && MathJax.typesetPromise) {
@@ -502,7 +533,7 @@ function updateProgress() {
     return answeredCount; 
 }
 
-async function startExamAction() { 
+async function startExamAction(isSilentAuto = false) { 
     let sId = document.getElementById("student-id").value.trim(); 
     let sName = document.getElementById("student-name").value.trim(); 
     let sClass = document.getElementById("student-class").value.trim(); 
@@ -518,8 +549,10 @@ async function startExamAction() {
     }
 
     if (!sId || !sName || !sClass) { 
-        document.getElementById("student-card").style.display = "block";
-        alert("⚠️ Vui lòng nhập đầy đủ SBD, Họ tên, Lớp!"); 
+        if (!isSilentAuto) {
+            document.getElementById("student-card").style.display = "block";
+            alert("⚠️ Vui lòng nhập đầy đủ SBD, Họ tên, Lớp!"); 
+        }
         return; 
     } 
     
@@ -546,7 +579,10 @@ async function startExamAction() {
         } 
     } 
     
-    if (now > endTimeMs) { alert("⛔ BÀI THI ĐÃ ĐÓNG!\nThời gian được phép làm bài đã kết thúc."); return; } 
+    if (now > endTimeMs) { 
+        alert("⛔ BÀI THI ĐÃ ĐÓNG!\nThời gian được phép làm bài đã kết thúc."); 
+        return; 
+    } 
     if (now < startTimeMs) { 
         document.getElementById("student-card").style.display = "none"; 
         document.getElementById("waiting-room-card").style.display = "block"; 
@@ -575,8 +611,6 @@ function startWaitingCountdown(startTimeMs, sId, sName, sClass) {
     }, 1000); 
 }
 
-// BẮT BUỘC FIREBASE PHẢN HỒI GHI DỮ LIỆU THÀNH CÔNG RỒI MỚI MỞ ĐỀ
-// ĐÃ NÂNG CẤP KIỂM TRA CHẶT CHẼ DỮ LIỆU JSON PHẢN HỒI TỪ FIREBASE
 async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
     const currentCat = getExamCategory();
     const urlParams = new URLSearchParams(window.location.search);
@@ -628,7 +662,7 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // Tối đa 5s cho mạng yếu
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
 
         const pushNodes = [examCode];
         if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
@@ -672,7 +706,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         const [primaryRes] = await Promise.all([primarySessionTask, ...otherTasks]);
         clearTimeout(timeoutId);
 
-        // KIỂM TRA CHẶT CHẼ PHẢN HỒI THÀNH CÔNG VÀ JSON TRẢ VỀ TỪ FIREBASE
         if (primaryRes && primaryRes.ok) {
             const resData = await primaryRes.json().catch(() => null);
             if (resData && !resData.error && resData.sbd) {
