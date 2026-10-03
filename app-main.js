@@ -14,7 +14,7 @@ const safeLocal = {
 const safeSession = {
     getItem(k) { try { return sessionStorage.getItem(k); } catch(e) { return null; } },
     setItem(k, v) { try { sessionStorage.setItem(k, v); } catch(e) {} },
-    removeItem(k) { try { localStorage.removeItem(k); } catch(e) {} }
+    removeItem(k) { try { sessionStorage.removeItem(k); } catch(e) {} }
 };
 
 let activeDayThemCatId = null;
@@ -37,8 +37,8 @@ let siteVisitStatsCache = {
 document.addEventListener("DOMContentLoaded", async function() {
     initBannerAndAvatars();
     if (typeof initTableSettings === "function") initTableSettings();
-    if (typeof initAvatarGrid === "function") initAvatarGrid();
     if (typeof checkAdminSessionValidity === "function") checkAdminSessionValidity();
+    if (typeof initAvatarGrid === "function") initAvatarGrid();
 
     refreshAllViews();
     await loadDataFromFirebase();
@@ -153,6 +153,7 @@ async function loadDataFromFirebase() {
                             if (q.examStartTimeStr) l.examStartTimeStr = q.examStartTimeStr;
                             if (q.examEndTimeStr) l.examEndTimeStr = q.examEndTimeStr;
                             if (q.allowFree !== undefined) l.allowFree = q.allowFree;
+                            if (!l.url) l.url = `thi.html?id=${qId}`;
                         }
                     });
                 });
@@ -503,7 +504,7 @@ function createItemCardElement(item, categoryId) {
 }
 
 function buildCardHtmlString(item, categoryId) {
-    const isDoc = item.isDoc;
+    const isDoc = Boolean(item.isDoc);
     const isReminder = (categoryId === "nhac-nho" || item.isArticle);
     const itemId = item.id || item.firebaseId || `item_${Date.now()}`;
     const quizId = extractQuizIdFromItem(item) || itemId;
@@ -511,7 +512,10 @@ function buildCardHtmlString(item, categoryId) {
     
     // Nếu là bài báo nhắc nhở có ảnh thì ưu tiên lấy ảnh bài báo làm thumbnail
     const avatar = (isReminder && item.articleImage) ? item.articleImage : (item.avatar || PRESET_AVATARS[0]);
-    const encodedData = encodeURIComponent(JSON.stringify(item));
+    
+    // Đảm bảo mã hóa an toàn toàn bộ dấu nháy đơn để tránh lỗi cú pháp inline HTML
+    const encodedData = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
+    const safeUrl = encodeURIComponent(item.url || "").replace(/'/g, "%27");
     const isAllowFree = (item.allowFree !== false);
 
     let badgeClass = "badge-empty";
@@ -588,7 +592,7 @@ function buildCardHtmlString(item, categoryId) {
                 </div>
             </div>
 
-            <div class="admin-card-bottom-row" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
+            <div class="admin-card-bottom-row" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${safeUrl}', '${encodedData}', event)">
                 <div class="exam-thumb-box">
                     <img src="${avatar}" class="exam-thumb" alt="icon">
                 </div>
@@ -617,7 +621,7 @@ function buildCardHtmlString(item, categoryId) {
     }
 
     return `
-    <div class="exam-card ${cardCustomClass}" id="card-${itemId}" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
+    <div class="exam-card ${cardCustomClass}" id="card-${itemId}" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${safeUrl}', '${encodedData}', event)">
         <div class="exam-thumb-box">
             <img src="${avatar}" class="exam-thumb" alt="icon">
         </div>
@@ -640,8 +644,15 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
         }
     }
 
-    const item = JSON.parse(decodeURIComponent(stringifiedData));
-    const url = decodeURIComponent(rawUrl || item.url || "");
+    let item;
+    try {
+        item = JSON.parse(decodeURIComponent(stringifiedData));
+    } catch (e) {
+        console.error("Lỗi phân tích dữ liệu mục:", e);
+        return;
+    }
+
+    let url = decodeURIComponent(rawUrl || item.url || "");
 
     // 1. NẾU LÀ MỤC NHẮC NHỞ HOẶC LÀ BÀI BÁO -> MỞ GIAO DIỆN BÀI BÁO CHUẨN DÂN TRÍ
     if (categoryId === "nhac-nho" || item.isArticle) {
@@ -649,15 +660,32 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
         return;
     }
 
-    // 2. NẾU LÀ TÀI LIỆU, LINK PADLET HOẶC LINK WEB NGOÀI
-    if (isDoc || categoryId === "tu-luan-padlet" || categoryId === "kho-tai-lieu" || !url.includes("thi.html")) {
+    // 2. NẾU LÀ TÀI LIỆU, LINK PADLET HOẶC LINK KHO TÀI LIỆU
+    if (isDoc || categoryId === "tu-luan-padlet" || categoryId === "kho-tai-lieu") {
         if (url && url !== "#") {
             window.open(url, "_blank");
         }
         return;
     }
 
-    // 3. ĐỀ THI TRẮC NGHIỆM ONLINE -> MỞ CỬA SỔ ĐĂNG NHẬP
+    // 3. ĐỀ THI TRẮC NGHIỆM ONLINE
+    // Tự động chuẩn hóa đường dẫn nếu chưa có hoặc thiếu thi.html
+    const quizId = extractQuizIdFromItem(item) || itemId;
+    if (!url || url === "#") {
+        url = `thi.html?id=${quizId}`;
+        item.url = url;
+    } else if (!url.includes("thi.html") && (url.startsWith("?id=") || !url.startsWith("http"))) {
+        url = `thi.html${url.startsWith("?") ? "" : "?id="}${url}`;
+        item.url = url;
+    }
+
+    // Nếu là đường dẫn web kiểm tra ngoài hoàn toàn (ví dụ hosting vercel riêng)
+    if (url.startsWith("http") && !url.includes("thi.html") && !item.quizId && !item.firebaseId?.startsWith("quiz_")) {
+        window.open(url, "_blank");
+        return;
+    }
+
+    // Mở cửa sổ đăng nhập phòng thi
     openStudentLoginModal(item, categoryId, event);
 }
 
@@ -733,7 +761,7 @@ function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
     const targetCatId = categoryId || item.categoryId || "them-11";
-    activeStudentLogin.targetUrl = item.url || "";
+    activeStudentLogin.targetUrl = item.url || (`thi.html?id=${extractQuizIdFromItem(item) || item.id || item.firebaseId}`);
     activeStudentLogin.examTitle = item.title || "Bài kiểm tra";
     activeStudentLogin.categoryId = targetCatId;
     activeStudentLogin.currentMode = "class";
@@ -869,8 +897,8 @@ function submitStudentLogin() {
         }
     };
 
-    let targetUrl = activeStudentLogin.targetUrl;
-    if (!targetUrl) {
+    let targetUrl = activeStudentLogin.targetUrl || (`thi.html?id=${activeStudentLogin.item?.firebaseId || activeStudentLogin.item?.id || ""}`);
+    if (!targetUrl || targetUrl === "#") {
         showErr("❌ Không tìm thấy đường dẫn đề thi!");
         return;
     }
