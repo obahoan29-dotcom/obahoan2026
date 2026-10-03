@@ -2,8 +2,8 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// - ĐÃ KHẮC PHỤC TRIỆT ĐỂ: KHÔNG CHỚP/NHÁY MÀN HÌNH ĐĂNG NHẬP THỨ 2
-// - ĐÃ KHÓA CHẶT VÙNG CUỘN ĐỂ KHÔNG BỊ TRÀN/LỆCH TRANG SANG TRÁI
+// - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
+// - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
 // =========================================================
 
 let hasInitExamEngine = false;
@@ -75,16 +75,6 @@ async function initExamEngine() {
         await checkSessionStatus(isAutostart);
         
         startTimeWatcherRealtime(quizId);
-
-        const sbdInput = document.getElementById("student-id");
-        if (sbdInput) {
-            sbdInput.addEventListener("input", function() {
-                const matched = findStudentFromDatabase(this.value, getExamCategory());
-                if (matched) {
-                    applyStudentToUI(matched);
-                }
-            });
-        }
     } catch (error) {
         clearTimeout(failsafeTimer);
         hideLoading();
@@ -217,7 +207,12 @@ async function checkSessionStatus(isAutostart = false) {
 function fetchExamQuestions(isAutostart = false) { 
     try { 
         if (typeof examData === 'undefined' || !examData) { showError("Lỗi", "Không tìm thấy dữ liệu đề thi!"); return; } 
-        if (examData.title) { EXAM_NAME = examData.title; document.getElementById("banner-title").innerText = EXAM_NAME; } 
+        if (examData.title) { 
+            EXAM_NAME = examData.title; 
+            document.getElementById("banner-title").innerText = EXAM_NAME; 
+            const examTitleEl = document.getElementById("res-exam-title");
+            if (examTitleEl) examTitleEl.innerText = EXAM_NAME;
+        } 
         document.getElementById("nav-exam-code-text").innerText = `Đề: ${getMaDe()}`; 
         if (examData.password !== undefined) EXAM_PASSWORD = String(examData.password).trim(); 
         if (examData.timeLimitMinutes !== undefined && examData.timeLimitMinutes !== "") { 
@@ -248,7 +243,6 @@ function fetchExamQuestions(isAutostart = false) {
             safeLocal.removeItem(shuffleKey);
         }
 
-        // NẾU LÀ AUTOSTART THÌ TUYỆT ĐỐI KHÔNG BẬT STUDENT-CARD HAY LOGIN-BOX
         if (!isAutostart) {
             if (EXAM_PASSWORD !== "") document.getElementById("login-box").style.display = "block"; 
             else document.getElementById("student-card").style.display = "block"; 
@@ -340,7 +334,7 @@ function renderQuizLayout(questions, imageMap) {
     }
 
     if (p1List.length > 0) { 
-        html += `<div class="exam-section-banner"><div class="section-icon">📑</div><div class="section-text"><h3>P.1 TRẮC NGHIỆM NHIỀU LỰA CHỌN</h3></div></div>`; 
+        html += `<div class="exam-section-banner"><div class="section-icon">📑</div><div class="section-text"><h3>PHẦN 1. TRẮC NGHIỆM NHIỀU PHƯƠNG ÁN LỰA CHỌN</h3><p>Chọn duy nhất 01 phương án đúng trong các phương án A, B, C, D</p></div></div>`; 
         p1List.forEach(q => { 
             questionDataMap[q.id] = q; 
             const letters = ["A", "B", "C", "D"]; 
@@ -353,7 +347,7 @@ function renderQuizLayout(questions, imageMap) {
     } 
 
     if (p2List.length > 0) { 
-        html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);"><div class="section-icon">⚖️</div><div class="section-text"><h3>P.2 TRẮC NGHIỆM ĐÚNG SAI</h3></div></div>`; 
+        html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);"><div class="section-icon">⚖️</div><div class="section-text"><h3>PHẦN 2. TRẮC NGHIỆM ĐÚNG SAI</h3><p>Thí sinh chọn Đúng hoặc Sai cho từng mệnh đề a), b), c), d)</p></div></div>`; 
         p2List.forEach(q => { 
             questionDataMap[q.id] = q; 
             const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
@@ -362,7 +356,7 @@ function renderQuizLayout(questions, imageMap) {
             q.statements.forEach((st) => { 
                 const subKey = `q${q.id}_${st.id}`; 
                 ANSWER_KEY[subKey] = st.correct ? "Đúng" : "Sai"; 
-                rows += `<tr><td><b>${st.id})</b> ${st.statement}</td> <td width="60" align="center"><input type="radio" name="${subKey}" value="Đúng" onchange="onStatementChange('${subKey}')"></td> <td width="60" align="center"><input type="radio" name="${subKey}" value="Sai" onchange="onStatementChange('${subKey}')"></td></tr>`; 
+                rows += `<tr><td><b>${st.id})</b> ${st.statement}</td> <td width="70" align="center"><input type="radio" name="${subKey}" value="Đúng" onchange="onStatementChange('${subKey}')"></td> <td width="70" align="center"><input type="radio" name="${subKey}" value="Sai" onchange="onStatementChange('${subKey}')"></td></tr>`; 
             }); 
             html += `<div class="question-card" id="q-card-${q.id}"> <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${q.question}</div></div> ${imgHTML} <div class="tf-table-box"> <table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Đúng</th><th>Sai</th></tr></thead><tbody>${rows}</tbody></table> </div> </div>`; 
             displayIndex++; 
@@ -370,7 +364,7 @@ function renderQuizLayout(questions, imageMap) {
     } 
 
     if (p3List.length > 0) { 
-        html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #0d9488, #059669);"><div class="section-icon">✍️</div><div class="section-text"><h3>P.3 TRẢ LỜI NGẮN</h3></div></div>`; 
+        html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #0d9488, #059669);"><div class="section-icon">✍️</div><div class="section-text"><h3>PHẦN 3. TRẢ LỜI NGẮN</h3><p>Nhập đáp số chính xác vào ô trống</p></div></div>`; 
         p3List.forEach(q => { 
             questionDataMap[q.id] = q; 
             ANSWER_KEY[`q${q.id}`] = q.correctAnswer; 
@@ -539,14 +533,7 @@ async function startExamAction(isSilentAuto = false) {
     let sClass = document.getElementById("student-class").value.trim(); 
     
     const currentCat = getExamCategory();
-    const matchedClassAcc = findStudentFromDatabase(sId, currentCat) || findStudentFromDatabase(sName, currentCat);
-
-    if (!sName && sId && matchedClassAcc) {
-        applyStudentToUI(matchedClassAcc);
-        sId = matchedClassAcc.sbd;
-        sName = matchedClassAcc.name;
-        sClass = matchedClassAcc.className;
-    }
+    const matchedClassAcc = findStudentFromDatabase(sId, currentCat);
 
     if (!sId || !sName || !sClass) { 
         if (!isSilentAuto) {
@@ -1031,6 +1018,13 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     document.getElementById("quiz-content").style.display = "none"; 
     const resView = document.getElementById("result-view-container"); 
     resView.style.display = "block"; 
+    
+    // GÁN CHUẨN XÁC TÊN ĐỀ THI LÊN THẺ TỔNG KẾT ĐIỂM
+    const resExamTitle = document.getElementById("res-exam-title");
+    if (resExamTitle) {
+        resExamTitle.innerText = EXAM_NAME || "BÀI THI TRẮC NGHIỆM";
+    }
+
     document.getElementById("res-score-overview").innerText = `Đúng ${correct}/${totalQuestionsCount} câu (${finalScore} điểm)`; 
     document.getElementById("res-stat-correct").innerText = correct; 
     document.getElementById("res-stat-wrong").innerText = wrong; 
@@ -1051,7 +1045,7 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     examData.questions.forEach(q => { 
         const imgUrl = (q.imageKey && examData.images[q.imageKey]) ? examData.images[q.imageKey] : (q.imageUrl || ""); 
         const imgTag = buildRevImgHtml(imgUrl); 
-        const explainText = q.explanation ? `<div class="explanation-box">💡 <b>Lời giải:</b> ${q.explanation}</div>` : ""; 
+        const explainText = q.explanation ? `<div class="explanation-box">💡 <b>Lời giải chi tiết:</b> ${q.explanation}</div>` : ""; 
         
         if (q.type === "multiple_choice") { 
             const letters = ["A", "B", "C", "D"]; 
@@ -1071,7 +1065,7 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
         } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
             const uVal = userAnswersState[`q${q.id}`] || "(Để trống)"; 
             const cVal = ANSWER_KEY[`q${q.id}`]; 
-            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${q.question}</div></div>${imgTag} <div style="margin-top:10px; font-size:0.95rem;"><div>Tr.lời của bạn: <b>${uVal}</b></div><div style="color:#15803d; font-weight:700; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div></div>${explainText}</div>`; 
+            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${q.question}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div>Tr.lời của bạn: <b>${uVal}</b></div><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div></div>${explainText}</div>`; 
         } 
         idx++; 
     }); 
