@@ -29,25 +29,59 @@ html, body {
 }
 
 /* ========================================================= */
-/* SỬA LỖI CÔNG THỨC TOÁN MATHJAX THẲNG HÀNG VỚI VĂN BẢN     */
-/* ĐÃ SỬA: Bỏ ép cứng line-height = 0 để dấu căn không bị vỡ */
+/* XỬ LÝ CÔNG THỨC TOÁN MATHJAX: TỰ ĐỘNG CO GỌN KHI DÀI     */
+/* CHỐNG TRÀN MÀN HÌNH 100%, KHÔNG LỆCH DÒNG, KHÔNG VỠ CĂN   */
 /* ========================================================= */
 
-/* Chỉ cho phép cuộn ngang đối với công thức dạng khối riêng biệt */
+/* Khung bao MathJax luôn nằm gọn trong khung chứa */
+mjx-container { 
+    max-width: 100% !important; 
+    box-sizing: border-box !important;
+}
+
+/* Tự động co nhỏ SVG công thức khi vượt quá bề ngang container */
+mjx-container[jax="SVG"] {
+    max-width: 100% !important;
+}
+
+mjx-container[jax="SVG"] > svg {
+    max-width: 100% !important;
+    height: auto !important; /* Tự động co chiều cao tỷ lệ thuận khi co chiều rộng */
+}
+
+/* Công thức dạng khối riêng biệt (display="true") */
 mjx-container[jax="SVG"][display="true"],
 mjx-container[jax="CHTML"][display="true"] { 
     max-width: 100% !important; 
     overflow-x: auto !important; 
     overflow-y: hidden !important; 
     display: block !important;
-    margin: 10px 0 !important;
+    margin: 10px auto !important;
+    padding: 4px 0 !important;
+    text-align: center !important;
     -webkit-overflow-scrolling: touch;
 }
 
-/* Công thức trong dòng (inline math) an toàn, mượt mà */
+mjx-container[jax="SVG"][display="true"] > svg {
+    display: block !important;
+    margin: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* Công thức trong dòng (inline math): co gọn tự nhiên và căn thẳng trục dòng chữ */
 mjx-container:not([display="true"]) { 
-    display: inline-block !important; /* Dùng inline-block để giữ chuẩn box-model */
-    white-space: nowrap !important;
+    display: inline-block !important;
+    max-width: 100% !important;
+    vertical-align: middle !important;
+    line-height: normal !important;
+}
+
+mjx-container:not([display="true"]) > svg { 
+    display: inline-block !important;
+    max-width: 100% !important;
+    height: auto !important;
+    vertical-align: middle !important;
 }
 
 .network-status-bar { 
@@ -77,7 +111,7 @@ mjx-container:not([display="true"]) {
     display: none; 
 }
 
-/* NAVBAR TRÊN CÙNG: ĐÃ ĐỔI TỪ STICKY SANG FIXED ĐỂ CỐ ĐỊNH CHẶT HƠN */
+/* NAVBAR TRÊN CÙNG: CỐ ĐỊNH CHẶT CHẼ */
 .top-navbar-wrapper { 
     position: fixed; 
     top: 0; 
@@ -395,7 +429,7 @@ mjx-container:not([display="true"]) {
         0 1px 3px rgba(15, 23, 42, 0.03),
         inset 0 1px 0 rgba(255, 255, 255, 0.9); 
     position: relative; 
-    scroll-margin-top: 140px; /* Tăng khoảng cách cuộn tránh bị thanh menu che */
+    scroll-margin-top: 140px;
     width: 100%;
     min-width: 0;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -432,7 +466,7 @@ mjx-container:not([display="true"]) {
     margin-top: 2px;
 }
 
-/* ĐÃ SỬA: Nội dung câu hỏi căn dãn đều 2 lề (justify) */
+/* Nội dung câu hỏi: Căn lề tự nhiên, chống tràn ngang và bao bọc công thức chuẩn */
 .q-content-text { 
     font-size: 1.18rem; 
     line-height: 1.7; 
@@ -445,9 +479,9 @@ mjx-container:not([display="true"]) {
     min-width: 0;
     flex: 1; 
     letter-spacing: -0.15px;
-    text-align: justify;       /* Căn lề 2 bên */
-    text-justify: inter-word;  /* Phân bổ khoảng cách từ đẹp mắt */
-    hyphens: auto;             /* Hạn chế rớt dòng xấu */
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
 }
 
 .options-list { 
@@ -471,6 +505,7 @@ mjx-container:not([display="true"]) {
     cursor: pointer; 
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
     min-width: 0;
+    width: 100%;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
 }
 .opt-label:hover { 
@@ -508,7 +543,7 @@ mjx-container:not([display="true"]) {
 }
 .opt-label input[type="radio"] { display: none; }
 
-/* ĐÃ SỬA: Nội dung đáp án căn dãn đều 2 lề (justify) */
+/* Nội dung đáp án */
 .opt-text { 
     font-size: 1.1rem; 
     color: #1e293b; 
@@ -516,6 +551,7 @@ mjx-container:not([display="true"]) {
     font-weight: 600; 
     word-wrap: break-word;
     word-break: break-word;
+    overflow-wrap: break-word;
     min-width: 0;
     flex: 1;
     text-align: justify;
