@@ -2,11 +2,11 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
-// - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
+// - ĐÃ KHẮC PHỤC TRIỆT ĐỂ LỖI CUỘN BỊ KHÓA / GIẬT CỤC
 // =========================================================
 
 let hasInitExamEngine = false;
+let isProgrammaticScrolling = false;
 
 async function initExamEngine() {
     if (hasInitExamEngine) return;
@@ -39,12 +39,11 @@ async function initExamEngine() {
         updateLoadingText("Đang kết nối phòng thi và tải đề...");
     }
 
-    // Cơ chế phòng thủ: Timeout chống treo trắng màn hình trên iPhone
     const failsafeTimer = setTimeout(() => {
         const gl = document.getElementById('global-loading');
         if (gl && gl.style.display !== 'none') {
             hideLoading();
-            showError("Kết nối chậm", "Máy chủ phản hồi chậm hoặc mạng Internet 4G/Wifi bị gián đoạn. Vui lòng kiểm tra lại mạng và tải lại trang!");
+            showError("Kết nối chậm", "Máy chủ phản hồi chậm hoặc mạng Internet bị gián đoạn. Vui lòng kiểm tra lại mạng và tải lại trang!");
         }
     }, 8500);
 
@@ -71,9 +70,7 @@ async function initExamEngine() {
         requestWakeLock();
         checkPendingSubmissionOnLoad();
         
-        // Tiến hành vào thi ngay nếu có cờ autostart, ẩn hẳn màn hình đăng nhập thứ 2
         await checkSessionStatus(isAutostart);
-        
         startTimeWatcherRealtime(quizId);
     } catch (error) {
         clearTimeout(failsafeTimer);
@@ -84,7 +81,6 @@ async function initExamEngine() {
     }
 }
 
-// Khởi chạy an toàn ngay khi DOM sẵn sàng
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initExamEngine);
 } else {
@@ -431,14 +427,17 @@ function scrollQPalette(offset) {
 function scrollToQuestion(qId) { 
     const target = document.getElementById(`q-card-${qId}`); 
     if (target) { 
-        const headerOffset = 110; 
+        isProgrammaticScrolling = true;
+        const headerOffset = 135; 
         const elementPosition = target.getBoundingClientRect().top; 
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset; 
         window.scrollTo({ top: offsetPosition, behavior: "smooth" }); 
         highlightActiveCircle(qId); 
+        setTimeout(() => { isProgrammaticScrolling = false; }, 600);
     } 
 }
 
+/* SỬA ĐỔI: Chỉ cuộn thanh nút ngang nội bộ, TUYỆT ĐỐI KHÔNG dùng scrollIntoView gây khóa cuộn dọc */
 function highlightActiveCircle(qId) { 
     if (currentActiveQId) { 
         const prev = document.getElementById(`q-nav-btn-${currentActiveQId}`); 
@@ -448,13 +447,18 @@ function highlightActiveCircle(qId) {
     const curr = document.getElementById(`q-nav-btn-${qId}`); 
     if (curr) { 
         curr.classList.add('active'); 
-        curr.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
+        const container = document.getElementById("q-nav-scroll-container");
+        if (container) {
+            const leftTarget = curr.offsetLeft - (container.clientWidth / 2) + (curr.offsetWidth / 2);
+            container.scrollTo({ left: Math.max(0, leftTarget), behavior: 'smooth' });
+        }
     } 
 }
 
 function setupScrollObserver() { 
-    const options = { root: null, rootMargin: '-110px 0px -60% 0px', threshold: 0.1 }; 
+    const options = { root: null, rootMargin: '-130px 0px -60% 0px', threshold: 0.05 }; 
     const observer = new IntersectionObserver((entries) => { 
+        if (isProgrammaticScrolling) return;
         entries.forEach(entry => { 
             if (entry.isIntersecting) { 
                 const id = entry.target.id.replace('q-card-', ''); 
@@ -1019,7 +1023,6 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     const resView = document.getElementById("result-view-container"); 
     resView.style.display = "block"; 
     
-    // GÁN CHUẨN XÁC TÊN ĐỀ THI LÊN THẺ TỔNG KẾT ĐIỂM
     const resExamTitle = document.getElementById("res-exam-title");
     if (resExamTitle) {
         resExamTitle.innerText = EXAM_NAME || "BÀI THI TRẮC NGHIỆM";

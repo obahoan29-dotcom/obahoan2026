@@ -1,12 +1,10 @@
 // ==========================================
 // FILE: app-config.js
 // CẤU HÌNH HỆ THỐNG VÀ DỮ LIỆU TĨNH DÙNG CHUNG
-// HỖ TRỢ ĐĂNG ĐỀ THI, TÀI LIỆU PDF / WORD / ẢNH GOOGLE DRIVE
 // ==========================================
 const ADMIN_PASSWORD = "Hopan130384";
 const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-// URL WEB APP GAS TẢI FILE PDF / WORD / ẢNH LÊN GOOGLE DRIVE
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbygCVlYabwzwzeVL1KQY_Jv3rdkZLXVmsflazNvvI4njnz9jj9QSAqC2Yo6-t8DW53o/exec";
 
 let isAdminLoggedIn = false;
@@ -58,10 +56,22 @@ let REMINDER_CATEGORY = {
     id: "nhac-nho",
     links: [
         { 
-            id: "rem_1", firebaseId: "rem_1", categoryId: "nhac-nho",
-            title: "Lưu ý quan trọng: Các em nộp tự luận Padlet phải đúng mẫu, ví dụ 11A25 ĐẠT, ở phần Subject ghi rõ 11a25-220926-đạt", 
-            date: "05/08/2026 - 15:00", url: "#", badgeText: "HOT", isDoc: true, 
-            avatar: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png" 
+            id: "rem_1", 
+            firebaseId: "rem_1", 
+            categoryId: "nhac-nho",
+            isDoc: true,
+            isArticle: true,
+            title: "Lưu ý quan trọng: 11C còn 15 em chưa làm đề số 100", 
+            sapo: "(Dân trí / Thầy giáo dặn dò) - Thầy thông báo danh sách học sinh lớp 11C chưa hoàn thành đề kiểm tra số 100, yêu cầu các em khẩn trương hoàn thành đúng hạn.",
+            content: "Qua kiểm tra hệ thống cơ sở dữ liệu làm bài trực tuyến, lớp 11C hiện vẫn còn 15 học sinh chưa hoàn thành bài thi số 100.\n\nCác em học sinh có tên trong danh sách cần khẩn trương đăng nhập vào phòng thi để làm bài và nộp bài trước 22h00 tối nay.\n\nSau khung giờ trên, hệ thống sẽ tự động đóng đề và tiến hành xuất bảng điểm đánh giá định kỳ.",
+            articleImage: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg",
+            imageCaption: "Thầy Phạm Công Hoan hướng dẫn học sinh kiểm tra bài làm (Ảnh: DonaldHoan).",
+            author: "Thầy Phạm Công Hoan",
+            badgeText: "MỚI",
+            isHot: true, 
+            date: "Thứ bảy, 03/10/2026 - 20:48",
+            formattedDate: "Thứ bảy, 03/10/2026 - 20:48",
+            avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg"
         }
     ]
 };

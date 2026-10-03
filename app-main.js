@@ -2,10 +2,9 @@
 // FILE: app-main.js
 // BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
 // NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI, ĐĂNG NHẬP HỌC SINH
-// ĐÃ ĐƯỢC CẬP NHẬT: CỬA SỔ ĐĂNG NHẬP LUÔN TRỐNG, KHÔNG LƯU DỮ LIỆU CŨ
+// TÍCH HỢP TOÀN DIỆN: XEM BÀI BÁO NHẮC NHỞ CHUẨN DÂN TRÍ
 // =========================================================
 
-// BỘ ĐỆM BẢO VỆ LƯU TRỮ TRÊN IPHONE
 const safeLocal = {
     getItem(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
     setItem(k, v) { try { localStorage.setItem(k, v); } catch(e) {} },
@@ -23,10 +22,8 @@ let activeChinhKhoaRow1CatId = null;
 let activeChinhKhoaRow2CatId = null;
 let activeDantriCatId = null;
 
-// Quản lý trạng thái mở/đóng gom gọn của từng lớp
 const categoryExpandedState = {};
 
-// Bộ nhớ đệm thống kê lượt truy cập
 let siteVisitStatsCache = {
     todayCount: 0,
     yesterdayCount: 0,
@@ -45,12 +42,9 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     refreshAllViews();
     await loadDataFromFirebase();
-
-    // Bắt đầu theo dõi và đếm lượt truy cập website
     initSiteVisitTracker();
 });
 
-// Gán ảnh Banner & Avatar
 function initBannerAndAvatars() {
     const topImg = document.getElementById("top-banner-img");
     const avatarImg = document.getElementById("web-avatar-img");
@@ -187,6 +181,12 @@ function refreshAllViews() {
         if (isAdminLoggedIn) gear.classList.add("active-gear");
         else gear.classList.remove("active-gear");
     }
+
+    // Hiển thị nút đăng bài báo nhắc nhở đối với Admin
+    const btnAddReminder = document.getElementById("btn-add-reminder-article");
+    if (btnAddReminder) {
+        btnAddReminder.style.display = isAdminLoggedIn ? "inline-flex" : "none";
+    }
 }
 
 function renderDantriNav() {
@@ -264,7 +264,7 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
     container.innerHTML = "";
 
     if (!links || links.length === 0) {
-        container.innerHTML = `<div class="empty-folder">Chưa có bài tập hoặc tài liệu nào trong mục này.</div>`;
+        container.innerHTML = `<div class="empty-folder">Chưa có bài tập hoặc thông báo nào trong mục này.</div>`;
         return;
     }
 
@@ -504,10 +504,13 @@ function createItemCardElement(item, categoryId) {
 
 function buildCardHtmlString(item, categoryId) {
     const isDoc = item.isDoc;
+    const isReminder = (categoryId === "nhac-nho" || item.isArticle);
     const itemId = item.id || item.firebaseId || `item_${Date.now()}`;
     const quizId = extractQuizIdFromItem(item) || itemId;
     const badge = item.badgeText || (item.isHot ? "HOT" : "NONE");
-    const avatar = item.avatar || PRESET_AVATARS[0];
+    
+    // Nếu là bài báo nhắc nhở có ảnh thì ưu tiên lấy ảnh bài báo làm thumbnail
+    const avatar = (isReminder && item.articleImage) ? item.articleImage : (item.avatar || PRESET_AVATARS[0]);
     const encodedData = encodeURIComponent(JSON.stringify(item));
     const isAllowFree = (item.allowFree !== false);
 
@@ -528,12 +531,14 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
+    const cardCustomClass = isReminder ? "article-reminder-card" : "";
+
     if (isAdminLoggedIn) {
         return `
-        <div class="exam-card admin-card-mode" id="card-${itemId}">
+        <div class="exam-card admin-card-mode ${cardCustomClass}" id="card-${itemId}">
             <div class="admin-card-top-row">
                 <div class="left-admin-actions-col">
-                    ${!isDoc ? `
+                    ${!isDoc && !isReminder ? `
                         <button type="button" class="btn-view-results-left" onclick="openExamResultModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${categoryId}', event)" title="Xem bảng điểm và nhật ký thi">
                             📊 Kết quả
                         </button>
@@ -558,10 +563,16 @@ function buildCardHtmlString(item, categoryId) {
                             </button>
                         </div>
                     ` : ''}
+
+                    ${isReminder ? `
+                        <button type="button" class="btn-view-results-left" style="background: linear-gradient(135deg, #e11d48, #be123c);" onclick="openReminderArticleEditorModal('${itemId}', '${encodedData}', event)" title="Sửa nội dung bài báo nhắc nhở">
+                            ✏️ Sửa bài báo
+                        </button>
+                    ` : ''}
                 </div>
 
                 <div class="admin-link-tools">
-                    ${!isDoc ? `
+                    ${!isDoc && !isReminder ? `
                         <span class="shuffle-label">Đảo:</span>
                         <label class="switch-toggle" title="Bật/Tắt đảo thứ tự câu hỏi và phương án">
                             <input type="checkbox" ${item.isShuffled !== false ? "checked" : ""} onchange="toggleShuffle('${categoryId}', '${itemId}', this.checked, event)">
@@ -572,7 +583,7 @@ function buildCardHtmlString(item, categoryId) {
                     <button type="button" class="tool-btn tool-btn-down" onclick="moveItemOrder('${categoryId}', '${itemId}', 'down', event)" title="Xuống dưới">▼</button>
                     <button type="button" class="tool-btn tool-btn-copy" onclick="openCopyModal('${categoryId}', '${itemId}', '${encodedData}', event)" title="Nhân bản sang lớp khác">📋</button>
                     <button type="button" class="tool-btn tool-btn-move" onclick="openMoveModal('${categoryId}', '${itemId}', '${encodedData}', event)" title="Chuyển lớp">🔄</button>
-                    <button type="button" class="tool-btn tool-btn-edit" onclick="renameItem('${categoryId}', '${itemId}', ${isDoc}, '${(item.title || "").replace(/'/g, "\\'")}', event)" title="Sửa tên">✏️</button>
+                    ${!isReminder ? `<button type="button" class="tool-btn tool-btn-edit" onclick="renameItem('${categoryId}', '${itemId}', ${isDoc}, '${(item.title || "").replace(/'/g, "\\'")}', event)" title="Sửa tên">✏️</button>` : ''}
                     <button type="button" class="tool-btn tool-btn-delete" onclick="deleteItem('${categoryId}', '${itemId}', event)" title="Xóa vĩnh viễn">🗑️</button>
                 </div>
             </div>
@@ -597,7 +608,7 @@ function buildCardHtmlString(item, categoryId) {
                         </div>
                         <span class="exam-title-text">${item.title}</span>
                     </div>
-                    <div class="exam-date">📅 ${item.date || "---"}</div>
+                    <div class="exam-date">📅 ${item.formattedDate || item.date || "---"}</div>
                     ${timeBoxHtml}
                 </div>
                 <div class="arrow">›</div>
@@ -606,7 +617,7 @@ function buildCardHtmlString(item, categoryId) {
     }
 
     return `
-    <div class="exam-card" id="card-${itemId}" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
+    <div class="exam-card ${cardCustomClass}" id="card-${itemId}" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
         <div class="exam-thumb-box">
             <img src="${avatar}" class="exam-thumb" alt="icon">
         </div>
@@ -615,7 +626,7 @@ function buildCardHtmlString(item, categoryId) {
                 ${badge !== "NONE" ? `<span class="badge-item ${badgeClass}">${badge}</span>` : ''}
                 <span class="exam-title-text">${item.title}</span>
             </div>
-            <div class="exam-date">📅 ${item.date || "---"}</div>
+            <div class="exam-date">📅 ${item.formattedDate || item.date || "---"}</div>
             ${timeBoxHtml}
         </div>
         <div class="arrow">›</div>
@@ -632,6 +643,13 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
     const item = JSON.parse(decodeURIComponent(stringifiedData));
     const url = decodeURIComponent(rawUrl || item.url || "");
 
+    // 1. NẾU LÀ MỤC NHẮC NHỞ HOẶC LÀ BÀI BÁO -> MỞ GIAO DIỆN BÀI BÁO CHUẨN DÂN TRÍ
+    if (categoryId === "nhac-nho" || item.isArticle) {
+        openReminderArticleModal(item);
+        return;
+    }
+
+    // 2. NẾU LÀ TÀI LIỆU, LINK PADLET HOẶC LINK WEB NGOÀI
     if (isDoc || categoryId === "tu-luan-padlet" || categoryId === "kho-tai-lieu" || !url.includes("thi.html")) {
         if (url && url !== "#") {
             window.open(url, "_blank");
@@ -639,12 +657,77 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
         return;
     }
 
+    // 3. ĐỀ THI TRẮC NGHIỆM ONLINE -> MỞ CỬA SỔ ĐĂNG NHẬP
     openStudentLoginModal(item, categoryId, event);
+}
+
+// =========================================================
+// MỞ GIAO DIỆN XEM BÀI BÁO NHẮC NHỞ (CHUẨN BÁO DÂN TRÍ)
+// =========================================================
+function openReminderArticleModal(articleItem) {
+    const modal = document.getElementById("article-reader-modal");
+    if (!modal) return;
+
+    const headlineEl = document.getElementById("article-modal-headline");
+    const datetimeEl = document.getElementById("article-modal-datetime");
+    const sapoEl = document.getElementById("article-modal-sapo");
+    const imgWrap = document.getElementById("article-modal-img-wrap");
+    const featuredImg = document.getElementById("article-modal-featured-img");
+    const captionEl = document.getElementById("article-modal-img-caption");
+    const contentEl = document.getElementById("article-modal-body-content");
+    const authorNameEl = document.getElementById("article-modal-author-name");
+
+    const titleText = articleItem.title || "Thông báo từ giáo viên";
+    const dateText = articleItem.formattedDate || articleItem.date || formatVietnameseDateTime(Date.now());
+    const authorText = articleItem.author || "Thầy Phạm Công Hoan";
+    
+    // Đoạn mở đầu / Sapo
+    let sapoText = articleItem.sapo || "";
+    if (!sapoText) {
+        sapoText = `(Thầy giáo dặn dò) - ${titleText}. Yêu cầu toàn thể các em học sinh đọc kỹ nội dung để thực hiện nghiêm túc.`;
+    }
+
+    // Nội dung bài viết
+    let rawContent = articleItem.content || articleItem.title || "";
+    let paragraphs = rawContent.split(/\n+/).filter(p => p.trim() !== "");
+    let contentHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join("");
+    if (!contentHtml) {
+        contentHtml = `<p>${titleText}</p>`;
+    }
+
+    if (headlineEl) headlineEl.innerText = titleText;
+    if (datetimeEl) datetimeEl.innerText = dateText;
+    if (authorNameEl) authorNameEl.innerText = authorText;
+    if (sapoEl) sapoEl.innerHTML = sapoText;
+    if (contentEl) contentEl.innerHTML = contentHtml;
+
+    // Ảnh phóng to & chú thích
+    if (articleItem.articleImage) {
+        featuredImg.src = articleItem.articleImage;
+        captionEl.innerText = articleItem.imageCaption || `${titleText} (Ảnh: DonaldHoan).`;
+        imgWrap.style.display = "block";
+    } else {
+        imgWrap.style.display = "none";
+    }
+
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+}
+
+function closeReminderArticleModal() {
+    const modal = document.getElementById("article-reader-modal");
+    if (modal) modal.style.display = "none";
+    document.body.style.overflow = "auto";
+}
+
+function handleArticleOverlayClick(event) {
+    if (event.target && event.target.id === "article-reader-modal") {
+        closeReminderArticleModal();
+    }
 }
 
 // ==========================================
 // MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
-// (ĐÃ XÓA TRẮNG HOÀN TOÀN CÁC Ô NHẬP, KHÔNG TỰ ĐIỀN DỮ LIỆU CŨ)
 // ==========================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -674,7 +757,6 @@ function openStudentLoginModal(item, categoryId, event) {
         timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date);
     }
 
-    // 1. LUÔN LUÔN XÓA RỖNG 100% TẤT CẢ CÁC Ô NHẬP LIỆU (CẢ TAB LỚP VÀ TỰ DO)
     const userIn = document.getElementById("st-username-input");
     const passIn = document.getElementById("st-password-input");
     const fNameIn = document.getElementById("st-free-name-input");
@@ -693,7 +775,6 @@ function openStudentLoginModal(item, categoryId, event) {
     const eyeBtn = document.getElementById("st-eye-btn");
     if (eyeBtn) eyeBtn.innerText = "👁️";
 
-    // 2. XÓA BỘ NHỚ LƯU TRỮ TẠM ĐỂ TRÁNH TRÌNH DUYỆT PHỤC HỒI DỮ LIỆU CŨ
     safeLocal.removeItem("saved_student_sbd");
     safeLocal.removeItem("saved_student_name");
     safeLocal.removeItem("saved_student_class");
@@ -721,7 +802,6 @@ function closeStudentLoginModal() {
     const modal = document.getElementById("student-login-modal");
     if (modal) modal.style.display = "none";
 
-    // Khi đóng cửa sổ, tự động xóa sạch các ô nhập
     const userIn = document.getElementById("st-username-input");
     const passIn = document.getElementById("st-password-input");
     const fNameIn = document.getElementById("st-free-name-input");
@@ -846,7 +926,6 @@ function submitStudentLogin() {
         }
     }
 
-    // Không lưu lại thông số học sinh vào các khóa cố định để phiên sau luôn bắt đầu với form trắng
     safeLocal.removeItem("last_submission_cleared");
     safeLocal.removeItem("saved_student_sbd");
     safeLocal.removeItem("saved_student_name");
@@ -903,9 +982,8 @@ async function selectBadgeOption(categoryId, itemId, badgeType, event) {
 }
 
 // =========================================================
-// HỆ THỐNG THEO DÕI VÀ THỐNG KÊ LƯỢT TRUY CẬP (VISITOR TRACKER)
+// THỐNG KÊ LƯỢT TRUY CẬP
 // =========================================================
-
 function getVNDateKey(d = new Date()) {
     const tzOffset = 7 * 60;
     const localTime = d.getTime();
@@ -1183,7 +1261,7 @@ async function refreshVisitStatsData() {
     if (btn) { btn.innerText = "🔄 Cập nhật"; btn.disabled = false; }
 }
 
-// SỰ KIỆN TOÀN CỤC: THU LẠI CÁC POPUP KHI CLICK RA NGOÀI
+// SỰ KIỆN TOÀN CỤC
 document.addEventListener("click", function(event) {
     const adminWrapper = event.target.closest(".admin-controls-wrapper");
     if (!adminWrapper) {
