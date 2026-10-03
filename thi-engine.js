@@ -2,6 +2,7 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
+// - ĐÃ SỬA TRIỆT ĐỂ LỖI GIẬT CỤC / KHÔNG CUỘN XUỐNG ĐƯỢC
 // - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
 // - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
 // =========================================================
@@ -440,6 +441,7 @@ function scrollToQuestion(qId) {
 }
 
 function highlightActiveCircle(qId) { 
+    if (currentActiveQId === qId) return; 
     if (currentActiveQId) { 
         const prev = document.getElementById(`q-nav-btn-${currentActiveQId}`); 
         if (prev) prev.classList.remove('active'); 
@@ -448,21 +450,40 @@ function highlightActiveCircle(qId) {
     const curr = document.getElementById(`q-nav-btn-${qId}`); 
     if (curr) { 
         curr.classList.add('active'); 
-        curr.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
+        // CHỈ CUỘN NỘI BỘ THANH PALETTE NGANG, TUYỆT ĐỐI KHÔNG DÙNG scrollIntoView ĐỂ TRÁNH GIẬT TRANG
+        const scrollContainer = document.getElementById("q-nav-scroll-container");
+        if (scrollContainer) {
+            const containerWidth = scrollContainer.offsetWidth;
+            const btnLeft = curr.offsetLeft;
+            const btnWidth = curr.offsetWidth;
+            scrollContainer.scrollTo({
+                left: btnLeft - (containerWidth / 2) + (btnWidth / 2),
+                behavior: 'smooth'
+            });
+        }
     } 
 }
 
 function setupScrollObserver() { 
-    const options = { root: null, rootMargin: '-110px 0px -60% 0px', threshold: 0.1 }; 
-    const observer = new IntersectionObserver((entries) => { 
+    if (window._qCardObserver) {
+        window._qCardObserver.disconnect();
+    }
+    const options = { root: null, rootMargin: '-120px 0px -50% 0px', threshold: 0.1 }; 
+    window._qCardObserver = new IntersectionObserver((entries) => { 
+        let bestEntry = null;
         entries.forEach(entry => { 
             if (entry.isIntersecting) { 
-                const id = entry.target.id.replace('q-card-', ''); 
-                highlightActiveCircle(id); 
+                if (!bestEntry || entry.intersectionRatio > bestEntry.intersectionRatio) {
+                    bestEntry = entry;
+                }
             } 
         }); 
+        if (bestEntry && bestEntry.target) {
+            const id = bestEntry.target.id.replace('q-card-', ''); 
+            highlightActiveCircle(id); 
+        }
     }, options); 
-    document.querySelectorAll('.question-card').forEach(card => observer.observe(card)); 
+    document.querySelectorAll('.question-card').forEach(card => window._qCardObserver.observe(card)); 
 }
 
 function selectOption(qId, letter) { 
