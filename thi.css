@@ -12,35 +12,26 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif; 
 }
 
-/* SỬA LỖI CUỘN: Cho phép cuộn dọc mượt mà, không khóa cứng, chống giật */
-html {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
-}
-
-body { 
+/* KHÓA CHẶT TRÀN NGANG TOÀN BỘ TRANG THI */
+html, body { 
     width: 100%; 
     max-width: 100%; 
-    min-height: 100vh;
-    height: auto;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow-x: hidden !important; 
     position: relative;
+    overscroll-behavior-x: none;
     background-color: var(--bg-page); 
     color: var(--text-dark); 
-    padding-bottom: 60px; 
+    min-height: 100vh; 
+    padding-bottom: 40px; 
     -webkit-tap-highlight-color: transparent; 
     font-size: 16px;
     line-height: 1.55;
-    touch-action: pan-y;
 }
 
-/* CÔNG THỨC TOÁN MATHJAX THẲNG HÀNG */
+/* ========================================================= */
+/* SỬA LỖI CÔNG THỨC TOÁN MATHJAX THẲNG HÀNG VỚI VĂN BẢN     */
+/* ========================================================= */
+/* Chỉ cho phép cuộn ngang đối với công thức dạng khối riêng biệt */
 mjx-container[jax="CHTML"][display="true"] { 
     max-width: 100% !important; 
     overflow-x: auto !important; 
@@ -50,6 +41,7 @@ mjx-container[jax="CHTML"][display="true"] {
     -webkit-overflow-scrolling: touch;
 }
 
+/* Công thức trong dòng (inline math): Căn chỉnh baseline thẳng tắp với chữ tiếng Việt */
 mjx-container:not([display="true"]) { 
     display: inline !important;
     vertical-align: -0.15ex !important;
@@ -124,6 +116,7 @@ mjx-container:not([display="true"]) {
     min-width: 0;
 }
 
+/* KHU VỰC THÔNG TIN HỌC SINH: ƯU TIÊN HIỂN THỊ KHÔNG BỊ CHE KHUẤT */
 .user-badge { 
     display: flex; 
     align-items: center; 
@@ -383,7 +376,9 @@ mjx-container:not([display="true"]) {
 .section-text h3 { font-size: 1.12rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
 .section-text p { font-size: 0.88rem; opacity: 0.95; margin-top: 4px; font-weight: 600;}
 
-/* THẺ CÂU HỎI */
+/* ========================================================= */
+/* THẺ CÂU HỎI: CỠ CHỮ TO HƠN, NỔI KHỐI 3D BẮT MẮT          */
+/* ========================================================= */
 .question-card { 
     background: #ffffff; 
     border-radius: 20px; 
@@ -395,7 +390,7 @@ mjx-container:not([display="true"]) {
         0 1px 3px rgba(15, 23, 42, 0.03),
         inset 0 1px 0 rgba(255, 255, 255, 0.9); 
     position: relative; 
-    scroll-margin-top: 130px; 
+    scroll-margin-top: 110px; 
     width: 100%;
     min-width: 0;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -432,6 +427,7 @@ mjx-container:not([display="true"]) {
     margin-top: 2px;
 }
 
+/* NỘI DUNG ĐỀ CÂU HỎI: CỠ CHỮ TO HƠN, RÕ NÉT */
 .q-content-text { 
     font-size: 1.18rem; 
     line-height: 1.7; 
@@ -455,6 +451,7 @@ mjx-container:not([display="true"]) {
 }
 @media(min-width: 650px) { .options-list.grid-2 { grid-template-columns: 1fr 1fr; } }
 
+/* PHƯƠNG ÁN A, B, C, D: NỔI BẬT DỄ BẤM */
 .opt-label { 
     display: flex; 
     align-items: center; 
@@ -571,7 +568,9 @@ mjx-container:not([display="true"]) {
 .btn-modal-confirm { flex: 1; padding: 13px; border: none; background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-hover)); color: #fff; border-radius: 14px; font-weight: 900; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35); transition: 0.2s; }
 .btn-modal-confirm:hover { transform: translateY(-1.5px); box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45); }
 
-/* BÁO ĐIỂM SAU NỘP BÀI */
+/* ========================================================= */
+/* MÀN HÌNH BÁO ĐIỂM SAU KHI NỘP BÀI (CÓ HIỂN THỊ TÊN ĐỀ THI)  */
+/* ========================================================= */
 .result-summary-card { 
     background: #ffffff; 
     border-radius: 22px; 
@@ -582,6 +581,7 @@ mjx-container:not([display="true"]) {
     border: 2px solid #e2e8f0;
 }
 
+/* TÊN ĐỀ THI TRÊN THẺ BÁO ĐIỂM */
 .result-exam-title-badge {
     display: inline-flex;
     align-items: center;
@@ -650,7 +650,7 @@ mjx-container:not([display="true"]) {
 @keyframes spin { 100% { transform: rotate(360deg); } }
 @keyframes pulseWait { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
-/* RESPONSIVE MOBILE */
+/* RESPONSIVE MOBILE FIX */
 @media(max-width: 640px) { 
     html, body { font-size: 15px; }
     .container { padding: 10px 8px; } 
@@ -665,6 +665,7 @@ mjx-container:not([display="true"]) {
     .opt-circle { width: 28px; height: 28px; font-size: 0.92rem; } 
     .explanation-box { font-size: 0.98rem; padding: 12px 14px; } 
 
+    /* ĐẢM BẢO HỌ TÊN - LỚP - SBD LUÔN HIỂN THỊ RÕ TRÊN MÀN HÌNH NHỎ */
     .user-avatar { display: none; }
     .u-row { font-size: 0.84rem; }
     .clock-pill { padding: 4px 8px; }
