@@ -22,24 +22,26 @@
     <script src="tklop11c.js"></script>
     <script src="tklop11e.js"></script>
 
-    <!-- Thư viện hiển thị công thức Toán MathJax chuẩn baseline -->
+    <!-- ĐÃ SỬA: Cấu hình hiển thị công thức Toán MathJax siêu nét bằng SVG -->
     <script>
         window.MathJax = { 
             tex: { 
                 inlineMath: [['$', '$'], ['\\(', '\\)']], 
-                displayMath: [['$$', '$$']], 
+                displayMath: [['$$', '$$'], ['\\[', '\\]']], 
                 processEscapes: true 
             },
-            chtml: {
-                scale: 1.04,
-                displayAlign: 'center'
+            svg: {
+                scale: 1.05, /* Phóng to một chút cho nét */
+                displayAlign: 'center',
+                fontCache: 'global'
             },
             options: { 
                 enableMenu: false 
             } 
         };
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- ĐÃ SỬA: Chuyển từ tex-chtml.js sang tex-svg.js để công thức, dấu căn mượt mà không bị vỡ -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
     <!-- Các module phân tách cho phòng thi -->
     <script src="thi-service.js"></script>
