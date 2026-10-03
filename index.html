@@ -649,7 +649,7 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- MODAL ĐĂNG NHẬP THI HỌC SINH -->
+<!-- MODAL ĐĂNG NHẬP THI HỌC SINH (KHÔNG TỰ ĐỘNG LƯU VÀ GỢI Ý CŨ) -->
 <!-- ========================================================= -->
 <div class="move-modal-overlay" id="student-login-modal">
     <div class="student-login-box">
@@ -675,7 +675,7 @@
                 <label>Tên đăng nhập / Số báo danh:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">👤</span>
-                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập tên đăng nhập hoặc SBD..." autocomplete="username">
+                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập tên đăng nhập hoặc SBD..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 </div>
             </div>
 
@@ -683,7 +683,7 @@
                 <label>Mật khẩu:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🔑</span>
-                    <input type="password" id="st-password-input" class="st-input-field" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+                    <input type="password" id="st-password-input" class="st-input-field" placeholder="Nhập mật khẩu..." autocomplete="new-password">
                     <button type="button" class="st-eye-btn" id="st-eye-btn" onclick="toggleStudentPassVisibility()">👁️</button>
                 </div>
             </div>
@@ -698,7 +698,7 @@
                 <label>Họ và tên thí sinh:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">📝</span>
-                    <input type="text" id="st-free-name-input" class="st-input-field" placeholder="VD: Nguyễn Văn An...">
+                    <input type="text" id="st-free-name-input" class="st-input-field" placeholder="VD: Nguyễn Văn An..." autocomplete="off" autocorrect="off" spellcheck="false">
                 </div>
             </div>
 
@@ -706,7 +706,7 @@
                 <label>Lớp học:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🏫</span>
-                    <input type="text" id="st-free-class-input" class="st-input-field" placeholder="VD: 10A1, Tự do...">
+                    <input type="text" id="st-free-class-input" class="st-input-field" placeholder="VD: 10A1, Tự do..." autocomplete="off" autocorrect="off" spellcheck="false">
                 </div>
             </div>
 
@@ -714,7 +714,7 @@
                 <label>Số báo danh (SBD):</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🔢</span>
-                    <input type="text" id="st-free-sbd-input" class="st-input-field" placeholder="VD: SBD01, 1001...">
+                    <input type="text" id="st-free-sbd-input" class="st-input-field" placeholder="VD: SBD01, 1001..." autocomplete="off" autocorrect="off" spellcheck="false">
                 </div>
             </div>
 
