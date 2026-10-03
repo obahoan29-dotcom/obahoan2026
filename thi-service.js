@@ -2,7 +2,7 @@
 // FILE: thi-service.js
 // QUẢN LÝ KẾT NỐI MẠNG, FIREBASE REALTIME, PRESENCE, 
 // THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
-// ĐÃ BẢO VỆ CHỐNG LỖI LOCALSTORAGE TRÊN IPHONE SAFARI / ZALO
+// ĐÃ SỬA TRIỆT ĐỂ: KHÔNG TỰ ĐỘNG MATCH ĐỔI TÊN HỌC SINH KHÁC
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
@@ -62,27 +62,17 @@ function findStudentFromDatabase(query, preferredCat = null) {
     if (!query || !window.STUDENT_ACCOUNTS) return null;
     const q = String(query).trim().toLowerCase();
 
+    // Chỉ tìm chính xác trong đúng danh mục lớp đang xét
     if (preferredCat && window.STUDENT_ACCOUNTS[preferredCat]) {
         const list = window.STUDENT_ACCOUNTS[preferredCat];
         const matched = list.find(acc => 
-            (String(acc.sbd).trim().toLowerCase() === q) ||
-            (acc.username && acc.username.trim().toLowerCase() === q) ||
-            (acc.name && acc.name.trim().toLowerCase() === q)
+            (acc.sbd && String(acc.sbd).trim().toLowerCase() === q) ||
+            (acc.username && String(acc.username).trim().toLowerCase() === q) ||
+            (acc.name && String(acc.name).trim().toLowerCase() === q)
         );
         if (matched) return matched;
     }
 
-    for (const cat in window.STUDENT_ACCOUNTS) {
-        const list = window.STUDENT_ACCOUNTS[cat];
-        if (Array.isArray(list)) {
-            const matched = list.find(acc => 
-                (String(acc.sbd).trim().toLowerCase() === q) ||
-                (acc.username && acc.username.trim().toLowerCase() === q) ||
-                (acc.name && acc.name.trim().toLowerCase() === q)
-            );
-            if (matched) return matched;
-        }
-    }
     return null;
 }
 
@@ -96,13 +86,6 @@ function findStudentByPassword(passQuery, preferredCat = null) {
         if (matched) return matched;
     }
 
-    for (const cat in window.STUDENT_ACCOUNTS) {
-        const list = window.STUDENT_ACCOUNTS[cat];
-        if (Array.isArray(list)) {
-            const matched = list.find(acc => String(acc.pass).trim().toLowerCase() === p);
-            if (matched) return matched;
-        }
-    }
     return null;
 }
 
@@ -131,45 +114,50 @@ function applyStudentToUI(student) {
     safeLocal.setItem("saved_student_class", sClass);
 }
 
+// BẢO VỆ THÔNG TIN ĐĂNG NHẬP 100%: GIỮ NGUYÊN BẢN, TUYỆT ĐỐI KHÔNG ÉP MATCH THÀNH HỌC SINH KHÁC
 function syncStudentFromParamsAndStorage() {
     const urlParams = new URLSearchParams(window.location.search);
     let sbd = urlParams.get('sbd');
     let name = urlParams.get('name');
     let className = urlParams.get('class');
-    let cat = urlParams.get('cat') || getExamCategory();
 
-    if (sbd && name) {
-        applyStudentToUI({ sbd: sbd, name: name, className: className || "---" });
+    // 1. ƯU TIÊN SỐ 1: Tham số trực tiếp từ URL lúc đăng nhập ở trang chủ
+    if (name && name.trim()) {
+        applyStudentToUI({
+            sbd: sbd ? sbd.trim() : "---",
+            name: name.trim(),
+            className: className ? className.trim() : "---"
+        });
         return;
     }
 
-    if (!sbd || !name) {
-        try {
-            const rawSaved = safeLocal.getItem("current_exam_student");
-            if (rawSaved) {
-                const parsed = JSON.parse(rawSaved);
-                if (parsed && (parsed.sbd || parsed.name)) {
-                    sbd = sbd || parsed.sbd;
-                    name = name || parsed.name;
-                    className = className || parsed.className;
-                }
+    // 2. ƯU TIÊN SỐ 2: Thông tin trong current_exam_student đã lưu lúc click vào thi
+    try {
+        const rawSaved = safeLocal.getItem("current_exam_student");
+        if (rawSaved) {
+            const parsed = JSON.parse(rawSaved);
+            if (parsed && parsed.name && parsed.name.trim()) {
+                applyStudentToUI({
+                    sbd: parsed.sbd ? parsed.sbd.trim() : "---",
+                    name: parsed.name.trim(),
+                    className: parsed.className ? parsed.className.trim() : "---"
+                });
+                return;
             }
-        } catch(e) {}
-    }
-
-    if (!sbd && !name) {
-        sbd = safeLocal.getItem("saved_student_sbd");
-        name = safeLocal.getItem("saved_student_name");
-        className = safeLocal.getItem("saved_student_class");
-    }
-
-    if (sbd || name) {
-        const found = findStudentFromDatabase(sbd, cat) || findStudentFromDatabase(name, cat);
-        if (found) {
-            applyStudentToUI(found);
-        } else if (name) {
-            applyStudentToUI({ sbd: sbd || "---", name: name, className: className || "---" });
         }
+    } catch(e) {}
+
+    // 3. ƯU TIÊN SỐ 3: Thông tin lưu dự phòng
+    sbd = safeLocal.getItem("saved_student_sbd");
+    name = safeLocal.getItem("saved_student_name");
+    className = safeLocal.getItem("saved_student_class");
+
+    if (name && name.trim()) {
+        applyStudentToUI({
+            sbd: sbd ? sbd.trim() : "---",
+            name: name.trim(),
+            className: className ? className.trim() : "---"
+        });
     }
 }
 
