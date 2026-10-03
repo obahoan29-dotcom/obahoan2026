@@ -2,18 +2,19 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// - ĐÃ SỬA TRIỆT ĐỂ LỖI GIẬT CỤC / KHÔNG CUỘN XUỐNG ĐƯỢC
+// - ĐÃ SỬA: ĐỊNH DẠNG DÒNG TRÍCH XUẤT ĐỀ THI SAU DẤU // THÀNH IN ĐẬM NÉT VÀ MÀU NÂU
 // - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
 // - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
-// - TÔ MÀU HỒNG NỔI BẬT CHO DÒNG CHỮ "// trích xuất mỗi câu"
 // =========================================================
 
 let hasInitExamEngine = false;
 
-// Hàm định dạng text: Tô màu hồng nhạt nổi bật cho dòng chữ "// trích xuất mỗi câu"
+// Hàm định dạng text: Nhận diện trích xuất đề thi sau dấu // và đổi thành in đậm nét + màu nâu
 function formatQuestionText(text) {
     if (!text) return "";
-    return text.replace(/\/\/ trích xuất mỗi câu/g, '<span style="background-color: #fce7f3; color: #be185d; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.9em; border: 1px dashed #f472b6; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin: 0 4px;">// trích xuất mỗi câu</span>');
+    return text.replace(/(^|[^:])\/\/\s*([^\r\n<]+)/g, function(match, prefix, content) {
+        return prefix + '<span style="color: #78350f; font-weight: 800;">// ' + content.trim() + '</span>';
+    });
 }
 
 async function initExamEngine() {
@@ -964,7 +965,7 @@ async function executeSubmitExam(isForceSubmit = false) {
         maDe: getMaDe(), 
         completionTime: completionTimeStr, 
         examName: EXAM_NAME, 
-        examTitle: EXAM_NAME,
+        examTitle: EXAM_NAME, 
         categoryId: currentCat,
         cat: currentCat,
         studentId: sId, 
