@@ -5,9 +5,16 @@
 // - ĐÃ SỬA TRIỆT ĐỂ LỖI GIẬT CỤC / KHÔNG CUỘN XUỐNG ĐƯỢC
 // - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
 // - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
+// - TÔ MÀU HỒNG NỔI BẬT CHO DÒNG CHỮ "// trích xuất mỗi câu"
 // =========================================================
 
 let hasInitExamEngine = false;
+
+// Hàm định dạng text: Tô màu hồng nhạt nổi bật cho dòng chữ "// trích xuất mỗi câu"
+function formatQuestionText(text) {
+    if (!text) return "";
+    return text.replace(/\/\/ trích xuất mỗi câu/g, '<span style="background-color: #fce7f3; color: #be185d; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.9em; border: 1px dashed #f472b6; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin: 0 4px;">// trích xuất mỗi câu</span>');
+}
 
 async function initExamEngine() {
     if (hasInitExamEngine) return;
@@ -342,7 +349,7 @@ function renderQuizLayout(questions, imageMap) {
             ANSWER_KEY[`q${q.id}`] = letters[q.correct]; 
             const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
             const imgHTML = buildImgHtml(imgUrl); 
-            html += `<div class="question-card" id="q-card-${q.id}"> <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${q.question}</div></div> ${imgHTML} <div class="options-list grid-2"> ${q.options.map((opt, oIdx) => `<label class="opt-label" id="opt-box-${q.id}-${letters[oIdx]}" onclick="selectOption(${q.id}, '${letters[oIdx]}')"> <input type="radio" name="q${q.id}" value="${letters[oIdx]}"> <span class="opt-circle">${letters[oIdx]}</span> <span class="opt-text">${opt}</span> </label>`).join('')} </div> </div>`; 
+            html += `<div class="question-card" id="q-card-${q.id}"> <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> ${imgHTML} <div class="options-list grid-2"> ${q.options.map((opt, oIdx) => `<label class="opt-label" id="opt-box-${q.id}-${letters[oIdx]}" onclick="selectOption(${q.id}, '${letters[oIdx]}')"> <input type="radio" name="q${q.id}" value="${letters[oIdx]}"> <span class="opt-circle">${letters[oIdx]}</span> <span class="opt-text">${opt}</span> </label>`).join('')} </div> </div>`; 
             displayIndex++; 
         }); 
     } 
@@ -359,7 +366,7 @@ function renderQuizLayout(questions, imageMap) {
                 ANSWER_KEY[subKey] = st.correct ? "Đúng" : "Sai"; 
                 rows += `<tr><td><b>${st.id})</b> ${st.statement}</td> <td width="70" align="center"><input type="radio" name="${subKey}" value="Đúng" onchange="onStatementChange('${subKey}')"></td> <td width="70" align="center"><input type="radio" name="${subKey}" value="Sai" onchange="onStatementChange('${subKey}')"></td></tr>`; 
             }); 
-            html += `<div class="question-card" id="q-card-${q.id}"> <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${q.question}</div></div> ${imgHTML} <div class="tf-table-box"> <table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Đúng</th><th>Sai</th></tr></thead><tbody>${rows}</tbody></table> </div> </div>`; 
+            html += `<div class="question-card" id="q-card-${q.id}"> <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> ${imgHTML} <div class="tf-table-box"> <table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Đúng</th><th>Sai</th></tr></thead><tbody>${rows}</tbody></table> </div> </div>`; 
             displayIndex++; 
         }); 
     } 
@@ -373,7 +380,7 @@ function renderQuizLayout(questions, imageMap) {
             const imgHTML = buildImgHtml(imgUrl); 
             html += `
             <div class="question-card" id="q-card-${q.id}"> 
-                <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${q.question}</div></div> 
+                <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> 
                 ${imgHTML} 
                 ${buildPart4RowHtml(q.id)}
             </div>`; 
@@ -398,7 +405,7 @@ function renderQuizLayout(questions, imageMap) {
             <div class="question-card" id="q-card-${q.id}"> 
                 <div class="q-header"> 
                     <div class="q-num-badge">${displayIndex}</div> 
-                    <div class="q-content-text">${q.question}</div> 
+                    <div class="q-content-text">${formatQuestionText(q.question)}</div> 
                 </div> 
                 ${imgHTML} 
                 ${buildPart4RowHtml(q.id)}
@@ -432,7 +439,7 @@ function scrollQPalette(offset) {
 function scrollToQuestion(qId) { 
     const target = document.getElementById(`q-card-${qId}`); 
     if (target) { 
-        // ĐÃ SỬA: Động tay trừ hao khoảng offset trên điện thoại và máy tính để banner k đè
+        // Động tay trừ hao khoảng offset trên điện thoại và máy tính để banner k đè
         const headerOffset = window.innerWidth <= 640 ? 115 : 135; 
         
         const elementPosition = target.getBoundingClientRect().top; 
@@ -470,7 +477,7 @@ function setupScrollObserver() {
     if (window._qCardObserver) {
         window._qCardObserver.disconnect();
     }
-    // ĐÃ SỬA: Thay margin từ -120px thành -145px khớp với headerOffset
+    // Thay margin từ -120px thành -145px khớp với headerOffset
     const options = { root: null, rootMargin: '-145px 0px -50% 0px', threshold: 0.1 }; 
     window._qCardObserver = new IntersectionObserver((entries) => { 
         let bestEntry = null;
@@ -1075,7 +1082,7 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
             const letters = ["A", "B", "C", "D"]; 
             const uAns = userAnswersState[`q${q.id}`]; 
             const cAns = ANSWER_KEY[`q${q.id}`]; 
-            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge" style="background:${uAns===cAns?'#22c55e':'#ef4444'}">${idx}</div><div class="q-content-text">${q.question}</div></div>${imgTag} <div class="options-list grid-2">${q.options.map((opt, oIdx) => { const L = letters[oIdx]; let cls = ""; let icon = ""; if (L === cAns) { cls = "is-correct"; icon = " ✓"; } else if (L === uAns && uAns !== cAns) { cls = "is-wrong"; icon = " ✗"; } return `<div class="opt-label ${cls}"><span class="opt-circle">${L}</span><span class="opt-text">${opt} <b>${icon}</b></span></div>`; }).join('')}</div>${explainText}</div>`; 
+            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge" style="background:${uAns===cAns?'#22c55e':'#ef4444'}">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="options-list grid-2">${q.options.map((opt, oIdx) => { const L = letters[oIdx]; let cls = ""; let icon = ""; if (L === cAns) { cls = "is-correct"; icon = " ✓"; } else if (L === uAns && uAns !== cAns) { cls = "is-wrong"; icon = " ✗"; } return `<div class="opt-label ${cls}"><span class="opt-circle">${L}</span><span class="opt-text">${opt} <b>${icon}</b></span></div>`; }).join('')}</div>${explainText}</div>`; 
         } else if (q.type === "true_false") { 
             let rows = ""; 
             q.statements.forEach(st => { 
@@ -1085,11 +1092,11 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
                 const ok = (uVal === cVal); 
                 rows += `<tr><td><b>${st.id})</b> ${st.statement}</td><td align="center">${uVal==="Đúng"?(ok?"🟢 Đúng":"🔴 Đúng (Sai)"):""}</td><td align="center">${uVal==="Sai"?(ok?"🟢 Sai":"🔴 Sai (Sai)"):""}</td><td align="center"><b>${cVal}</b></td></tr>`; 
             }); 
-            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${q.question}</div></div>${imgTag} <div class="tf-table-box"><table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Bạn chọn</th><th>Đ.Á Đúng</th></tr></thead><tbody>${rows}</tbody></table></div>${explainText}</div>`; 
+            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="tf-table-box"><table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Bạn chọn</th><th>Đ.Á Đúng</th></tr></thead><tbody>${rows}</tbody></table></div>${explainText}</div>`; 
         } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
             const uVal = userAnswersState[`q${q.id}`] || "(Để trống)"; 
             const cVal = ANSWER_KEY[`q${q.id}`]; 
-            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${q.question}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div>Tr.lời của bạn: <b>${uVal}</b></div><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div></div>${explainText}</div>`; 
+            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div>Tr.lời của bạn: <b>${uVal}</b></div><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div></div>${explainText}</div>`; 
         } 
         idx++; 
     }); 
