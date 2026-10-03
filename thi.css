@@ -376,7 +376,6 @@ mjx-container:not([display="true"]) {
 .section-text h3 { font-size: 1.12rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
 .section-text p { font-size: 0.88rem; opacity: 0.95; margin-top: 4px; font-weight: 600;}
 
-/* ĐẨY NỘI DUNG XUỐNG DƯỚI THANH MENU CỐ ĐỊNH */
 #quiz-content {
     padding-top: 135px;
 }
@@ -395,7 +394,7 @@ mjx-container:not([display="true"]) {
         0 1px 3px rgba(15, 23, 42, 0.03),
         inset 0 1px 0 rgba(255, 255, 255, 0.9); 
     position: relative; 
-    scroll-margin-top: 140px; /* Tăng khoảng cách cuộn tránh bị thanh menu che */
+    scroll-margin-top: 140px; 
     width: 100%;
     min-width: 0;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -432,7 +431,6 @@ mjx-container:not([display="true"]) {
     margin-top: 2px;
 }
 
-/* ĐÃ SỬA: Nội dung câu hỏi căn dãn đều 2 lề (justify) */
 .q-content-text { 
     font-size: 1.18rem; 
     line-height: 1.7; 
@@ -445,9 +443,27 @@ mjx-container:not([display="true"]) {
     min-width: 0;
     flex: 1; 
     letter-spacing: -0.15px;
-    text-align: justify;       /* Căn lề 2 bên */
-    text-justify: inter-word;  /* Phân bổ khoảng cách từ đẹp mắt */
-    hyphens: auto;             /* Hạn chế rớt dòng xấu */
+    text-align: justify;       
+    text-justify: inter-word;  
+    hyphens: auto;             
+}
+
+/* YÊU CẦU: Thêm class source-note-pink cho chú thích // đề thi */
+.source-note-pink {
+    display: inline-block;
+    background: rgba(253, 232, 232, 0.7);
+    color: #be185d;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 0.85em;
+    font-weight: 700;
+    font-style: italic;
+    border: 1px solid rgba(244, 114, 182, 0.3);
+    box-shadow: 0 4px 10px rgba(236, 72, 153, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    margin-top: 6px;
+    line-height: 1.4;
 }
 
 .options-list { 
@@ -459,7 +475,6 @@ mjx-container:not([display="true"]) {
 }
 @media(min-width: 650px) { .options-list.grid-2 { grid-template-columns: 1fr 1fr; } }
 
-/* PHƯƠNG ÁN A, B, C, D: NỔI BẬT DỄ BẤM */
 .opt-label { 
     display: flex; 
     align-items: center; 
@@ -508,7 +523,6 @@ mjx-container:not([display="true"]) {
 }
 .opt-label input[type="radio"] { display: none; }
 
-/* ĐÃ SỬA: Nội dung đáp án căn dãn đều 2 lề (justify) */
 .opt-text { 
     font-size: 1.1rem; 
     color: #1e293b; 
@@ -675,9 +689,8 @@ mjx-container:not([display="true"]) {
     .opt-circle { width: 28px; height: 28px; font-size: 0.92rem; } 
     .explanation-box { font-size: 0.98rem; padding: 12px 14px; } 
 
-    #quiz-content { padding-top: 115px; } /* Hạ bớt padding trên điện thoại */
+    #quiz-content { padding-top: 115px; }
 
-    /* ĐẢM BẢO HỌ TÊN - LỚP - SBD LUÔN HIỂN THỊ RÕ TRÊN MÀN HÌNH NHỎ */
     .user-avatar { display: none; }
     .u-row { font-size: 0.84rem; }
     .clock-pill { padding: 4px 8px; }
