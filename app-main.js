@@ -2,7 +2,7 @@
 // FILE: app-main.js
 // BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
 // NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI, ĐĂNG NHẬP HỌC SINH
-// ĐÃ BẢO VỆ CHỐNG LỖI MÀN HÌNH TRẮNG TRÊN IPHONE (SAFARI PRIVATE / ZALO)
+// ĐÃ ĐƯỢC CẬP NHẬT: CỬA SỔ ĐĂNG NHẬP LUÔN TRỐNG, KHÔNG LƯU DỮ LIỆU CŨ
 // =========================================================
 
 // BỘ ĐỆM BẢO VỆ LƯU TRỮ TRÊN IPHONE
@@ -15,7 +15,7 @@ const safeLocal = {
 const safeSession = {
     getItem(k) { try { return sessionStorage.getItem(k); } catch(e) { return null; } },
     setItem(k, v) { try { sessionStorage.setItem(k, v); } catch(e) {} },
-    removeItem(k) { try { sessionStorage.removeItem(k); } catch(e) {} }
+    removeItem(k) { try { localStorage.removeItem(k); } catch(e) {} }
 };
 
 let activeDayThemCatId = null;
@@ -644,6 +644,7 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
 
 // ==========================================
 // MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
+// (ĐÃ XÓA TRẮNG HOÀN TOÀN CÁC Ô NHẬP, KHÔNG TỰ ĐIỀN DỮ LIỆU CŨ)
 // ==========================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -673,32 +674,30 @@ function openStudentLoginModal(item, categoryId, event) {
         timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date);
     }
 
-    const isCleanSession = (safeLocal.getItem("last_submission_cleared") === "true") || 
-                           !safeLocal.getItem("saved_student_name");
-
+    // 1. LUÔN LUÔN XÓA RỖNG 100% TẤT CẢ CÁC Ô NHẬP LIỆU (CẢ TAB LỚP VÀ TỰ DO)
     const userIn = document.getElementById("st-username-input");
     const passIn = document.getElementById("st-password-input");
     const fNameIn = document.getElementById("st-free-name-input");
     const fClassIn = document.getElementById("st-free-class-input");
     const fSbdIn = document.getElementById("st-free-sbd-input");
 
-    if (isCleanSession) {
-        if (userIn) userIn.value = "";
-        if (passIn) passIn.value = "";
-        if (fNameIn) fNameIn.value = "";
-        if (fClassIn) fClassIn.value = "";
-        if (fSbdIn) fSbdIn.value = "";
-    } else {
-        const savedSbd = safeLocal.getItem("saved_student_sbd") || "";
-        const savedName = safeLocal.getItem("saved_student_name") || "";
-        const savedClass = safeLocal.getItem("saved_student_class") || "";
-
-        if (userIn) userIn.value = savedSbd || savedName;
-        if (passIn) passIn.value = "";
-        if (fNameIn) fNameIn.value = savedName;
-        if (fClassIn) fClassIn.value = savedClass;
-        if (fSbdIn) fSbdIn.value = savedSbd;
+    if (userIn) userIn.value = "";
+    if (passIn) {
+        passIn.value = "";
+        passIn.type = "password";
     }
+    if (fNameIn) fNameIn.value = "";
+    if (fClassIn) fClassIn.value = "";
+    if (fSbdIn) fSbdIn.value = "";
+
+    const eyeBtn = document.getElementById("st-eye-btn");
+    if (eyeBtn) eyeBtn.innerText = "👁️";
+
+    // 2. XÓA BỘ NHỚ LƯU TRỮ TẠM ĐỂ TRÁNH TRÌNH DUYỆT PHỤC HỒI DỮ LIỆU CŨ
+    safeLocal.removeItem("saved_student_sbd");
+    safeLocal.removeItem("saved_student_name");
+    safeLocal.removeItem("saved_student_class");
+    safeLocal.removeItem("current_exam_student");
 
     const allowFree = (item.allowFree !== false);
     const tabFree = document.getElementById("tab-st-free");
@@ -721,6 +720,22 @@ function openStudentLoginModal(item, categoryId, event) {
 function closeStudentLoginModal() {
     const modal = document.getElementById("student-login-modal");
     if (modal) modal.style.display = "none";
+
+    // Khi đóng cửa sổ, tự động xóa sạch các ô nhập
+    const userIn = document.getElementById("st-username-input");
+    const passIn = document.getElementById("st-password-input");
+    const fNameIn = document.getElementById("st-free-name-input");
+    const fClassIn = document.getElementById("st-free-class-input");
+    const fSbdIn = document.getElementById("st-free-sbd-input");
+
+    if (userIn) userIn.value = "";
+    if (passIn) passIn.value = "";
+    if (fNameIn) fNameIn.value = "";
+    if (fClassIn) fClassIn.value = "";
+    if (fSbdIn) fSbdIn.value = "";
+
+    const errBox = document.getElementById("st-login-error");
+    if (errBox) { errBox.style.display = "none"; errBox.innerText = ""; }
 }
 
 function switchStudentLoginMode(mode) {
@@ -831,10 +846,12 @@ function submitStudentLogin() {
         }
     }
 
+    // Không lưu lại thông số học sinh vào các khóa cố định để phiên sau luôn bắt đầu với form trắng
     safeLocal.removeItem("last_submission_cleared");
-    safeLocal.setItem("saved_student_sbd", finalSbd);
-    safeLocal.setItem("saved_student_name", finalName);
-    safeLocal.setItem("saved_student_class", finalClass);
+    safeLocal.removeItem("saved_student_sbd");
+    safeLocal.removeItem("saved_student_name");
+    safeLocal.removeItem("saved_student_class");
+
     safeLocal.setItem("current_exam_student", JSON.stringify({
         sbd: finalSbd,
         name: finalName,
