@@ -1,20 +1,12 @@
 // =========================================================
 // FILE: app-main.js
-// BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
-// NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI, ĐĂNG NHẬP HỌC SINH
-// NÂNG CẤP CHUYÊN BIỆT CHO MỤC: NHẮC NHỞ QUAN TRỌNG
-// 1. Nút ✏️ sửa chữ "Nhắc nhở quan trọng"
-// 2. Click Avatar mở 30 avatar mẫu hoặc chọn từ máy tính (tự upload Drive qua GAS)
-// 3. Click Badge ("MỚI", "HOT",...) mở menu đổi badge trực tiếp
-// 4. Nút ✏️ sửa tiêu đề nhắc nhở ("Lưu ý quan trọng: 11C còn 15 em...")
-// 5. Click vào bài viết mở trang xem/soạn thảo phong cách báo Dân trí:
-//    - Hiển thị Tác giả (có ô gõ vào)
-//    - Thời gian tự động từ hệ thống
-//    - Khung tải ảnh đại diện bài viết (tự động lưu vào Google Drive qua GAS)
-//    - Nội dung chi tiết & Lưu realtime lên Firebase
+// BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH & MỤC NHẮC NHỞ QUAN TRỌNG
+// 1. Tự động hiển thị ảnh bài viết khi mở báo (Hỗ trợ Google Drive GAS 100%)
+// 2. Khắc phục lỗi bấm "Sửa" tự động tắt giao diện
+// 3. Avatar click: Bảng chọn 20 avatar, chọn cỡ (Nhỏ -> Rất to), tải ảnh PC kèm lưu ý
 // =========================================================
 
-// BỘ ĐỆM BẢO VỆ LƯU TRỮ TRÊN IPHONE
+// BỘ ĐỆM BẢO VỆ LƯU TRỮ
 const safeLocal = {
     getItem(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
     setItem(k, v) { try { localStorage.setItem(k, v); } catch(e) {} },
@@ -32,15 +24,13 @@ let activeChinhKhoaRow1CatId = null;
 let activeChinhKhoaRow2CatId = null;
 let activeDantriCatId = null;
 
-// Biến quản lý bài viết Dân trí đang xem / soạn thảo
 let currentActiveArticleItem = null;
 let currentActiveArticleCatId = "nhac-nho";
 let currentTargetAvatarItemId = null;
+let currentTargetAvatarCatId = "nhac-nho";
 
-// Quản lý trạng thái mở/đóng gom gọn của từng lớp
 const categoryExpandedState = {};
 
-// Bộ nhớ đệm thống kê lượt truy cập
 let siteVisitStatsCache = {
     todayCount: 0,
     yesterdayCount: 0,
@@ -49,6 +39,41 @@ let siteVisitStatsCache = {
     hourlyCounts: Array(24).fill(0),
     dailyCounts: []
 };
+
+// 20 AVATAR MẪU CHỌN LỌC ĐẸP MẮT
+const PRESET_20_AVATARS = [
+    "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg", // Khủng long bạo chúa
+    "https://cdn-icons-png.flaticon.com/512/3755/3755251.png", // Khủng long xanh
+    "https://cdn-icons-png.flaticon.com/512/3062/3062279.png", // Khủng long con
+    "https://cdn-icons-png.flaticon.com/512/4144/4144683.png", // Khủng long cam
+    "https://cdn-icons-png.flaticon.com/512/4144/4144672.png", // Rồng xanh
+    "https://cdn-icons-png.flaticon.com/512/2996/2996841.png", // Cúp vàng
+    "https://cdn-icons-png.flaticon.com/512/10061/10061805.png", // Robot học tập
+    "https://cdn-icons-png.flaticon.com/512/9308/9308006.png", // Phi hành gia
+    "https://cdn-icons-png.flaticon.com/512/9068/9068641.png", // Chim cánh cụt
+    "https://cdn-icons-png.flaticon.com/512/9181/9181285.png", // Mèo thần tài
+    "https://cdn-icons-png.flaticon.com/512/3074/3074058.png", // Thỏ trắng
+    "https://cdn-icons-png.flaticon.com/512/4243/4243003.png", // Cáo thông thái
+    "https://cdn-icons-png.flaticon.com/512/3135/3135810.png", // Giáo viên nam
+    "https://cdn-icons-png.flaticon.com/512/4144/4144724.png", // Học sinh nam
+    "https://cdn-icons-png.flaticon.com/512/4144/4144773.png", // Học sinh nữ
+    "https://cdn-icons-png.flaticon.com/512/4762/4762295.png", // Bằng khen
+    "https://cdn-icons-png.flaticon.com/512/6168/6168641.png", // Mục tiêu điểm 10
+    "https://cdn-icons-png.flaticon.com/512/3253/3253258.png", // Tên lửa
+    "https://cdn-icons-png.flaticon.com/512/2275/2275069.png", // Não bộ tư duy
+    "https://cdn-icons-png.flaticon.com/512/4006/4006511.png"  // Sách tri thức
+];
+
+// HÀM CHUYỂN LINK GOOGLE DRIVE THÀNH LINK ẢNH TRỰC TIẾP (HIỂN THỊ 100%)
+function toDirectGoogleDriveImageUrl(url) {
+    if (!url) return "";
+    let cleanUrl = String(url).trim();
+    let m = cleanUrl.match(/(?:file\/d\/|id=|open\?id=|\/d\/)([a-zA-Z0-9_-]{25,})/);
+    if (m && m[1]) {
+        return `https://lh3.googleusercontent.com/d/${m[1]}`;
+    }
+    return cleanUrl;
+}
 
 // Khởi chạy khi DOM sẵn sàng
 document.addEventListener("DOMContentLoaded", async function() {
@@ -59,12 +84,9 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     refreshAllViews();
     await loadDataFromFirebase();
-
-    // Bắt đầu theo dõi và đếm lượt truy cập website
     initSiteVisitTracker();
 });
 
-// Gán ảnh Banner & Avatar
 function initBannerAndAvatars() {
     const topImg = document.getElementById("top-banner-img");
     const avatarImg = document.getElementById("web-avatar-img");
@@ -72,21 +94,15 @@ function initBannerAndAvatars() {
 
     if (topImg) {
         topImg.src = TOP_BANNER_URL || "https://files.catbox.moe/cf5o9u.jpg";
-        topImg.onerror = function() {
-            this.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200";
-        };
+        topImg.onerror = function() { this.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200"; };
     }
     if (avatarImg) {
         avatarImg.src = WEB_AVATAR_URL || "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150";
-        avatarImg.onerror = function() {
-            this.src = "https://cdn-icons-png.flaticon.com/512/3135/3135768.png";
-        };
+        avatarImg.onerror = function() { this.src = "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"; };
     }
     if (botImg) {
         botImg.src = BOTTOM_BANNER_URL || "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000";
-        botImg.onerror = function() {
-            this.src = "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1000";
-        };
+        botImg.onerror = function() { this.src = "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1000"; };
     }
 }
 
@@ -130,10 +146,7 @@ async function loadDataFromFirebase() {
             DAY_THEM_CATEGORIES.forEach(cat => {
                 if (customLinksData[cat.id]) {
                     let list = Object.keys(customLinksData[cat.id]).map(k => ({
-                        id: k,
-                        firebaseId: k,
-                        ...customLinksData[cat.id][k],
-                        categoryId: cat.id
+                        id: k, firebaseId: k, ...customLinksData[cat.id][k], categoryId: cat.id
                     }));
                     cat.links = sortLinksNewestFirst(list);
                 } else if (cat.links) {
@@ -144,10 +157,7 @@ async function loadDataFromFirebase() {
             CHINH_KHOA_CATEGORIES.forEach(cat => {
                 if (customLinksData[cat.id]) {
                     let list = Object.keys(customLinksData[cat.id]).map(k => ({
-                        id: k,
-                        firebaseId: k,
-                        ...customLinksData[cat.id][k],
-                        categoryId: cat.id
+                        id: k, firebaseId: k, ...customLinksData[cat.id][k], categoryId: cat.id
                     }));
                     cat.links = sortLinksNewestFirst(list);
                 } else if (cat.links) {
@@ -157,10 +167,7 @@ async function loadDataFromFirebase() {
 
             if (customLinksData["kho-tai-lieu"]) {
                 let list = Object.keys(customLinksData["kho-tai-lieu"]).map(k => ({
-                    id: k,
-                    firebaseId: k,
-                    ...customLinksData["kho-tai-lieu"][k],
-                    categoryId: "kho-tai-lieu"
+                    id: k, firebaseId: k, ...customLinksData["kho-tai-lieu"][k], categoryId: "kho-tai-lieu"
                 }));
                 KHO_TAI_LIEU_FOLDER.links = sortLinksNewestFirst(list);
             } else if (KHO_TAI_LIEU_FOLDER.links) {
@@ -270,16 +277,10 @@ function renderDantriDropdown() {
     panel.classList.add("show");
 }
 
-// =========================================================
-// MỤC: NHẮC NHỞ QUAN TRỌNG (ĐƯỢC NÂNG CẤP TOÀN DIỆN)
-// =========================================================
-
-// 1. Sửa chữ "Nhắc nhở quan trọng"
 async function editReminderSectionTitle(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    const curTitle = (typeof REMINDER_SECTION_TITLE !== 'undefined' && REMINDER_SECTION_TITLE) ? REMINDER_SECTION_TITLE : "📌 Nhắc nhở quan trọng";
-    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Nhắc nhở quan trọng:", curTitle);
-    if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== curTitle) {
+    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Nhắc nhở quan trọng:", REMINDER_SECTION_TITLE);
+    if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== REMINDER_SECTION_TITLE) {
         REMINDER_SECTION_TITLE = newTitle.trim();
         const titleEl = document.getElementById("reminder-section-title-text");
         if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE;
@@ -301,8 +302,7 @@ function renderReminderSection() {
     const titleEl = document.getElementById("reminder-section-title-text");
     const editHeadBtn = document.getElementById("btn-edit-reminder-head");
 
-    const displayTitle = (typeof REMINDER_SECTION_TITLE !== 'undefined' && REMINDER_SECTION_TITLE) ? REMINDER_SECTION_TITLE : "📌 Nhắc nhở quan trọng";
-    if (titleEl) titleEl.innerText = displayTitle;
+    if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE || "📌 Nhắc nhở quan trọng";
     if (editHeadBtn) {
         editHeadBtn.style.display = isAdminLoggedIn ? "inline-flex" : "none";
     }
@@ -399,7 +399,6 @@ function renderDayThemSection() {
     if (!bar || !panel || !list) return;
 
     bar.innerHTML = "";
-
     DAY_THEM_CATEGORIES.forEach(cat => {
         const isActive = (activeDayThemCatId === cat.id);
         const btn = document.createElement("button");
@@ -414,7 +413,6 @@ function renderDayThemSection() {
     });
 
     list.innerHTML = "";
-
     if (!activeDayThemCatId) {
         panel.classList.remove("show");
         return;
@@ -562,10 +560,13 @@ function buildCardHtmlString(item, categoryId) {
     const itemId = item.id || item.firebaseId || `item_${Date.now()}`;
     const quizId = extractQuizIdFromItem(item) || itemId;
     const badge = item.badgeText || (item.isHot ? "HOT" : "NONE");
-    const avatar = item.avatar || PRESET_AVATARS[0];
+    const avatar = toDirectGoogleDriveImageUrl(item.avatar) || PRESET_20_AVATARS[0];
     const encodedData = encodeURIComponent(JSON.stringify(item));
     const isAllowFree = (item.allowFree !== false);
     const isReminder = (categoryId === "nhac-nho");
+    
+    // Đọc kích cỡ avatar được lưu: mặc định 48px
+    const avatarSize = parseInt(item.avatarSize, 10) || 48;
 
     let badgeClass = "badge-empty";
     if (badge === "HOT") badgeClass = "b-hot";
@@ -584,23 +585,44 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
-    // 30 AVATAR PRESET HTML CHO KHỐI NHẮC NHỞ
+    // BẢNG ĐIỀU KHIỂN AVATAR: 4 KÍCH CỠ + 20 AVATAR MẪU + TẢI TỪ MÁY TÍNH
     let avatarPopoverHtml = "";
-    if (isReminder) {
+    if (isAdminLoggedIn) {
         avatarPopoverHtml = `
-            <div class="avatar-selection-popover" id="avatar-popover-${itemId}">
+            <div class="avatar-selection-popover" id="avatar-popover-${itemId}" onclick="event.stopPropagation()">
                 <div class="avatar-popover-header">
-                    <span>🖼️ Chọn Avatar nhanh:</span>
-                    <button type="button" onclick="closeAvatarPopover('${itemId}', event)" style="background:none; border:none; font-size:14px; font-weight:900; color:#94a3b8; cursor:pointer;">✕</button>
+                    <span>🖼️ Cấu hình Avatar & Kích thước</span>
+                    <button type="button" class="btn-close-popover-x" onclick="closeAvatarPopover('${itemId}', event)">✕</button>
                 </div>
-                <div class="avatar-grid-30">
-                    ${PRESET_AVATARS.map((url, i) => `
-                        <img src="${url}" class="avatar-mini-thumb" onclick="selectReminderPresetAvatar('${categoryId}', '${itemId}', '${url}', event)" title="Avatar ${i+1}">
+                
+                <!-- BỘ CHỌN KÍCH CỠ AVATAR: NHỎ ĐẾN RẤT TO -->
+                <div class="avatar-size-control-box">
+                    <div class="size-control-label">📏 Kích cỡ hiển thị avatar:</div>
+                    <div class="avatar-size-pills">
+                        <button type="button" class="size-pill-btn ${avatarSize === 38 ? 'active' : ''}" onclick="changeAvatarSize('${categoryId}', '${itemId}', 38, event)">🟢 Nhỏ (38px)</button>
+                        <button type="button" class="size-pill-btn ${avatarSize === 48 ? 'active' : ''}" onclick="changeAvatarSize('${categoryId}', '${itemId}', 48, event)">🔵 Vừa (48px)</button>
+                        <button type="button" class="size-pill-btn ${avatarSize === 62 ? 'active' : ''}" onclick="changeAvatarSize('${categoryId}', '${itemId}', 62, event)">🟠 To (62px)</button>
+                        <button type="button" class="size-pill-btn ${avatarSize === 78 ? 'active' : ''}" onclick="changeAvatarSize('${categoryId}', '${itemId}', 78, event)">🔴 Rất to (78px)</button>
+                    </div>
+                </div>
+
+                <div class="avatar-palette-title">🎨 Chọn trong 20 Avatar mẫu:</div>
+                <div class="avatar-grid-20">
+                    ${PRESET_20_AVATARS.map((url, i) => `
+                        <div class="avatar-thumb-wrapper ${avatar === url ? 'current-selected' : ''}" onclick="selectItemAvatar('${categoryId}', '${itemId}', '${url}', event)">
+                            <img src="${url}" class="avatar-mini-thumb" title="Avatar ${i+1}">
+                        </div>
                     `).join('')}
                 </div>
-                <button type="button" class="btn-upload-pc-avatar" onclick="triggerReminderUploadPC('${itemId}', event)">
-                    📁 Tải ảnh từ máy tính (lưu Drive)
-                </button>
+
+                <div class="avatar-upload-pc-box">
+                    <button type="button" class="btn-upload-pc-avatar" onclick="triggerItemAvatarUploadPC('${categoryId}', '${itemId}', event)">
+                        📁 Tải ảnh từ máy tính (lưu Google Drive)
+                    </button>
+                    <div class="avatar-upload-note">
+                        💡 <b>Chú ý cỡ ảnh:</b> Khuyên dùng ảnh vuông tỉ lệ <b>1:1</b> (độ phân giải 200x200 đến 800x800px, dung lượng &lt; 5MB, định dạng PNG/JPG/WebP) để ảnh hiển thị chuẩn đẹp, sắc nét nhất và không bị méo.
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -653,13 +675,13 @@ function buildCardHtmlString(item, categoryId) {
                     <button type="button" class="tool-btn tool-btn-down" onclick="moveItemOrder('${categoryId}', '${itemId}', 'down', event)" title="Xuống dưới">▼</button>
                     <button type="button" class="tool-btn tool-btn-copy" onclick="openCopyModal('${categoryId}', '${itemId}', '${encodedData}', event)" title="Nhân bản sang lớp khác">📋</button>
                     <button type="button" class="tool-btn tool-btn-move" onclick="openMoveModal('${categoryId}', '${itemId}', '${encodedData}', event)" title="Chuyển lớp">🔄</button>
-                    <button type="button" class="tool-btn tool-btn-edit" onclick="renameItem('${categoryId}', '${itemId}', ${isDoc}, '${(item.title || "").replace(/'/g, "\\'")}', event)" title="Sửa tên">✏️</button>
+                    <button type="button" class="tool-btn tool-btn-edit" onclick="${isReminder ? `openDantriArticleModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${categoryId}', event, true)` : `renameItem('${categoryId}', '${itemId}', ${isDoc}, '${(item.title || "").replace(/'/g, "\\'")}', event)`}" title="Sửa bài">✏️</button>
                     <button type="button" class="tool-btn tool-btn-delete" onclick="deleteItem('${categoryId}', '${itemId}', event)" title="Xóa vĩnh viễn">🗑️</button>
                 </div>
             </div>
 
             <div class="admin-card-bottom-row" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
-                <div class="exam-thumb-box" ${isReminder ? `onclick="openReminderAvatarPicker('${itemId}', event)" title="Ấn để chọn 30 Avatar đẹp hoặc tải từ máy tính"` : ''} style="${isReminder ? 'cursor:pointer;' : ''}">
+                <div class="exam-thumb-box" onclick="openItemAvatarPicker('${itemId}', event)" title="Ấn để chọn 20 Avatar mẫu, đổi kích thước từ nhỏ đến rất to, hoặc tải từ máy tính" style="width: ${avatarSize}px; height: ${avatarSize}px; cursor: pointer;">
                     <img src="${avatar}" class="exam-thumb" alt="icon">
                     ${avatarPopoverHtml}
                 </div>
@@ -679,10 +701,14 @@ function buildCardHtmlString(item, categoryId) {
                         </div>
                         <span class="exam-title-text">${item.title}</span>
                         ${isReminder ? `
-                            <button type="button" class="btn-edit-inline-title" onclick="renameItem('${categoryId}', '${itemId}', true, '${(item.title || "").replace(/'/g, "\\'")}', event)" title="Sửa tiêu đề này">
+                            <button type="button" class="btn-edit-inline-title" onclick="openDantriArticleModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${categoryId}', event, true)" title="Chỉnh sửa bài viết">
                                 ✏️ Sửa
                             </button>
-                        ` : ''}
+                        ` : `
+                            <button type="button" class="btn-edit-inline-title" onclick="renameItem('${categoryId}', '${itemId}', ${isDoc}, '${(item.title || "").replace(/'/g, "\\'")}', event)" title="Sửa tên tiêu đề">
+                                ✏️ Sửa
+                            </button>
+                        `}
                     </div>
                     <div class="exam-date">📅 ${item.date || "---"}</div>
                     ${timeBoxHtml}
@@ -694,7 +720,7 @@ function buildCardHtmlString(item, categoryId) {
 
     return `
     <div class="exam-card" id="card-${itemId}" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
-        <div class="exam-thumb-box">
+        <div class="exam-thumb-box" style="width: ${avatarSize}px; height: ${avatarSize}px;">
             <img src="${avatar}" class="exam-thumb" alt="icon">
         </div>
         <div class="exam-info">
@@ -725,18 +751,14 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
 
     const item = JSON.parse(decodeURIComponent(stringifiedData));
 
-    // 5. Nếu click vào bài viết ở mục Nhắc nhở quan trọng => mở modal giao diện Dân trí
     if (categoryId === "nhac-nho") {
         openDantriArticleModal(item, categoryId, event, false);
         return;
     }
 
     const url = decodeURIComponent(rawUrl || item.url || "");
-
     if (isDoc || categoryId === "tu-luan-padlet" || categoryId === "kho-tai-lieu" || !url.includes("thi.html")) {
-        if (url && url !== "#") {
-            window.open(url, "_blank");
-        }
+        if (url && url !== "#") window.open(url, "_blank");
         return;
     }
 
@@ -744,16 +766,18 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
 }
 
 // =========================================================
-// QUẢN LÝ AVATAR & UPLOAD GOOGLE DRIVE CHO MỤC NHẮC NHỞ
+// QUẢN LÝ AVATAR: 20 AVATAR MẪU, ĐỔI CỠ VÀ TẢI TỪ MÁY TÍNH
 // =========================================================
 
-function openReminderAvatarPicker(itemId, event) {
+function openItemAvatarPicker(itemId, event) {
     if (!isAdminLoggedIn) return;
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
-    document.querySelectorAll(".avatar-selection-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".avatar-selection-popover.show").forEach(p => {
+        if (p.id !== `avatar-popover-${itemId}`) p.classList.remove("show");
+    });
     const pop = document.getElementById(`avatar-popover-${itemId}`);
-    if (pop) pop.classList.add("show");
+    if (pop) pop.classList.toggle("show");
 }
 
 function closeAvatarPopover(itemId, event) {
@@ -762,7 +786,7 @@ function closeAvatarPopover(itemId, event) {
     if (pop) pop.classList.remove("show");
 }
 
-async function selectReminderPresetAvatar(categoryId, itemId, avatarUrl, event) {
+async function selectItemAvatar(categoryId, itemId, avatarUrl, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     closeAvatarPopover(itemId, event);
 
@@ -774,13 +798,29 @@ async function selectReminderPresetAvatar(categoryId, itemId, avatarUrl, event) 
         });
         window.location.reload();
     } catch(e) {
-        alert("❌ Lỗi khi đổi avatar!");
+        alert("❌ Lỗi khi đổi avatar: " + e.message);
     }
 }
 
-function triggerReminderUploadPC(itemId, event) {
+async function changeAvatarSize(categoryId, itemId, sizePx, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatarSize: sizePx })
+        });
+        window.location.reload();
+    } catch(e) {
+        alert("❌ Lỗi khi đổi cỡ avatar: " + e.message);
+    }
+}
+
+function triggerItemAvatarUploadPC(categoryId, itemId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     currentTargetAvatarItemId = itemId;
+    currentTargetAvatarCatId = categoryId;
     const fileInput = document.getElementById("reminder-custom-avatar-input");
     if (fileInput) {
         fileInput.value = "";
@@ -792,6 +832,7 @@ async function handleReminderCustomAvatarUploaded(fileInput) {
     if (!fileInput.files || fileInput.files.length === 0 || !currentTargetAvatarItemId) return;
     const file = fileInput.files[0];
     const itemId = currentTargetAvatarItemId;
+    const categoryId = currentTargetAvatarCatId || "nhac-nho";
 
     if (!GOOGLE_DRIVE_UPLOAD_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL.includes("DÁN_URL")) {
         alert("⚠️ Bạn chưa cấu hình GOOGLE_DRIVE_UPLOAD_GAS_URL trong app-config.js!");
@@ -816,10 +857,11 @@ async function handleReminderCustomAvatarUploaded(fileInput) {
 
             const result = await res.json();
             if (result.status === "success" && result.fileUrl) {
-                await fetch(`${FIREBASE_DB_URL}/custom_links/nhac-nho/${itemId}.json`, {
+                const directImgUrl = toDirectGoogleDriveImageUrl(result.fileUrl);
+                await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ avatar: result.fileUrl })
+                    body: JSON.stringify({ avatar: directImgUrl })
                 });
                 alert("🎉 Đã tải ảnh avatar từ máy tính lên Google Drive và cập nhật thành công!");
                 window.location.reload();
@@ -834,7 +876,7 @@ async function handleReminderCustomAvatarUploaded(fileInput) {
 }
 
 // =========================================================
-// GIAO DIỆN BÀI BÁO PHONG CÁCH BÁO DÂN TRÍ & SOẠN THẢO ADMIN
+// GIAO DIỆN BÀI BÁO DÂN TRÍ: TỰ ĐỘNG HIỆN ẢNH VÀ CHỐNG TẮT GIAO DIỆN
 // =========================================================
 
 function formatDantriDateTime(d = new Date()) {
@@ -863,9 +905,9 @@ function openDantriArticleModal(item, categoryId, event, startWithEdit = false) 
 
     const authorText = item.author || "Thầy Hoan";
     const titleText = item.articleTitle || item.title || "Lưu ý quan trọng";
-    const sapoText = item.sapo || `(Dân trí) - Thông báo quan trọng gửi tới toàn thể học sinh: ${titleText}.`;
+    const sapoText = item.sapo || `(Dân trí) - Thông báo quan trọng: ${titleText}.`;
     const timeText = item.articleTime || formatDantriDateTime(new Date(item.timestamp || Date.now()));
-    const bodyText = item.articleBody || "Nội dung thông báo chi tiết từ giáo viên. Các em chú ý theo dõi và thực hiện nghiêm túc.";
+    const bodyText = item.articleBody || "Nội dung chi tiết thông báo từ giáo viên. Các em chú ý theo dõi và thực hiện nghiêm túc.";
 
     if (viewTitle) viewTitle.innerText = titleText;
     if (viewAuthor) viewAuthor.innerText = authorText;
@@ -873,9 +915,21 @@ function openDantriArticleModal(item, categoryId, event, startWithEdit = false) 
     if (viewSapo) viewSapo.innerText = sapoText;
     if (viewBody) viewBody.innerText = bodyText;
 
-    if (item.articleImg) {
-        if (viewImg) viewImg.src = item.articleImg;
-        if (viewCaption) viewCaption.innerText = item.articleImgCaption || "Ảnh minh họa";
+    // TỰ ĐỘNG MỞ VÀ HIỂN THỊ ẢNH ĐẠI DIỆN NẾU CÓ LINK GOOGLE DRIVE HOẶC ẢNH
+    const rawImg = item.articleImg || item.articleImage || "";
+    if (rawImg && rawImg.trim() !== "") {
+        const directUrl = toDirectGoogleDriveImageUrl(rawImg);
+        if (viewImg) {
+            viewImg.src = directUrl;
+            viewImg.onerror = function() {
+                let m = rawImg.match(/(?:file\/d\/|id=|open\?id=|\/d\/)([a-zA-Z0-9_-]{25,})/);
+                if (m && m[1] && !this.dataset.triedThumb) {
+                    this.dataset.triedThumb = "true";
+                    this.src = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1200`;
+                }
+            };
+        }
+        if (viewCaption) viewCaption.innerText = item.articleImgCaption || "Ảnh đại diện bài viết";
         if (viewImgBox) viewImgBox.style.display = "block";
     } else {
         if (viewImgBox) viewImgBox.style.display = "none";
@@ -894,13 +948,15 @@ function openDantriArticleModal(item, categoryId, event, startWithEdit = false) 
     if (modal) modal.style.display = "flex";
 }
 
-function closeArticleModal() {
+function closeArticleModal(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
     const modal = document.getElementById("dantri-article-modal");
     if (modal) modal.style.display = "none";
     setArticleEditMode(false);
 }
 
-function toggleArticleEditMode() {
+function toggleArticleEditMode(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
     const editModeDiv = document.getElementById("dantri-article-edit-mode");
     const isCurrentlyEditing = (editModeDiv && editModeDiv.style.display === "block");
     setArticleEditMode(!isCurrentlyEditing);
@@ -910,6 +966,8 @@ function setArticleEditMode(isEdit) {
     const viewDiv = document.getElementById("dantri-article-view-mode");
     const editDiv = document.getElementById("dantri-article-edit-mode");
     const toggleBtn = document.getElementById("btn-toggle-article-edit");
+    const previewImgBox = document.getElementById("article-edit-preview-box");
+    const previewImg = document.getElementById("article-edit-preview-img");
 
     if (isEdit) {
         if (viewDiv) viewDiv.style.display = "none";
@@ -917,21 +975,70 @@ function setArticleEditMode(isEdit) {
         if (toggleBtn) toggleBtn.innerText = "👁️ Xem trước bài";
 
         const item = currentActiveArticleItem || {};
-        document.getElementById("edit-article-title").value = item.articleTitle || item.title || "";
-        document.getElementById("edit-article-author").value = item.author || "Thầy Hoan";
-        document.getElementById("edit-article-time").value = formatDantriDateTime(new Date());
-        document.getElementById("edit-article-sapo").value = item.sapo || "";
-        document.getElementById("edit-article-img-url").value = item.articleImg || "";
-        document.getElementById("edit-article-img-caption").value = item.articleImgCaption || "";
-        document.getElementById("edit-article-body").value = item.articleBody || "";
+        const titleVal = item.articleTitle || item.title || "";
+        const authorVal = item.author || "Thầy Hoan";
+        const timeVal = item.articleTime || formatDantriDateTime(new Date());
+        const sapoVal = item.sapo || "";
+        const imgVal = item.articleImg || "";
+        const captionVal = item.articleImgCaption || "";
+        const bodyVal = item.articleBody || "";
+
+        document.getElementById("edit-article-title").value = titleVal;
+        document.getElementById("edit-article-author").value = authorVal;
+        document.getElementById("edit-article-time").value = timeVal;
+        document.getElementById("edit-article-sapo").value = sapoVal;
+        document.getElementById("edit-article-img-url").value = imgVal;
+        document.getElementById("edit-article-img-caption").value = captionVal;
+        document.getElementById("edit-article-body").value = bodyVal;
+
+        // Cập nhật khung xem trước ảnh trong giao diện soạn thảo
+        if (imgVal && previewImgBox && previewImg) {
+            previewImg.src = toDirectGoogleDriveImageUrl(imgVal);
+            previewImgBox.style.display = "block";
+        } else if (previewImgBox) {
+            previewImgBox.style.display = "none";
+        }
     } else {
+        // Đồng bộ dữ liệu vừa gõ vào chế độ xem trước bài
+        const titleVal = document.getElementById("edit-article-title")?.value || "";
+        const authorVal = document.getElementById("edit-article-author")?.value || "Thầy Hoan";
+        const timeVal = document.getElementById("edit-article-time")?.value || "";
+        const sapoVal = document.getElementById("edit-article-sapo")?.value || "";
+        const imgVal = document.getElementById("edit-article-img-url")?.value || "";
+        const captionVal = document.getElementById("edit-article-img-caption")?.value || "";
+        const bodyVal = document.getElementById("edit-article-body")?.value || "";
+
+        const viewTitle = document.getElementById("article-view-title");
+        const viewAuthor = document.getElementById("article-view-author");
+        const viewTime = document.getElementById("article-view-time");
+        const viewSapo = document.getElementById("article-view-sapo");
+        const viewImgBox = document.getElementById("article-view-img-box");
+        const viewImg = document.getElementById("article-view-img");
+        const viewCaption = document.getElementById("article-view-caption");
+        const viewBody = document.getElementById("article-view-body");
+
+        if (titleVal && viewTitle) viewTitle.innerText = titleVal;
+        if (viewAuthor) viewAuthor.innerText = authorVal;
+        if (viewTime && timeVal) viewTime.innerText = timeVal;
+        if (viewSapo) viewSapo.innerText = sapoVal;
+        if (viewBody) viewBody.innerText = bodyVal;
+
+        if (imgVal && viewImgBox && viewImg) {
+            viewImg.src = toDirectGoogleDriveImageUrl(imgVal);
+            if (viewCaption) viewCaption.innerText = captionVal || "Ảnh đại diện bài viết";
+            viewImgBox.style.display = "block";
+        } else if (viewImgBox) {
+            viewImgBox.style.display = "none";
+        }
+
         if (viewDiv) viewDiv.style.display = "block";
         if (editDiv) editDiv.style.display = "none";
         if (toggleBtn) toggleBtn.innerText = "✏️ Chỉnh sửa";
     }
 }
 
-function cancelArticleEdit() {
+function cancelArticleEdit(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
     setArticleEditMode(false);
 }
 
@@ -940,6 +1047,8 @@ async function uploadArticleImageToDrive(input) {
     const file = input.files[0];
     const statusBox = document.getElementById("article-img-upload-status");
     const urlInput = document.getElementById("edit-article-img-url");
+    const previewBox = document.getElementById("article-edit-preview-box");
+    const previewImg = document.getElementById("article-edit-preview-img");
 
     if (!GOOGLE_DRIVE_UPLOAD_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL.includes("DÁN_URL")) {
         alert("⚠️ Bạn chưa cấu hình GOOGLE_DRIVE_UPLOAD_GAS_URL trong app-config.js!");
@@ -969,8 +1078,13 @@ async function uploadArticleImageToDrive(input) {
 
             const result = await res.json();
             if (result.status === "success" && result.fileUrl) {
-                if (urlInput) urlInput.value = result.fileUrl;
-                if (statusBox) statusBox.innerText = "✅ Tải ảnh lên Google Drive thành công!";
+                const directUrl = toDirectGoogleDriveImageUrl(result.fileUrl);
+                if (urlInput) urlInput.value = directUrl;
+                if (previewBox && previewImg) {
+                    previewImg.src = directUrl;
+                    previewBox.style.display = "block";
+                }
+                if (statusBox) statusBox.innerText = "✅ Tải ảnh lên Google Drive thành công! Ảnh đã sẵn sàng hiển thị.";
             } else {
                 throw new Error(result.message || "Máy chủ Drive không trả về URL");
             }
@@ -982,7 +1096,8 @@ async function uploadArticleImageToDrive(input) {
     reader.readAsDataURL(file);
 }
 
-async function saveArticleToFirebase() {
+async function saveArticleToFirebase(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
     if (!currentActiveArticleItem) return;
 
     const btn = document.getElementById("btn-save-article-firebase");
@@ -990,7 +1105,7 @@ async function saveArticleToFirebase() {
     const authorVal = document.getElementById("edit-article-author").value.trim() || "Thầy Hoan";
     const timeVal = document.getElementById("edit-article-time").value.trim() || formatDantriDateTime(new Date());
     const sapoVal = document.getElementById("edit-article-sapo").value.trim();
-    const imgUrlVal = document.getElementById("edit-article-img-url").value.trim();
+    const rawImgVal = document.getElementById("edit-article-img-url").value.trim();
     const captionVal = document.getElementById("edit-article-img-caption").value.trim();
     const bodyVal = document.getElementById("edit-article-body").value.trim();
 
@@ -1002,13 +1117,15 @@ async function saveArticleToFirebase() {
     btn.disabled = true;
     btn.innerText = "⏳ Đang lưu bài...";
 
+    const directImgVal = toDirectGoogleDriveImageUrl(rawImgVal);
+
     const payload = {
         title: titleVal,
         articleTitle: titleVal,
         author: authorVal,
         articleTime: timeVal,
         sapo: sapoVal,
-        articleImg: imgUrlVal,
+        articleImg: directImgVal,
         articleImgCaption: captionVal,
         articleBody: bodyVal
     };
@@ -1033,7 +1150,6 @@ async function saveArticleToFirebase() {
 
 // ==========================================
 // MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
-// (LUÔN XÓA RỖNG Ô NHẬP, TRÁNH LẪN DỮ LIỆU CŨ)
 // ==========================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -1052,10 +1168,7 @@ function openStudentLoginModal(item, categoryId, event) {
     const mainTitleEl = document.getElementById("st-modal-main-title");
 
     const catName = getCategoryDisplayName(targetCatId);
-    if (mainTitleEl) {
-        mainTitleEl.innerText = `Đăng Nhập Làm Bài Thi: ${catName}`;
-    }
-
+    if (mainTitleEl) mainTitleEl.innerText = `Đăng Nhập Làm Bài Thi: ${catName}`;
     if (nameEl) nameEl.innerText = item.title;
     if (errBox) { errBox.style.display = "none"; errBox.innerText = ""; }
 
@@ -1070,10 +1183,7 @@ function openStudentLoginModal(item, categoryId, event) {
     const fSbdIn = document.getElementById("st-free-sbd-input");
 
     if (userIn) userIn.value = "";
-    if (passIn) {
-        passIn.value = "";
-        passIn.type = "password";
-    }
+    if (passIn) { passIn.value = ""; passIn.type = "password"; }
     if (fNameIn) fNameIn.value = "";
     if (fClassIn) fClassIn.value = "";
     if (fSbdIn) fSbdIn.value = "";
@@ -1288,7 +1398,7 @@ async function selectBadgeOption(categoryId, itemId, badgeType, event) {
 }
 
 // =========================================================
-// HỆ THỐNG THEO DÕI VÀ THỐNG KÊ LƯỢT TRUY CẬP (VISITOR TRACKER)
+// THỐNG KÊ LƯỢT TRUY CẬP WEBSITE
 // =========================================================
 
 function getVNDateKey(d = new Date()) {
@@ -1311,9 +1421,7 @@ function getVNHour(d = new Date()) {
 function formatVNDateDisplay(dateStr) {
     if (!dateStr) return "";
     let parts = String(dateStr).split('-');
-    if (parts.length === 3) {
-        return `${parts[2]}/${parts[1]}`;
-    }
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
     return dateStr;
 }
 
@@ -1343,7 +1451,6 @@ async function initSiteVisitTracker() {
 async function recordSiteVisit(todayKey, hour) {
     try {
         const hourStr = String(hour).padStart(2, '0');
-
         const dayRes = await fetch(`${FIREBASE_DB_URL}/site_visits/days/${todayKey}.json`).catch(() => null);
         let dayData = (dayRes && dayRes.ok) ? await dayRes.json() : null;
 
@@ -1430,19 +1537,10 @@ async function fetchAndRenderVisitStats(isSilent = false) {
 
         if (allTimeTotal < weekCount) allTimeTotal = weekCount;
 
-        siteVisitStatsCache = {
-            todayCount,
-            yesterdayCount,
-            weekCount,
-            totalCount: allTimeTotal,
-            hourlyCounts,
-            dailyCounts
-        };
+        siteVisitStatsCache = { todayCount, yesterdayCount, weekCount, totalCount: allTimeTotal, hourlyCounts, dailyCounts };
 
         const badgeNumber = document.getElementById("visit-today-count");
-        if (badgeNumber) {
-            badgeNumber.innerText = todayCount.toLocaleString("vi-VN");
-        }
+        if (badgeNumber) badgeNumber.innerText = todayCount.toLocaleString("vi-VN");
 
         const kpiToday = document.getElementById("kpi-visit-today");
         const kpiYest = document.getElementById("kpi-visit-yesterday");
@@ -1493,9 +1591,7 @@ function renderHourlyBars(hourlyCounts, currentHour) {
 
     setTimeout(() => {
         const curEl = container.querySelector(".hourly-bar-col.is-current");
-        if (curEl) {
-            curEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        }
+        if (curEl) curEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }, 150);
 }
 
@@ -1568,7 +1664,7 @@ async function refreshVisitStatsData() {
     if (btn) { btn.innerText = "🔄 Cập nhật"; btn.disabled = false; }
 }
 
-// SỰ KIỆN TOÀN CỤC: THU LẠI CÁC POPUP KHI CLICK RA NGOÀI
+// SỰ KIỆN CLICK TOÀN CỤC (CHỐNG TỰ ĐỘNG TẮT KHI BẤM BÊN TRONG BẢNG)
 document.addEventListener("click", function(event) {
     const adminWrapper = event.target.closest(".admin-controls-wrapper");
     if (!adminWrapper) {
@@ -1598,9 +1694,10 @@ document.addEventListener("click", function(event) {
         }
     }
 
+    // CHỐNG TẮT MODAL BÀI BÁO NGOÀI Ý MUỐN: CHỈ TẮT KHI BẤM CHÍNH XÁC VÀO PHẦN ĐỆM NỀN TỐI
     const articleModal = document.getElementById("dantri-article-modal");
     if (articleModal && articleModal.style.display === "flex") {
-        if (event.target === articleModal) {
+        if (event.target.id === "dantri-article-modal") {
             closeArticleModal();
         }
     }
