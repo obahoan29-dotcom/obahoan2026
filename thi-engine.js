@@ -2,9 +2,10 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// - ĐÃ SỬA: ĐỊNH DẠNG DÒNG TRÍCH XUẤT ĐỀ THI SAU DẤU // THÀNH IN ĐẬM NÉT VÀ MÀU NÂU
+// - ĐỊNH DẠNG DÒNG TRÍCH XUẤT ĐỀ THI SAU DẤU // THÀNH IN ĐẬM NÉT VÀ MÀU NÂU
 // - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
 // - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
+// - TỐI ƯU OFFSET SCROLL TƯƠNG THÍCH VỚI TOP BANNER CO GỌN
 // =========================================================
 
 let hasInitExamEngine = false;
@@ -440,8 +441,8 @@ function scrollQPalette(offset) {
 function scrollToQuestion(qId) { 
     const target = document.getElementById(`q-card-${qId}`); 
     if (target) { 
-        // Động tay trừ hao khoảng offset trên điện thoại và máy tính để banner k đè
-        const headerOffset = window.innerWidth <= 640 ? 115 : 135; 
+        // Đã cập nhật offset tương thích với top banner co gọn tối đa (máy tính 82px, điện thoại 72px)
+        const headerOffset = window.innerWidth <= 640 ? 72 : 82; 
         
         const elementPosition = target.getBoundingClientRect().top; 
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset; 
@@ -478,8 +479,8 @@ function setupScrollObserver() {
     if (window._qCardObserver) {
         window._qCardObserver.disconnect();
     }
-    // Thay margin từ -120px thành -145px khớp với headerOffset
-    const options = { root: null, rootMargin: '-145px 0px -50% 0px', threshold: 0.1 }; 
+    // Cập nhật rootMargin khớp với top banner co gọn (-85px)
+    const options = { root: null, rootMargin: '-85px 0px -50% 0px', threshold: 0.1 }; 
     window._qCardObserver = new IntersectionObserver((entries) => { 
         let bestEntry = null;
         entries.forEach(entry => { 
