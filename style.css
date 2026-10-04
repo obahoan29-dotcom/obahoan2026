@@ -92,19 +92,10 @@ body {
 /* THANH 3 TAB QUẢN TRỊ */
 .admin-tabs { display: flex; gap: 4px; margin-bottom: 14px; background: rgba(226, 232, 240, 0.7); padding: 4px; border-radius: 14px;}
 .admin-tab-btn { 
-    flex: 1; 
-    padding: 8px 3px; 
-    border: none; 
-    border-radius: 10px; 
-    font-weight: 800; 
-    font-size: 0.78rem; 
-    cursor: pointer; 
-    color: #475569; 
-    background: transparent; 
-    transition: 0.2s; 
-    font-family: inherit; 
-    white-space: nowrap;
-    text-align: center;
+    flex: 1; padding: 8px 3px; border: none; border-radius: 10px; 
+    font-weight: 800; font-size: 0.78rem; cursor: pointer; color: #475569; 
+    background: transparent; transition: 0.2s; font-family: inherit; 
+    white-space: nowrap; text-align: center;
 }
 .admin-tab-btn.active { background: #ffffff; color: var(--primary-blue); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
 
@@ -113,42 +104,18 @@ body {
 .admin-input-group select, .admin-input-group input[type="text"], .admin-input-group input[type="file"], .admin-input-group input[type="number"], .admin-input-group input[type="datetime-local"] { width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; background: #ffffff; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #0f172a;}
 .admin-input-group select:focus, .admin-input-group input:focus { border-color: var(--primary-blue); background: #fff; }
 
-.cat-quick-actions {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 6px;
-}
-.btn-cat-quick {
-    background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;
-    border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 800;
-    cursor: pointer; transition: 0.15s; font-family: inherit;
-}
+.cat-quick-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.btn-cat-quick { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.15s; font-family: inherit; }
 .btn-cat-quick:hover { background: #0284c7; color: #ffffff; border-color: #0284c7; }
 
-.category-checkbox-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
-    max-height: 145px; overflow-y: auto; padding: 7px;
-    background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px;
-}
-.category-checkbox-grid::-webkit-scrollbar { width: 4px; }
-.category-checkbox-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-.cat-checkbox-item {
-    display: flex; align-items: center; gap: 7px;
-    background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 9px;
-    padding: 6px 8px; cursor: pointer; font-size: 12px; font-weight: 700;
-    color: #1e293b; user-select: none; transition: all 0.15s ease;
-}
+.category-checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-height: 145px; overflow-y: auto; padding: 7px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; }
+.cat-checkbox-item { display: flex; align-items: center; gap: 7px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 9px; padding: 6px 8px; cursor: pointer; font-size: 12px; font-weight: 700; color: #1e293b; user-select: none; transition: all 0.15s ease; }
 .cat-checkbox-item:hover { border-color: #38bdf8; background: #f0f9ff; }
 .cat-checkbox-item.checked { border-color: #0284c7; background: #e0f2fe; color: #0369a1; }
-.cat-checkbox-item input[type="checkbox"] {
-    width: 15px; height: 15px; accent-color: #0284c7;
-    cursor: pointer; flex-shrink: 0; margin: 0;
-}
+.cat-checkbox-item input[type="checkbox"] { width: 15px; height: 15px; accent-color: #0284c7; cursor: pointer; flex-shrink: 0; margin: 0; }
 .cat-checkbox-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .avatar-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 6px; background: rgba(241, 245, 249, 0.75); border-radius: 12px; border: 1px solid #e2e8f0; }
-.avatar-picker-grid::-webkit-scrollbar { width: 4px; }
-.avatar-picker-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 .avatar-option { width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: 0.2s; background: #fff; padding: 2px;}
 .avatar-option:hover { transform: scale(1.1); }
 .avatar-option.selected { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3); transform: scale(1.06); background: #f0f9ff;}
@@ -305,7 +272,7 @@ body {
 }
 .visit-arrow { font-size: 13.5px; opacity: 0.95; }
 
-/* MODAL THỐNG KÊ CHI TIẾT TRUY CẬP */
+/* MODAL THỐNG KÊ TRUY CẬP */
 .visit-stats-modal-overlay {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -391,7 +358,7 @@ body {
 .dantri-sub-header { font-size: 15px; font-weight: 800; color: #047857; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
 /* ========================================================= */
-/* KHỐI NHẮC NHỞ QUAN TRỌNG VÀ CÔNG CỤ QUẢN TRỊ VIÊN MỚI     */
+/* KHỐI NHẮC NHỞ QUAN TRỌNG VÀ POPOVER AVATAR MỚI            */
 /* ========================================================= */
 .reminder-section { 
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 241, 242, 0.85) 100%); 
@@ -415,58 +382,103 @@ body {
 }
 .btn-edit-reminder-head:hover { background: #dc2626; color: #ffffff; }
 
-/* Nút sửa tiêu đề bài viết trong card */
 .btn-edit-inline-title {
     background: #e0f2fe; color: #0284c7; border: 1px solid #7dd3fc;
-    border-radius: 6px; padding: 2px 6px; font-size: 11px; font-weight: 800;
+    border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 800;
     cursor: pointer; transition: 0.15s; margin-left: 6px; flex-shrink: 0;
 }
 .btn-edit-inline-title:hover { background: #0284c7; color: #ffffff; }
 
-/* Popover chọn 30 avatar và upload ảnh máy tính */
+/* POPOVER CẤU HÌNH AVATAR VÀ KÍCH CỠ */
 .avatar-selection-popover {
     display: none; position: absolute; top: calc(100% + 8px); left: 0;
-    background: #ffffff; border-radius: 14px; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);
-    border: 1.5px solid #cbd5e1; padding: 12px; z-index: 999999;
-    width: 290px; animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background: #ffffff; border-radius: 16px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.32), 0 0 0 1px #cbd5e1;
+    border: 1.5px solid #94a3b8; padding: 14px; z-index: 999999;
+    width: 320px; animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: default; text-align: left;
 }
 .avatar-selection-popover.show { display: block; }
 .avatar-popover-header {
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 12.5px; font-weight: 800; color: #0f172a; margin-bottom: 8px;
-    border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;
+    font-size: 13px; font-weight: 900; color: #0f172a; margin-bottom: 10px;
+    border-bottom: 1.5px solid #f1f5f9; padding-bottom: 7px;
 }
-.avatar-grid-30 {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
-    max-height: 140px; overflow-y: auto; padding: 4px; background: #f8fafc;
-    border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 8px;
+.btn-close-popover-x {
+    background: none; border: none; font-size: 15px; font-weight: 900; color: #94a3b8; cursor: pointer; padding: 0 4px;
+}
+.btn-close-popover-x:hover { color: #ef4444; }
+
+/* Thanh điều chỉnh kích cỡ Avatar (từ nhỏ đến rất to) */
+.avatar-size-control-box {
+    background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px;
+    padding: 8px 10px; margin-bottom: 10px;
+}
+.size-control-label {
+    font-size: 11.5px; font-weight: 800; color: #334155; margin-bottom: 6px;
+}
+.avatar-size-pills {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;
+}
+.size-pill-btn {
+    background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px;
+    padding: 5px 6px; font-size: 11px; font-weight: 800; color: #475569;
+    cursor: pointer; transition: all 0.15s ease; text-align: center;
+}
+.size-pill-btn:hover { border-color: #0284c7; color: #0284c7; background: #f0f9ff; }
+.size-pill-btn.active {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff; border-color: #0284c7; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+}
+
+.avatar-palette-title {
+    font-size: 11.5px; font-weight: 800; color: #475569; margin-bottom: 6px;
+}
+.avatar-grid-20 {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    max-height: 165px; overflow-y: auto; padding: 6px; background: #f8fafc;
+    border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px;
+}
+.avatar-thumb-wrapper {
+    aspect-ratio: 1; border-radius: 10px; border: 2px solid transparent;
+    padding: 2px; cursor: pointer; transition: transform 0.15s ease; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+}
+.avatar-thumb-wrapper:hover { transform: scale(1.15); border-color: #38bdf8; z-index: 2; }
+.avatar-thumb-wrapper.current-selected {
+    border-color: #0284c7; background: #e0f2fe; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.35);
 }
 .avatar-mini-thumb {
-    width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover;
-    cursor: pointer; border: 1.5px solid transparent; background: #fff;
-    transition: transform 0.12s ease;
+    width: 100%; height: 100%; object-fit: cover; border-radius: 6px;
 }
-.avatar-mini-thumb:hover { transform: scale(1.18); border-color: #0284c7; z-index: 2; }
+
+.avatar-upload-pc-box {
+    border-top: 1px solid #f1f5f9; padding-top: 8px;
+}
 .btn-upload-pc-avatar {
-    width: 100%; padding: 7px; background: linear-gradient(135deg, #0284c7, #0369a1);
-    color: #ffffff; border: none; border-radius: 8px; font-size: 12px; font-weight: 800;
+    width: 100%; padding: 8px 10px; background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff; border: none; border-radius: 10px; font-size: 12px; font-weight: 800;
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: 0.15s; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
 }
-.btn-upload-pc-avatar:hover { filter: brightness(1.08); }
+.btn-upload-pc-avatar:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.avatar-upload-note {
+    font-size: 10.5px; line-height: 1.45; color: #64748b; margin-top: 6px;
+    background: #fffbeb; border: 1px solid #fed7aa; padding: 6px 8px; border-radius: 8px;
+}
 
 /* ========================================================= */
-/* GIAO DIỆN BÀI VIẾT PHONG CÁCH BÁO ĐIỆN TỬ DÂN TRÍ         */
+/* GIAO DIỆN BÀI VIẾT BÁO DÂN TRÍ VÀ KHUNG XEM TRƯỚC ẢNH     */
 /* ========================================================= */
 .dantri-article-modal {
-    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     z-index: 9999999; display: none; align-items: center; justify-content: center;
     padding: 14px; animation: fadeInModal 0.25s ease-out;
 }
 .dantri-article-card {
-    background: #ffffff; border-radius: 18px; max-width: 680px; width: 100%;
-    max-height: 92vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35);
-    border: 1px solid #cbd5e1; padding: 22px 24px; display: flex; flex-direction: column;
+    background: #ffffff; border-radius: 20px; max-width: 720px; width: 100%;
+    max-height: 92vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
+    border: 1.5px solid #cbd5e1; padding: 22px 24px; display: flex; flex-direction: column;
     animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .dantri-modal-top-bar {
@@ -504,13 +516,17 @@ body {
     font-size: 15.5px; font-weight: 700; line-height: 1.55; color: #1e293b;
     margin-bottom: 16px; border-left: 3.5px solid #0284c7; padding-left: 12px;
 }
+
+/* Khung hiển thị ảnh bài viết */
 .dantri-main-img-box {
-    width: 100%; border-radius: 12px; overflow: hidden; background: #f8fafc;
-    border: 1px solid #e2e8f0; margin-bottom: 16px;
+    width: 100%; border-radius: 14px; overflow: hidden; background: #f8fafc;
+    border: 1px solid #e2e8f0; margin-bottom: 16px; box-shadow: 0 3px 12px rgba(0,0,0,0.06);
 }
-.dantri-main-img-box img { width: 100%; max-height: 380px; object-fit: cover; display: block; }
+.dantri-main-img-box img {
+    width: 100%; max-height: 420px; object-fit: contain; display: block; background: #ffffff;
+}
 .dantri-img-caption {
-    font-size: 12px; color: #64748b; font-style: italic; padding: 6px 12px;
+    font-size: 12px; color: #64748b; font-style: italic; padding: 7px 12px;
     background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;
 }
 .dantri-body-content {
@@ -528,6 +544,14 @@ body {
     border-color: #0284c7; box-shadow: 0 0 0 2.5px rgba(2, 132, 199, 0.15);
 }
 
+.article-edit-preview-box {
+    margin-top: 8px; border-radius: 10px; overflow: hidden; border: 1px solid #cbd5e1;
+    background: #ffffff; max-height: 200px; display: none; text-align: center;
+}
+.article-edit-preview-box img {
+    max-height: 200px; width: 100%; object-fit: contain;
+}
+
 .folder-section { 
     background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-radius: 16px; box-shadow: var(--shadow-sm); overflow: visible; 
@@ -541,7 +565,7 @@ body {
 details[open] .folder-arrow { transform: rotate(90deg); color: var(--primary-blue); }
 .link-list { padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; background: transparent; width: 100%; }
 
-/* THẺ ĐỀ THI TRÊN TRANG CHỦ */
+/* THẺ BÀI VIẾT / ĐỀ THI */
 .exam-card { 
     position: relative; 
     background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -625,10 +649,12 @@ details[open] .folder-arrow { transform: rotate(90deg); color: var(--primary-blu
 .btn-time-sub-schedule { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
 .btn-time-sub-schedule:hover { background: #f59e0b; color: #fff; }
 
+/* KHUNG ẢNH AVATAR VÀ THAY ĐỔI CỠ LINH HOẠT */
 .exam-thumb-box { 
-    width: 44px; height: 50px; border-radius: 10px; overflow: hidden; 
+    border-radius: 12px; overflow: hidden; 
     flex-shrink: 0; border: 1.5px solid #e2e8f0; background: #f8fafc; 
-    position: relative;
+    position: relative; display: flex; align-items: center; justify-content: center;
+    transition: width 0.2s ease, height 0.2s ease;
 }
 .exam-thumb { width: 100%; height: 100%; object-fit: cover; }
 .exam-info { flex: 1; min-width: 0; padding-right: 4px; overflow: visible;}
@@ -1073,7 +1099,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     #dantri-nav-bar .dantri-nav-btn { min-height: 40px; padding: 5px 9px; font-size: 12px; }
     .full-width-nav-row .dantri-nav-btn { font-size: 13px; padding: 8px 4px; min-height: 44px; }
     .news-img-box { width: 68px; height: 46px; }
-    .exam-thumb-box { width: 38px; height: 44px; }
     .auth-input { width: 100px; }
     .admin-duration-select { font-size: 11.5px; padding: 6px 6px; }
     
@@ -1101,4 +1126,5 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .dantri-article-card { padding: 16px 14px; }
     .dantri-view-title { font-size: 18.5px; }
     .dantri-sapo-text { font-size: 14px; }
+    .avatar-selection-popover { width: 290px; }
 }
