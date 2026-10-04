@@ -1,5 +1,3 @@
---- START OF FILE text/javascript ---
-
 // =========================================================
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
