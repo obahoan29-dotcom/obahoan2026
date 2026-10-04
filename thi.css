@@ -25,35 +25,48 @@ html, body {
     padding-bottom: 28px; 
     -webkit-tap-highlight-color: transparent; 
     font-size: 15.5px;
-    line-height: 1.45; /* Dòng chữ giãn nhẹ nhàng, tự nhiên */
+    line-height: 1.45; /* Dòng chữ giãn nở nhẹ nhàng, thoáng đãng */
 }
 
 /* ========================================================= */
-/* XỬ LÝ CÔNG THỨC TOÁN MATHJAX: CO GỌN, CHỐNG TRÀN VÀ MƯỢT MÀ */
+/* XỬ LÝ CÔNG THỨC TOÁN MATHJAX: CĂN CHUẨN THẲNG HÀNG (BASELINE) */
 /* ========================================================= */
 
 mjx-container { 
-    max-width: 100% !important; 
-    box-sizing: border-box !important;
+    box-sizing: border-box;
+    outline: none;
 }
 
 mjx-container[jax="SVG"] {
-    max-width: 100% !important;
+    max-width: 100%;
 }
 
-mjx-container[jax="SVG"] > svg {
-    max-width: 100% !important;
-    height: auto !important;
+/* CÔNG THỨC TRONG DÒNG (INLINE MATH):
+   Để display: inline và vertical-align: baseline.
+   TUYỆT ĐỐI KHÔNG ép vertical-align: middle hay height: auto lên SVG,
+   để MathJax tự động áp dụng style="vertical-align: -0.xxxex" nội tại,
+   giúp ký hiệu, phân số, chỉ số nằm phẳng lì trên trục chân chữ */
+mjx-container:not([display="true"]) { 
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: baseline !important;
 }
 
-/* Công thức dạng khối: khoảng cách trên dưới vừa vặn, không tạo khoảng trắng lớn */
+mjx-container:not([display="true"]) > svg { 
+    display: inline !important;
+    overflow: visible !important;
+    /* Giữ nguyên vertical-align và height do MathJax tính toán chính xác */
+}
+
+/* Công thức dạng khối riêng biệt (display="true"): căn giữa và chống tràn ngang */
 mjx-container[jax="SVG"][display="true"],
 mjx-container[jax="CHTML"][display="true"] { 
     max-width: 100% !important; 
     overflow-x: auto !important; 
     overflow-y: hidden !important; 
     display: block !important;
-    margin: 6px auto !important;
+    margin: 8px auto !important;
     padding: 3px 0 !important;
     text-align: center !important;
     -webkit-overflow-scrolling: touch;
@@ -63,21 +76,6 @@ mjx-container[jax="SVG"][display="true"] > svg {
     display: block !important;
     margin: auto !important;
     max-width: 100% !important;
-    height: auto !important;
-}
-
-mjx-container:not([display="true"]) { 
-    display: inline-block !important;
-    max-width: 100% !important;
-    vertical-align: middle !important;
-    line-height: normal !important;
-}
-
-mjx-container:not([display="true"]) > svg { 
-    display: inline-block !important;
-    max-width: 100% !important;
-    height: auto !important;
-    vertical-align: middle !important;
 }
 
 .network-status-bar { 
@@ -416,13 +414,13 @@ mjx-container:not([display="true"]) > svg {
 }
 
 /* ========================================================= */
-/* THẺ CÂU HỎI: DÒNG CHỮ GIÃN THOẢNG HỢP LÝ, DỄ ĐỌC         */
+/* THẺ CÂU HỎI: DÒNG CHỮ GIÃN THOẢNG HỢP LÝ, CÔNG THỨC THẲNG HÀNG */
 /* ========================================================= */
 .question-card { 
     background: #ffffff; 
     border-radius: 15px; 
-    padding: 15px 16px; /* Giãn nhẹ lề thẻ câu hỏi */
-    margin-bottom: 13px; /* Khoảng cách giữa các câu vừa vặn */
+    padding: 15px 16px; 
+    margin-bottom: 13px; 
     border: 1.5px solid #cbd5e1; 
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04); 
     position: relative; 
@@ -461,10 +459,10 @@ mjx-container:not([display="true"]) > svg {
     margin-top: 2px;
 }
 
-/* Nội dung câu hỏi: line-height 1.46 tạo độ thoáng đãng */
+/* Nội dung câu hỏi: line-height 1.46 thoáng đãng, bám chuẩn baseline */
 .q-content-text { 
     font-size: 1.08rem; 
-    line-height: 1.46; /* Giãn dòng thoải mái, không quá sát */
+    line-height: 1.46; 
     color: #0f172a; 
     font-weight: 600; 
     white-space: pre-line; 
@@ -481,7 +479,7 @@ mjx-container:not([display="true"]) > svg {
 .options-list { 
     display: grid; 
     grid-template-columns: 1fr; 
-    gap: 8px; /* Khoảng cách giữa các phương án thoáng hơn */
+    gap: 8px; 
     width: 100%;
     min-width: 0;
 }
@@ -494,7 +492,7 @@ mjx-container:not([display="true"]) > svg {
     gap: 9px; 
     background: #ffffff; 
     border: 1.5px solid #e2e8f0; 
-    padding: 9px 12px; /* Tăng padding nhẹ để bấm êm ái */
+    padding: 9px 12px; 
     border-radius: 11px; 
     cursor: pointer; 
     transition: all 0.15s ease; 
@@ -539,7 +537,7 @@ mjx-container:not([display="true"]) > svg {
 .opt-text { 
     font-size: 1.02rem; 
     color: #1e293b; 
-    line-height: 1.4; /* Dòng chữ đáp án giãn đều */
+    line-height: 1.4; 
     font-weight: 600; 
     word-wrap: break-word;
     word-break: break-word;
@@ -691,7 +689,7 @@ mjx-container:not([display="true"]) > svg {
 @media(max-width: 640px) { 
     html, body { 
         font-size: 14.5px; 
-        line-height: 1.4; /* Điện thoại giãn dòng tự nhiên */
+        line-height: 1.4; 
     }
     .container { padding: 5px 7px; } 
     .card-panel { padding: 14px 12px; border-radius: 14px; margin-bottom: 12px; } 
@@ -708,7 +706,7 @@ mjx-container:not([display="true"]) > svg {
 
     .q-content-text { 
         font-size: 1.02rem; 
-        line-height: 1.42; /* Giãn thêm nhẹ, đọc rõ ràng */
+        line-height: 1.42; 
     } 
 
     .opt-label { 
@@ -719,7 +717,7 @@ mjx-container:not([display="true"]) > svg {
     .opt-circle { width: 22px; height: 22px; font-size: 0.82rem; } 
     .opt-text { 
         font-size: 0.96rem; 
-        line-height: 1.36; /* Đáp án giãn dòng vừa vặn */
+        line-height: 1.36; 
     } 
 
     .short-input-box { font-size: 0.98rem; padding: 8px 11px; } 
