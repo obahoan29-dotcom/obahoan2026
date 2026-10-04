@@ -113,7 +113,6 @@ body {
 .admin-input-group select, .admin-input-group input[type="text"], .admin-input-group input[type="file"], .admin-input-group input[type="number"], .admin-input-group input[type="datetime-local"] { width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; background: #ffffff; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #0f172a;}
 .admin-input-group select:focus, .admin-input-group input:focus { border-color: var(--primary-blue); background: #fff; }
 
-/* KHỐI CHECKBOX TÍCH CHỌN ĐỒNG THỜI NHIỀU LỚP */
 .cat-quick-actions {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 6px;
@@ -266,48 +265,26 @@ body {
     100% { filter: drop-shadow(0 0 22px rgba(253, 224, 71, 1)) drop-shadow(0 0 38px rgba(249, 115, 22, 0.95)) drop-shadow(0 0 50px rgba(239, 68, 68, 0.8)); }
 }
 
-/* ========================================================= */
-/* WIDGET NỔI ĐẾM LƯỢT TRUY CẬP WEBSITE CHÍNH (ĐÃ THU NHỎ 70%, TRONG SUỐT HIỆN ĐẠI, CHỮ SỐ NỔI BẬT) */
-/* ========================================================= */
+/* WIDGET TRUY CẬP */
 .site-visit-badge {
-    position: fixed;
-    top: 8px;
-    left: 8px;
-    z-index: 9998;
-    background: rgba(15, 23, 42, 0.32);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 30px;
-    padding: 6px 14px;
-    color: #ffffff;
+    position: fixed; top: 8px; left: 8px; z-index: 9998;
+    background: rgba(15, 23, 42, 0.32); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 30px;
+    padding: 6px 14px; color: #ffffff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.08);
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    font-size: 13px;
-    font-weight: 800;
-    transform: scale(0.7);
-    transform-origin: top left;
+    display: inline-flex; align-items: center; gap: 7px;
+    cursor: pointer; user-select: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 13px; font-weight: 800; transform: scale(0.7); transform-origin: top left;
 }
 .site-visit-badge:hover {
-    transform: scale(0.75);
-    background: rgba(15, 23, 42, 0.52);
+    transform: scale(0.75); background: rgba(15, 23, 42, 0.52);
     border-color: rgba(56, 189, 248, 0.7);
     box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35), inset 0 0 12px rgba(56, 189, 248, 0.2);
 }
-.site-visit-badge:active {
-    transform: scale(0.68);
-}
+.site-visit-badge:active { transform: scale(0.68); }
 .visit-pulse-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background-color: #22c55e;
-    box-shadow: 0 0 10px #22c55e;
+    width: 9px; height: 9px; border-radius: 50%;
+    background-color: #22c55e; box-shadow: 0 0 10px #22c55e;
     animation: visitDotPulse 1.5s infinite alternate;
 }
 @keyframes visitDotPulse {
@@ -317,23 +294,14 @@ body {
 .visit-icon { font-size: 15px; line-height: 1; }
 .visit-label { color: #f1f5f9; font-weight: 800; font-size: 13px; letter-spacing: -0.1px; }
 
-/* CHỮ ĐẾM SỐ LẦN TRUY CẬP: SẮC NÉT, ĐẬM ĐÀ, NỔI BẬT NỀN VÀNG RỰC RỠ TRÊN NỀN KÍNH TRONG SUỐT */
 .visit-number {
-    color: #ffe600;
-    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
-    font-variant-numeric: tabular-nums;
-    font-size: 17.5px;
-    font-weight: 900;
-    letter-spacing: 0.6px;
-    line-height: 1;
-    -webkit-text-stroke: 0.8px #b91c1c;
+    color: #ffe600; font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-variant-numeric: tabular-nums; font-size: 17.5px; font-weight: 900;
+    letter-spacing: 0.6px; line-height: 1; -webkit-text-stroke: 0.8px #b91c1c;
     text-shadow: 
-        -1.2px -1.2px 0 #b91c1c,  
-         1.2px -1.2px 0 #b91c1c,
-        -1.2px  1.2px 0 #b91c1c,
-         1.2px  1.2px 0 #b91c1c,
-         0 0 10px rgba(250, 204, 21, 0.95),
-         0 2px 5px rgba(0, 0, 0, 0.7);
+        -1.2px -1.2px 0 #b91c1c, 1.2px -1.2px 0 #b91c1c,
+        -1.2px 1.2px 0 #b91c1c, 1.2px 1.2px 0 #b91c1c,
+         0 0 10px rgba(250, 204, 21, 0.95), 0 2px 5px rgba(0, 0, 0, 0.7);
 }
 .visit-arrow { font-size: 13.5px; opacity: 0.95; }
 
@@ -345,18 +313,12 @@ body {
     padding: 14px; animation: fadeInModal 0.2s ease-out;
 }
 .visit-stats-modal-box {
-    background: #ffffff; border-radius: 20px;
-    max-width: 580px; width: 100%;
-    max-height: 90vh; overflow-y: auto;
-    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35);
-    border: 1px solid #cbd5e1; padding: 20px 22px;
-    display: flex; flex-direction: column; gap: 14px;
+    background: #ffffff; border-radius: 20px; max-width: 580px; width: 100%;
+    max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35);
+    border: 1px solid #cbd5e1; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px;
     animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.visit-modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px;
-}
+.visit-modal-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px; }
 .visit-modal-title { display: flex; align-items: center; gap: 10px; }
 .vm-icon {
     width: 38px; height: 38px; border-radius: 10px;
@@ -372,124 +334,50 @@ body {
 }
 .btn-close-visit-modal:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
 
-/* 4 CARD KPI TRUY CẬP */
-.visit-kpi-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-}
-.visit-kpi-card {
-    padding: 12px 10px; border-radius: 14px; text-align: center;
-    border: 1px solid transparent; display: flex; flex-direction: column; justify-content: center;
-}
+.visit-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.visit-kpi-card { padding: 12px 10px; border-radius: 14px; text-align: center; border: 1px solid transparent; display: flex; flex-direction: column; justify-content: center; }
 .kpi-today { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-color: #bae6fd; }
 .kpi-today .kpi-label { color: #0369a1; }
 .kpi-today .kpi-val { color: #0284c7; }
-
 .kpi-yesterday { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: #bbf7d0; }
 .kpi-yesterday .kpi-label { color: #166534; }
 .kpi-yesterday .kpi-val { color: #16a34a; }
-
 .kpi-week { background: linear-gradient(135deg, #faf5ff, #f3e8ff); border-color: #e9d5ff; }
 .kpi-week .kpi-label { color: #6b21a8; }
 .kpi-week .kpi-val { color: #9333ea; }
-
 .kpi-total { background: linear-gradient(135deg, #fff7ed, #ffedd5); border-color: #fed7aa; }
 .kpi-total .kpi-label { color: #9a3412; }
 .kpi-total .kpi-val { color: #ea580c; }
-
 .kpi-label { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2px; margin-bottom: 2px; }
 .kpi-val { font-size: 22px; font-weight: 900; font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .kpi-sub { font-size: 10px; color: #64748b; font-weight: 600; margin-top: 2px; }
 
-/* TABS MODAL */
-.visit-tabs-row {
-    display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 12px;
-}
-.visit-tab-btn {
-    flex: 1; padding: 8px 10px; border: none; border-radius: 9px;
-    background: transparent; color: #475569; font-weight: 800; font-size: 12.5px;
-    cursor: pointer; transition: 0.2s; font-family: inherit;
-}
-.visit-tab-btn.active {
-    background: #ffffff; color: #0284c7; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-}
+.visit-tabs-row { display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
+.visit-tab-btn { flex: 1; padding: 8px 10px; border: none; border-radius: 9px; background: transparent; color: #475569; font-weight: 800; font-size: 12.5px; cursor: pointer; transition: 0.2s; font-family: inherit; }
+.visit-tab-btn.active { background: #ffffff; color: #0284c7; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+.chart-header-hint { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 8px; }
 
-.chart-header-hint {
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 8px;
-}
+.hourly-bars-scroll-container { display: flex; align-items: flex-end; gap: 6px; height: 180px; overflow-x: auto; padding: 10px 4px 6px 4px; background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; }
+.hourly-bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 22px; flex: 1; height: 100%; position: relative; }
+.hourly-bar-track { width: 14px; height: 130px; display: flex; align-items: flex-end; background: #e2e8f0; border-radius: 6px; overflow: hidden; position: relative; }
+.hourly-bar-fill { width: 100%; border-radius: 6px; background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); transition: height 0.4s ease; min-height: 2px; }
+.hourly-bar-col.is-current .hourly-bar-fill { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
+.hourly-bar-val { font-size: 9.5px; font-weight: 800; color: #0f172a; margin-bottom: 3px; line-height: 1; }
+.hourly-bar-hour { font-size: 10px; font-weight: 700; color: #64748b; margin-top: 5px; }
+.hourly-bar-col.is-current .hourly-bar-hour { color: #d97706; font-weight: 900; }
 
-/* BIỂU ĐỒ 24 GIỜ TRONG NGÀY */
-.hourly-bars-scroll-container {
-    display: flex; align-items: flex-end; gap: 6px;
-    height: 180px; overflow-x: auto; padding: 10px 4px 6px 4px;
-    background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0;
-}
-.hourly-bar-col {
-    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    min-width: 22px; flex: 1; height: 100%; position: relative;
-}
-.hourly-bar-track {
-    width: 14px; height: 130px; display: flex; align-items: flex-end;
-    background: #e2e8f0; border-radius: 6px; overflow: hidden; position: relative;
-}
-.hourly-bar-fill {
-    width: 100%; border-radius: 6px;
-    background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
-    transition: height 0.4s ease; min-height: 2px;
-}
-.hourly-bar-col.is-current .hourly-bar-fill {
-    background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
-}
-.hourly-bar-val {
-    font-size: 9.5px; font-weight: 800; color: #0f172a; margin-bottom: 3px; line-height: 1;
-}
-.hourly-bar-hour {
-    font-size: 10px; font-weight: 700; color: #64748b; margin-top: 5px;
-}
-.hourly-bar-col.is-current .hourly-bar-hour {
-    color: #d97706; font-weight: 900;
-}
-
-/* BIỂU ĐỒ 7 NGÀY TRONG TUẦN */
-.weekly-list-container {
-    display: flex; flex-direction: column; gap: 8px;
-    background: #f8fafc; padding: 12px; border-radius: 14px; border: 1px solid #e2e8f0;
-}
-.weekly-row-item {
-    display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700;
-}
-.weekly-row-day {
-    width: 80px; color: #334155; white-space: nowrap; flex-shrink: 0;
-}
-.weekly-row-day.is-today {
-    color: #0284c7; font-weight: 900;
-}
-.weekly-row-bar-wrap {
-    flex: 1; height: 16px; background: #e2e8f0; border-radius: 8px; overflow: hidden; position: relative;
-}
-.weekly-row-bar-fill {
-    height: 100%; background: linear-gradient(90deg, #38bdf8, #0284c7); border-radius: 8px;
-    transition: width 0.4s ease; min-width: 4px;
-}
-.weekly-row-item.is-today .weekly-row-bar-fill {
-    background: linear-gradient(90deg, #34d399, #059669);
-}
-.weekly-row-count {
-    width: 55px; text-align: right; color: #0f172a; font-weight: 800; font-family: 'Be Vietnam Pro', monospace;
-}
-
-.visit-modal-footer {
-    display: flex; align-items: center; justify-content: space-between;
-    border-top: 1.5px solid #f1f5f9; padding-top: 10px; margin-top: 4px;
-}
-.btn-refresh-visits {
-    background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;
-    border-radius: 10px; padding: 5px 12px; font-size: 12px; font-weight: 800;
-    cursor: pointer; transition: 0.15s;
-}
+.weekly-list-container { display: flex; flex-direction: column; gap: 8px; background: #f8fafc; padding: 12px; border-radius: 14px; border: 1px solid #e2e8f0; }
+.weekly-row-item { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; }
+.weekly-row-day { width: 80px; color: #334155; white-space: nowrap; flex-shrink: 0; }
+.weekly-row-day.is-today { color: #0284c7; font-weight: 900; }
+.weekly-row-bar-wrap { flex: 1; height: 16px; background: #e2e8f0; border-radius: 8px; overflow: hidden; position: relative; }
+.weekly-row-bar-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #0284c7); border-radius: 8px; transition: width 0.4s ease; min-width: 4px; }
+.weekly-row-item.is-today .weekly-row-bar-fill { background: linear-gradient(90deg, #34d399, #059669); }
+.weekly-row-count { width: 55px; text-align: right; color: #0f172a; font-weight: 800; font-family: 'Be Vietnam Pro', monospace; }
+.visit-modal-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1.5px solid #f1f5f9; padding-top: 10px; margin-top: 4px; }
+.btn-refresh-visits { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; border-radius: 10px; padding: 5px 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.15s; }
 .btn-refresh-visits:hover { background: #0284c7; color: #fff; }
 
-/* BẢNG XÒE & CONTAINER */
 .dantri-dropdown-panel { 
     display: none; padding: 14px; 
     background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -502,14 +390,143 @@ body {
 @keyframes expandDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 .dantri-sub-header { font-size: 15px; font-weight: 800; color: #047857; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
+/* ========================================================= */
+/* KHỐI NHẮC NHỞ QUAN TRỌNG VÀ CÔNG CỤ QUẢN TRỊ VIÊN MỚI     */
+/* ========================================================= */
 .reminder-section { 
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 241, 242, 0.82) 100%); 
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 241, 242, 0.85) 100%); 
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-radius: 16px; box-shadow: var(--shadow-sm); 
     border: var(--glass-border); border-left: 5px solid var(--primary-red); 
     margin-bottom: 12px; padding: 12px 14px; 
 }
-.reminder-header-title { font-size: 16px; font-weight: 800; color: var(--primary-red); margin: 0 0 10px 0; border-bottom: 1.5px solid rgba(254, 205, 211, 0.8); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;}
+.reminder-header-row-box {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1.5px solid rgba(254, 205, 211, 0.8); padding-bottom: 8px; margin-bottom: 10px;
+}
+.reminder-header-title { 
+    font-size: 16px; font-weight: 800; color: var(--primary-red); margin: 0; 
+    display: flex; align-items: center; gap: 8px;
+}
+.btn-edit-reminder-head {
+    display: none; background: #fee2e2; color: #dc2626; border: 1.5px solid #fca5a5;
+    border-radius: 8px; padding: 3px 8px; font-size: 11.5px; font-weight: 800;
+    cursor: pointer; transition: 0.15s; font-family: inherit;
+}
+.btn-edit-reminder-head:hover { background: #dc2626; color: #ffffff; }
+
+/* Nút sửa tiêu đề bài viết trong card */
+.btn-edit-inline-title {
+    background: #e0f2fe; color: #0284c7; border: 1px solid #7dd3fc;
+    border-radius: 6px; padding: 2px 6px; font-size: 11px; font-weight: 800;
+    cursor: pointer; transition: 0.15s; margin-left: 6px; flex-shrink: 0;
+}
+.btn-edit-inline-title:hover { background: #0284c7; color: #ffffff; }
+
+/* Popover chọn 30 avatar và upload ảnh máy tính */
+.avatar-selection-popover {
+    display: none; position: absolute; top: calc(100% + 8px); left: 0;
+    background: #ffffff; border-radius: 14px; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);
+    border: 1.5px solid #cbd5e1; padding: 12px; z-index: 999999;
+    width: 290px; animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.avatar-selection-popover.show { display: block; }
+.avatar-popover-header {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12.5px; font-weight: 800; color: #0f172a; margin-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;
+}
+.avatar-grid-30 {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+    max-height: 140px; overflow-y: auto; padding: 4px; background: #f8fafc;
+    border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 8px;
+}
+.avatar-mini-thumb {
+    width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover;
+    cursor: pointer; border: 1.5px solid transparent; background: #fff;
+    transition: transform 0.12s ease;
+}
+.avatar-mini-thumb:hover { transform: scale(1.18); border-color: #0284c7; z-index: 2; }
+.btn-upload-pc-avatar {
+    width: 100%; padding: 7px; background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff; border: none; border-radius: 8px; font-size: 12px; font-weight: 800;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.btn-upload-pc-avatar:hover { filter: brightness(1.08); }
+
+/* ========================================================= */
+/* GIAO DIỆN BÀI VIẾT PHONG CÁCH BÁO ĐIỆN TỬ DÂN TRÍ         */
+/* ========================================================= */
+.dantri-article-modal {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 9999999; display: none; align-items: center; justify-content: center;
+    padding: 14px; animation: fadeInModal 0.25s ease-out;
+}
+.dantri-article-card {
+    background: #ffffff; border-radius: 18px; max-width: 680px; width: 100%;
+    max-height: 92vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35);
+    border: 1px solid #cbd5e1; padding: 22px 24px; display: flex; flex-direction: column;
+    animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dantri-modal-top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 14px;
+}
+.dantri-tag-pill {
+    background: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 800;
+    padding: 3px 10px; border-radius: 14px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.dantri-btn-mode-toggle {
+    background: #fef3c7; color: #b45309; border: 1px solid #fde68a;
+    border-radius: 10px; padding: 5px 12px; font-size: 12px; font-weight: 800;
+    cursor: pointer; transition: 0.15s;
+}
+.dantri-btn-mode-toggle:hover { background: #f59e0b; color: #ffffff; }
+.dantri-btn-close {
+    background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 50%;
+    width: 32px; height: 32px; font-size: 15px; font-weight: 900; color: #64748b;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.dantri-btn-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+.dantri-view-title {
+    font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.35;
+    margin: 0 0 10px 0; letter-spacing: -0.3px;
+}
+.dantri-author-meta-bar {
+    display: flex; align-items: center; gap: 8px; font-size: 13px;
+    color: #64748b; margin-bottom: 14px; font-weight: 600;
+}
+.dantri-author-name { font-weight: 800; color: #1e293b; }
+.dantri-meta-dot { opacity: 0.5; }
+.dantri-sapo-text {
+    font-size: 15.5px; font-weight: 700; line-height: 1.55; color: #1e293b;
+    margin-bottom: 16px; border-left: 3.5px solid #0284c7; padding-left: 12px;
+}
+.dantri-main-img-box {
+    width: 100%; border-radius: 12px; overflow: hidden; background: #f8fafc;
+    border: 1px solid #e2e8f0; margin-bottom: 16px;
+}
+.dantri-main-img-box img { width: 100%; max-height: 380px; object-fit: cover; display: block; }
+.dantri-img-caption {
+    font-size: 12px; color: #64748b; font-style: italic; padding: 6px 12px;
+    background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;
+}
+.dantri-body-content {
+    font-size: 15px; line-height: 1.7; color: #334155; white-space: pre-line; text-align: justify;
+}
+
+/* Các trường trong ô soạn thảo admin */
+.article-edit-input-group { margin-bottom: 12px; }
+.article-edit-input-group label { display: block; font-size: 12.5px; font-weight: 800; color: #334155; margin-bottom: 5px; }
+.article-edit-input-group input, .article-edit-input-group textarea {
+    width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px;
+    font-family: inherit; font-size: 13.5px; font-weight: 600; outline: none; background: #ffffff;
+}
+.article-edit-input-group input:focus, .article-edit-input-group textarea:focus {
+    border-color: #0284c7; box-shadow: 0 0 0 2.5px rgba(2, 132, 199, 0.15);
+}
 
 .folder-section { 
     background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -608,7 +625,11 @@ details[open] .folder-arrow { transform: rotate(90deg); color: var(--primary-blu
 .btn-time-sub-schedule { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
 .btn-time-sub-schedule:hover { background: #f59e0b; color: #fff; }
 
-.exam-thumb-box { width: 44px; height: 50px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1.5px solid #e2e8f0; background: #f8fafc; }
+.exam-thumb-box { 
+    width: 44px; height: 50px; border-radius: 10px; overflow: hidden; 
+    flex-shrink: 0; border: 1.5px solid #e2e8f0; background: #f8fafc; 
+    position: relative;
+}
 .exam-thumb { width: 100%; height: 100%; object-fit: cover; }
 .exam-info { flex: 1; min-width: 0; padding-right: 4px; overflow: visible;}
 .exam-header-row { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; overflow: visible; }
@@ -709,7 +730,7 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 .move-btn-cancel { background: #64748b;}
 .move-btn-submit { background: var(--primary-blue);}
 
-/* MODAL BẢNG KẾT QUẢ THI ĐẦY ĐỦ CHO ADMIN */
+/* MODAL BẢNG KẾT QUẢ THI */
 .result-fullscreen-modal {
     position: fixed; inset: 0; width: 100%; height: 100%;
     background: rgba(15, 23, 42, 0.88);
@@ -741,26 +762,12 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 }
 .result-search-input:focus { border-color: #8b5cf6; width: 200px; }
 
-/* CÁC NÚT CÔNG CỤ */
-@keyframes spinRefresh {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 #btn-toggle-autorefresh {
     transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, filter 0.16s ease !important;
     user-select: none;
 }
-#btn-toggle-autorefresh:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
-    filter: brightness(1.08);
-}
-#btn-toggle-autorefresh:active {
-    transform: translateY(2px) scale(0.95) !important;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
-    filter: brightness(0.9);
-}
+#btn-toggle-autorefresh:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25); filter: brightness(1.08); }
+#btn-toggle-autorefresh:active { transform: translateY(2px) scale(0.95) !important; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important; filter: brightness(0.9); }
 
 .btn-refresh-result {
     background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
@@ -770,38 +777,11 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, filter 0.16s ease;
     user-select: none;
 }
-.btn-refresh-result::before {
-    content: "🔄";
-    font-size: 13px;
-    display: inline-block;
-    line-height: 1;
-    margin-right: 4px;
-    transform-origin: center center;
-    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.btn-refresh-result::after {
-    content: "Cập nhật";
-    font-size: 12.5px;
-    font-weight: 800;
-    line-height: 1;
-    color: #ffffff;
-}
-.btn-refresh-result:hover { 
-    transform: translateY(-1px); 
-    filter: brightness(1.08); 
-    box-shadow: 0 6px 14px rgba(2, 132, 199, 0.4);
-}
-.btn-refresh-result:active {
-    transform: translateY(2px) scale(0.95) !important;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-    filter: brightness(0.92);
-}
-.btn-refresh-result:active::before,
-.btn-refresh-result:focus::before {
-    animation: spinRefresh 0.75s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
+.btn-refresh-result::before { content: "🔄"; font-size: 13px; display: inline-block; line-height: 1; margin-right: 4px; }
+.btn-refresh-result::after { content: "Cập nhật"; font-size: 12.5px; font-weight: 800; line-height: 1; color: #ffffff; }
+.btn-refresh-result:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 6px 14px rgba(2, 132, 199, 0.4); }
+.btn-refresh-result:active { transform: translateY(2px) scale(0.95) !important; box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3) !important; filter: brightness(0.92); }
 
-/* NÚT CHẤM LẠI BÀI VỚI ĐÁP ÁN SỬA */
 .btn-regrade-exam {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     color: white; border: none; border-radius: 20px; padding: 8px 14px;
@@ -810,16 +790,8 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, filter 0.16s ease;
     user-select: none; white-space: nowrap;
 }
-.btn-regrade-exam:hover { 
-    transform: translateY(-1px); 
-    filter: brightness(1.08); 
-    box-shadow: 0 6px 14px rgba(245, 158, 11, 0.45);
-}
-.btn-regrade-exam:active {
-    transform: translateY(2px) scale(0.95) !important;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3) !important;
-    filter: brightness(0.92);
-}
+.btn-regrade-exam:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 6px 14px rgba(245, 158, 11, 0.45); }
+.btn-regrade-exam:active { transform: translateY(2px) scale(0.95) !important; box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3) !important; filter: brightness(0.92); }
 
 .btn-export-excel {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -829,45 +801,25 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, filter 0.16s ease;
     user-select: none;
 }
-.btn-export-excel:hover { 
-    transform: translateY(-1px); 
-    filter: brightness(1.08); 
-    box-shadow: 0 6px 14px rgba(16, 185, 129, 0.4);
-}
-.btn-export-excel:active {
-    transform: translateY(2px) scale(0.95) !important;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-    filter: brightness(0.92);
-}
+.btn-export-excel:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 6px 14px rgba(16, 185, 129, 0.4); }
+.btn-export-excel:active { transform: translateY(2px) scale(0.95) !important; box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3) !important; filter: brightness(0.92); }
 
-#btn-result-back-action {
-    transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease !important;
-    user-select: none;
-}
-#btn-result-back-action:hover {
-    background: #bae6fd !important;
-    transform: translateY(-1px);
-}
-#btn-result-back-action:active {
-    transform: translateY(2px) scale(0.95) !important;
-    background: #7dd3fc !important;
-}
+#btn-result-back-action { transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease !important; user-select: none; }
+#btn-result-back-action:hover { background: #bae6fd !important; transform: translateY(-1px); }
+#btn-result-back-action:active { transform: translateY(2px) scale(0.95) !important; background: #7dd3fc !important; }
 
 .table-settings-wrapper { position: relative; display: flex; align-items: center; }
 .btn-table-settings {
     background: #f1f5f9; color: #334155; border: 1.5px solid #cbd5e1;
     width: 36px; height: 36px; border-radius: 50%; font-size: 17px;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0;
-    user-select: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; user-select: none;
 }
 .btn-table-settings:hover, .btn-table-settings.active {
     background: #e0f2fe; color: #0284c7; border-color: #0284c7; transform: rotate(60deg) scale(1.08);
     box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
 }
-.btn-table-settings:active {
-    transform: translateY(2px) scale(0.92) !important;
-}
+.btn-table-settings:active { transform: translateY(2px) scale(0.92) !important; }
 
 .table-settings-popover {
     display: none; position: absolute; top: calc(100% + 10px); right: 0;
@@ -882,20 +834,11 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     font-weight: 800; font-size: 14px; color: #0f172a; margin-bottom: 12px;
     border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;
 }
-.btn-close-settings {
-    background: none; border: none; font-size: 16px; font-weight: 900; color: #94a3b8;
-    cursor: pointer; padding: 0 4px; line-height: 1;
-}
+.btn-close-settings { background: none; border: none; font-size: 16px; font-weight: 900; color: #94a3b8; cursor: pointer; padding: 0 4px; line-height: 1; }
 .btn-close-settings:hover { color: #ef4444; }
 .setting-item { margin-bottom: 14px; }
-.setting-label-row {
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;
-}
-.setting-val-badge {
-    background: #ede9fe; color: #6d28d9; padding: 2px 8px; border-radius: 12px;
-    font-size: 11.5px; font-weight: 800; font-family: monospace;
-}
+.setting-label-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+.setting-val-badge { background: #ede9fe; color: #6d28d9; padding: 2px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 800; font-family: monospace; }
 .slider-control-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .slider-control-row input[type="range"] { flex: 1; accent-color: #8b5cf6; cursor: pointer; height: 6px; }
 .btn-step {
@@ -906,18 +849,10 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 }
 .btn-step:hover { background: #e2e8f0; color: #0f172a; }
 .preset-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
-.preset-btn {
-    background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px;
-    padding: 3px 7px; font-size: 11px; font-weight: 700; color: #475569;
-    cursor: pointer; transition: 0.15s;
-}
+.preset-btn { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 3px 7px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; transition: 0.15s; }
 .preset-btn:hover { background: #e0f2fe; color: #0369a1; border-color: #7dd3fc; }
 .settings-footer { display: flex; justify-content: flex-end; border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 8px; }
-.btn-reset-settings {
-    background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;
-    padding: 5px 12px; font-size: 11.5px; font-weight: 800; color: #64748b;
-    cursor: pointer; transition: 0.15s;
-}
+.btn-reset-settings { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 12px; font-size: 11.5px; font-weight: 800; color: #64748b; cursor: pointer; transition: 0.15s; }
 .btn-reset-settings:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
 
 .btn-close-result-modal {
@@ -1015,7 +950,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     background: #fff7ed; color: #c2410c; border: 1px solid #fdba74;
     padding: 1px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle;
 }
-
 .class-badge {
     background: #f1f5f9; color: #334155; padding: 2px 7px; border-radius: 6px;
     font-weight: 800; border: 1px solid #cbd5e1; font-size: 0.92em;
@@ -1090,29 +1024,14 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; 
 }
 
-/* KHUNG THỜI GIAN LÀM BÀI */
 .st-modal-time-box {
-    margin: 12px auto 14px auto; 
-    background: #fffbeb; 
-    border: 1.5px solid #fed7aa;
-    border-radius: 14px; 
-    padding: 10px 14px; 
-    color: #9a3412; 
-    font-size: 12.5px;
-    font-weight: 700; 
-    line-height: 1.45; 
-    text-align: center; 
-    box-shadow: 0 3px 10px rgba(249, 115, 22, 0.08);
+    margin: 12px auto 14px auto; background: #fffbeb; border: 1.5px solid #fed7aa;
+    border-radius: 14px; padding: 10px 14px; color: #9a3412; font-size: 12.5px;
+    font-weight: 700; line-height: 1.45; text-align: center; box-shadow: 0 3px 10px rgba(249, 115, 22, 0.08);
 }
-.st-modal-time-box .time-row-limit {
-    font-weight: 800; color: #c2410c; font-size: 13px; margin-bottom: 3px;
-}
-.st-modal-time-box .time-row-limit b {
-    font-weight: 900; color: #b91c1c;
-}
-.st-modal-time-box .time-row-schedule {
-    font-weight: 700; color: #9a3412; font-size: 12px;
-}
+.st-modal-time-box .time-row-limit { font-weight: 800; color: #c2410c; font-size: 13px; margin-bottom: 3px; }
+.st-modal-time-box .time-row-limit b { font-weight: 900; color: #b91c1c; }
+.st-modal-time-box .time-row-schedule { font-weight: 700; color: #9a3412; font-size: 12px; }
 
 .student-type-tabs { display: flex; gap: 6px; margin-bottom: 16px; background: rgba(226, 232, 240, 0.85); padding: 4px; border-radius: 14px; }
 .st-tab-btn { flex: 1; padding: 10px 6px; border: none; border-radius: 11px; font-weight: 800; font-size: 13px; cursor: pointer; color: #475569; background: transparent; transition: 0.2s; font-family: inherit; text-align: center; }
@@ -1142,17 +1061,10 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     body { font-size: 14px; }
     
     .admin-popover-panel { 
-        position: fixed; 
-        top: 60px; 
-        left: 8px; 
-        right: 8px; 
-        width: auto; 
-        max-width: none;
-        max-height: calc(100vh - 80px); 
-        border-radius: 18px; 
-        padding: 14px 12px;
-        transform: translateY(-10px) scale(0.98);
-        transform-origin: top center;
+        position: fixed; top: 60px; left: 8px; right: 8px; 
+        width: auto; max-width: none; max-height: calc(100vh - 80px); 
+        border-radius: 18px; padding: 14px 12px;
+        transform: translateY(-10px) scale(0.98); transform-origin: top center;
     }
     .admin-popover-panel.show { transform: translateY(0) scale(1); }
 
@@ -1181,18 +1093,12 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .lantern-string { height: 12px; }
     .mid-autumn-icon { font-size: 34px; }
 
-    /* Responsive cho modal & badge truy cập trên điện thoại (giữ tỷ lệ scale 0.7 gọn đẹp) */
-    .site-visit-badge {
-        top: 6px; left: 6px;
-        transform: scale(0.7);
-        transform-origin: top left;
-    }
-    .visit-kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-    }
-    .visit-stats-modal-box {
-        padding: 16px; border-radius: 16px;
-    }
+    .site-visit-badge { top: 6px; left: 6px; transform: scale(0.7); transform-origin: top left; }
+    .visit-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .visit-stats-modal-box { padding: 16px; border-radius: 16px; }
     .kpi-val { font-size: 19px; }
+
+    .dantri-article-card { padding: 16px 14px; }
+    .dantri-view-title { font-size: 18.5px; }
+    .dantri-sapo-text { font-size: 14px; }
 }
