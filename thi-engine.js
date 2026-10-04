@@ -1,3 +1,5 @@
+--- START OF FILE text/javascript ---
+
 // =========================================================
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
@@ -6,6 +8,7 @@
 // - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
 // - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
 // - TỐI ƯU OFFSET SCROLL TƯƠNG THÍCH VỚI TOP BANNER CO GỌN
+// - ĐÃ SỬA LỖI ĐẾM SAI THỜI GIAN VÀ KHÔNG GHI NHẬN BÀI NỘP
 // =========================================================
 
 let hasInitExamEngine = false;
@@ -785,6 +788,55 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
     }
 }
 
+// BẢO VỆ KEY LƯU TRỮ CHUẨN XÁC DỰA VÀO ID CỦA ĐỀ THI ĐỂ CHỐNG LỖI ĐẾM SAI THỜI GIAN
+function getStorageKey() { 
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizId = urlParams.get('id') || "unknown_quiz";
+    return `exam_autosave_active_session_${quizId}_${getMaDe()}`; 
+}
+
+function getLegacyStorageKey() {
+    return `exam_autosave_active_session_${EXAM_NAME}_${getMaDe()}`;
+}
+
+function restoreExamStateFromStorage() { 
+    try { 
+        let raw = safeLocal.getItem(getStorageKey()); 
+        if (!raw) {
+            raw = safeLocal.getItem(getLegacyStorageKey());
+            if (raw) {
+                safeLocal.setItem(getStorageKey(), raw); // Migrate sang key chuẩn
+            }
+        }
+        if (!raw) return false; 
+
+        const parsed = JSON.parse(raw); 
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentUrlSbd = urlParams.get('sbd');
+        if (currentUrlSbd && parsed.studentId && currentUrlSbd.toLowerCase() !== String(parsed.studentId).toLowerCase()) {
+            safeLocal.removeItem(getStorageKey());
+            return false;
+        }
+
+        if (parsed && parsed.isStarted && parsed.userAnswers) { 
+            userAnswersState = parsed.userAnswers || {}; 
+            padletClickedMap = parsed.padletClickedMap || {}; 
+            tabSwitchCount = parsed.tabSwitchCount || 0; 
+            examStartTime = parsed.examStartTime || Date.now(); 
+            if (parsed.timeLimitMinutes) {
+                TIME_LIMIT_MINUTES = parseInt(parsed.timeLimitMinutes, 10);
+                totalTimeSeconds = TIME_LIMIT_MINUTES * 60;
+            }
+            if (parsed.studentId) document.getElementById("student-id").value = parsed.studentId; 
+            if (parsed.studentName) document.getElementById("student-name").value = parsed.studentName; 
+            if (parsed.studentClass) document.getElementById("student-class").value = parsed.studentClass; 
+            return true; 
+        } 
+    } catch(e) {} 
+    return false; 
+}
+
 function reapplySavedAnswers() { 
     Object.keys(userAnswersState).forEach(key => { 
         const val = userAnswersState[key]; 
@@ -992,6 +1044,7 @@ async function executeSubmitExam(isForceSubmit = false) {
     const examCode = getExamCode();
     let firebaseConfirmed = false;
 
+    // ĐẨY BÀI NỘP TRỰC TIẾP VÀO NHÁNH ĐỂ ADMIN BẢNG ĐIỂM CHẮC CHẮN TÌM ĐƯỢC
     const sendToFirebaseEndpoint = async (codeKey) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -1011,14 +1064,22 @@ async function executeSubmitExam(isForceSubmit = false) {
 
     try {
         firebaseConfirmed = await sendToFirebaseEndpoint(examCode);
+        if (currentQuizId && currentQuizId !== examCode) {
+            await sendToFirebaseEndpoint(currentQuizId).catch(e => null);
+        }
     } catch(err) {
         console.warn("Lỗi gửi Firebase lần 1, thử lại ngay:", err);
         try {
             firebaseConfirmed = await sendToFirebaseEndpoint(examCode);
+            if (currentQuizId && currentQuizId !== examCode) {
+                await sendToFirebaseEndpoint(currentQuizId).catch(e => null);
+            }
         } catch(e2) {}
     }
 
     postToGoogleSheet(URL2_EXAM_RESULT, payload, 15000).catch(e => null);
+    
+    // GỌI HÀM XÓA TRẠNG THÁI "ĐANG LÀM BÀI" ĐỂ ĐỒNG BỘ BẢNG QUẢN TRỊ ADMIN
     clearPresence(sId);
 
     if (firebaseConfirmed) {
@@ -1107,3 +1168,5 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     }
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
 }
+
+--- START OF FILE text/javascript ---
