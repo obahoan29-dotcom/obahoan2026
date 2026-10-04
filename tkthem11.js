@@ -28,7 +28,7 @@ window.STUDENT_ACCOUNTS["them-11"] = [
     { stt: 21, pass: "21", sbd: "1121", username: "Phạm Thanh Sơn", name: "Phạm Thanh Sơn", className: "11g" },
     { stt: 22, pass: "22", sbd: "1122", username: "Đinh Nguyễn Diệu Linh", name: "Đ N Diệu Linh", className: "11c" },
     { stt: 23, pass: "23", sbd: "1123", username: "Phát", name: "Phát", className: "11A" },
-    { stt: 24, pass: "24", sbd: "1124", username: "Duy Mạnh", name: "Duy Mạnh", className: "11e" },
+    { stt: 24, pass: "24", sbd: "1124", username: "Duy Thành", name: "Duy Thành", className: "11i" },
     { stt: 25, pass: "25", sbd: "1125", username: "Thùy Dung", name: "Thùy Dung", className: "11N" },
     { stt: 26, pass: "26", sbd: "1126", username: "Đạt", name: "Đạt", className: "11a" },
     { stt: 27, pass: "27", sbd: "1127", username: "Minh Nhi", name: "Minh Nhi", className: "11i" },
