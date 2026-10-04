@@ -4,6 +4,7 @@
 // 1. Tự động hiển thị bài báo Dân trí đầy đủ Sapo, nội dung, ảnh & file đính kèm
 // 2. Avatar click: Bảng chọn 20 avatar mẫu, chọn 4 cỡ ảnh (Nhỏ -> Rất to), tải ảnh từ PC
 // 3. Khắc phục lỗi che khuất popover avatar và chống tắt giao diện ngoài ý muốn
+// 4. Tự động đồng bộ ngày giờ đăng bài báo dưới tiêu đề (thay thế dấu ---)
 // =========================================================
 
 // BỘ ĐỆM BẢO VỆ LƯU TRỮ
@@ -555,6 +556,41 @@ function createItemCardElement(item, categoryId) {
     return wrapper.firstElementChild;
 }
 
+// HÀM LẤY NGÀY GIỜ HIỂN THỊ CHUẨN XÁC DƯỚI TIÊU ĐỀ
+function getItemDisplayDate(item) {
+    if (!item) return "---";
+
+    // 1. Nếu có ngày theo định dạng chuẩn DD/MM/YYYY
+    let rawDate = item.date || item.articleDate || "";
+    if (rawDate && String(rawDate).trim() !== "" && String(rawDate).trim() !== "---") {
+        return String(rawDate).trim();
+    }
+
+    // 2. Nếu có trường articleTime (Dân trí: Thứ ba, 24/09/2026 - 15:30) -> Rút gọn sang ngày giờ hiển thị
+    if (item.articleTime && String(item.articleTime).trim() !== "") {
+        let cleanTime = String(item.articleTime).trim();
+        let m = cleanTime.match(/(\d{1,2}\/\d{1,2}\/\d{4}(?:\s*-\s*\d{1,2}:\d{2})?)/);
+        if (m) return m[1];
+        return cleanTime;
+    }
+
+    // 3. Nếu có timestamp
+    if (item.timestamp && !isNaN(Number(item.timestamp))) {
+        let d = new Date(Number(item.timestamp));
+        const pad = n => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    // 4. Nếu là bài viết thuộc mục nhắc nhở, tự động tạo ngày hiện tại nếu chưa từng có
+    if (item.categoryId === "nhac-nho" || item.isDoc) {
+        let d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    return "---";
+}
+
 function buildCardHtmlString(item, categoryId) {
     const isDoc = item.isDoc;
     const itemId = item.id || item.firebaseId || `item_${Date.now()}`;
@@ -565,6 +601,9 @@ function buildCardHtmlString(item, categoryId) {
     const isAllowFree = (item.allowFree !== false);
     const isReminder = (categoryId === "nhac-nho");
     
+    // Lấy ngày giờ hiển thị thay thế cho dấu ---
+    const displayDate = getItemDisplayDate(item);
+
     // Đọc kích cỡ avatar được lưu: mặc định 48px
     const avatarSize = parseInt(item.avatarSize, 10) || 48;
 
@@ -580,7 +619,7 @@ function buildCardHtmlString(item, categoryId) {
     if (!isDoc && (categoryId.includes("them") || categoryId.includes("lop") || categoryId.includes("hsg"))) {
         timeBoxHtml = `
             <div class="st-modal-time-box" style="margin: 6px 0 0 0; padding: 6px 10px; font-size: 11.5px; text-align: left;">
-                ${buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date)}
+                ${buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date || displayDate)}
             </div>
         `;
     }
@@ -710,7 +749,7 @@ function buildCardHtmlString(item, categoryId) {
                             </button>
                         `}
                     </div>
-                    <div class="exam-date">📅 ${item.date || "---"}</div>
+                    <div class="exam-date">📅 ${displayDate}</div>
                     ${timeBoxHtml}
                 </div>
                 <div class="arrow">›</div>
@@ -728,7 +767,7 @@ function buildCardHtmlString(item, categoryId) {
                 ${badge !== "NONE" ? `<span class="badge-item ${badgeClass}">${badge}</span>` : ''}
                 <span class="exam-title-text">${item.title}</span>
             </div>
-            <div class="exam-date">📅 ${item.date || "---"}</div>
+            <div class="exam-date">📅 ${displayDate}</div>
             ${timeBoxHtml}
         </div>
         <div class="arrow">›</div>
@@ -1141,11 +1180,24 @@ async function saveArticleToFirebase(event) {
 
     const directImgVal = toDirectGoogleDriveImageUrl(rawImgVal);
 
+    // Chuẩn hóa ngày giờ ngắn gọn để hiển thị trên thẻ card (VD: 24/09/2026 - 15:30)
+    let cardDateStr = "";
+    let m = timeVal.match(/(\d{1,2}\/\d{1,2}\/\d{4}(?:\s*-\s*\d{1,2}:\d{2})?)/);
+    if (m) {
+        cardDateStr = m[1];
+    } else {
+        let d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        cardDateStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
     const payload = {
         title: titleVal,
         articleTitle: titleVal,
         author: authorVal,
         articleTime: timeVal,
+        date: cardDateStr,
+        timestamp: currentActiveArticleItem.timestamp || Date.now(),
         sapo: sapoVal,
         articleImg: directImgVal,
         articleImgCaption: captionVal,
@@ -1195,7 +1247,7 @@ function openStudentLoginModal(item, categoryId, event) {
     if (errBox) { errBox.style.display = "none"; errBox.innerText = ""; }
 
     if (timeBox) {
-        timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date);
+        timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date || getItemDisplayDate(item));
     }
 
     const userIn = document.getElementById("st-username-input");
