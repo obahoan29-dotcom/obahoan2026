@@ -47,8 +47,8 @@
     <span class="mid-autumn-icon">🏮</span>
 </div>
 
-<!-- NÚT NỔI HIỂN THỊ SỐ LƯỢT TRUY CẬP HÔM NAY (GÓC DƯỚI BÊN TRÁI) -->
-<div class="site-visit-badge" id="site-visit-badge" onclick="toggleVisitStatsModal(event)" title="Nhấn để xem chi tiết thống kê lượt truy cập theo giờ và 7 ngày">
+<!-- NÚT NỔI HIỂN THỊ SỐ LƯỢT TRUY CẬP HÔM NAY -->
+<div class="site-visit-badge" id="site-visit-badge" onclick="toggleVisitStatsModal(event)" title="Nhấn để xem chi tiết thống kê lượt truy cập">
     <div class="visit-pulse-dot"></div>
     <span class="visit-icon">👁️</span>
     <span class="visit-label">Hôm nay:</span>
@@ -248,7 +248,7 @@
         <div class="link-list" style="padding:0; background:transparent;" id="reminder-container"></div>
     </div>
 
-    <!-- DẠY THÊM (MẶC ĐỊNH CO LẠI) -->
+    <!-- DẠY THÊM -->
     <div class="section-header-title red-title">🔴 Các lớp dạy thêm</div>
     <div class="dantri-nav-container">
         <div class="full-width-nav-row" id="daythem-nav-bar"></div>
@@ -257,7 +257,7 @@
         </div>
     </div>
 
-    <!-- CHÍNH KHÓA (MẶC ĐỊNH CO LẠI) -->
+    <!-- CHÍNH KHÓA -->
     <div class="section-header-title blue-title">🔵 Các lớp chính khóa</div>
     <div class="dantri-nav-container">
         <div class="full-width-nav-row" id="chinhkhoa-row1-bar"></div>
@@ -292,27 +292,27 @@
 <!-- MODAL BÀI VIẾT PHONG CÁCH BÁO DÂN TRÍ & SOẠN THẢO ADMIN  -->
 <!-- ========================================================= -->
 <div class="dantri-article-modal" id="dantri-article-modal">
-    <div class="dantri-article-card">
+    <div class="dantri-article-card" onclick="event.stopPropagation()">
         <div class="dantri-modal-top-bar">
             <div class="dantri-tag-pill" id="dantri-modal-tag">THÔNG BÁO</div>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <button type="button" class="dantri-btn-mode-toggle" id="btn-toggle-article-edit" onclick="toggleArticleEditMode()" style="display: none;">✏️ Chỉnh sửa</button>
-                <button type="button" class="dantri-btn-close" onclick="closeArticleModal()">✕</button>
+                <button type="button" class="dantri-btn-mode-toggle" id="btn-toggle-article-edit" onclick="toggleArticleEditMode(event)" style="display: none;">✏️ Chỉnh sửa</button>
+                <button type="button" class="dantri-btn-close" onclick="closeArticleModal(event)">✕</button>
             </div>
         </div>
 
         <!-- MÀN HÌNH ĐỌC BÀI BÁO (THEO PHONG CÁCH DÂN TRÍ) -->
         <div id="dantri-article-view-mode">
-            <h1 class="dantri-view-title" id="article-view-title">Lưu ý quan trọng: 11C còn 15 em chưa làm đề so 100</h1>
+            <h1 class="dantri-view-title" id="article-view-title">Lưu ý quan trọng</h1>
             
             <div class="dantri-author-meta-bar">
-                <span class="dantri-author-name" id="article-view-author">Lê Tình</span>
+                <span class="dantri-author-name" id="article-view-author">Thầy Hoan</span>
                 <span class="dantri-meta-dot">•</span>
-                <span class="dantri-meta-time" id="article-view-time">Chủ nhật, 04/10/2026 - 10:37</span>
+                <span class="dantri-meta-time" id="article-view-time">--:--</span>
             </div>
 
             <div class="dantri-sapo-text" id="article-view-sapo">
-                (Dân trí) - Đến năm 2030, Việt Nam phấn đấu vận hành 3 khu thử nghiệm bay và một trung tâm nghiên cứu...
+                (Dân trí) - Thông báo quan trọng gửi tới toàn thể học sinh.
             </div>
 
             <div class="dantri-main-img-box" id="article-view-img-box" style="display:none;">
@@ -335,7 +335,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="article-edit-input-group">
                     <label>Tác giả (nhập tay):</label>
-                    <input type="text" id="edit-article-author" placeholder="VD: Thầy Hoan, Lê Tình...">
+                    <input type="text" id="edit-article-author" placeholder="VD: Thầy Hoan, Ban Giám Hiệu...">
                 </div>
                 <div class="article-edit-input-group">
                     <label>Thời gian hệ thống (tự động cập nhật):</label>
@@ -352,6 +352,12 @@
                 <label>🖼️ Ảnh đại diện bài viết (Tải lên tự lưu Google Drive):</label>
                 <input type="file" id="edit-article-file-upload" accept="image/*" onchange="uploadArticleImageToDrive(this)">
                 <div id="article-img-upload-status" style="display:none; font-size:12px; font-weight:700; color:#0284c7; margin-top:5px;"></div>
+                
+                <!-- Khung xem trước ảnh đại diện ngay khi tải lên -->
+                <div class="article-edit-preview-box" id="article-edit-preview-box">
+                    <img id="article-edit-preview-img" src="" alt="Xem trước ảnh">
+                </div>
+
                 <input type="text" id="edit-article-img-url" placeholder="Hoặc dán trực tiếp đường link ảnh..." style="margin-top:6px;">
                 <input type="text" id="edit-article-img-caption" placeholder="Chú thích ảnh (nếu có)..." style="margin-top:6px;">
             </div>
@@ -362,8 +368,8 @@
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 14px;">
-                <button type="button" class="btn-admin btn-cancel" onclick="cancelArticleEdit()">Hủy bỏ</button>
-                <button type="button" class="btn-admin btn-submit" id="btn-save-article-firebase" onclick="saveArticleToFirebase()">💾 Lưu bài viết lên hệ thống</button>
+                <button type="button" class="btn-admin btn-cancel" onclick="cancelArticleEdit(event)">Hủy bỏ</button>
+                <button type="button" class="btn-admin btn-submit" id="btn-save-article-firebase" onclick="saveArticleToFirebase(event)">💾 Lưu bài viết lên hệ thống</button>
             </div>
         </div>
 
@@ -371,7 +377,7 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- MODAL THỐNG KÊ CHI TIẾT LƯỢT TRUY CẬP (THEO GIỜ & 7 NGÀY) -->
+<!-- MODAL THỐNG KÊ CHI TIẾT LƯỢT TRUY CẬP                     -->
 <!-- ========================================================= -->
 <div class="visit-stats-modal-overlay" id="visit-stats-modal">
     <div class="visit-stats-modal-box">
@@ -470,14 +476,14 @@
             <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
             
             <div class="regrade-action-wrapper" style="position: relative; display: inline-block;">
-                <button type="button" class="btn-regrade-exam" id="btn-regrade-exam" onclick="openRegradeModal(event)" title="Tải file đáp án đã sửa để chấm lại toàn bộ bài thi của học sinh">
+                <button type="button" class="btn-regrade-exam" id="btn-regrade-exam" onclick="openRegradeModal(event)" title="Tải file đáp án đã sửa để chấm lại toàn bộ bài thi">
                     ⚖️ Chấm lại bài ▾
                 </button>
                 
                 <div class="regrade-inline-dropdown" id="regrade-inline-dropdown" style="display:none; position:absolute; top:calc(100% + 8px); right:0; width:340px; background:#ffffff; border-radius:14px; box-shadow:0 14px 35px rgba(15,23,42,0.25); border:1.5px solid #fde68a; padding:14px; z-index:9999999; animation:popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:6px;">
                         <span style="font-weight:900; color:#b45309; font-size:13px; display:flex; align-items:center; gap:5px;">⚖️ Tải file đáp án đã sửa</span>
-                        <button type="button" onclick="closeRegradeModal()" style="background:none; border:none; font-size:15px; font-weight:900; color:#94a3b8; cursor:pointer;">✕</button>
+                        <button type="button" onclick="closeRegradeModal(event)" style="background:none; border:none; font-size:15px; font-weight:900; color:#94a3b8; cursor:pointer;">✕</button>
                     </div>
                     <div style="font-size:11.5px; color:#475569; margin-bottom:8px; line-height:1.4;">
                         Chọn file <b>dapan.js / .txt / .json</b> mới. Hệ thống sẽ tự động tính lại điểm và cập nhật đồng bộ các bài đã nộp.
@@ -485,7 +491,7 @@
                     <input type="file" id="regrade-answer-file" accept="*/*" onchange="previewRegradeFile(this)" style="width:100%; padding:6px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:12px; margin-bottom:8px; background:#f8fafc;">
                     <div id="regrade-file-preview-status" style="font-size:11.5px; font-weight:700; color:#0284c7; margin-bottom:8px; display:none; background:#f0f9ff; padding:6px 10px; border-radius:8px; border:1px solid #bae6fd; line-height:1.3;"></div>
                     <div style="display:flex; gap:6px;">
-                        <button type="button" onclick="closeRegradeModal()" style="flex:1; padding:7px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; font-weight:800; color:#475569; cursor:pointer;">Đóng</button>
+                        <button type="button" onclick="closeRegradeModal(event)" style="flex:1; padding:7px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; font-weight:800; color:#475569; cursor:pointer;">Đóng</button>
                         <button type="button" id="btn-confirm-regrade" onclick="processRegradeWithAnswers()" style="flex:1.5; padding:7px; background:linear-gradient(135deg, #f59e0b, #d97706); border:none; border-radius:8px; font-size:12px; font-weight:800; color:#fff; cursor:pointer; box-shadow:0 2px 6px rgba(245,158,11,0.3);">🚀 Chấm lại ngay</button>
                     </div>
                 </div>
