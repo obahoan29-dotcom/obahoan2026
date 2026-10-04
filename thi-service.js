@@ -3,6 +3,7 @@
 // QUẢN LÝ KẾT NỐI MẠNG, FIREBASE REALTIME, PRESENCE, 
 // THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
 // ĐÃ SỬA TRIỆT ĐỂ: KHÔNG TỰ ĐỘNG MATCH ĐỔI TÊN HỌC SINH KHÁC
+// TỐI ƯU HÓA: CHỐNG NGHẼN MẠNG GÂY ĐƠ LAG KHI LÀM BÀI
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
@@ -218,8 +219,8 @@ function startPresenceSystem(sId) {
     if (presenceInterval) clearInterval(presenceInterval);
     if (onlineCountInterval) clearInterval(onlineCountInterval);
 
-    presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 12000);
-    onlineCountInterval = setInterval(() => { fetchOnlineCount(examCode); }, 10000);
+    presenceInterval = setInterval(() => { updatePresence(examCode, safeId); }, 15000);
+    onlineCountInterval = setInterval(() => { fetchOnlineCount(examCode); }, 15000);
 }
 
 async function updatePresence(examCode, safeId) {
@@ -306,6 +307,7 @@ function showTimeChangeToast(message) {
     setTimeout(() => { toast.classList.remove("show"); }, 4500);
 }
 
+// ĐÃ SỬA: Đổi chu kỳ kiểm tra từ 1500ms (1.5 giây) thành 15000ms (15 giây) để tránh tràn bộ nhớ & nghẽn mạng
 function startTimeWatcherRealtime(quizId) {
     if (!quizId) return;
     if (timeWatcherInterval) clearInterval(timeWatcherInterval);
@@ -364,7 +366,7 @@ function startTimeWatcherRealtime(quizId) {
                 safeLocal.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
             }
         } catch(e) {}
-    }, 1500);
+    }, 15000); // 15 giây kiểm tra 1 lần để hệ thống mượt mà
 }
 
 function setupBackPrevention() { 
