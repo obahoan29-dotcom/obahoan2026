@@ -6,16 +6,13 @@
 const ADMIN_PASSWORD = "Hopan130384";
 const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-// URL WEB APP GAS TẢI FILE PDF / WORD / ẢNH LÊN GOOGLE DRIVE
-const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbygCVlYabwzwzeVL1KQY_Jv3rdkZLXVmsflazNvvI4njnz9jj9QSAqC2Yo6-t8DW53o/exec";
+// URL WEB APP GAS TẢI FILE PDF / WORD / ẢNH LÊN GOOGLE DRIVE (ĐÃ CẬP NHẬT MỚI)
+const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
 let isAdminLoggedIn = false;
 let selectedAvatarUrl = "";
 let currentMoveData = { oldCategory: null, quizId: null, quizData: null };
 let currentCopyData = { sourceCategory: null, itemId: null, itemData: null };
-
-// Quản lý tiêu đề mục nhắc nhở lớn
-let REMINDER_SECTION_TITLE = "📌 Nhắc nhở quan trọng";
 
 let activeStudentLogin = {
     targetUrl: "",
@@ -62,15 +59,9 @@ let REMINDER_CATEGORY = {
     links: [
         { 
             id: "rem_1", firebaseId: "rem_1", categoryId: "nhac-nho",
-            title: "Lưu ý quan trọng: 11C còn 15 em chưa làm đề so 100", 
-            date: "---", url: "#", badgeText: "MỚI", isDoc: true, 
-            avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg",
-            author: "Thầy Hoan",
-            articleTitle: "Lưu ý quan trọng: 11C còn 15 em chưa làm đề so 100",
-            sapo: "Nhắc nhở học sinh lớp 11C khẩn trương hoàn thành bài thi số 100 theo đúng thời hạn.",
-            articleImg: "",
-            articleImgCaption: "Hệ thống làm bài thi trực tuyến",
-            articleBody: "Đến thời điểm hiện tại hệ thống ghi nhận còn 15 học sinh lớp 11C chưa nộp bài thi đề số 100. Các em kiểm tra lại tài khoản và hoàn thiện trước thời hạn quy định."
+            title: "Lưu ý quan trọng: Các em nộp tự luận Padlet phải đúng mẫu, ví dụ 11A25 ĐẠT, ở phần Subject ghi rõ 11a25-220926-đạt", 
+            date: "05/08/2026 - 15:00", url: "#", badgeText: "HOT", isDoc: true, 
+            avatar: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png" 
         }
     ]
 };
