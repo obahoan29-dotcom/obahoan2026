@@ -9,6 +9,9 @@ const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-so
 // URL WEB APP GAS TẢI FILE PDF / WORD / ẢNH LÊN GOOGLE DRIVE (ĐÃ CẬP NHẬT MỚI)
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
+// TIÊU ĐỀ MẶC ĐỊNH CHO KHỐI NHẮC NHỞ QUAN TRỌNG (ĐÃ KHAI BÁO CHỐNG LỖI TREO ĐƠ)
+let REMINDER_SECTION_TITLE = "📌 Nhắc nhở quan trọng";
+
 let isAdminLoggedIn = false;
 let selectedAvatarUrl = "";
 let currentMoveData = { oldCategory: null, quizId: null, quizData: null };
