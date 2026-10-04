@@ -649,7 +649,8 @@ body {
 }
 .dantri-img-caption {
     font-size: 12px; color: #64748b; font-style: italic; padding: 7px 12px;
-    background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;
+    background: #f8fafc; border-top:
+   1px solid #e2e8f0; text-align: center;
 }
 .dantri-body-content {
     font-size: 15px; 
@@ -1279,4 +1280,4 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 
     .reminder-scroll-list { max-height: 186px; }
     .reminder-scroll-list:has(.admin-card-mode) { max-height: 280px; }
-}
+}     
