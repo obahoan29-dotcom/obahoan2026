@@ -238,8 +238,13 @@
     </div>
 
     <!-- KHỐI NHẮC NHỞ QUAN TRỌNG -->
-    <div class="reminder-section">
-        <h3 class="reminder-header-title">📌 Nhắc nhở quan trọng</h3>
+    <div class="reminder-section" id="reminder-main-card">
+        <div class="reminder-header-row-box">
+            <h3 class="reminder-header-title" id="reminder-section-title-text">📌 Nhắc nhở quan trọng</h3>
+            <button type="button" class="btn-edit-reminder-head" id="btn-edit-reminder-head" onclick="editReminderSectionTitle(event)" title="Sửa chữ tiêu đề 'Nhắc nhở quan trọng'">
+                ✏️ Sửa tiêu đề
+            </button>
+        </div>
         <div class="link-list" style="padding:0; background:transparent;" id="reminder-container"></div>
     </div>
 
@@ -284,6 +289,88 @@
 </div>
 
 <!-- ========================================================= -->
+<!-- MODAL BÀI VIẾT PHONG CÁCH BÁO DÂN TRÍ & SOẠN THẢO ADMIN  -->
+<!-- ========================================================= -->
+<div class="dantri-article-modal" id="dantri-article-modal">
+    <div class="dantri-article-card">
+        <div class="dantri-modal-top-bar">
+            <div class="dantri-tag-pill" id="dantri-modal-tag">THÔNG BÁO</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="dantri-btn-mode-toggle" id="btn-toggle-article-edit" onclick="toggleArticleEditMode()" style="display: none;">✏️ Chỉnh sửa</button>
+                <button type="button" class="dantri-btn-close" onclick="closeArticleModal()">✕</button>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH ĐỌC BÀI BÁO (THEO PHONG CÁCH DÂN TRÍ) -->
+        <div id="dantri-article-view-mode">
+            <h1 class="dantri-view-title" id="article-view-title">Lưu ý quan trọng: 11C còn 15 em chưa làm đề so 100</h1>
+            
+            <div class="dantri-author-meta-bar">
+                <span class="dantri-author-name" id="article-view-author">Lê Tình</span>
+                <span class="dantri-meta-dot">•</span>
+                <span class="dantri-meta-time" id="article-view-time">Chủ nhật, 04/10/2026 - 10:37</span>
+            </div>
+
+            <div class="dantri-sapo-text" id="article-view-sapo">
+                (Dân trí) - Đến năm 2030, Việt Nam phấn đấu vận hành 3 khu thử nghiệm bay và một trung tâm nghiên cứu...
+            </div>
+
+            <div class="dantri-main-img-box" id="article-view-img-box" style="display:none;">
+                <img id="article-view-img" src="" alt="Ảnh bài báo">
+                <div class="dantri-img-caption" id="article-view-caption">Ảnh minh họa</div>
+            </div>
+
+            <div class="dantri-body-content" id="article-view-body">
+                Nội dung bài viết thông báo...
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH SOẠN THẢO DÀNH CHO ADMIN -->
+        <div id="dantri-article-edit-mode" style="display: none;">
+            <div class="article-edit-input-group">
+                <label>Tiêu đề bài viết:</label>
+                <input type="text" id="edit-article-title" placeholder="Nhập tiêu đề bài báo...">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="article-edit-input-group">
+                    <label>Tác giả (nhập tay):</label>
+                    <input type="text" id="edit-article-author" placeholder="VD: Thầy Hoan, Lê Tình...">
+                </div>
+                <div class="article-edit-input-group">
+                    <label>Thời gian hệ thống (tự động cập nhật):</label>
+                    <input type="text" id="edit-article-time" readonly style="background:#f1f5f9; cursor:not-allowed;">
+                </div>
+            </div>
+
+            <div class="article-edit-input-group">
+                <label>Đoạn tóm tắt mở đầu (Sapo):</label>
+                <textarea id="edit-article-sapo" rows="2" placeholder="Tóm tắt ngắn gọn bài viết..."></textarea>
+            </div>
+
+            <div class="article-edit-input-group" style="background: #f8fafc; padding: 12px; border-radius: 12px; border: 1.5px dashed #cbd5e1;">
+                <label>🖼️ Ảnh đại diện bài viết (Tải lên tự lưu Google Drive):</label>
+                <input type="file" id="edit-article-file-upload" accept="image/*" onchange="uploadArticleImageToDrive(this)">
+                <div id="article-img-upload-status" style="display:none; font-size:12px; font-weight:700; color:#0284c7; margin-top:5px;"></div>
+                <input type="text" id="edit-article-img-url" placeholder="Hoặc dán trực tiếp đường link ảnh..." style="margin-top:6px;">
+                <input type="text" id="edit-article-img-caption" placeholder="Chú thích ảnh (nếu có)..." style="margin-top:6px;">
+            </div>
+
+            <div class="article-edit-input-group">
+                <label>Nội dung chi tiết bài viết:</label>
+                <textarea id="edit-article-body" rows="6" placeholder="Nhập toàn bộ nội dung bài viết dặn dò tại đây..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 14px;">
+                <button type="button" class="btn-admin btn-cancel" onclick="cancelArticleEdit()">Hủy bỏ</button>
+                <button type="button" class="btn-admin btn-submit" id="btn-save-article-firebase" onclick="saveArticleToFirebase()">💾 Lưu bài viết lên hệ thống</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================================================= -->
 <!-- MODAL THỐNG KÊ CHI TIẾT LƯỢT TRUY CẬP (THEO GIỜ & 7 NGÀY) -->
 <!-- ========================================================= -->
 <div class="visit-stats-modal-overlay" id="visit-stats-modal">
@@ -299,7 +386,6 @@
             <button type="button" class="btn-close-visit-modal" onclick="closeVisitStatsModal(event)">✕</button>
         </div>
 
-        <!-- 4 Ô CHỈ SỐ KPI -->
         <div class="visit-kpi-grid">
             <div class="visit-kpi-card kpi-today">
                 <div class="kpi-label">Hôm nay</div>
@@ -323,31 +409,24 @@
             </div>
         </div>
 
-        <!-- TAB CHUYỂN ĐỔI: THEO GIỜ HÔM NAY / THEO 7 NGÀY -->
         <div class="visit-tabs-row">
             <button type="button" class="visit-tab-btn active" id="tab-btn-hours" onclick="switchVisitStatsTab('hours')">⏱ Theo giờ hôm nay</button>
             <button type="button" class="visit-tab-btn" id="tab-btn-week" onclick="switchVisitStatsTab('week')">📅 Theo 7 ngày trong tuần</button>
         </div>
 
-        <!-- NỘI DUNG 1: PHÂN TÍCH THEO GIỜ (0h - 23h) -->
         <div id="visit-tab-content-hours" class="visit-tab-content" style="display:block;">
             <div class="chart-header-hint">
-                <span>🕒 Phân bổ lượt truy cập 24 giờ ngày hôm nay (giờ vàng làm bài):</span>
+                <span>🕒 Phân bổ lượt truy cập 24 giờ ngày hôm nay:</span>
                 <span id="current-hour-badge" style="font-weight:800; color:#0284c7; background:#e0f2fe; padding:2px 8px; border-radius:12px; font-size:11.5px;">--:--</span>
             </div>
-            <div class="hourly-bars-scroll-container" id="hourly-bars-container">
-                <!-- Sẽ được render tự động qua JS -->
-            </div>
+            <div class="hourly-bars-scroll-container" id="hourly-bars-container"></div>
         </div>
 
-        <!-- NỘI DUNG 2: PHÂN TÍCH THEO 7 NGÀY TRONG TUẦN -->
         <div id="visit-tab-content-week" class="visit-tab-content" style="display:none;">
             <div class="chart-header-hint">
                 <span>📆 Thống kê lượt truy cập các ngày gần nhất:</span>
             </div>
-            <div class="weekly-list-container" id="weekly-bars-container">
-                <!-- Sẽ được render tự động qua JS -->
-            </div>
+            <div class="weekly-list-container" id="weekly-bars-container"></div>
         </div>
 
         <div class="visit-modal-footer">
@@ -358,7 +437,7 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- MODAL TOÀN MÀN HÌNH: XEM BẢNG KẾT QUẢ THI ĐẦY ĐỦ CHO ADMIN -->
+<!-- MODAL TOÀN MÀN HÌNH: XEM BẢNG KẾT QUẢ THI CHO ADMIN      -->
 <!-- ========================================================= -->
 <div class="result-fullscreen-modal" id="result-fullscreen-modal">
     <div class="result-modal-header">
@@ -390,13 +469,11 @@
 
             <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
             
-            <!-- NÚT CHẤM LẠI BÀI VỚI ĐÁP ÁN SỬA ĐẶT Ở GIỮA CẬP NHẬT VÀ TẢI EXCEL -->
             <div class="regrade-action-wrapper" style="position: relative; display: inline-block;">
                 <button type="button" class="btn-regrade-exam" id="btn-regrade-exam" onclick="openRegradeModal(event)" title="Tải file đáp án đã sửa để chấm lại toàn bộ bài thi của học sinh">
                     ⚖️ Chấm lại bài ▾
                 </button>
                 
-                <!-- POPUP XÒE RA TRỰC TIẾP TẠI CHỖ KHI BẤM NÚT CHẤM LẠI -->
                 <div class="regrade-inline-dropdown" id="regrade-inline-dropdown" style="display:none; position:absolute; top:calc(100% + 8px); right:0; width:340px; background:#ffffff; border-radius:14px; box-shadow:0 14px 35px rgba(15,23,42,0.25); border:1.5px solid #fde68a; padding:14px; z-index:9999999; animation:popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:6px;">
                         <span style="font-weight:900; color:#b45309; font-size:13px; display:flex; align-items:center; gap:5px;">⚖️ Tải file đáp án đã sửa</span>
@@ -491,25 +568,25 @@
             <span style="color:#475569; display:inline-flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap;">
                 📊 <b>Phân loại:</b>
             </span>
-            <div class="stat-badge-item" style="background:#fef2f2; border-color:#fecaca; color:#991b1b; padding:3px 7px; border-radius:12px;" title="Điểm từ 0 đến dưới 3">
+            <div class="stat-badge-item" style="background:#fef2f2; border-color:#fecaca; color:#991b1b; padding:3px 7px; border-radius:12px;">
                 0 đến &lt; 3: <b id="stat-score-0-to-3" style="color:#dc2626; margin-left:3px;">0</b>
             </div>
-            <div class="stat-badge-item" style="background:#fff1f2; border-color:#fecdd3; color:#9f1239; padding:3px 7px; border-radius:12px;" title="Điểm từ 3 đến dưới 5">
+            <div class="stat-badge-item" style="background:#fff1f2; border-color:#fecdd3; color:#9f1239; padding:3px 7px; border-radius:12px;">
                 3 đến &lt; 5: <b id="stat-score-3-to-5" style="color:#e11d48; margin-left:3px;">0</b>
             </div>
-            <div class="stat-badge-item" style="background:#fffbeb; border-color:#fef3c7; color:#92400e; padding:3px 7px; border-radius:12px;" title="Điểm từ 5 đến 6">
+            <div class="stat-badge-item" style="background:#fffbeb; border-color:#fef3c7; color:#92400e; padding:3px 7px; border-radius:12px;">
                 5 đến &le; 6: <b id="stat-score-5-to-6" style="color:#d97706; margin-left:3px;">0</b>
             </div>
-            <div class="stat-badge-item" style="background:#fefce8; border-color:#fef08a; color:#854d0e; padding:3px 7px; border-radius:12px;" title="Điểm trên 6 đến 7">
+            <div class="stat-badge-item" style="background:#fefce8; border-color:#fef08a; color:#854d0e; padding:3px 7px; border-radius:12px;">
                 6 đến &le; 7: <b id="stat-score-6-to-7" style="color:#b45309; margin-left:3px;">0</b>
             </div>
-            <div class="stat-badge-item" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534; padding:3px 7px; border-radius:12px;" title="Điểm trên 7 đến 8">
+            <div class="stat-badge-item" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534; padding:3px 7px; border-radius:12px;">
                 7 đến &le; 8: <b id="stat-score-7-to-8" style="color:#16a34a; margin-left:3px;">0</b>
             </div>
-            <div class="stat-badge-item" style="background:#ecfdf5; border-color:#a7f3d0; color:#065f46; padding:3px 7px; border-radius:12px;" title="Điểm trên 8 đến 9">
+            <div class="stat-badge-item" style="background:#ecfdf5; border-color:#a7f3d0; color:#065f46; padding:3px 7px; border-radius:12px;">
                 8 đến &le; 9: <b id="stat-score-8-to-9" style="color:#059669; margin-left:3px;">0</b>
             </div>
-            <div class="stat-badge-item" style="background:#eff6ff; border-color:#bfdbfe; color:#1e40af; padding:3px 7px; border-radius:12px;" title="Điểm trên 9 đến 10">
+            <div class="stat-badge-item" style="background:#eff6ff; border-color:#bfdbfe; color:#1e40af; padding:3px 7px; border-radius:12px;">
                 9 đến &le; 10: <b id="stat-score-9-to-10" style="color:#2563eb; margin-left:3px;">0</b>
             </div>
         </div>
@@ -547,7 +624,6 @@
                             <th style="width: 110px; text-align:center;">Số câu đúng</th>
                             <th style="width: 120px; text-align:center;">Điểm thang 10</th>
 
-                            <!-- CỘT XẾP HẠNG -->
                             <th style="width: 125px; text-align:center; overflow: visible;">
                                 <div class="rank-picker-wrapper" style="position: relative; display: inline-block; width: 100%;">
                                     <button type="button" class="btn-rank-picker" onclick="toggleRankSortMenu(event)" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; border: 1px solid #fde68a; border-radius: 8px; padding: 4px 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25); user-select: none;">
@@ -649,7 +725,7 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- MODAL ĐĂNG NHẬP THI HỌC SINH (KHÔNG TỰ ĐỘNG LƯU VÀ GỢI Ý CŨ) -->
+<!-- MODAL ĐĂNG NHẬP THI HỌC SINH                              -->
 <!-- ========================================================= -->
 <div class="move-modal-overlay" id="student-login-modal">
     <div class="student-login-box">
@@ -675,7 +751,7 @@
                 <label>Tên đăng nhập / Số báo danh:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">👤</span>
-                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập tên đăng nhập hoặc SBD..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập tên đăng nhập hoặc SBD..." autocomplete="off">
                 </div>
             </div>
 
@@ -698,7 +774,7 @@
                 <label>Họ và tên thí sinh:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">📝</span>
-                    <input type="text" id="st-free-name-input" class="st-input-field" placeholder="VD: Nguyễn Văn An..." autocomplete="off" autocorrect="off" spellcheck="false">
+                    <input type="text" id="st-free-name-input" class="st-input-field" placeholder="VD: Nguyễn Văn An...">
                 </div>
             </div>
 
@@ -706,7 +782,7 @@
                 <label>Lớp học:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🏫</span>
-                    <input type="text" id="st-free-class-input" class="st-input-field" placeholder="VD: 10A1, Tự do..." autocomplete="off" autocorrect="off" spellcheck="false">
+                    <input type="text" id="st-free-class-input" class="st-input-field" placeholder="VD: 10A1, Tự do...">
                 </div>
             </div>
 
@@ -714,7 +790,7 @@
                 <label>Số báo danh (SBD):</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🔢</span>
-                    <input type="text" id="st-free-sbd-input" class="st-input-field" placeholder="VD: SBD01, 1001..." autocomplete="off" autocorrect="off" spellcheck="false">
+                    <input type="text" id="st-free-sbd-input" class="st-input-field" placeholder="VD: SBD01, 1001...">
                 </div>
             </div>
 
@@ -731,7 +807,7 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- MODAL THAY ĐỔI THỜI GIAN THI & GIA HẠN LỊCH MỞ ĐỀ -->
+<!-- MODAL THAY ĐỔI THỜI GIAN THI & GIA HẠN LỊCH MỞ ĐỀ         -->
 <!-- ========================================================= -->
 <div class="move-modal-overlay" id="exam-time-modal">
     <div class="move-modal-box" style="width: 360px;">
@@ -809,6 +885,9 @@
         </div>
     </div>
 </div>
+
+<!-- INPUT ẨN ĐỂ CHỌN ẢNH TỪ MÁY TÍNH KHI ĐỔI AVATAR TRỰC TIẾP -->
+<input type="file" id="reminder-custom-avatar-input" accept="image/*" style="display: none;" onchange="handleReminderCustomAvatarUploaded(this)">
 
 </body>
 </html>
