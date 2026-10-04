@@ -2,7 +2,16 @@
 // FILE: app-main.js
 // BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH: NẠP BANNER, HIỂN THỊ DANH MỤC,
 // NẠP DỮ LIỆU FIREBASE, RENDER THẺ ĐỀ THI, ĐĂNG NHẬP HỌC SINH
-// ĐÃ ĐƯỢC CẬP NHẬT: CỬA SỔ ĐĂNG NHẬP LUÔN TRỐNG, KHÔNG LƯU DỮ LIỆU CŨ
+// NÂNG CẤP CHUYÊN BIỆT CHO MỤC: NHẮC NHỞ QUAN TRỌNG
+// 1. Nút ✏️ sửa chữ "Nhắc nhở quan trọng"
+// 2. Click Avatar mở 30 avatar mẫu hoặc chọn từ máy tính (tự upload Drive qua GAS)
+// 3. Click Badge ("MỚI", "HOT",...) mở menu đổi badge trực tiếp
+// 4. Nút ✏️ sửa tiêu đề nhắc nhở ("Lưu ý quan trọng: 11C còn 15 em...")
+// 5. Click vào bài viết mở trang xem/soạn thảo phong cách báo Dân trí:
+//    - Hiển thị Tác giả (có ô gõ vào)
+//    - Thời gian tự động từ hệ thống
+//    - Khung tải ảnh đại diện bài viết (tự động lưu vào Google Drive qua GAS)
+//    - Nội dung chi tiết & Lưu realtime lên Firebase
 // =========================================================
 
 // BỘ ĐỆM BẢO VỆ LƯU TRỮ TRÊN IPHONE
@@ -22,6 +31,11 @@ let activeDayThemCatId = null;
 let activeChinhKhoaRow1CatId = null;
 let activeChinhKhoaRow2CatId = null;
 let activeDantriCatId = null;
+
+// Biến quản lý bài viết Dân trí đang xem / soạn thảo
+let currentActiveArticleItem = null;
+let currentActiveArticleCatId = "nhac-nho";
+let currentTargetAvatarItemId = null;
 
 // Quản lý trạng thái mở/đóng gom gọn của từng lớp
 const categoryExpandedState = {};
@@ -88,13 +102,19 @@ function sortLinksNewestFirst(linksArray) {
 
 async function loadDataFromFirebase() {
     try {
-        const [linksRes, quizzesRes] = await Promise.all([
+        const [linksRes, quizzesRes, metaRes] = await Promise.all([
             fetch(`${FIREBASE_DB_URL}/custom_links.json`).catch(() => null),
-            fetch(`${FIREBASE_DB_URL}/quizzes.json`).catch(() => null)
+            fetch(`${FIREBASE_DB_URL}/quizzes.json`).catch(() => null),
+            fetch(`${FIREBASE_DB_URL}/site_meta.json`).catch(() => null)
         ]);
 
         let customLinksData = linksRes && linksRes.ok ? await linksRes.json() : null;
         let quizzesData = quizzesRes && quizzesRes.ok ? await quizzesRes.json() : null;
+        let siteMetaData = metaRes && metaRes.ok ? await metaRes.json() : null;
+
+        if (siteMetaData && siteMetaData.reminderTitle) {
+            REMINDER_SECTION_TITLE = siteMetaData.reminderTitle;
+        }
 
         if (customLinksData && typeof customLinksData === "object") {
             if (customLinksData["nhac-nho"]) {
@@ -250,8 +270,41 @@ function renderDantriDropdown() {
     panel.classList.add("show");
 }
 
+// =========================================================
+// MỤC: NHẮC NHỞ QUAN TRỌNG (ĐƯỢC NÂNG CẤP TOÀN DIỆN)
+// =========================================================
+
+// 1. Sửa chữ "Nhắc nhở quan trọng"
+async function editReminderSectionTitle(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Nhắc nhở quan trọng:", REMINDER_SECTION_TITLE);
+    if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== REMINDER_SECTION_TITLE) {
+        REMINDER_SECTION_TITLE = newTitle.trim();
+        const titleEl = document.getElementById("reminder-section-title-text");
+        if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE;
+
+        try {
+            await fetch(`${FIREBASE_DB_URL}/site_meta.json`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reminderTitle: REMINDER_SECTION_TITLE })
+            });
+        } catch(e) {
+            console.error("Lỗi lưu tiêu đề nhắc nhở:", e);
+        }
+    }
+}
+
 function renderReminderSection() {
     const container = document.getElementById("reminder-container");
+    const titleEl = document.getElementById("reminder-section-title-text");
+    const editHeadBtn = document.getElementById("btn-edit-reminder-head");
+
+    if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE || "📌 Nhắc nhở quan trọng";
+    if (editHeadBtn) {
+        editHeadBtn.style.display = isAdminLoggedIn ? "inline-flex" : "none";
+    }
+
     if (!container) return;
     container.innerHTML = "";
 
@@ -510,6 +563,7 @@ function buildCardHtmlString(item, categoryId) {
     const avatar = item.avatar || PRESET_AVATARS[0];
     const encodedData = encodeURIComponent(JSON.stringify(item));
     const isAllowFree = (item.allowFree !== false);
+    const isReminder = (categoryId === "nhac-nho");
 
     let badgeClass = "badge-empty";
     if (badge === "HOT") badgeClass = "b-hot";
@@ -524,6 +578,27 @@ function buildCardHtmlString(item, categoryId) {
         timeBoxHtml = `
             <div class="st-modal-time-box" style="margin: 6px 0 0 0; padding: 6px 10px; font-size: 11.5px; text-align: left;">
                 ${buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date)}
+            </div>
+        `;
+    }
+
+    // 30 AVATAR PRESET HTML CHO KHỐI NHẮC NHỞ
+    let avatarPopoverHtml = "";
+    if (isReminder) {
+        avatarPopoverHtml = `
+            <div class="avatar-selection-popover" id="avatar-popover-${itemId}">
+                <div class="avatar-popover-header">
+                    <span>🖼️ Chọn Avatar nhanh:</span>
+                    <button type="button" onclick="closeAvatarPopover('${itemId}', event)" style="background:none; border:none; font-size:14px; font-weight:900; color:#94a3b8; cursor:pointer;">✕</button>
+                </div>
+                <div class="avatar-grid-30">
+                    ${PRESET_AVATARS.map((url, i) => `
+                        <img src="${url}" class="avatar-mini-thumb" onclick="selectReminderPresetAvatar('${categoryId}', '${itemId}', '${url}', event)" title="Avatar ${i+1}">
+                    `).join('')}
+                </div>
+                <button type="button" class="btn-upload-pc-avatar" onclick="triggerReminderUploadPC('${itemId}', event)">
+                    📁 Tải ảnh từ máy tính (lưu Drive)
+                </button>
             </div>
         `;
     }
@@ -557,7 +632,11 @@ function buildCardHtmlString(item, categoryId) {
                                 📅 Gia hạn
                             </button>
                         </div>
-                    ` : ''}
+                    ` : (isReminder ? `
+                        <button type="button" class="btn-edit-inline-title" onclick="openDantriArticleModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${categoryId}', event, true)" title="Mở trang soạn thảo bài viết phong cách Dân trí">
+                            📰 Soạn thảo bài viết
+                        </button>
+                    ` : '')}
                 </div>
 
                 <div class="admin-link-tools">
@@ -578,8 +657,9 @@ function buildCardHtmlString(item, categoryId) {
             </div>
 
             <div class="admin-card-bottom-row" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
-                <div class="exam-thumb-box">
+                <div class="exam-thumb-box" ${isReminder ? `onclick="openReminderAvatarPicker('${itemId}', event)" title="Ấn để chọn 30 Avatar đẹp hoặc tải từ máy tính"` : ''} style="${isReminder ? 'cursor:pointer;' : ''}">
                     <img src="${avatar}" class="exam-thumb" alt="icon">
+                    ${avatarPopoverHtml}
                 </div>
                 <div class="exam-info">
                     <div class="exam-header-row">
@@ -596,6 +676,11 @@ function buildCardHtmlString(item, categoryId) {
                             </div>
                         </div>
                         <span class="exam-title-text">${item.title}</span>
+                        ${isReminder ? `
+                            <button type="button" class="btn-edit-inline-title" onclick="renameItem('${categoryId}', '${itemId}', true, '${(item.title || "").replace(/'/g, "\\'")}', event)" title="Sửa tiêu đề này">
+                                ✏️ Sửa
+                            </button>
+                        ` : ''}
                     </div>
                     <div class="exam-date">📅 ${item.date || "---"}</div>
                     ${timeBoxHtml}
@@ -624,12 +709,26 @@ function buildCardHtmlString(item, categoryId) {
 
 function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, event) {
     if (event) {
-        if (event.target.closest('.free-student-toggle-wrap') || event.target.closest('.mini-switch') || event.target.closest('.admin-link-tools') || event.target.closest('.badge-wrapper') || event.target.closest('.btn-view-results-left') || event.target.closest('.left-sub-btns-row')) {
+        if (event.target.closest('.free-student-toggle-wrap') || 
+            event.target.closest('.mini-switch') || 
+            event.target.closest('.admin-link-tools') || 
+            event.target.closest('.badge-wrapper') || 
+            event.target.closest('.btn-view-results-left') || 
+            event.target.closest('.left-sub-btns-row') ||
+            event.target.closest('.btn-edit-inline-title') ||
+            event.target.closest('.avatar-selection-popover')) {
             return;
         }
     }
 
     const item = JSON.parse(decodeURIComponent(stringifiedData));
+
+    // 5. Nếu click vào bài viết ở mục Nhắc nhở quan trọng => mở modal giao diện Dân trí
+    if (categoryId === "nhac-nho") {
+        openDantriArticleModal(item, categoryId, event, false);
+        return;
+    }
+
     const url = decodeURIComponent(rawUrl || item.url || "");
 
     if (isDoc || categoryId === "tu-luan-padlet" || categoryId === "kho-tai-lieu" || !url.includes("thi.html")) {
@@ -642,9 +741,297 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
     openStudentLoginModal(item, categoryId, event);
 }
 
+// =========================================================
+// QUẢN LÝ AVATAR & UPLOAD GOOGLE DRIVE CHO MỤC NHẮC NHỞ
+// =========================================================
+
+function openReminderAvatarPicker(itemId, event) {
+    if (!isAdminLoggedIn) return;
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+
+    document.querySelectorAll(".avatar-selection-popover.show").forEach(p => p.classList.remove("show"));
+    const pop = document.getElementById(`avatar-popover-${itemId}`);
+    if (pop) pop.classList.add("show");
+}
+
+function closeAvatarPopover(itemId, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const pop = document.getElementById(`avatar-popover-${itemId}`);
+    if (pop) pop.classList.remove("show");
+}
+
+async function selectReminderPresetAvatar(categoryId, itemId, avatarUrl, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    closeAvatarPopover(itemId, event);
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatar: avatarUrl })
+        });
+        window.location.reload();
+    } catch(e) {
+        alert("❌ Lỗi khi đổi avatar!");
+    }
+}
+
+function triggerReminderUploadPC(itemId, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    currentTargetAvatarItemId = itemId;
+    const fileInput = document.getElementById("reminder-custom-avatar-input");
+    if (fileInput) {
+        fileInput.value = "";
+        fileInput.click();
+    }
+}
+
+async function handleReminderCustomAvatarUploaded(fileInput) {
+    if (!fileInput.files || fileInput.files.length === 0 || !currentTargetAvatarItemId) return;
+    const file = fileInput.files[0];
+    const itemId = currentTargetAvatarItemId;
+
+    if (!GOOGLE_DRIVE_UPLOAD_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL.includes("DÁN_URL")) {
+        alert("⚠️ Bạn chưa cấu hình GOOGLE_DRIVE_UPLOAD_GAS_URL trong app-config.js!");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            let base64Data = e.target.result.split(',')[1];
+            let mimeType = file.type || "image/jpeg";
+
+            const res = await fetch(GOOGLE_DRIVE_UPLOAD_GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    filename: file.name,
+                    mimeType: mimeType,
+                    base64: base64Data
+                })
+            });
+
+            const result = await res.json();
+            if (result.status === "success" && result.fileUrl) {
+                await fetch(`${FIREBASE_DB_URL}/custom_links/nhac-nho/${itemId}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avatar: result.fileUrl })
+                });
+                alert("🎉 Đã tải ảnh avatar từ máy tính lên Google Drive và cập nhật thành công!");
+                window.location.reload();
+            } else {
+                throw new Error(result.message || "Lỗi tải ảnh lên Google Drive!");
+            }
+        } catch(err) {
+            alert("❌ Lỗi upload ảnh avatar: " + err.message);
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// =========================================================
+// GIAO DIỆN BÀI BÁO PHONG CÁCH BÁO DÂN TRÍ & SOẠN THẢO ADMIN
+// =========================================================
+
+function formatDantriDateTime(d = new Date()) {
+    const days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+    const dayName = days[d.getDay()] || "Hôm nay";
+    const pad = n => String(n).padStart(2, '0');
+    return `${dayName}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function openDantriArticleModal(item, categoryId, event, startWithEdit = false) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+
+    currentActiveArticleItem = item;
+    currentActiveArticleCatId = categoryId || "nhac-nho";
+
+    const modal = document.getElementById("dantri-article-modal");
+    const editToggleBtn = document.getElementById("btn-toggle-article-edit");
+    const viewTitle = document.getElementById("article-view-title");
+    const viewAuthor = document.getElementById("article-view-author");
+    const viewTime = document.getElementById("article-view-time");
+    const viewSapo = document.getElementById("article-view-sapo");
+    const viewImgBox = document.getElementById("article-view-img-box");
+    const viewImg = document.getElementById("article-view-img");
+    const viewCaption = document.getElementById("article-view-caption");
+    const viewBody = document.getElementById("article-view-body");
+
+    const authorText = item.author || "Thầy Hoan";
+    const titleText = item.articleTitle || item.title || "Lưu ý quan trọng";
+    const sapoText = item.sapo || `(Dân trí) - Thông báo quan trọng gửi tới toàn thể học sinh: ${titleText}.`;
+    const timeText = item.articleTime || formatDantriDateTime(new Date(item.timestamp || Date.now()));
+    const bodyText = item.articleBody || "Nội dung thông báo chi tiết từ giáo viên. Các em chú ý theo dõi và thực hiện nghiêm túc.";
+
+    if (viewTitle) viewTitle.innerText = titleText;
+    if (viewAuthor) viewAuthor.innerText = authorText;
+    if (viewTime) viewTime.innerText = timeText;
+    if (viewSapo) viewSapo.innerText = sapoText;
+    if (viewBody) viewBody.innerText = bodyText;
+
+    if (item.articleImg) {
+        if (viewImg) viewImg.src = item.articleImg;
+        if (viewCaption) viewCaption.innerText = item.articleImgCaption || "Ảnh minh họa";
+        if (viewImgBox) viewImgBox.style.display = "block";
+    } else {
+        if (viewImgBox) viewImgBox.style.display = "none";
+    }
+
+    if (editToggleBtn) {
+        editToggleBtn.style.display = isAdminLoggedIn ? "inline-block" : "none";
+    }
+
+    if (startWithEdit && isAdminLoggedIn) {
+        setArticleEditMode(true);
+    } else {
+        setArticleEditMode(false);
+    }
+
+    if (modal) modal.style.display = "flex";
+}
+
+function closeArticleModal() {
+    const modal = document.getElementById("dantri-article-modal");
+    if (modal) modal.style.display = "none";
+    setArticleEditMode(false);
+}
+
+function toggleArticleEditMode() {
+    const editModeDiv = document.getElementById("dantri-article-edit-mode");
+    const isCurrentlyEditing = (editModeDiv && editModeDiv.style.display === "block");
+    setArticleEditMode(!isCurrentlyEditing);
+}
+
+function setArticleEditMode(isEdit) {
+    const viewDiv = document.getElementById("dantri-article-view-mode");
+    const editDiv = document.getElementById("dantri-article-edit-mode");
+    const toggleBtn = document.getElementById("btn-toggle-article-edit");
+
+    if (isEdit) {
+        if (viewDiv) viewDiv.style.display = "none";
+        if (editDiv) editDiv.style.display = "block";
+        if (toggleBtn) toggleBtn.innerText = "👁️ Xem trước bài";
+
+        const item = currentActiveArticleItem || {};
+        document.getElementById("edit-article-title").value = item.articleTitle || item.title || "";
+        document.getElementById("edit-article-author").value = item.author || "Thầy Hoan";
+        document.getElementById("edit-article-time").value = formatDantriDateTime(new Date());
+        document.getElementById("edit-article-sapo").value = item.sapo || "";
+        document.getElementById("edit-article-img-url").value = item.articleImg || "";
+        document.getElementById("edit-article-img-caption").value = item.articleImgCaption || "";
+        document.getElementById("edit-article-body").value = item.articleBody || "";
+    } else {
+        if (viewDiv) viewDiv.style.display = "block";
+        if (editDiv) editDiv.style.display = "none";
+        if (toggleBtn) toggleBtn.innerText = "✏️ Chỉnh sửa";
+    }
+}
+
+function cancelArticleEdit() {
+    setArticleEditMode(false);
+}
+
+async function uploadArticleImageToDrive(input) {
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    const statusBox = document.getElementById("article-img-upload-status");
+    const urlInput = document.getElementById("edit-article-img-url");
+
+    if (!GOOGLE_DRIVE_UPLOAD_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL.includes("DÁN_URL")) {
+        alert("⚠️ Bạn chưa cấu hình GOOGLE_DRIVE_UPLOAD_GAS_URL trong app-config.js!");
+        return;
+    }
+
+    if (statusBox) {
+        statusBox.style.display = "block";
+        statusBox.innerText = `⏳ Đang đọc và tải ảnh "${file.name}" lên Google Drive...`;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            let base64Data = e.target.result.split(',')[1];
+            let mimeType = file.type || "image/jpeg";
+
+            const res = await fetch(GOOGLE_DRIVE_UPLOAD_GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    filename: file.name,
+                    mimeType: mimeType,
+                    base64: base64Data
+                })
+            });
+
+            const result = await res.json();
+            if (result.status === "success" && result.fileUrl) {
+                if (urlInput) urlInput.value = result.fileUrl;
+                if (statusBox) statusBox.innerText = "✅ Tải ảnh lên Google Drive thành công!";
+            } else {
+                throw new Error(result.message || "Máy chủ Drive không trả về URL");
+            }
+        } catch(err) {
+            if (statusBox) statusBox.innerText = "❌ Lỗi: " + err.message;
+            alert("Lỗi upload ảnh lên Google Drive: " + err.message);
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+async function saveArticleToFirebase() {
+    if (!currentActiveArticleItem) return;
+
+    const btn = document.getElementById("btn-save-article-firebase");
+    const titleVal = document.getElementById("edit-article-title").value.trim();
+    const authorVal = document.getElementById("edit-article-author").value.trim() || "Thầy Hoan";
+    const timeVal = document.getElementById("edit-article-time").value.trim() || formatDantriDateTime(new Date());
+    const sapoVal = document.getElementById("edit-article-sapo").value.trim();
+    const imgUrlVal = document.getElementById("edit-article-img-url").value.trim();
+    const captionVal = document.getElementById("edit-article-img-caption").value.trim();
+    const bodyVal = document.getElementById("edit-article-body").value.trim();
+
+    if (!titleVal) {
+        alert("⚠️ Vui lòng nhập tiêu đề bài viết!");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "⏳ Đang lưu bài...";
+
+    const payload = {
+        title: titleVal,
+        articleTitle: titleVal,
+        author: authorVal,
+        articleTime: timeVal,
+        sapo: sapoVal,
+        articleImg: imgUrlVal,
+        articleImgCaption: captionVal,
+        articleBody: bodyVal
+    };
+
+    try {
+        const itemId = currentActiveArticleItem.id || currentActiveArticleItem.firebaseId;
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${currentActiveArticleCatId}/${itemId}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        Object.assign(currentActiveArticleItem, payload);
+        alert("🎉 Đã lưu bài viết theo phong cách báo Dân trí thành công!");
+        window.location.reload();
+    } catch(e) {
+        alert("❌ Lỗi khi lưu bài viết: " + e.message);
+        btn.disabled = false;
+        btn.innerText = "💾 Lưu bài viết lên hệ thống";
+    }
+}
+
 // ==========================================
 // MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
-// (ĐÃ XÓA TRẮNG HOÀN TOÀN CÁC Ô NHẬP, KHÔNG TỰ ĐIỀN DỮ LIỆU CŨ)
+// (LUÔN XÓA RỖNG Ô NHẬP, TRÁNH LẪN DỮ LIỆU CŨ)
 // ==========================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -674,7 +1061,6 @@ function openStudentLoginModal(item, categoryId, event) {
         timeBox.innerHTML = buildTimeBoxHtml(item.timeLimitMinutes, item.examStartTimeStr, item.examEndTimeStr, item.date);
     }
 
-    // 1. LUÔN LUÔN XÓA RỖNG 100% TẤT CẢ CÁC Ô NHẬP LIỆU (CẢ TAB LỚP VÀ TỰ DO)
     const userIn = document.getElementById("st-username-input");
     const passIn = document.getElementById("st-password-input");
     const fNameIn = document.getElementById("st-free-name-input");
@@ -693,7 +1079,6 @@ function openStudentLoginModal(item, categoryId, event) {
     const eyeBtn = document.getElementById("st-eye-btn");
     if (eyeBtn) eyeBtn.innerText = "👁️";
 
-    // 2. XÓA BỘ NHỚ LƯU TRỮ TẠM ĐỂ TRÁNH TRÌNH DUYỆT PHỤC HỒI DỮ LIỆU CŨ
     safeLocal.removeItem("saved_student_sbd");
     safeLocal.removeItem("saved_student_name");
     safeLocal.removeItem("saved_student_class");
@@ -721,7 +1106,6 @@ function closeStudentLoginModal() {
     const modal = document.getElementById("student-login-modal");
     if (modal) modal.style.display = "none";
 
-    // Khi đóng cửa sổ, tự động xóa sạch các ô nhập
     const userIn = document.getElementById("st-username-input");
     const passIn = document.getElementById("st-password-input");
     const fNameIn = document.getElementById("st-free-name-input");
@@ -846,7 +1230,6 @@ function submitStudentLogin() {
         }
     }
 
-    // Không lưu lại thông số học sinh vào các khóa cố định để phiên sau luôn bắt đầu với form trắng
     safeLocal.removeItem("last_submission_cleared");
     safeLocal.removeItem("saved_student_sbd");
     safeLocal.removeItem("saved_student_name");
@@ -1201,10 +1584,22 @@ document.addEventListener("click", function(event) {
         document.querySelectorAll(".badge-dropdown-menu.show").forEach(m => m.classList.remove("show"));
     }
 
+    const avatarBox = event.target.closest(".exam-thumb-box");
+    if (!avatarBox) {
+        document.querySelectorAll(".avatar-selection-popover.show").forEach(p => p.classList.remove("show"));
+    }
+
     const visitModal = document.getElementById("visit-stats-modal");
     if (visitModal && visitModal.style.display === "flex") {
         if (event.target === visitModal) {
             closeVisitStatsModal();
+        }
+    }
+
+    const articleModal = document.getElementById("dantri-article-modal");
+    if (articleModal && articleModal.style.display === "flex") {
+        if (event.target === articleModal) {
+            closeArticleModal();
         }
     }
 });
