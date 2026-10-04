@@ -1,10 +1,11 @@
 // =========================================================
 // FILE: app-main.js
-// BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH & MỤC NHẮC NHỞ QUAN TRỌNG
+// BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH & MỤC BẢN TIN THƯỜNG NGÀY
 // 1. Tự động hiển thị bài báo Dân trí đầy đủ Sapo, nội dung, ảnh & file đính kèm
 // 2. Avatar click: Bảng chọn 20 avatar mẫu, chọn 4 cỡ ảnh (Nhỏ -> Rất to), tải ảnh từ PC
 // 3. Khắc phục lỗi che khuất popover avatar và chống tắt giao diện ngoài ý muốn
-// 4. Tự động đồng bộ ngày giờ đăng bài báo dưới tiêu đề (thay thế dấu ---)
+// 4. Nút ➕ Thêm bài cho Bản tin thường ngày: Tạo bài mới lên đầu & mở ngay soạn thảo
+// 5. Bản tin thường ngày: Hiển thị 2 bài, từ bài 3 tự động cuộn dọc (scroll)
 // =========================================================
 
 // BỘ ĐỆM BẢO VỆ LƯU TRỮ
@@ -280,7 +281,7 @@ function renderDantriDropdown() {
 
 async function editReminderSectionTitle(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Nhắc nhở quan trọng:", REMINDER_SECTION_TITLE);
+    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Bản tin thường ngày:", REMINDER_SECTION_TITLE);
     if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== REMINDER_SECTION_TITLE) {
         REMINDER_SECTION_TITLE = newTitle.trim();
         const titleEl = document.getElementById("reminder-section-title-text");
@@ -298,21 +299,93 @@ async function editReminderSectionTitle(event) {
     }
 }
 
+// =========================================================
+// CHỨC NĂNG 1: THÊM BÀI MỚI VÀO BẢN TIN THƯỜNG NGÀY
+// =========================================================
+async function addNewReminderArticle(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    if (!isAdminLoggedIn) return;
+
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const dateCardStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} - ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const articleTimeStr = formatDantriDateTime(now);
+    const newItemId = "rem_" + Date.now();
+
+    // Mẫu bài báo mới có cấu trúc chuẩn như bài "Đi siêu thị mua gì"
+    const newArticle = {
+        id: newItemId,
+        firebaseId: newItemId,
+        categoryId: "nhac-nho",
+        title: "Bản tin mới...",
+        articleTitle: "Bản tin mới...",
+        author: "Thầy Hoan",
+        articleTime: articleTimeStr,
+        date: dateCardStr,
+        timestamp: Date.now(),
+        badgeText: "MỚI",
+        isHot: true,
+        isDoc: true,
+        avatar: PRESET_20_AVATARS[0],
+        avatarSize: 48,
+        sapo: "(Dân trí) - ",
+        articleImg: "",
+        articleImgCaption: "",
+        articleBody: "",
+        url: "#"
+    };
+
+    try {
+        // Lưu ngay vào Firebase mục nhac-nho
+        await fetch(`${FIREBASE_DB_URL}/custom_links/nhac-nho/${newItemId}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newArticle)
+        });
+
+        if (!REMINDER_CATEGORY.links) REMINDER_CATEGORY.links = [];
+        REMINDER_CATEGORY.links.unshift(newArticle);
+        REMINDER_CATEGORY.links = sortLinksNewestFirst(REMINDER_CATEGORY.links);
+
+        renderReminderSection();
+
+        // Mở ngay modal soạn thảo Dân trí để thầy cô gõ tiêu đề, sapo, ảnh và nội dung
+        openDantriArticleModal(newArticle, "nhac-nho", null, true);
+    } catch(err) {
+        alert("❌ Lỗi khi thêm bài mới: " + err.message);
+    }
+}
+
+// =========================================================
+// CHỨC NĂNG 2: HIỂN THỊ CÙNG LÚC 2 BÀI ĐĂNG, TỪ BÀI 3 CÓ THANH TRƯỢT DỌC
+// =========================================================
 function renderReminderSection() {
     const container = document.getElementById("reminder-container");
     const titleEl = document.getElementById("reminder-section-title-text");
     const editHeadBtn = document.getElementById("btn-edit-reminder-head");
+    const addArticleBtn = document.getElementById("btn-add-reminder-article");
 
-    if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE || "📌 Nhắc nhở quan trọng";
+    if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE || "📌 Bản tin thường ngày";
     if (editHeadBtn) {
         editHeadBtn.style.display = isAdminLoggedIn ? "inline-flex" : "none";
+    }
+    if (addArticleBtn) {
+        addArticleBtn.style.display = isAdminLoggedIn ? "inline-flex" : "none";
     }
 
     if (!container) return;
     container.innerHTML = "";
 
     const links = sortLinksNewestFirst(REMINDER_CATEGORY.links || []);
-    renderLinksWithFold(container, links, "nhac-nho", 2);
+    if (!links || links.length === 0) {
+        container.innerHTML = `<div class="empty-folder">Chưa có bài đăng nào trong Bản tin thường ngày.</div>`;
+        return;
+    }
+
+    // Hiển thị trực tiếp danh sách các thẻ bài, css sẽ tự động giới hạn độ cao đúng 2 bài và cuộn từ bài thứ 3
+    links.forEach(item => {
+        container.appendChild(createItemCardElement(item, "nhac-nho"));
+    });
 }
 
 function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
@@ -560,13 +633,11 @@ function createItemCardElement(item, categoryId) {
 function getItemDisplayDate(item) {
     if (!item) return "---";
 
-    // 1. Nếu có ngày theo định dạng chuẩn DD/MM/YYYY
     let rawDate = item.date || item.articleDate || "";
     if (rawDate && String(rawDate).trim() !== "" && String(rawDate).trim() !== "---") {
         return String(rawDate).trim();
     }
 
-    // 2. Nếu có trường articleTime (Dân trí: Thứ ba, 24/09/2026 - 15:30) -> Rút gọn sang ngày giờ hiển thị
     if (item.articleTime && String(item.articleTime).trim() !== "") {
         let cleanTime = String(item.articleTime).trim();
         let m = cleanTime.match(/(\d{1,2}\/\d{1,2}\/\d{4}(?:\s*-\s*\d{1,2}:\d{2})?)/);
@@ -574,14 +645,12 @@ function getItemDisplayDate(item) {
         return cleanTime;
     }
 
-    // 3. Nếu có timestamp
     if (item.timestamp && !isNaN(Number(item.timestamp))) {
         let d = new Date(Number(item.timestamp));
         const pad = n => String(n).padStart(2, '0');
         return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
-    // 4. Nếu là bài viết thuộc mục nhắc nhở, tự động tạo ngày hiện tại nếu chưa từng có
     if (item.categoryId === "nhac-nho" || item.isDoc) {
         let d = new Date();
         const pad = n => String(n).padStart(2, '0');
@@ -601,10 +670,7 @@ function buildCardHtmlString(item, categoryId) {
     const isAllowFree = (item.allowFree !== false);
     const isReminder = (categoryId === "nhac-nho");
     
-    // Lấy ngày giờ hiển thị thay thế cho dấu ---
     const displayDate = getItemDisplayDate(item);
-
-    // Đọc kích cỡ avatar được lưu: mặc định 48px
     const avatarSize = parseInt(item.avatarSize, 10) || 48;
 
     let badgeClass = "badge-empty";
@@ -624,7 +690,6 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
-    // BẢNG ĐIỀU KHIỂN AVATAR: 4 KÍCH CỠ + 20 AVATAR MẪU + TẢI TỪ MÁY TÍNH
     let avatarPopoverHtml = "";
     if (isAdminLoggedIn) {
         avatarPopoverHtml = `
@@ -634,7 +699,6 @@ function buildCardHtmlString(item, categoryId) {
                     <button type="button" class="btn-close-popover-x" onclick="closeAvatarPopover('${itemId}', event)">✕</button>
                 </div>
                 
-                <!-- BỘ CHỌN KÍCH CỠ AVATAR: NHỎ ĐẾN RẤT TO -->
                 <div class="avatar-size-control-box">
                     <div class="size-control-label">📏 Kích cỡ hiển thị avatar:</div>
                     <div class="avatar-size-pills">
@@ -720,7 +784,7 @@ function buildCardHtmlString(item, categoryId) {
             </div>
 
             <div class="admin-card-bottom-row" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
-                <div class="exam-thumb-box" onclick="openItemAvatarPicker('${itemId}', event)" title="Ấn để chọn 20 Avatar mẫu, đổi kích thước từ nhỏ đến rất to, hoặc tải từ máy tính" style="width: ${avatarSize}px; height: ${avatarSize}px; cursor: pointer;">
+                <div class="exam-thumb-box" onclick="openItemAvatarPicker('${itemId}', event)" title="Ấn để chọn 20 Avatar mẫu, đổi kích thước hoặc tải từ máy tính" style="width: ${avatarSize}px; height: ${avatarSize}px; cursor: pointer;">
                     <img src="${avatar}" class="exam-thumb" alt="icon">
                     ${avatarPopoverHtml}
                 </div>
@@ -776,7 +840,6 @@ function buildCardHtmlString(item, categoryId) {
 
 function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, event) {
     if (event) {
-        // Ngăn click vào avatar picker, switch, các nút công cụ admin
         if (event.target.closest('.exam-thumb-box') ||
             event.target.closest('.avatar-selection-popover') ||
             event.target.closest('.free-student-toggle-wrap') || 
@@ -817,7 +880,6 @@ function openItemAvatarPicker(itemId, event) {
     const targetPop = document.getElementById(`avatar-popover-${itemId}`);
     const isAlreadyOpen = targetPop && targetPop.classList.contains("show");
 
-    // Đóng tất cả popover khác và gỡ z-index
     document.querySelectorAll(".avatar-selection-popover.show").forEach(p => p.classList.remove("show"));
     document.querySelectorAll(".exam-card.has-active-popover").forEach(c => c.classList.remove("has-active-popover"));
 
@@ -964,7 +1026,6 @@ function renderArticleViewContent(item) {
     if (viewSapo) viewSapo.innerText = sapoText;
     if (viewBody) viewBody.innerText = bodyText;
 
-    // Hiển thị ảnh bài viết nếu có
     const rawImg = item.articleImg || item.articleImage || "";
     if (rawImg && rawImg.trim() !== "") {
         const directUrl = toDirectGoogleDriveImageUrl(rawImg);
@@ -984,7 +1045,6 @@ function renderArticleViewContent(item) {
         if (viewImgBox) viewImgBox.style.display = "none";
     }
 
-    // Nếu bài viết có link đính kèm tài liệu Google Drive hoặc link web
     let attachBox = document.getElementById("article-view-attach-box");
     if (!attachBox && viewBody) {
         attachBox = document.createElement("div");
@@ -1039,7 +1099,6 @@ function toggleArticleEditMode(event) {
     const isCurrentlyEditing = (editModeDiv && editModeDiv.style.display === "block");
 
     if (isCurrentlyEditing) {
-        // Đồng bộ dữ liệu vừa gõ vào chế độ xem trước
         if (currentActiveArticleItem) {
             currentActiveArticleItem.articleTitle = document.getElementById("edit-article-title")?.value.trim() || currentActiveArticleItem.title;
             currentActiveArticleItem.title = currentActiveArticleItem.articleTitle;
@@ -1180,7 +1239,6 @@ async function saveArticleToFirebase(event) {
 
     const directImgVal = toDirectGoogleDriveImageUrl(rawImgVal);
 
-    // Chuẩn hóa ngày giờ ngắn gọn để hiển thị trên thẻ card (VD: 24/09/2026 - 15:30)
     let cardDateStr = "";
     let m = timeVal.match(/(\d{1,2}\/\d{1,2}\/\d{4}(?:\s*-\s*\d{1,2}:\d{2})?)/);
     if (m) {
@@ -1738,7 +1796,7 @@ async function refreshVisitStatsData() {
     if (btn) { btn.innerText = "🔄 Cập nhật"; btn.disabled = false; }
 }
 
-// SỰ KIỆN CLICK TOÀN CỤC (CHỐNG TỰ ĐỘNG TẮT KHI BẤM BÊN TRONG BẢNG)
+// SỰ KIỆN CLICK TOÀN CỤC
 document.addEventListener("click", function(event) {
     const adminWrapper = event.target.closest(".admin-controls-wrapper");
     if (!adminWrapper) {
@@ -1756,7 +1814,6 @@ document.addEventListener("click", function(event) {
         document.querySelectorAll(".badge-dropdown-menu.show").forEach(m => m.classList.remove("show"));
     }
 
-    // Đóng popover avatar khi click ra ngoài ô avatar
     const avatarBox = event.target.closest(".exam-thumb-box");
     if (!avatarBox) {
         document.querySelectorAll(".avatar-selection-popover.show").forEach(p => p.classList.remove("show"));
@@ -1770,7 +1827,6 @@ document.addEventListener("click", function(event) {
         }
     }
 
-    // CHỐNG TẮT MODAL BÀI BÁO NGOÀI Ý MUỐN: CHỈ TẮT KHI BẤM CHÍNH XÁC VÀO PHẦN ĐỆM NỀN TỐI
     const articleModal = document.getElementById("dantri-article-modal");
     if (articleModal && articleModal.style.display === "flex") {
         if (event.target.id === "dantri-article-modal") {
