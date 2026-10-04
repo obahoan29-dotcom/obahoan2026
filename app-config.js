@@ -14,6 +14,9 @@ let selectedAvatarUrl = "";
 let currentMoveData = { oldCategory: null, quizId: null, quizData: null };
 let currentCopyData = { sourceCategory: null, itemId: null, itemData: null };
 
+// Quản lý tiêu đề mục nhắc nhở lớn
+let REMINDER_SECTION_TITLE = "📌 Nhắc nhở quan trọng";
+
 let activeStudentLogin = {
     targetUrl: "",
     examTitle: "",
@@ -59,9 +62,15 @@ let REMINDER_CATEGORY = {
     links: [
         { 
             id: "rem_1", firebaseId: "rem_1", categoryId: "nhac-nho",
-            title: "Lưu ý quan trọng: Các em nộp tự luận Padlet phải đúng mẫu, ví dụ 11A25 ĐẠT, ở phần Subject ghi rõ 11a25-220926-đạt", 
-            date: "05/08/2026 - 15:00", url: "#", badgeText: "HOT", isDoc: true, 
-            avatar: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png" 
+            title: "Lưu ý quan trọng: 11C còn 15 em chưa làm đề so 100", 
+            date: "---", url: "#", badgeText: "MỚI", isDoc: true, 
+            avatar: "https://i.ibb.co/HTPxzDtT/khung-long-bao-chua.jpg",
+            author: "Thầy Hoan",
+            articleTitle: "Lưu ý quan trọng: 11C còn 15 em chưa làm đề so 100",
+            sapo: "Nhắc nhở học sinh lớp 11C khẩn trương hoàn thành bài thi số 100 theo đúng thời hạn.",
+            articleImg: "",
+            articleImgCaption: "Hệ thống làm bài thi trực tuyến",
+            articleBody: "Đến thời điểm hiện tại hệ thống ghi nhận còn 15 học sinh lớp 11C chưa nộp bài thi đề số 100. Các em kiểm tra lại tài khoản và hoàn thiện trước thời hạn quy định."
         }
     ]
 };
