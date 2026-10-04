@@ -4,6 +4,7 @@
 // THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
 // ĐÃ SỬA TRIỆT ĐỂ: KHÔNG TỰ ĐỘNG MATCH ĐỔI TÊN HỌC SINH KHÁC
 // TỐI ƯU HÓA: CHỐNG NGHẼN MẠNG GÂY ĐƠ LAG KHI LÀM BÀI
+// - ĐÃ SỬA: XÓA CHUẨN XÁC TRẠNG THÁI "ĐANG LÀM BÀI" KHI NỘP XONG
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
@@ -285,17 +286,29 @@ async function fetchOnlineCount(examCode) {
     } catch(e) {}
 }
 
+// ĐÃ SỬA CĂN BẢN: Càn quét xóa sạch khỏi TOÀN BỘ các nhánh dự phòng (chống lỗi báo Đang làm bài)
 function clearPresence(sId) {
     if (presenceInterval) clearInterval(presenceInterval);
     if (onlineCountInterval) clearInterval(onlineCountInterval);
+    
     const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
     const urlParams = new URLSearchParams(window.location.search);
     const currentQuizId = urlParams.get('id') || "";
+    const examCode = getExamCode();
 
-    fetch(`${FIREBASE_DB_URL}/active_sessions/${getExamCode()}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
-    if (currentQuizId) {
-        fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
+    const pushNodes = [examCode];
+    if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
+    
+    let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
+    if (numMatch) {
+        pushNodes.push(numMatch[1]);
+        pushNodes.push("DE" + numMatch[1]);
+        pushNodes.push("DE" + numMatch[1] + "TOAN11");
     }
+    
+    pushNodes.forEach(n => {
+        fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
+    });
 }
 
 function showTimeChangeToast(message) {
@@ -393,8 +406,6 @@ function setupBackPrevention() {
     }); 
 }
 
-function getStorageKey() { return `exam_autosave_active_session_${EXAM_NAME}_${getMaDe()}`; }
-
 function saveExamStateToStorage() { 
     if (!examStartTime || isSubmitted) return; 
     const dataToSave = { 
@@ -409,37 +420,6 @@ function saveExamStateToStorage() {
         isStarted: true 
     }; 
     safeLocal.setItem(getStorageKey(), JSON.stringify(dataToSave)); 
-}
-
-function restoreExamStateFromStorage() { 
-    try { 
-        const raw = safeLocal.getItem(getStorageKey()); 
-        if (!raw) return false; 
-        const parsed = JSON.parse(raw); 
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentUrlSbd = urlParams.get('sbd');
-        if (currentUrlSbd && parsed.studentId && currentUrlSbd.toLowerCase() !== String(parsed.studentId).toLowerCase()) {
-            safeLocal.removeItem(getStorageKey());
-            return false;
-        }
-
-        if (parsed && parsed.isStarted && parsed.userAnswers) { 
-            userAnswersState = parsed.userAnswers || {}; 
-            padletClickedMap = parsed.padletClickedMap || {}; 
-            tabSwitchCount = parsed.tabSwitchCount || 0; 
-            examStartTime = parsed.examStartTime || Date.now(); 
-            if (parsed.timeLimitMinutes) {
-                TIME_LIMIT_MINUTES = parseInt(parsed.timeLimitMinutes, 10);
-                totalTimeSeconds = TIME_LIMIT_MINUTES * 60;
-            }
-            if (parsed.studentId) document.getElementById("student-id").value = parsed.studentId; 
-            if (parsed.studentName) document.getElementById("student-name").value = parsed.studentName; 
-            if (parsed.studentClass) document.getElementById("student-class").value = parsed.studentClass; 
-            return true; 
-        } 
-    } catch(e) {} 
-    return false; 
 }
 
 function checkPendingSubmissionOnLoad() { 
@@ -559,3 +539,5 @@ function retrySubmitPending() {
 }
 
 async function requestWakeLock() { try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (err) {} }
+
+--- START OF FILE text/javascript ---
