@@ -441,7 +441,7 @@ function scrollQPalette(offset) {
 function scrollToQuestion(qId) { 
     const target = document.getElementById(`q-card-${qId}`); 
     if (target) { 
-        // Đã cập nhật offset tương thích với top banner co gọn tối đa (máy tính 82px, điện thoại 72px)
+        // Offset khớp hoàn hảo với chiều cao top banner co gọn
         const headerOffset = window.innerWidth <= 640 ? 72 : 82; 
         
         const elementPosition = target.getBoundingClientRect().top; 
@@ -479,7 +479,6 @@ function setupScrollObserver() {
     if (window._qCardObserver) {
         window._qCardObserver.disconnect();
     }
-    // Cập nhật rootMargin khớp với top banner co gọn (-85px)
     const options = { root: null, rootMargin: '-85px 0px -50% 0px', threshold: 0.1 }; 
     window._qCardObserver = new IntersectionObserver((entries) => { 
         let bestEntry = null;
