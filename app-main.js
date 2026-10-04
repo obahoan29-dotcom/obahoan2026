@@ -277,8 +277,9 @@ function renderDantriDropdown() {
 // 1. Sửa chữ "Nhắc nhở quan trọng"
 async function editReminderSectionTitle(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Nhắc nhở quan trọng:", REMINDER_SECTION_TITLE);
-    if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== REMINDER_SECTION_TITLE) {
+    const curTitle = (typeof REMINDER_SECTION_TITLE !== 'undefined' && REMINDER_SECTION_TITLE) ? REMINDER_SECTION_TITLE : "📌 Nhắc nhở quan trọng";
+    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Nhắc nhở quan trọng:", curTitle);
+    if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== curTitle) {
         REMINDER_SECTION_TITLE = newTitle.trim();
         const titleEl = document.getElementById("reminder-section-title-text");
         if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE;
@@ -300,7 +301,8 @@ function renderReminderSection() {
     const titleEl = document.getElementById("reminder-section-title-text");
     const editHeadBtn = document.getElementById("btn-edit-reminder-head");
 
-    if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE || "📌 Nhắc nhở quan trọng";
+    const displayTitle = (typeof REMINDER_SECTION_TITLE !== 'undefined' && REMINDER_SECTION_TITLE) ? REMINDER_SECTION_TITLE : "📌 Nhắc nhở quan trọng";
+    if (titleEl) titleEl.innerText = displayTitle;
     if (editHeadBtn) {
         editHeadBtn.style.display = isAdminLoggedIn ? "inline-flex" : "none";
     }
