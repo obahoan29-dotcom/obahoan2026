@@ -389,15 +389,53 @@ body {
 }
 .btn-edit-inline-title:hover { background: #0284c7; color: #ffffff; }
 
+/* KHUNG ẢNH AVATAR VÀ THAY ĐỔI CỠ LINH HOẠT - SỬA LỖI OVERFLOW BỊ CẮT */
+.exam-thumb-box { 
+    border-radius: 12px; 
+    overflow: visible !important; /* QUAN TRỌNG: Cho phép bảng chọn avatar bung ra ngoài */
+    flex-shrink: 0; 
+    border: 1.5px solid #e2e8f0; 
+    background: #f8fafc; 
+    position: relative; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    transition: width 0.2s ease, height 0.2s ease;
+}
+.exam-thumb { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    border-radius: 10px;
+    display: block;
+}
+
+/* Đưa thẻ bài lên lớp trên cùng khi mở bảng chọn avatar */
+.exam-card.has-active-popover {
+    z-index: 10000 !important;
+}
+
 /* POPOVER CẤU HÌNH AVATAR VÀ KÍCH CỠ */
 .avatar-selection-popover {
-    display: none; position: absolute; top: calc(100% + 8px); left: 0;
-    background: #ffffff; border-radius: 16px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.32), 0 0 0 1px #cbd5e1;
-    border: 1.5px solid #94a3b8; padding: 14px; z-index: 999999;
-    width: 320px; animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    cursor: default; text-align: left;
+    display: none; 
+    position: absolute; 
+    top: calc(100% + 8px); 
+    left: 0;
+    background: #ffffff; 
+    border-radius: 16px; 
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.32), 0 0 0 1px #cbd5e1;
+    border: 1.5px solid #94a3b8; 
+    padding: 14px; 
+    z-index: 999999;
+    width: 320px; 
+    max-width: calc(100vw - 36px);
+    animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: default; 
+    text-align: left;
 }
-.avatar-selection-popover.show { display: block; }
+.avatar-selection-popover.show { 
+    display: block !important; 
+}
 .avatar-popover-header {
     display: flex; align-items: center; justify-content: space-between;
     font-size: 13px; font-weight: 900; color: #0f172a; margin-bottom: 10px;
@@ -467,7 +505,7 @@ body {
 }
 
 /* ========================================================= */
-/* GIAO DIỆN BÀI VIẾT BÁO DÂN TRÍ VÀ KHUNG XEM TRƯỚC ẢNH     */
+/* GIAO DIỆN BÀI VIẾT BÁO DÂN TRÍ - SỬA LỖI CO RÚT BÉ TÍ     */
 /* ========================================================= */
 .dantri-article-modal {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
@@ -476,9 +514,18 @@ body {
     padding: 14px; animation: fadeInModal 0.25s ease-out;
 }
 .dantri-article-card {
-    background: #ffffff; border-radius: 20px; max-width: 720px; width: 100%;
-    max-height: 92vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
-    border: 1.5px solid #cbd5e1; padding: 22px 24px; display: flex; flex-direction: column;
+    background: #ffffff; 
+    border-radius: 20px; 
+    max-width: 720px; 
+    width: min(720px, calc(100vw - 28px)); 
+    min-height: 360px; /* Chống co rút bé tí */
+    max-height: 92vh; 
+    overflow-y: auto; 
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
+    border: 1.5px solid #cbd5e1; 
+    padding: 22px 24px; 
+    display: flex; 
+    flex-direction: column;
     animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .dantri-modal-top-bar {
@@ -513,8 +560,15 @@ body {
 .dantri-author-name { font-weight: 800; color: #1e293b; }
 .dantri-meta-dot { opacity: 0.5; }
 .dantri-sapo-text {
-    font-size: 15.5px; font-weight: 700; line-height: 1.55; color: #1e293b;
-    margin-bottom: 16px; border-left: 3.5px solid #0284c7; padding-left: 12px;
+    font-size: 15px; 
+    font-weight: 700; 
+    line-height: 1.6; 
+    color: #1e293b;
+    margin-bottom: 16px; 
+    border-left: 4px solid #0284c7; 
+    background: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 0 12px 12px 0;
 }
 
 /* Khung hiển thị ảnh bài viết */
@@ -530,7 +584,40 @@ body {
     background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;
 }
 .dantri-body-content {
-    font-size: 15px; line-height: 1.7; color: #334155; white-space: pre-line; text-align: justify;
+    font-size: 15px; 
+    line-height: 1.75; 
+    color: #334155; 
+    white-space: pre-line; 
+    text-align: justify;
+    margin-bottom: 16px;
+}
+
+/* Nút mở file tài liệu / Drive đính kèm */
+.dantri-attach-box {
+    margin: 14px 0; 
+    padding: 14px; 
+    background: #f0f9ff; 
+    border: 1.5px dashed #0284c7;
+    border-radius: 12px; 
+    text-align: center;
+}
+.btn-open-attach {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px; 
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff !important; 
+    font-weight: 800; 
+    font-size: 13.5px; 
+    padding: 9px 18px;
+    border-radius: 10px; 
+    text-decoration: none; 
+    transition: 0.2s;
+    box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3);
+}
+.btn-open-attach:hover { 
+    transform: scale(1.03); 
+    box-shadow: 0 5px 14px rgba(2, 132, 199, 0.45);
 }
 
 /* Các trường trong ô soạn thảo admin */
@@ -649,14 +736,6 @@ details[open] .folder-arrow { transform: rotate(90deg); color: var(--primary-blu
 .btn-time-sub-schedule { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
 .btn-time-sub-schedule:hover { background: #f59e0b; color: #fff; }
 
-/* KHUNG ẢNH AVATAR VÀ THAY ĐỔI CỠ LINH HOẠT */
-.exam-thumb-box { 
-    border-radius: 12px; overflow: hidden; 
-    flex-shrink: 0; border: 1.5px solid #e2e8f0; background: #f8fafc; 
-    position: relative; display: flex; align-items: center; justify-content: center;
-    transition: width 0.2s ease, height 0.2s ease;
-}
-.exam-thumb { width: 100%; height: 100%; object-fit: cover; }
 .exam-info { flex: 1; min-width: 0; padding-right: 4px; overflow: visible;}
 .exam-header-row { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; overflow: visible; }
 
@@ -1123,7 +1202,7 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .visit-stats-modal-box { padding: 16px; border-radius: 16px; }
     .kpi-val { font-size: 19px; }
 
-    .dantri-article-card { padding: 16px 14px; }
+    .dantri-article-card { padding: 16px 14px; min-height: 320px; }
     .dantri-view-title { font-size: 18.5px; }
     .dantri-sapo-text { font-size: 14px; }
     .avatar-selection-popover { width: 290px; }
