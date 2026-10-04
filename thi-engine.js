@@ -2,11 +2,8 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// - ĐỊNH DẠNG DÒNG TRÍCH XUẤT ĐỀ THI SAU DẤU // THÀNH IN ĐẬM NÉT VÀ MÀU NÂU
 // - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
-// - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
-// - TỐI ƯU OFFSET SCROLL TƯƠNG THÍCH VỚI TOP BANNER CO GỌN
-// - ĐÃ SỬA LỖI ĐẾM SAI THỜI GIAN VÀ KHÔNG GHI NHẬN BÀI NỘP
+// - TỐI ƯU HÓA: BẤM VÀO THI VÀO ĐỀ NGAY LẬP TỨC (XỬ LÝ ĐỒNG BỘ BACKGROUND)
 // =========================================================
 
 let hasInitExamEngine = false;
@@ -631,6 +628,7 @@ function startWaitingCountdown(startTimeMs, sId, sName, sClass) {
     }, 1000); 
 }
 
+// ĐÃ TỐI ƯU HÓA TỐC ĐỘ: KHÔNG AWAIT CÁC TIẾN TRÌNH PHỤ (BACKGROUND) ĐỂ VÀO BÀI NHANH CHÓNG
 async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
     const currentCat = getExamCategory();
     const urlParams = new URLSearchParams(window.location.search);
@@ -640,7 +638,7 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
 
     if (startBtn) {
         startBtn.disabled = true;
-        startBtn.innerText = "⏳ Đang kết nối máy chủ thi...";
+        startBtn.innerText = "⏳ Đang kết nối...";
     }
 
     const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
@@ -682,8 +680,26 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 3500); // Rút ngắn chờ mạng xuống 3.5s
 
+        // CHỈ AWAIT ĐÚNG NHÁNH CHÍNH ĐỂ ĐẢM BẢO NHANH CHÓNG
+        const primaryRes = await fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(presencePayload),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (primaryRes && primaryRes.ok) {
+            const resData = await primaryRes.json().catch(() => null);
+            if (resData && !resData.error && resData.sbd) {
+                isFirebaseConfirmed = true;
+            }
+        }
+
+        // TÁCH VÀ ĐẨY CÁC TASK PHỤ CHẠY NGẦM BACKGROUND MÀ KHÔNG CHỜ (FIRE-AND-FORGET)
         const pushNodes = [examCode];
         if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
         let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
@@ -693,45 +709,22 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
             pushNodes.push("DE" + numMatch[1] + "TOAN11");
         }
 
-        const primarySessionTask = fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(presencePayload),
-            signal: controller.signal
-        });
-
-        const otherTasks = [];
         pushNodes.forEach(n => {
             if (n !== examCode) {
-                otherTasks.push(
-                    fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(presencePayload),
-                        signal: controller.signal
-                    }).catch(() => null)
-                );
+                fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(presencePayload)
+                }).catch(() => null);
             }
         });
 
-        otherTasks.push(
-            fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(logPayload),
-                signal: controller.signal
-            }).catch(() => null)
-        );
+        fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(logPayload)
+        }).catch(() => null);
 
-        const [primaryRes] = await Promise.all([primarySessionTask, ...otherTasks]);
-        clearTimeout(timeoutId);
-
-        if (primaryRes && primaryRes.ok) {
-            const resData = await primaryRes.json().catch(() => null);
-            if (resData && !resData.error && resData.sbd) {
-                isFirebaseConfirmed = true;
-            }
-        }
     } catch(e) {
         console.warn("Lỗi kết nối Firebase khi bắt đầu bài thi:", e);
     }
@@ -757,6 +750,7 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         return;
     }
 
+    // Đẩy Google Sheet chạy ẩn
     postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
 
     document.getElementById("nav-student-name").innerText = sName; 
@@ -1166,5 +1160,3 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     }
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
 }
-
---- START OF FILE text/javascript ---
