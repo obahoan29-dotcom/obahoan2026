@@ -359,7 +359,7 @@ body {
 .dantri-sub-header { font-size: 15px; font-weight: 800; color: #047857; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
 /* ========================================================= */
-/* KHỐI BẢN TIN THƯỜNG NGÀY & THANH CUỘN 2 BÀI ĐĂNG          */
+/* KHỐI NHẮC NHỞ QUAN TRỌNG VÀ POPOVER AVATAR MỚI            */
 /* ========================================================= */
 .reminder-section { 
     position: relative;
@@ -392,56 +392,12 @@ body {
     font-size: 16px; font-weight: 800; color: var(--primary-red); margin: 0; 
     display: flex; align-items: center; gap: 8px;
 }
-
-.reminder-head-actions {
-    display: flex; align-items: center; gap: 6px;
-}
-
-/* NÚT DẤU CỘNG THÊM BÀI MỚI */
-.btn-add-reminder-article {
-    display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-    color: #ffffff; border: none; border-radius: 8px; padding: 3px 9px; font-size: 11.5px; 
-    font-weight: 800; cursor: pointer; transition: 0.15s; font-family: inherit;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
-}
-.btn-add-reminder-article:hover { 
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    transform: scale(1.05); 
-}
-
 .btn-edit-reminder-head {
     display: none; background: #fee2e2; color: #dc2626; border: 1.5px solid #fca5a5;
     border-radius: 8px; padding: 3px 8px; font-size: 11.5px; font-weight: 800;
     cursor: pointer; transition: 0.15s; font-family: inherit;
 }
 .btn-edit-reminder-head:hover { background: #dc2626; color: #ffffff; }
-
-/* KHU VỰC CUỘN DỌC: HIỂN THỊ ĐÚNG 2 BÀI, TỪ BÀI 3 KÉO THANH CUỘN */
-.reminder-scroll-list {
-    max-height: 198px; /* Độ cao vừa vặn cho 2 thẻ bài của học sinh */
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 4px;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-}
-.reminder-scroll-list:has(.admin-card-mode) {
-    max-height: 295px; /* Độ cao vừa vặn cho 2 thẻ bài ở chế độ quản trị admin */
-}
-.reminder-scroll-list::-webkit-scrollbar {
-    width: 6px;
-}
-.reminder-scroll-list::-webkit-scrollbar-track {
-    background: rgba(241, 245, 249, 0.6);
-    border-radius: 10px;
-}
-.reminder-scroll-list::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-.reminder-scroll-list::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
 
 .btn-edit-inline-title {
     background: #e0f2fe; color: #0284c7; border: 1px solid #7dd3fc;
@@ -453,7 +409,7 @@ body {
 /* KHUNG ẢNH AVATAR VÀ THAY ĐỔI CỠ LINH HOẠT - SỬA LỖI OVERFLOW BỊ CẮT */
 .exam-thumb-box { 
     border-radius: 12px; 
-    overflow: visible !important;
+    overflow: visible !important; /* QUAN TRỌNG: Cho phép bảng chọn avatar bung ra ngoài */
     flex-shrink: 0; 
     border: 1.5px solid #e2e8f0; 
     background: #f8fafc; 
@@ -514,7 +470,7 @@ body {
 }
 .btn-close-popover-x:hover { color: #ef4444; }
 
-/* Thanh điều chỉnh kích cỡ Avatar */
+/* Thanh điều chỉnh kích cỡ Avatar (từ nhỏ đến rất to) */
 .avatar-size-control-box {
     background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px;
     padding: 8px 10px; margin-bottom: 10px;
@@ -573,7 +529,7 @@ body {
 }
 
 /* ========================================================= */
-/* GIAO DIỆN BÀI VIẾT BÁO DÂN TRÍ                            */
+/* GIAO DIỆN BÀI VIẾT BÁO DÂN TRÍ - SỬA LỖI CO RÚT BÉ TÍ     */
 /* ========================================================= */
 .dantri-article-modal {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
@@ -586,7 +542,7 @@ body {
     border-radius: 20px; 
     max-width: 720px; 
     width: min(720px, calc(100vw - 28px)); 
-    min-height: 360px;
+    min-height: 360px; /* Chống co rút bé tí */
     max-height: 92vh; 
     overflow-y: auto; 
     box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
@@ -649,8 +605,7 @@ body {
 }
 .dantri-img-caption {
     font-size: 12px; color: #64748b; font-style: italic; padding: 7px 12px;
-    background: #f8fafc; border-top:
-   1px solid #e2e8f0; text-align: center;
+    background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;
 }
 .dantri-body-content {
     font-size: 15px; 
@@ -1277,7 +1232,4 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .dantri-view-title { font-size: 18.5px; }
     .dantri-sapo-text { font-size: 14px; }
     .avatar-selection-popover { width: 290px; }
-
-    .reminder-scroll-list { max-height: 186px; }
-    .reminder-scroll-list:has(.admin-card-mode) { max-height: 280px; }
-}     
+}

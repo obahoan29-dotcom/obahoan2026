@@ -237,20 +237,15 @@
         </div>
     </div>
 
-    <!-- KHỐI BẢN TIN THƯỜNG NGÀY / NHẮC NHỞ QUAN TRỌNG -->
+    <!-- KHỐI NHẮC NHỞ QUAN TRỌNG -->
     <div class="reminder-section" id="reminder-main-card">
         <div class="reminder-header-row-box">
-            <h3 class="reminder-header-title" id="reminder-section-title-text">📌 Bản tin thường ngày</h3>
-            <div class="reminder-head-actions">
-                <button type="button" class="btn-add-reminder-article" id="btn-add-reminder-article" onclick="addNewReminderArticle(event)" title="Thêm bài báo mới vào đầu danh sách">
-                    ➕ Thêm bài
-                </button>
-                <button type="button" class="btn-edit-reminder-head" id="btn-edit-reminder-head" onclick="editReminderSectionTitle(event)" title="Sửa chữ tiêu đề 'Bản tin thường ngày'">
-                    ✏️ Sửa tiêu đề
-                </button>
-            </div>
+            <h3 class="reminder-header-title" id="reminder-section-title-text">📌 Nhắc nhở quan trọng</h3>
+            <button type="button" class="btn-edit-reminder-head" id="btn-edit-reminder-head" onclick="editReminderSectionTitle(event)" title="Sửa chữ tiêu đề 'Nhắc nhở quan trọng'">
+                ✏️ Sửa tiêu đề
+            </button>
         </div>
-        <div class="link-list reminder-scroll-list" id="reminder-container"></div>
+        <div class="link-list" style="padding:0; background:transparent;" id="reminder-container"></div>
     </div>
 
     <!-- DẠY THÊM -->
@@ -855,7 +850,7 @@
         <h4>🔄 Chuyển sang lớp:</h4>
         <select id="move-category-select">
             <option value="kho-tai-lieu">📚 Kho tài liệu PDF, Word, Ảnh...</option>
-            <option value="nhac-nho">📌 Bản tin thường ngày</option>
+            <option value="nhac-nho">📌 Nhắc nhở quan trọng</option>
             <option value="them-10">📐 Thêm 10</option>
             <option value="them-11">✍️ Thêm 11</option>
             <option value="them-12">🎓 Thêm 12</option>
@@ -879,7 +874,7 @@
         <h4>📋 Sao chép sang mục:</h4>
         <select id="copy-category-select">
             <option value="kho-tai-lieu">📚 Kho tài liệu PDF, Word, Ảnh...</option>
-            <option value="nhac-nho">📌 Bản tin thường ngày</option>
+            <option value="nhac-nho">📌 Nhắc nhở quan trọng</option>
             <option value="them-10">📐 Thêm 10</option>
             <option value="them-11">✍️ Thêm 11</option>
             <option value="them-12">🎓 Thêm 12</option>
