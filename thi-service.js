@@ -513,6 +513,15 @@ function startTimeWatcherRealtime(quizId) {
                 examData.allowFree = freshData.allowFree;
                 safeLocal.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
             }
+            
+            // --- CHÈN THÊM ĐOẠN NÀY ĐỂ ĐỒNG BỘ REALTIME CHẾ ĐỘ ĐIỂM ---
+            if (freshData.resultMode !== undefined && examData) {
+                examData.resultMode = freshData.resultMode;
+            }
+            if (freshData.allowReviewOriginal !== undefined && examData) {
+                examData.allowReviewOriginal = freshData.allowReviewOriginal;
+            }
+            // ---------------------------------------------------------
         } catch(e) {}
     }, 15000); 
 }
@@ -705,5 +714,3 @@ function retrySubmitPending() {
         infoText.innerText = "⚠️ Lỗi khi gửi lại! Vui lòng tải file và gửi cho giáo viên."; 
     }); 
 }
-
-async function requestWakeLock() { try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (err) {} }
