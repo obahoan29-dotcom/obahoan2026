@@ -2,15 +2,12 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// - ĐỊNH DẠNG DÒNG TRÍCH XUẤT ĐỀ THI SAU DẤU // THÀNH IN ĐẬM NÉT VÀ MÀU NÂU
-// - BẢO TOÀN THÔNG TIN ĐĂNG NHẬP 100%, KHÔNG BỊ TRÁO HỌC SINH KHÁC
-// - HIỂN THỊ TÊN ĐỀ THI TRÊN THẺ KẾT QUẢ
-// - TỐI ƯU OFFSET SCROLL TƯƠNG THÍCH VỚI TOP BANNER CO GỌN
+// ĐÃ SỬA TRIỆT ĐỂ: BẮT BUỘC FIREBASE XÁC NHẬN NỘP THÀNH CÔNG
+// MỚI ĐƯỢC PHÉP HIỂN THỊ ĐIỂM TRÊN MÀN HÌNH HỌC SINH
 // =========================================================
 
 let hasInitExamEngine = false;
 
-// Hàm định dạng text: Nhận diện trích xuất đề thi sau dấu // và đổi thành in đậm nét + màu nâu
 function formatQuestionText(text) {
     if (!text) return "";
     return text.replace(/(^|[^:])\/\/\s*([^\r\n<]+)/g, function(match, prefix, content) {
@@ -49,7 +46,6 @@ async function initExamEngine() {
         updateLoadingText("Đang kết nối phòng thi và tải đề...");
     }
 
-    // Cơ chế phòng thủ: Timeout chống treo trắng màn hình trên iPhone
     const failsafeTimer = setTimeout(() => {
         const gl = document.getElementById('global-loading');
         if (gl && gl.style.display !== 'none') {
@@ -81,7 +77,6 @@ async function initExamEngine() {
         requestWakeLock();
         checkPendingSubmissionOnLoad();
         
-        // Tiến hành vào thi ngay nếu có cờ autostart, ẩn hẳn màn hình đăng nhập thứ 2
         await checkSessionStatus(isAutostart);
         
         startTimeWatcherRealtime(quizId);
@@ -94,7 +89,6 @@ async function initExamEngine() {
     }
 }
 
-// Khởi chạy an toàn ngay khi DOM sẵn sàng
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initExamEngine);
 } else {
@@ -441,9 +435,7 @@ function scrollQPalette(offset) {
 function scrollToQuestion(qId) { 
     const target = document.getElementById(`q-card-${qId}`); 
     if (target) { 
-        // Offset khớp hoàn hảo với chiều cao top banner co gọn
         const headerOffset = window.innerWidth <= 640 ? 72 : 82; 
-        
         const elementPosition = target.getBoundingClientRect().top; 
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset; 
         window.scrollTo({ top: offsetPosition, behavior: "smooth" }); 
@@ -461,7 +453,6 @@ function highlightActiveCircle(qId) {
     const curr = document.getElementById(`q-nav-btn-${qId}`); 
     if (curr) { 
         curr.classList.add('active'); 
-        // CHỈ CUỘN NỘI BỘ THANH PALETTE NGANG, TUYỆT ĐỐI KHÔNG DÙNG scrollIntoView ĐỂ TRÁNH GIẬT TRANG
         const scrollContainer = document.getElementById("q-nav-scroll-container");
         if (scrollContainer) {
             const containerWidth = scrollContainer.offsetWidth;
@@ -559,59 +550,6 @@ function updateProgress() {
     return answeredCount; 
 }
 
-async function startExamAction(isSilentAuto = false) { 
-    let sId = document.getElementById("student-id").value.trim(); 
-    let sName = document.getElementById("student-name").value.trim(); 
-    let sClass = document.getElementById("student-class").value.trim(); 
-    
-    const currentCat = getExamCategory();
-    const matchedClassAcc = findStudentFromDatabase(sId, currentCat);
-
-    if (!sId || !sName || !sClass) { 
-        if (!isSilentAuto) {
-            document.getElementById("student-card").style.display = "block";
-            alert("⚠️ Vui lòng nhập đầy đủ SBD, Họ tên, Lớp!"); 
-        }
-        return; 
-    } 
-    
-    const isFreeStudent = !matchedClassAcc;
-    const allowFree = isCurrentExamAllowFree();
-
-    if (isFreeStudent && !allowFree) {
-        alert("⛔ GIÁO VIÊN ĐÃ TẮT CHẾ ĐỘ THI TỰ DO!\nĐề thi này hiện chỉ dành riêng cho học sinh chính thức có tên trong danh sách lớp.");
-        document.getElementById("student-card").style.display = "block";
-        return;
-    }
-
-    const now = Date.now(); 
-    let startTimeMs = 0; 
-    let endTimeMs = Infinity; 
-    if (typeof examData !== 'undefined' && examData) { 
-        if (examData.examStartTimeStr) {
-            let t = new Date(examData.examStartTimeStr).getTime();
-            if (!isNaN(t)) startTimeMs = t;
-        } 
-        if (examData.examEndTimeStr) {
-            let t = new Date(examData.examEndTimeStr).getTime();
-            if (!isNaN(t)) endTimeMs = t;
-        } 
-    } 
-    
-    if (now > endTimeMs) { 
-        alert("⛔ BÀI THI ĐÃ ĐÓNG!\nThời gian được phép làm bài đã kết thúc."); 
-        return; 
-    } 
-    if (now < startTimeMs) { 
-        document.getElementById("student-card").style.display = "none"; 
-        document.getElementById("waiting-room-card").style.display = "block"; 
-        startWaitingCountdown(startTimeMs, sId, sName, sClass); 
-        return; 
-    } 
-    
-    await executeStartExamAPI(sId, sName, sClass, isFreeStudent); 
-}
-
 function startWaitingCountdown(startTimeMs, sId, sName, sClass) { 
     const countdownEl = document.getElementById("waiting-countdown"); 
     if (waitingInterval) clearInterval(waitingInterval); 
@@ -628,161 +566,6 @@ function startWaitingCountdown(startTimeMs, sId, sName, sClass) {
             countdownEl.innerText = `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; 
         } 
     }, 1000); 
-}
-
-async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
-    const currentCat = getExamCategory();
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentQuizId = urlParams.get('id') || "";
-    const examCode = getExamCode();
-    const startBtn = document.getElementById("btn-start-exam");
-
-    if (startBtn) {
-        startBtn.disabled = true;
-        startBtn.innerText = "⏳ Đang kết nối máy chủ thi...";
-    }
-
-    const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
-    const presencePayload = {
-        sbd: sId,
-        name: sName,
-        className: sClass,
-        cat: currentCat,
-        categoryId: currentCat,
-        isFree: isFreeStudent,
-        quizId: currentQuizId,
-        maDe: getMaDe(),
-        examName: EXAM_NAME,
-        examTitle: EXAM_NAME,
-        startTime: Date.now(),
-        lastPing: Date.now()
-    };
-
-    let logPayload = { 
-        quizId: currentQuizId,
-        maDe: getMaDe(), 
-        examName: EXAM_NAME, 
-        categoryId: currentCat,
-        cat: currentCat,
-        studentId: sId, 
-        sbd: sId, 
-        soBaoDanh: sId, 
-        studentName: sName, 
-        studentClass: sClass, 
-        switchCount: 0, 
-        tabSwitchCount: 0, 
-        durationStr: "Bắt đầu", 
-        durationSec: 0, 
-        timestamp: new Date().toLocaleString("vi-VN"), 
-        createdAt: Date.now() 
-    }; 
-
-    let isFirebaseConfirmed = false;
-
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const pushNodes = [examCode];
-        if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
-        let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
-        if (numMatch) {
-            pushNodes.push(numMatch[1]);
-            pushNodes.push("DE" + numMatch[1]);
-            pushNodes.push("DE" + numMatch[1] + "TOAN11");
-        }
-
-        const primarySessionTask = fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(presencePayload),
-            signal: controller.signal
-        });
-
-        const otherTasks = [];
-        pushNodes.forEach(n => {
-            if (n !== examCode) {
-                otherTasks.push(
-                    fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(presencePayload),
-                        signal: controller.signal
-                    }).catch(() => null)
-                );
-            }
-        });
-
-        otherTasks.push(
-            fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(logPayload),
-                signal: controller.signal
-            }).catch(() => null)
-        );
-
-        const [primaryRes] = await Promise.all([primarySessionTask, ...otherTasks]);
-        clearTimeout(timeoutId);
-
-        if (primaryRes && primaryRes.ok) {
-            const resData = await primaryRes.json().catch(() => null);
-            if (resData && !resData.error && resData.sbd) {
-                isFirebaseConfirmed = true;
-            }
-        }
-    } catch(e) {
-        console.warn("Lỗi kết nối Firebase khi bắt đầu bài thi:", e);
-    }
-
-    if (!isFirebaseConfirmed) {
-        if (startBtn) {
-            startBtn.disabled = false;
-            startBtn.innerText = "Vào Làm Bài";
-        }
-        document.getElementById("student-card").style.display = "block";
-        const waitingCard = document.getElementById("waiting-room-card");
-        if (waitingCard) waitingCard.style.display = "none";
-
-        try {
-            const u = new URL(window.location.href);
-            if (u.searchParams.has('autostart')) {
-                u.searchParams.delete('autostart');
-                window.history.replaceState({}, '', u.toString());
-            }
-        } catch(e) {}
-
-        alert("⚠️ CHƯA THỂ MỞ ĐỀ THI!\n\nMáy chủ thi (Firebase) chưa phản hồi xác nhận ghi danh sách do mạng Internet của bạn bị chập chờn hoặc gián đoạn.\n\nVui lòng kiểm tra lại kết nối mạng và bấm nút 'Vào Làm Bài' lại để hệ thống bảo lưu kết quả chuẩn xác!");
-        return;
-    }
-
-    postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
-
-    document.getElementById("nav-student-name").innerText = sName; 
-    document.getElementById("nav-student-id").innerText = sId; 
-    document.getElementById("nav-student-class").innerText = sClass; 
-    document.getElementById("nav-exam-code-text").innerText = `Đề: ${getMaDe()}`; 
-    
-    document.getElementById("student-card").style.display = "none"; 
-    const waitingCard = document.getElementById("waiting-room-card"); 
-    if (waitingCard) waitingCard.style.display = "none"; 
-    
-    document.getElementById("top-navbar").style.display = "block"; 
-    document.getElementById("quiz-content").style.display = "block"; 
-    
-    if (!examStartTime) { 
-        examStartTime = Date.now(); 
-        saveExamStateToStorage(); 
-    } 
-    
-    updateProgress(); 
-    startCountdownTimer(); 
-    startPresenceSystem(sId);
-
-    if (startBtn) {
-        startBtn.disabled = false;
-        startBtn.innerText = "Vào Làm Bài";
-    }
 }
 
 function reapplySavedAnswers() { 
@@ -861,7 +644,12 @@ function showSubmitConfirmModal() {
     } 
     document.getElementById("modal-normal-submit-view").style.display = "block";
     document.getElementById("modal-submitting-progress-view").style.display = "none";
-    document.getElementById("modal-actions-container").style.display = "block";
+    document.getElementById("modal-actions-container").innerHTML = `
+        <div class="modal-btn-row">
+            <button type="button" class="btn-modal-cancel" onclick="closeSubmitConfirmModal()">Tiếp tục làm</button>
+            <button type="button" class="btn-modal-confirm" onclick="executeSubmitExam()">✓ Nộp bài</button>
+        </div>
+    `;
     document.getElementById("submit-confirm-modal").style.display = "flex"; 
 }
 
@@ -869,6 +657,9 @@ function closeSubmitConfirmModal() {
     document.getElementById("submit-confirm-modal").style.display = "none"; 
 }
 
+// =========================================================
+// HÀM SUBMIT EXAM: BẮT BUỘC 100% GHI ĐIỂM THÀNH CÔNG MỚI HIỆN ĐIỂM
+// =========================================================
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted) return; 
     
@@ -876,17 +667,24 @@ async function executeSubmitExam(isForceSubmit = false) {
     const normalView = document.getElementById("modal-normal-submit-view");
     const progressView = document.getElementById("modal-submitting-progress-view");
     const actionsBox = document.getElementById("modal-actions-container");
-    const progressText = document.getElementById("submit-progress-text");
 
     if (confirmModal) confirmModal.style.display = "flex";
     if (normalView) normalView.style.display = "none";
-    if (progressView) progressView.style.display = "block";
-    if (actionsBox) actionsBox.style.display = "none";
-    if (progressText) progressText.innerText = "⏳ Đang kết nối máy chủ nộp bài...";
+    
+    // Tạo UI báo trạng thái nộp bài
+    if (progressView) {
+        progressView.innerHTML = `
+            <div class="spinner" style="width:38px; height:38px; margin:0 auto 12px auto; border-top-color:#f97316;"></div>
+            <div style="font-weight:900; color:#0284c7; font-size:1.1rem;" id="submit-progress-text">⏳ Đang nộp bài thi...</div>
+            <div style="font-size:0.9rem; color:#64748b; margin-top:6px; font-weight:600;">Vui lòng giữ kết nối để bảo lưu bài thi thành công 100%.</div>
+        `;
+        progressView.style.display = "block";
+    }
+    if (actionsBox) actionsBox.innerHTML = "";
 
-    if (timerInterval) clearInterval(timerInterval); 
-    if (timeWatcherInterval) clearInterval(timeWatcherInterval);
-
+    // Đừng clear timer ngay, lỡ nộp lỗi rớt mạng vẫn còn tính giờ chạy tiếp (nếu chưa hết giờ)
+    // Sẽ clear timer khi nộp thành công.
+    
     const sId = document.getElementById("student-id").value.trim(); 
     const sName = document.getElementById("student-name").value.trim(); 
     const sClass = document.getElementById("student-class").value.trim(); 
@@ -984,55 +782,69 @@ async function executeSubmitExam(isForceSubmit = false) {
     }; 
 
     safeLocal.setItem("pending_exam_submission", JSON.stringify(payload)); 
-    safeLocal.setItem(`submitted_backup_${getExamCode()}_${sId}`, JSON.stringify(payload));
     pendingSubmissionPayload = payload; 
-
-    if (progressText) progressText.innerText = "🚀 Đang gửi bài thi lên máy chủ...";
 
     const examCode = getExamCode();
     let firebaseConfirmed = false;
 
-    const sendToFirebaseEndpoint = async (codeKey) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        const res = await fetch(`${FIREBASE_DB_URL}/exams/${codeKey}/submissions.json`, {
+    try {
+        // Dùng hàm fetchWithRetry: Thử nộp bài 4 lần, thời gian tối đa chờ mỗi lần là 8 giây (Tổng max 32 giây)
+        const res = await fetchWithRetry(`${FIREBASE_DB_URL}/exams/${examCode}/submissions.json`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (res.ok) {
+            body: JSON.stringify(payload)
+        }, 4, 8000);
+
+        if (res && res.ok) {
             const resJson = await res.json();
-            if (resJson && resJson.name) return true;
+            if (resJson && resJson.name) {
+                firebaseConfirmed = true;
+            }
         }
-        return false;
-    };
-
-    try {
-        firebaseConfirmed = await sendToFirebaseEndpoint(examCode);
     } catch(err) {
-        console.warn("Lỗi gửi Firebase lần 1, thử lại ngay:", err);
-        try {
-            firebaseConfirmed = await sendToFirebaseEndpoint(examCode);
-        } catch(e2) {}
+        console.warn("Nộp bài Firebase thất bại sau nhiều lần thử:", err);
     }
 
+    if (!firebaseConfirmed) {
+        // Nếu thất bại (Rớt mạng): HIỂN THỊ NÚT THỬ LẠI, KHÔNG CHO XEM ĐIỂM
+        if (progressView) {
+            progressView.innerHTML = `
+                <div style="font-size:40px; margin-bottom:10px;">📶❌</div>
+                <div style="font-weight:900; color:#ef4444; font-size:1.1rem;">LỖI MẠNG! CHƯA THỂ NỘP BÀI</div>
+                <div style="font-size:0.9rem; color:#475569; margin-top:6px; font-weight:600; line-height: 1.4;">
+                    Hệ thống không thể kết nối tới máy chủ. Điểm của bạn CHƯA được ghi nhận.<br>
+                    Vui lòng kiểm tra lại 4G/Wifi và bấm thử lại!
+                </div>
+            `;
+        }
+        if (actionsBox) {
+            actionsBox.innerHTML = `
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button type="button" onclick="executeSubmitExam(${isForceSubmit})" style="flex:1; padding:10px; background:#0284c7; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">🔄 Thử gửi lại</button>
+                    <button type="button" onclick="downloadPendingSubmissionFile()" style="flex:1; padding:10px; background:#0d9488; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">💾 Tải file dự phòng</button>
+                </div>
+            `;
+            actionsBox.style.display = "block";
+        }
+        return; // Chặn đứng tại đây, không chạy xuống dưới nữa
+    }
+
+    // =========================================================
+    // NẾU XUỐNG ĐƯỢC TỚI ĐÂY NGHĨA LÀ FIREBASE ĐÃ XÁC NHẬN OK 100%
+    // =========================================================
+    
+    // Gửi tiếp Google Sheet dưới nền
     postToGoogleSheet(URL2_EXAM_RESULT, payload, 15000).catch(e => null);
+    
+    // Xóa presence để báo hiệu đã thi xong
     clearPresence(sId);
+    
+    // Dừng đồng hồ
+    if (timerInterval) clearInterval(timerInterval); 
+    if (timeWatcherInterval) clearInterval(timeWatcherInterval);
 
-    if (firebaseConfirmed) {
-        safeLocal.removeItem("pending_exam_submission");
-        if (progressText) progressText.innerText = "✅ Máy chủ đã xác nhận lưu bài thành công!";
-    } else {
-        if (progressText) progressText.innerText = "⚠️ Đã lưu trữ bài an toàn vào hàng đợi máy chủ.";
-        document.getElementById("pending-resend-bar").style.display = "block";
-    }
-
-    await new Promise(r => setTimeout(r, 400));
-
-    isSubmitted = true; 
-
+    // Xóa trạng thái tạm
+    safeLocal.removeItem("pending_exam_submission");
     safeLocal.removeItem(getStorageKey()); 
     safeLocal.removeItem(`shuffled_exam_${getExamCode()}`); 
     safeLocal.removeItem("saved_student_sbd");
@@ -1041,7 +853,10 @@ async function executeSubmitExam(isForceSubmit = false) {
     safeLocal.removeItem("current_exam_student");
     safeLocal.setItem("last_submission_cleared", "true");
     
+    isSubmitted = true; 
     if (confirmModal) confirmModal.style.display = "none"; 
+    
+    // HIỂN THỊ ĐIỂM
     renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, score10Scale); 
 }
 
@@ -1051,7 +866,6 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     const resView = document.getElementById("result-view-container"); 
     resView.style.display = "block"; 
     
-    // GÁN CHUẨN XÁC TÊN ĐỀ THI LÊN THẺ TỔNG KẾT ĐIỂM
     const resExamTitle = document.getElementById("res-exam-title");
     if (resExamTitle) {
         resExamTitle.innerText = EXAM_NAME || "BÀI THI TRẮC NGHIỆM";
