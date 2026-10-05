@@ -68,6 +68,31 @@ async function initExamEngine() {
             throw new Error("Mã đề thi không tồn tại trên hệ thống!");
         }
         
+        // --- CHÈN THÊM XỬ LÝ CHẾ ĐỘ XEM ĐỀ GỐC (REVIEW) TẠI ĐÂY ---
+        if (urlParams.get('review') === "1") {
+            if (examData.allowReviewOriginal !== true) {
+                hideLoading();
+                showError("Bị Khóa", "Giáo viên đã tắt tính năng xem đáp án gốc của đề thi này.");
+                return;
+            }
+            // Thiết lập giả trạng thái đã nộp bài
+            isSubmitted = true;
+            totalQuestionsCount = examData.questions ? examData.questions.length : 0;
+            
+            // Render luôn trang Review
+            document.getElementById("top-navbar").style.display = "none";
+            document.getElementById("quiz-content").style.display = "none";
+            document.getElementById("login-box").style.display = "none";
+            document.getElementById("student-card").style.display = "none";
+            document.getElementById("waiting-room-card").style.display = "none";
+            
+            // Gọi hàm render riêng cho Xem Đề Gốc
+            renderOriginalReviewScreen();
+            hideLoading();
+            return; // Dừng, không chạy vào logic thi
+        }
+        // ----------------------------------------------------------
+
         if (examData.allowFree !== undefined) {
             safeLocal.setItem(`exam_allow_free_${quizId}`, String(examData.allowFree !== false));
         }
@@ -917,49 +942,172 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     document.getElementById("res-stat-correct").innerText = correct; 
     document.getElementById("res-stat-wrong").innerText = wrong; 
     document.getElementById("res-stat-time").innerText = spentMins; 
-    document.getElementById("res-user-name").innerText = document.getElementById("student-name").value.trim(); 
-    document.getElementById("res-user-class").innerText = document.getElementById("student-class").value.trim(); 
-    document.getElementById("res-user-id").innerText = document.getElementById("student-id").value.trim(); 
+    document.getElementById("res-user-name").innerText = document.getElementById("student-name").value.trim() || "Thí sinh"; 
+    document.getElementById("res-user-class").innerText = document.getElementById("student-class").value.trim() || "---"; 
+    document.getElementById("res-user-id").innerText = document.getElementById("student-id").value.trim() || "---"; 
     document.getElementById("res-spent-time").innerText = spentTimeStr; 
+
+    // =========================================================
+    // XỬ LÝ 3 CHẾ ĐỘ HIỂN THỊ KẾT QUẢ TỪ QUẢN TRỊ VIÊN
+    // =========================================================
+    const resultMode = examData.resultMode || "show_all";
+
+    const scoreOverviewEl = document.getElementById("res-score-overview");
+    const statsCardsEl = document.querySelector(".stats-cards-grid");
+    const reviewBannerEl = document.querySelector(".review-banner");
+    const reviewBodyEl = document.getElementById("review-container-body");
     
+    const oldMsg = document.getElementById("res-success-msg");
+    if (oldMsg) oldMsg.remove();
+
+    if (resultMode === "hide_all") {
+        // CHẾ ĐỘ 1: TẮT TOÀN BỘ - Chỉ báo nộp bài thành công
+        scoreOverviewEl.style.display = "none";
+        statsCardsEl.style.display = "none";
+        reviewBannerEl.style.display = "none";
+        reviewBodyEl.style.display = "none";
+
+        const successMsg = document.createElement("div");
+        successMsg.id = "res-success-msg";
+        successMsg.innerHTML = `
+            <div style="font-size: 55px; margin-bottom: 12px;">🎉</div>
+            <h3 style="color: #16a34a; font-weight: 900; font-size: 1.3rem; margin-bottom: 12px; text-transform: uppercase;">NỘP BÀI THÀNH CÔNG!</h3>
+            <p style="color: #475569; font-weight: 600; font-size: 1rem; line-height: 1.5; background: #f0fdf4; padding: 12px; border-radius: 12px; border: 1px dashed #86efac;">
+                Hệ thống đã ghi nhận bài làm của bạn an toàn 100%.<br>
+                <b style="color: #15803d;">Điểm số và đáp án chi tiết sẽ được giáo viên công bố sau!</b>
+            </p>
+        `;
+        document.querySelector(".result-summary-card").insertBefore(successMsg, document.querySelector(".user-details-grid"));
+        
+    } else if (resultMode === "score_only") {
+        // CHẾ ĐỘ 2: CHỈ HIỆN ĐIỂM - Giấu phần giải chi tiết bên dưới
+        scoreOverviewEl.style.display = "block";
+        statsCardsEl.style.display = "grid";
+        reviewBannerEl.style.display = "none";
+        reviewBodyEl.style.display = "none";
+
+        const successMsg = document.createElement("div");
+        successMsg.id = "res-success-msg";
+        successMsg.innerHTML = `
+            <p style="color: #b45309; font-weight: 600; font-size: 0.95rem; line-height: 1.5; background: #fffbeb; padding: 10px; border-radius: 10px; border: 1px dashed #fcd34d; margin-bottom: 16px;">
+                🔒 Giáo viên đã tạm khóa tính năng xem lại bài làm chi tiết để đảm bảo công bằng. Bạn chỉ có thể xem điểm tổng quát lúc này.
+            </p>
+        `;
+        document.querySelector(".result-summary-card").insertBefore(successMsg, document.querySelector(".user-details-grid"));
+
+    } else {
+        // CHẾ ĐỘ 3: HIỆN TẤT CẢ (MẶC ĐỊNH NHƯ CŨ)
+        scoreOverviewEl.style.display = "block";
+        statsCardsEl.style.display = "grid";
+        reviewBannerEl.style.display = "flex";
+        reviewBodyEl.style.display = "block";
+
+        let revHTML = ""; 
+        let idx = 1; 
+        
+        function buildRevImgHtml(imgUrl) {
+            if (!imgUrl) return "";
+            return `<div class="quiz-img-container"><img src="${imgUrl}" class="quiz-img" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa"></div>`;
+        }
+
+        examData.questions.forEach(q => { 
+            const imgUrl = (q.imageKey && examData.images && examData.images[q.imageKey]) ? examData.images[q.imageKey] : (q.imageUrl || ""); 
+            const imgTag = buildRevImgHtml(imgUrl); 
+            const explainText = q.explanation ? `<div class="explanation-box">💡 <b>Lời giải chi tiết:</b> ${q.explanation}</div>` : ""; 
+            
+            if (q.type === "multiple_choice") { 
+                const letters = ["A", "B", "C", "D"]; 
+                const uAns = userAnswersState[`q${q.id}`]; 
+                const cAns = ANSWER_KEY[`q${q.id}`]; 
+                revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge" style="background:${uAns===cAns?'#22c55e':'#ef4444'}">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="options-list grid-2">${q.options.map((opt, oIdx) => { const L = letters[oIdx]; let cls = ""; let icon = ""; if (L === cAns) { cls = "is-correct"; icon = " ✓"; } else if (L === uAns && uAns !== cAns) { cls = "is-wrong"; icon = " ✗"; } return `<div class="opt-label ${cls}"><span class="opt-circle">${L}</span><span class="opt-text">${opt} <b>${icon}</b></span></div>`; }).join('')}</div>${explainText}</div>`; 
+            } else if (q.type === "true_false") { 
+                let rows = ""; 
+                q.statements.forEach(st => { 
+                    const sub = `q${q.id}_${st.id}`; 
+                    const uVal = userAnswersState[sub] || "Chưa chọn"; 
+                    const cVal = ANSWER_KEY[sub]; 
+                    const ok = (uVal === cVal); 
+                    rows += `<tr><td><b>${st.id})</b> ${st.statement}</td><td align="center">${uVal==="Đúng"?(ok?"🟢 Đúng":"🔴 Đúng (Sai)"):""}</td><td align="center">${uVal==="Sai"?(ok?"🟢 Sai":"🔴 Sai (Sai)"):""}</td><td align="center"><b>${cVal}</b></td></tr>`; 
+                }); 
+                revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="tf-table-box"><table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Bạn chọn</th><th>Đ.Á Đúng</th></tr></thead><tbody>${rows}</tbody></table></div>${explainText}</div>`; 
+            } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
+                const uVal = userAnswersState[`q${q.id}`] || "(Để trống)"; 
+                const cVal = ANSWER_KEY[`q${q.id}`]; 
+                revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div>Tr.lời của bạn: <b>${uVal}</b></div><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div></div>${explainText}</div>`; 
+            } 
+            idx++; 
+        }); 
+        reviewBodyEl.innerHTML = revHTML; 
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise().catch(() => {});
+        }
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+}
+
+// HÀM HIỂN THỊ ĐÁP ÁN GỐC DÀNH CHO NÚT "XEM GIẢI CHI TIẾT" TỪ TRANG CHỦ
+function renderOriginalReviewScreen() {
+    const resView = document.getElementById("result-view-container"); 
+    resView.style.display = "block"; 
+    
+    // Ẩn bảng điểm vì đây chỉ là xem giải gốc
+    document.querySelector(".result-summary-card").style.display = "none";
+
+    const reviewBannerEl = document.querySelector(".review-banner");
+    const reviewBodyEl = document.getElementById("review-container-body");
+    
+    reviewBannerEl.style.display = "flex";
+    reviewBannerEl.innerHTML = `<span>📖</span> TÀI LIỆU ĐỀ THI GỐC & LỜI GIẢI CHI TIẾT`;
+    reviewBannerEl.style.background = "linear-gradient(135deg, #059669, #047857)";
+
+    // Dựng Answer Key chuẩn từ dữ liệu gốc
+    let generatedAnswerKey = {};
+    const letters = ["A", "B", "C", "D"]; 
+    (examData.questions || []).forEach(q => {
+        if (q.type === "multiple_choice") {
+            generatedAnswerKey[`q${q.id}`] = typeof q.correct === 'number' ? letters[q.correct] : q.correct;
+        } else if (q.type === "true_false") {
+            q.statements.forEach(st => {
+                generatedAnswerKey[`q${q.id}_${st.id}`] = st.correct ? "Đúng" : "Sai";
+            });
+        } else {
+            generatedAnswerKey[`q${q.id}`] = q.correctAnswer;
+        }
+    });
+
     let revHTML = ""; 
     let idx = 1; 
-    
+
     function buildRevImgHtml(imgUrl) {
         if (!imgUrl) return "";
         return `<div class="quiz-img-container"><img src="${imgUrl}" class="quiz-img" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa"></div>`;
     }
 
-    examData.questions.forEach(q => { 
-        const imgUrl = (q.imageKey && examData.images[q.imageKey]) ? examData.images[q.imageKey] : (q.imageUrl || ""); 
+    (examData.questions || []).forEach(q => { 
+        const imgUrl = (q.imageKey && examData.images && examData.images[q.imageKey]) ? examData.images[q.imageKey] : (q.imageUrl || ""); 
         const imgTag = buildRevImgHtml(imgUrl); 
         const explainText = q.explanation ? `<div class="explanation-box">💡 <b>Lời giải chi tiết:</b> ${q.explanation}</div>` : ""; 
         
         if (q.type === "multiple_choice") { 
-            const letters = ["A", "B", "C", "D"]; 
-            const uAns = userAnswersState[`q${q.id}`]; 
-            const cAns = ANSWER_KEY[`q${q.id}`]; 
-            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge" style="background:${uAns===cAns?'#22c55e':'#ef4444'}">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="options-list grid-2">${q.options.map((opt, oIdx) => { const L = letters[oIdx]; let cls = ""; let icon = ""; if (L === cAns) { cls = "is-correct"; icon = " ✓"; } else if (L === uAns && uAns !== cAns) { cls = "is-wrong"; icon = " ✗"; } return `<div class="opt-label ${cls}"><span class="opt-circle">${L}</span><span class="opt-text">${opt} <b>${icon}</b></span></div>`; }).join('')}</div>${explainText}</div>`; 
+            const cAns = generatedAnswerKey[`q${q.id}`]; 
+            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="options-list grid-2">${q.options.map((opt, oIdx) => { const L = letters[oIdx]; let cls = ""; let icon = ""; if (L === cAns) { cls = "is-correct"; icon = " ✓ Đ.Án"; } return `<div class="opt-label ${cls}"><span class="opt-circle">${L}</span><span class="opt-text">${opt} <b>${icon}</b></span></div>`; }).join('')}</div>${explainText}</div>`; 
         } else if (q.type === "true_false") { 
             let rows = ""; 
             q.statements.forEach(st => { 
                 const sub = `q${q.id}_${st.id}`; 
-                const uVal = userAnswersState[sub] || "Chưa chọn"; 
-                const cVal = ANSWER_KEY[sub]; 
-                const ok = (uVal === cVal); 
-                rows += `<tr><td><b>${st.id})</b> ${st.statement}</td><td align="center">${uVal==="Đúng"?(ok?"🟢 Đúng":"🔴 Đúng (Sai)"):""}</td><td align="center">${uVal==="Sai"?(ok?"🟢 Sai":"🔴 Sai (Sai)"):""}</td><td align="center"><b>${cVal}</b></td></tr>`; 
+                const cVal = generatedAnswerKey[sub]; 
+                rows += `<tr><td><b>${st.id})</b> ${st.statement}</td><td align="center" style="color:#15803d; font-weight:800;">${cVal}</td></tr>`; 
             }); 
-            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="tf-table-box"><table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Bạn chọn</th><th>Đ.Á Đúng</th></tr></thead><tbody>${rows}</tbody></table></div>${explainText}</div>`; 
+            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="tf-table-box"><table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Đáp án gốc</th></tr></thead><tbody>${rows}</tbody></table></div>${explainText}</div>`; 
         } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
-            const uVal = userAnswersState[`q${q.id}`] || "(Để trống)"; 
-            const cVal = ANSWER_KEY[`q${q.id}`]; 
-            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div>Tr.lời của bạn: <b>${uVal}</b></div><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div></div>${explainText}</div>`; 
+            const cVal = generatedAnswerKey[`q${q.id}`]; 
+            revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án chuẩn: ${cVal}</div></div>${explainText}</div>`; 
         } 
         idx++; 
     }); 
-    document.getElementById("review-container-body").innerHTML = revHTML; 
+    reviewBodyEl.innerHTML = revHTML; 
     if (window.MathJax && MathJax.typesetPromise) {
         MathJax.typesetPromise().catch(() => {});
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' }); 
 }
