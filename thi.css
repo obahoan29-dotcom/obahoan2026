@@ -25,7 +25,7 @@ html, body {
     padding-bottom: 28px; 
     -webkit-tap-highlight-color: transparent; 
     font-size: 15.5px;
-    line-height: 1.45; /* Dòng chữ giãn nở nhẹ nhàng, thoáng đãng */
+    line-height: 1.45;
 }
 
 /* ========================================================= */
@@ -41,11 +41,6 @@ mjx-container[jax="SVG"] {
     max-width: 100%;
 }
 
-/* CÔNG THỨC TRONG DÒNG (INLINE MATH):
-   Để display: inline và vertical-align: baseline.
-   TUYỆT ĐỐI KHÔNG ép vertical-align: middle hay height: auto lên SVG,
-   để MathJax tự động áp dụng style="vertical-align: -0.xxxex" nội tại,
-   giúp ký hiệu, phân số, chỉ số nằm phẳng lì trên trục chân chữ */
 mjx-container:not([display="true"]) { 
     display: inline !important;
     margin: 0 !important;
@@ -56,10 +51,8 @@ mjx-container:not([display="true"]) {
 mjx-container:not([display="true"]) > svg { 
     display: inline !important;
     overflow: visible !important;
-    /* Giữ nguyên vertical-align và height do MathJax tính toán chính xác */
 }
 
-/* Công thức dạng khối riêng biệt (display="true"): căn giữa và chống tràn ngang */
 mjx-container[jax="SVG"][display="true"],
 mjx-container[jax="CHTML"][display="true"] { 
     max-width: 100% !important; 
@@ -105,9 +98,7 @@ mjx-container[jax="SVG"][display="true"] > svg {
     display: none; 
 }
 
-/* ========================================================= */
-/* NAVBAR TRÊN CÙNG: GIỮ NGUYÊN CO GỌN TỐI ĐA CHIỀU CAO     */
-/* ========================================================= */
+/* NAVBAR TRÊN CÙNG */
 .top-navbar-wrapper { 
     position: fixed; 
     top: 0; 
@@ -122,7 +113,7 @@ mjx-container[jax="SVG"][display="true"] > svg {
     background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%); 
     border-bottom: 1.5px solid #93c5fd; 
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08); 
-    padding: 4px 8px; /* Giữ nguyên độ mỏng */
+    padding: 4px 8px;
     pointer-events: auto; 
     width: 100%;
 }
@@ -233,7 +224,7 @@ mjx-container[jax="SVG"][display="true"] > svg {
 }
 .btn-top-submit:hover { transform: scale(1.03); }
 
-/* BĂNG CHỌN SỐ CÂU HỎI (PALETTE) CO GỌN */
+/* BĂNG CHỌN SỐ CÂU HỎI (PALETTE) */
 .q-nav-bar { 
     display: flex; 
     align-items: center; 
@@ -295,7 +286,7 @@ mjx-container[jax="SVG"][display="true"] > svg {
 .q-circle.active { border-color: #ef4444 !important; color: #ef4444 !important; background: #fef2f2 !important; font-weight: 900; box-shadow: 0 0 0 1.5px rgba(239, 68, 68, 0.3); transform: scale(1.06); }
 .q-circle.active.answered { background: #f97316 !important; color: #ffffff !important; border-color: #dc2626 !important; box-shadow: 0 0 0 1.5px #ef4444; }
 
-/* PHẦN DƯỚI THANH MENU: MÃ ĐỀ & TIẾN ĐỘ */
+/* PHẦN DƯỚI THANH MENU */
 .nav-floating-part { 
     padding: 3px 8px; 
     width: 100%;
@@ -408,14 +399,11 @@ mjx-container[jax="SVG"][display="true"] > svg {
 .section-text h3 { font-size: 1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1.3; }
 .section-text p { font-size: 0.82rem; opacity: 0.95; margin-top: 2px; font-weight: 600; line-height: 1.3; }
 
-/* KHOẢNG ĐỆM ĐẨY NỘI DUNG XUỐNG DƯỚI TOP BANNER */
 #quiz-content {
     padding-top: 78px; 
 }
 
-/* ========================================================= */
-/* THẺ CÂU HỎI: DÒNG CHỮ GIÃN THOẢNG HỢP LÝ, CÔNG THỨC THẲNG HÀNG */
-/* ========================================================= */
+/* THẺ CÂU HỎI */
 .question-card { 
     background: #ffffff; 
     border-radius: 15px; 
@@ -459,7 +447,6 @@ mjx-container[jax="SVG"][display="true"] > svg {
     margin-top: 2px;
 }
 
-/* Nội dung câu hỏi: line-height 1.46 thoáng đãng, bám chuẩn baseline */
 .q-content-text { 
     font-size: 1.08rem; 
     line-height: 1.46; 
@@ -485,7 +472,6 @@ mjx-container[jax="SVG"][display="true"] > svg {
 }
 @media(min-width: 650px) { .options-list.grid-2 { grid-template-columns: 1fr 1fr; } }
 
-/* PHƯƠNG ÁN A, B, C, D: ĐỘ RỘNG VÀ DÒNG CHỮ DỄ CHỊU */
 .opt-label { 
     display: flex; 
     align-items: center; 
@@ -533,7 +519,6 @@ mjx-container[jax="SVG"][display="true"] > svg {
 }
 .opt-label input[type="radio"] { display: none; }
 
-/* Nội dung đáp án */
 .opt-text { 
     font-size: 1.02rem; 
     color: #1e293b; 
@@ -683,9 +668,7 @@ mjx-container[jax="SVG"][display="true"] > svg {
 @keyframes spin { 100% { transform: rotate(360deg); } }
 @keyframes pulseWait { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
-/* ========================================================= */
-/* TỐI ƯU HÓA CHO ĐIỆN THOẠI: DÒNG CHỮ GIÃN ĐỀU, DỄ ĐỌC     */
-/* ========================================================= */
+/* TỐI ƯU HÓA CHO ĐIỆN THOẠI */
 @media(max-width: 640px) { 
     html, body { 
         font-size: 14.5px; 
@@ -725,7 +708,6 @@ mjx-container[jax="SVG"][display="true"] > svg {
     .tf-table td { font-size: 0.94rem; padding: 7px 8px; line-height: 1.38; } 
     .explanation-box { font-size: 0.92rem; padding: 8px 10px; line-height: 1.45; } 
 
-    /* Top banner trên điện thoại tiếp tục giữ nguyên co gọn tối đa */
     .nav-solid-part { padding: 3px 6px; }
     .nav-floating-part { padding: 2px 6px; }
     #quiz-content { padding-top: 68px; }
@@ -772,3 +754,36 @@ mjx-container[jax="SVG"][display="true"] > svg {
     display: flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255, 255, 255, 0.6);
 }
 .time-change-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+/* ========================================================
+   CHỈ TỰ ĐỘNG KÍCH HOẠT TRÊN IPHONE / IPAD (HỆ ĐIỀU HÀNH IOS)
+   MÁY TÍNH, LAPTOP, ANDROID GIỮ NGUYÊN 100% GIAO DIỆN & HIỆU ỨNG GỐC
+   ======================================================== */
+@supports (-webkit-touch-callout: none) {
+    /* 1. Ngăn iOS Safari tự vẽ lại nền gây lag/crash */
+    html, body {
+        background-attachment: scroll !important;
+    }
+
+    /* 2. Cố định font-size = 16px trên tất cả các ô nhập liệu của phòng thi để triệt tiêu Auto-zoom */
+    .input-group input,
+    .short-input-box {
+        font-size: 16px !important;
+    }
+
+    /* 3. Tắt backdrop-filter lồng nhau ở các lớp phủ modal khi mở bàn phím */
+    .modal-overlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(15, 23, 42, 0.78) !important;
+    }
+
+    /* 4. Tắt backdrop-filter bên trong hộp thoại, dùng màu trắng đục thuần và hardware acceleration */
+    .modal-box,
+    .card-panel {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: #ffffff !important;
+        transform: translateZ(0);
+    }
+}
