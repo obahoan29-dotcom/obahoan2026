@@ -2,30 +2,14 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ KHẮC PHỤC TRIỆT ĐỂ: KHAI BÁO & BỌC AN TOÀN requestWakeLock()
+// ĐÃ KHẮC PHỤC TRIỆT ĐỂ: LỖI CÚ PHÁP VÀ TRÙNG LẶP BIẾN WAKE LOCK
 // =========================================================
 
 let hasInitExamEngine = false;
 
-// =========================================================
-// SCREEN WAKE LOCK: GIỮ SÁNG MÀN HÌNH KHÔNG BỊ TẮT KHI THI
-// =========================================================
-let wakeLockSentinel = null;
-async function requestWakeLock() {
-    try {
-        if ('wakeLock' in navigator && navigator.wakeLock) {
-            wakeLockSentinel = await navigator.wakeLock.request('screen');
-            wakeLockSentinel.addEventListener('release', () => {
-                wakeLockSentinel = null;
-            });
-        }
-    } catch (err) {
-        // Trình duyệt không hỗ trợ hoặc từ chối quyền, bỏ qua an toàn
-    }
-}
-
+// Tận dụng hàm requestWakeLock đã được khai báo an toàn trong thi-service.js
 document.addEventListener("visibilitychange", async function() {
-    if (wakeLockSentinel === null && !document.hidden && typeof requestWakeLock === 'function') {
+    if (typeof wakeLockSentinel !== 'undefined' && wakeLockSentinel === null && !document.hidden && typeof requestWakeLock === 'function') {
         try { await requestWakeLock(); } catch(e) {}
     }
 });
@@ -118,7 +102,6 @@ async function initExamEngine() {
         fetchExamQuestions(isAutostart);
         setupBackPrevention();
         
-        // Gọi hàm wake lock an toàn tuyệt đối
         if (typeof requestWakeLock === 'function') {
             try { requestWakeLock(); } catch(e) {}
         }
@@ -134,6 +117,8 @@ async function initExamEngine() {
         showError("Lỗi tải đề thi", error.name === 'AbortError' 
             ? "Mạng Internet của bạn bị chập chờn, đã hết thời gian chờ máy chủ. Vui lòng bấm làm mới (F5) trang lại!" 
             : error.message);
+    } finally {
+        hideLoading();
     }
 }
 
@@ -559,13 +544,13 @@ function setupScrollObserver() {
     const options = { root: null, rootMargin: '-85px 0px -50% 0px', threshold: 0.1 }; 
     window._qCardObserver = new IntersectionObserver((entries) => { 
         let bestEntry = null;
-        entries.forEach(entry => 
+        entries.forEach(entry => {
             if (entry.isIntersecting) { 
                 if (!bestEntry || entry.intersectionRatio > bestEntry.intersectionRatio) {
                     bestEntry = entry;
                 }
             } 
-        ); 
+        }); 
         if (bestEntry && bestEntry.target) {
             const id = bestEntry.target.id.replace('q-card-', ''); 
             highlightActiveCircle(id); 
