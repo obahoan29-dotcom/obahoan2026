@@ -157,6 +157,44 @@ function resetToFreshLoginScreen() {
     window.location.reload(); 
 }
 
+// =========================================================
+// [ĐÃ SỬA THÊM] HÀM START EXAM ACTION BỊ THIẾU
+// Làm cầu nối giữa nút "Vào Làm Bài" ở HTML và hệ thống API
+// =========================================================
+async function startExamAction(isAutostart = false) {
+    const sId = document.getElementById("student-id").value.trim();
+    const sName = document.getElementById("student-name").value.trim();
+    const sClass = document.getElementById("student-class").value.trim();
+
+    // 1. Kiểm tra nhập liệu
+    if (!sId || !sName || !sClass) {
+        if (!isAutostart) alert("⚠️ Vui lòng nhập đầy đủ Số báo danh, Họ và tên, Lớp!");
+        return;
+    }
+
+    // 2. Xác định thí sinh tự do hay trong lớp
+    const currentCat = typeof getExamCategory === 'function' ? getExamCategory() : "them-11";
+    const checkInClass = typeof findStudentFromDatabase === 'function' ? findStudentFromDatabase(sId, currentCat) : null;
+    const isFree = !checkInClass;
+
+    // 3. Nếu là tự do, kiểm tra xem đề có khóa tự do không
+    if (isFree) {
+        const allowFree = typeof isCurrentExamAllowFree === 'function' ? isCurrentExamAllowFree() : true;
+        if (!allowFree) {
+            alert("⛔ Đề thi này không cho phép thí sinh tự do tham gia!\nVui lòng kiểm tra lại thông tin đăng nhập.");
+            return;
+        }
+    }
+
+    // 4. Bắt đầu đẩy lên hệ thống qua thi-service.js
+    if (typeof executeStartExamAPI === 'function') {
+        await executeStartExamAPI(sId, sName, sClass, isFree);
+    } else {
+        console.error("Lỗi: Không tìm thấy hàm executeStartExamAPI trong thi-service.js");
+    }
+}
+// =========================================================
+
 async function checkSessionStatus(isAutostart = false) { 
     syncStudentFromParamsAndStorage();
 
@@ -688,11 +726,11 @@ async function executeSubmitExam(isForceSubmit = false) {
     const sId = document.getElementById("student-id").value.trim(); 
     const sName = document.getElementById("student-name").value.trim(); 
     const sClass = document.getElementById("student-class").value.trim(); 
-    const currentCat = getExamCategory();
+    const currentCat = typeof getExamCategory === 'function' ? getExamCategory() : "them-11";
     const urlParams = new URLSearchParams(window.location.search);
     const currentQuizId = urlParams.get('id') || "";
 
-    const isClassAcc = !!findStudentFromDatabase(sId, currentCat);
+    const isClassAcc = typeof findStudentFromDatabase === 'function' ? !!findStudentFromDatabase(sId, currentCat) : false;
     const isFreeStudent = !isClassAcc;
 
     const durationSec = examStartTime ? Math.round((Date.now() - examStartTime) / 1000) : 0; 
@@ -834,10 +872,14 @@ async function executeSubmitExam(isForceSubmit = false) {
     // =========================================================
     
     // Gửi tiếp Google Sheet dưới nền
-    postToGoogleSheet(URL2_EXAM_RESULT, payload, 15000).catch(e => null);
+    if (typeof postToGoogleSheet === 'function') {
+        postToGoogleSheet(typeof URL2_EXAM_RESULT !== 'undefined' ? URL2_EXAM_RESULT : "", payload, 15000).catch(e => null);
+    }
     
     // Xóa presence để báo hiệu đã thi xong
-    clearPresence(sId);
+    if (typeof clearPresence === 'function') {
+        clearPresence(sId);
+    }
     
     // Dừng đồng hồ
     if (timerInterval) clearInterval(timerInterval); 
