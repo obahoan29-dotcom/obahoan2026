@@ -4,6 +4,7 @@
 // THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
 // ĐÃ SỬA TRIỆT ĐỂ: KHÔNG TỰ ĐỘNG MATCH ĐỔI TÊN HỌC SINH KHÁC
 // TỐI ƯU HÓA: ĐẢM BẢO 100% KẾT NỐI FIREBASE THÀNH CÔNG MỚI CHO VÀO THI
+// SỬA LỖI: BỔ SUNG requestWakeLock() CHỐNG TẮT MÀN HÌNH KHI THI
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
@@ -46,6 +47,23 @@ let presenceInterval = null;
 let onlineCountInterval = null;
 
 // =========================================================
+// GIỮ MÀN HÌNH KHÔNG BỊ TẮT TRONG KHI THI (SCREEN WAKE LOCK)
+// =========================================================
+let wakeLockSentinel = null;
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator && navigator.wakeLock) {
+            wakeLockSentinel = await navigator.wakeLock.request('screen');
+            wakeLockSentinel.addEventListener('release', () => {
+                wakeLockSentinel = null;
+            });
+        }
+    } catch (err) {
+        // Trình duyệt không hỗ trợ hoặc từ chối, bỏ qua an toàn không gây dừng chương trình
+    }
+}
+
+// =========================================================
 // HÀM FETCH SIÊU CẤP: TỰ ĐỘNG THỬ LẠI NẾU RỚT MẠNG
 // =========================================================
 async function fetchWithRetry(url, options, maxRetries = 3, timeoutMs = 6000) {
@@ -59,7 +77,6 @@ async function fetchWithRetry(url, options, maxRetries = 3, timeoutMs = 6000) {
         } catch (err) {
             clearTimeout(id);
             if (i === maxRetries - 1) throw err;
-            // Chờ 1 khoảng thời gian nhỏ trước khi thử lại (Exponential backoff)
             await new Promise(r => setTimeout(r, 1000 * (i + 1))); 
         }
     }
@@ -278,17 +295,15 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
     let isFirebaseConfirmed = false;
 
     try {
-        // Sử dụng hàm fetchWithRetry siêu cấp để đảm bảo ghi thành công, nếu thất bại thử lại tối đa 3 lần
         const primaryRes = await fetchWithRetry(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(presencePayload)
-        }, 3, 5000); // Thử 3 lần, mỗi lần chờ max 5 giây
+        }, 3, 5000);
 
         if (primaryRes && primaryRes.ok) {
             isFirebaseConfirmed = true;
             
-            // Lặng lẽ ghi đệm vào các Node liên quan (Không cần await để tăng tốc độ)
             const pushNodes = [];
             if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
             let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
@@ -302,7 +317,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
                 }).catch(() => null);
             });
 
-            // Lặng lẽ ghi log bắt đầu thi
             fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logPayload)
             }).catch(() => null);
@@ -311,7 +325,6 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         console.warn("Lỗi kết nối Firebase khi bắt đầu bài thi:", e);
     }
 
-    // NẾU SAU 3 LẦN THỬ MÀ VẪN THẤT BẠI -> CHẶN ĐỨNG KHÔNG CHO VÀO THI
     if (!isFirebaseConfirmed) {
         if (startBtn) {
             startBtn.disabled = false;
@@ -333,10 +346,8 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         return;
     }
 
-    // Async đẩy lên Google Sheets, không cần await để chặn luồng
     postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
 
-    // CHỈ CHẠY ĐẾN ĐÂY NẾU FIREBASE ĐÃ GHI THÀNH CÔNG 100%
     document.getElementById("nav-student-name").innerText = sName; 
     document.getElementById("nav-student-id").innerText = sId; 
     document.getElementById("nav-student-class").innerText = sClass; 
@@ -514,14 +525,12 @@ function startTimeWatcherRealtime(quizId) {
                 safeLocal.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
             }
             
-            // --- CHÈN THÊM ĐOẠN NÀY ĐỂ ĐỒNG BỘ REALTIME CHẾ ĐỘ ĐIỂM ---
             if (freshData.resultMode !== undefined && examData) {
                 examData.resultMode = freshData.resultMode;
             }
             if (freshData.allowReviewOriginal !== undefined && examData) {
                 examData.allowReviewOriginal = freshData.allowReviewOriginal;
             }
-            // ---------------------------------------------------------
         } catch(e) {}
     }, 15000); 
 }
@@ -613,7 +622,11 @@ function checkPendingSubmissionOnLoad() {
 }
 function dismissPendingBar() { document.getElementById("pending-resend-bar").style.display = "none"; }
 
-document.addEventListener("visibilitychange", function() { 
+document.addEventListener("visibilitychange", async function() { 
+    if (wakeLockSentinel === null && !document.hidden) {
+        await requestWakeLock();
+    }
+
     if (!examStartTime || isSubmitted) return; 
     if (document.hidden) { 
         if (!isTabHidden) { 
