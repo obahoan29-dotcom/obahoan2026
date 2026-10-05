@@ -3,7 +3,7 @@
 // QUẢN LÝ KẾT NỐI MẠNG, FIREBASE REALTIME, PRESENCE, 
 // THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
 // ĐÃ SỬA TRIỆT ĐỂ: KHÔNG TỰ ĐỘNG MATCH ĐỔI TÊN HỌC SINH KHÁC
-// TỐI ƯU HÓA: CHỐNG NGHẼN MẠNG GÂY ĐƠ LAG KHI LÀM BÀI
+// TỐI ƯU HÓA: ĐẢM BẢO 100% KẾT NỐI FIREBASE THÀNH CÔNG MỚI CHO VÀO THI
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
@@ -45,6 +45,27 @@ let pendingSubmissionPayload = null;
 let presenceInterval = null;
 let onlineCountInterval = null;
 
+// =========================================================
+// HÀM FETCH SIÊU CẤP: TỰ ĐỘNG THỬ LẠI NẾU RỚT MẠNG
+// =========================================================
+async function fetchWithRetry(url, options, maxRetries = 3, timeoutMs = 6000) {
+    for (let i = 0; i < maxRetries; i++) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const res = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(id);
+            if (res.ok) return res;
+        } catch (err) {
+            clearTimeout(id);
+            if (i === maxRetries - 1) throw err;
+            // Chờ 1 khoảng thời gian nhỏ trước khi thử lại (Exponential backoff)
+            await new Promise(r => setTimeout(r, 1000 * (i + 1))); 
+        }
+    }
+    throw new Error("Không thể kết nối tới máy chủ sau nhiều lần thử.");
+}
+
 function getExamCategory() {
     const urlParams = new URLSearchParams(window.location.search);
     let cat = urlParams.get('cat');
@@ -63,7 +84,6 @@ function findStudentFromDatabase(query, preferredCat = null) {
     if (!query || !window.STUDENT_ACCOUNTS) return null;
     const q = String(query).trim().toLowerCase();
 
-    // Chỉ tìm chính xác trong đúng danh mục lớp đang xét
     if (preferredCat && window.STUDENT_ACCOUNTS[preferredCat]) {
         const list = window.STUDENT_ACCOUNTS[preferredCat];
         const matched = list.find(acc => 
@@ -115,14 +135,12 @@ function applyStudentToUI(student) {
     safeLocal.setItem("saved_student_class", sClass);
 }
 
-// BẢO VỆ THÔNG TIN ĐĂNG NHẬP 100%: GIỮ NGUYÊN BẢN, TUYỆT ĐỐI KHÔNG ÉP MATCH THÀNH HỌC SINH KHÁC
 function syncStudentFromParamsAndStorage() {
     const urlParams = new URLSearchParams(window.location.search);
     let sbd = urlParams.get('sbd');
     let name = urlParams.get('name');
     let className = urlParams.get('class');
 
-    // 1. ƯU TIÊN SỐ 1: Tham số trực tiếp từ URL lúc đăng nhập ở trang chủ
     if (name && name.trim()) {
         applyStudentToUI({
             sbd: sbd ? sbd.trim() : "---",
@@ -132,7 +150,6 @@ function syncStudentFromParamsAndStorage() {
         return;
     }
 
-    // 2. ƯU TIÊN SỐ 2: Thông tin trong current_exam_student đã lưu lúc click vào thi
     try {
         const rawSaved = safeLocal.getItem("current_exam_student");
         if (rawSaved) {
@@ -148,7 +165,6 @@ function syncStudentFromParamsAndStorage() {
         }
     } catch(e) {}
 
-    // 3. ƯU TIÊN SỐ 3: Thông tin lưu dự phòng
     sbd = safeLocal.getItem("saved_student_sbd");
     name = safeLocal.getItem("saved_student_name");
     className = safeLocal.getItem("saved_student_class");
@@ -209,6 +225,145 @@ async function postToGoogleSheet(url, payload, timeoutMs = 15000) {
     } 
 }
 
+// =========================================================
+// HÀM START EXAM: BẮT BUỘC 100% GHI DANH SÁCH THÀNH CÔNG MỚI CHO VÀO THI
+// =========================================================
+async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) { 
+    const currentCat = getExamCategory();
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentQuizId = urlParams.get('id') || "";
+    const examCode = getExamCode();
+    const startBtn = document.getElementById("btn-start-exam");
+
+    if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.innerText = "⏳ Đang kết nối máy chủ thi...";
+    }
+
+    const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
+    const presencePayload = {
+        sbd: sId,
+        name: sName,
+        className: sClass,
+        cat: currentCat,
+        categoryId: currentCat,
+        isFree: isFreeStudent,
+        quizId: currentQuizId,
+        maDe: getMaDe(),
+        examName: EXAM_NAME,
+        examTitle: EXAM_NAME,
+        startTime: Date.now(),
+        lastPing: Date.now()
+    };
+
+    let logPayload = { 
+        quizId: currentQuizId,
+        maDe: getMaDe(), 
+        examName: EXAM_NAME, 
+        categoryId: currentCat,
+        cat: currentCat,
+        studentId: sId, 
+        sbd: sId, 
+        soBaoDanh: sId, 
+        studentName: sName, 
+        studentClass: sClass, 
+        switchCount: 0, 
+        tabSwitchCount: 0, 
+        durationStr: "Bắt đầu", 
+        durationSec: 0, 
+        timestamp: new Date().toLocaleString("vi-VN"), 
+        createdAt: Date.now() 
+    }; 
+
+    let isFirebaseConfirmed = false;
+
+    try {
+        // Sử dụng hàm fetchWithRetry siêu cấp để đảm bảo ghi thành công, nếu thất bại thử lại tối đa 3 lần
+        const primaryRes = await fetchWithRetry(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(presencePayload)
+        }, 3, 5000); // Thử 3 lần, mỗi lần chờ max 5 giây
+
+        if (primaryRes && primaryRes.ok) {
+            isFirebaseConfirmed = true;
+            
+            // Lặng lẽ ghi đệm vào các Node liên quan (Không cần await để tăng tốc độ)
+            const pushNodes = [];
+            if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
+            let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
+            if (numMatch) {
+                pushNodes.push(numMatch[1]);
+                pushNodes.push("DE" + numMatch[1]);
+            }
+            pushNodes.forEach(n => {
+                fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(presencePayload)
+                }).catch(() => null);
+            });
+
+            // Lặng lẽ ghi log bắt đầu thi
+            fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logPayload)
+            }).catch(() => null);
+        }
+    } catch(e) {
+        console.warn("Lỗi kết nối Firebase khi bắt đầu bài thi:", e);
+    }
+
+    // NẾU SAU 3 LẦN THỬ MÀ VẪN THẤT BẠI -> CHẶN ĐỨNG KHÔNG CHO VÀO THI
+    if (!isFirebaseConfirmed) {
+        if (startBtn) {
+            startBtn.disabled = false;
+            startBtn.innerText = "Vào Làm Bài";
+        }
+        document.getElementById("student-card").style.display = "block";
+        const waitingCard = document.getElementById("waiting-room-card");
+        if (waitingCard) waitingCard.style.display = "none";
+
+        try {
+            const u = new URL(window.location.href);
+            if (u.searchParams.has('autostart')) {
+                u.searchParams.delete('autostart');
+                window.history.replaceState({}, '', u.toString());
+            }
+        } catch(e) {}
+
+        alert("⚠️ CHƯA THỂ MỞ ĐỀ THI!\n\nMáy chủ thi (Firebase) chưa phản hồi xác nhận do mạng Internet của bạn bị chập chờn hoặc gián đoạn.\n\nVui lòng kiểm tra lại kết nối mạng 4G/Wifi và bấm nút 'Vào Làm Bài' lại để hệ thống bảo đảm quyền lợi của bạn!");
+        return;
+    }
+
+    // Async đẩy lên Google Sheets, không cần await để chặn luồng
+    postToGoogleSheet(URL1_TAB_CHEATING, logPayload, 15000).catch(e=>{});
+
+    // CHỈ CHẠY ĐẾN ĐÂY NẾU FIREBASE ĐÃ GHI THÀNH CÔNG 100%
+    document.getElementById("nav-student-name").innerText = sName; 
+    document.getElementById("nav-student-id").innerText = sId; 
+    document.getElementById("nav-student-class").innerText = sClass; 
+    document.getElementById("nav-exam-code-text").innerText = `Đề: ${getMaDe()}`; 
+    
+    document.getElementById("student-card").style.display = "none"; 
+    const waitingCard = document.getElementById("waiting-room-card"); 
+    if (waitingCard) waitingCard.style.display = "none"; 
+    
+    document.getElementById("top-navbar").style.display = "block"; 
+    document.getElementById("quiz-content").style.display = "block"; 
+    
+    if (!examStartTime) { 
+        examStartTime = Date.now(); 
+        saveExamStateToStorage(); 
+    } 
+    
+    updateProgress(); 
+    startCountdownTimer(); 
+    startPresenceSystem(sId);
+
+    if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.innerText = "Vào Làm Bài";
+    }
+}
+
 function startPresenceSystem(sId) {
     const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
     const examCode = getExamCode();
@@ -252,13 +407,7 @@ async function updatePresence(examCode, safeId) {
 
         const pushNodes = [examCode];
         if (currentQuizId && currentQuizId !== examCode) pushNodes.push(currentQuizId);
-        let numMatch = (EXAM_NAME || "").match(/(?:đề|de)\s*(?:số|so)?\s*(\d+)/i);
-        if (numMatch) {
-            pushNodes.push(numMatch[1]);
-            pushNodes.push("DE" + numMatch[1]);
-            pushNodes.push("DE" + numMatch[1] + "TOAN11");
-        }
-
+        
         await Promise.all(pushNodes.map(n => 
             fetch(`${FIREBASE_DB_URL}/active_sessions/${n}/${safeId}.json`, {
                 method: 'PUT', body: JSON.stringify(presencePayload)
@@ -307,7 +456,6 @@ function showTimeChangeToast(message) {
     setTimeout(() => { toast.classList.remove("show"); }, 4500);
 }
 
-// ĐÃ SỬA: Đổi chu kỳ kiểm tra từ 1500ms (1.5 giây) thành 15000ms (15 giây) để tránh tràn bộ nhớ & nghẽn mạng
 function startTimeWatcherRealtime(quizId) {
     if (!quizId) return;
     if (timeWatcherInterval) clearInterval(timeWatcherInterval);
@@ -366,7 +514,7 @@ function startTimeWatcherRealtime(quizId) {
                 safeLocal.setItem(`exam_allow_free_${quizId}`, String(freshData.allowFree !== false));
             }
         } catch(e) {}
-    }, 15000); // 15 giây kiểm tra 1 lần để hệ thống mượt mà
+    }, 15000); 
 }
 
 function setupBackPrevention() { 
