@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- ĐÃ SỬA: Xóa maximum-scale=1.0 và user-scalable=no để cho phép zoom bằng 2 ngón tay -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>HỆ THỐNG THI TRẮC NGHIỆM ONLINE</title>
     
@@ -22,7 +21,7 @@
     <script src="tklop11c.js"></script>
     <script src="tklop11e.js"></script>
 
-    <!-- ĐÃ SỬA: Cấu hình hiển thị công thức Toán MathJax siêu nét bằng SVG -->
+    <!-- Cấu hình hiển thị công thức Toán MathJax SVG siêu nét -->
     <script>
         window.MathJax = { 
             tex: { 
@@ -31,7 +30,7 @@
                 processEscapes: true 
             },
             svg: {
-                scale: 1.05, /* Phóng to một chút cho nét */
+                scale: 1.05,
                 displayAlign: 'center',
                 fontCache: 'global'
             },
@@ -40,7 +39,6 @@
             } 
         };
     </script>
-    <!-- ĐÃ SỬA: Chuyển từ tex-chtml.js sang tex-svg.js để công thức, dấu căn mượt mà không bị vỡ -->
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
     <!-- Các module phân tách cho phòng thi -->
@@ -115,11 +113,17 @@
             <h3 id="error-title" style="color: #dc2626; margin-bottom: 8px; font-size: 1.15rem; font-weight: 900;">⚠️ Lỗi nạp bài thi</h3>
             <p id="error-msg" style="color: #7f1d1d; line-height: 1.5; font-size: 1rem; font-weight: 600;"></p>
         </div>
+
         <div id="login-box" class="card-panel" style="display: none;">
             <h2 style="font-size: 1.3rem; font-weight: 900; color: #0284c7; margin-bottom: 16px;">🔒 Mật Khẩu Bài Thi</h2>
-            <div class="input-group"><label>Nhập mật khẩu do giáo viên cung cấp (hoặc mã học sinh):</label><input type="password" id="exam-pass-input" placeholder="Nhập mật khẩu bài thi..." onkeydown="if(event.key==='Enter') checkPassword()"></div>
+            <div class="input-group">
+                <label>Nhập mật khẩu do giáo viên cung cấp (hoặc mã học sinh):</label>
+                <input type="password" id="exam-pass-input" placeholder="Nhập mật khẩu bài thi..." onkeydown="if(event.key==='Enter') checkPassword()" autocorrect="off" autocapitalize="none">
+            </div>
             <button class="btn-action-main" onclick="checkPassword()">Tiếp Tục</button>
         </div>
+
+        <!-- MÀN HÌNH ĐIỀN THÔNG TIN HỌC SINH -->
         <div id="student-card" class="card-panel" style="display: none;">
             <div style="text-align: center; margin-bottom: 22px;">
                 <div style="font-size: 40px; line-height: 1; margin-bottom: 8px;">🎯⚡</div>
@@ -127,11 +131,23 @@
                 <div id="exam-time-notice" style="color: #ea580c; font-size: 0.95rem; font-weight: 800; margin-top: 8px; display: none; background: #ffedd5; padding: 8px; border-radius: 10px; display: inline-block;"></div>
             </div>
             <h3 style="font-size: 1.12rem; font-weight: 900; color: #334155; margin-bottom: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">👤 Thông Tin Học Sinh</h3>
-            <div class="input-group"><label>Số báo danh (*):</label><input type="text" id="student-id" placeholder="Ví dụ: 1001, 1016, 1137"></div>
-            <div class="input-group"><label>Họ và tên học sinh (*):</label><input type="text" id="student-name" placeholder="Ví dụ: Nguyễn Văn Nam"></div>
-            <div class="input-group"><label>Lớp (*):</label><input type="text" id="student-class" placeholder="Ví dụ: 10B, 11A"></div>
+            
+            <div class="input-group">
+                <label>Số báo danh (*):</label>
+                <input type="text" id="student-id" placeholder="Ví dụ: 1001, 1016, 1137" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+            </div>
+            <div class="input-group">
+                <label>Họ và tên học sinh (*):</label>
+                <input type="text" id="student-name" placeholder="Ví dụ: Nguyễn Văn Nam" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
+            </div>
+            <div class="input-group">
+                <label>Lớp (*):</label>
+                <input type="text" id="student-class" placeholder="Ví dụ: 10B, 11A" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
+            </div>
+            
             <button class="btn-action-main" id="btn-start-exam" onclick="startExamAction()" style="margin-top: 20px; font-size: 1.15rem;">Vào Làm Bài</button>
         </div>
+
         <div id="waiting-room-card" class="card-panel" style="display: none; text-align: center; padding: 40px 16px;">
             <div style="font-size: 54px; margin-bottom: 16px; animation: pulseWait 1.5s infinite;">⏳</div>
             <h2 id="waiting-title" style="font-size: 1.35rem; font-weight: 900; color: #0369a1; margin-bottom: 12px; text-transform: uppercase;">Chưa đến giờ làm bài...</h2>
@@ -139,6 +155,7 @@
             <div id="waiting-countdown" style="font-size: 3rem; font-weight: 900; color: #ef4444; font-family: 'Courier New', Courier, monospace; background: #fef2f2; border: 2px solid #fecaca; display: inline-block; padding: 14px 28px; border-radius: 18px; margin-bottom: 20px; box-shadow: 0 4px 18px rgba(239, 68, 68, 0.18);">00:00:00</div>
             <p style="font-size: 0.95rem; color: #64748b; font-style: italic; font-weight: 600;">⚠️ Vui lòng giữ nguyên màn hình, không tải lại trang để tránh gián đoạn.</p>
         </div>
+
         <div id="quiz-content" style="display: none;">
             <form id="quiz-form">
                 <div id="dynamic-questions-container"></div>
@@ -148,12 +165,9 @@
             </form>
         </div>
         
-        <!-- ========================================================= -->
-        <!-- MÀN HÌNH TỔNG KẾT ĐIỂM SAU KHI NỘP (CÓ TÊN ĐỀ THI)         -->
-        <!-- ========================================================= -->
+        <!-- MÀN HÌNH TỔNG KẾT ĐIỂM SAU KHI NỘP -->
         <div id="result-view-container" style="display: none;">
             <div class="result-summary-card">
-                <!-- VÙNG HIỂN THỊ TÊN ĐỀ THI TRANG TRỌNG -->
                 <div class="result-exam-title-badge" id="res-exam-title-badge">
                     <span>📑</span> <span id="res-exam-title">BÀI THI TRẮC NGHIỆM</span>
                 </div>
