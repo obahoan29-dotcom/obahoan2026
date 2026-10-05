@@ -61,8 +61,8 @@ body {
 
 .admin-logout-btn {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: #ffffff; border: none; border-radius: 12px; padding: 6px 12px;
-    font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s;
+    color: #ffffff; border: none; border-radius: 10px; padding: 5px 10px;
+    font-size: 11.5px; font-weight: 800; cursor: pointer; transition: 0.2s;
     display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
 }
 .admin-logout-btn:hover { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); transform: scale(1.04); }
@@ -71,56 +71,134 @@ body {
 .admin-gear-btn:hover { background: rgba(255, 255, 255, 0.5); transform: rotate(90deg) scale(1.08); }
 .admin-gear-btn.active-gear { background: linear-gradient(135deg, #0284c7 0%, #3b82f6 100%); border-color: #fff; box-shadow: 0 0 16px rgba(2, 132, 199, 0.85); }
 
-/* BẢNG QUẢN TRỊ POPOVER */
+/* ========================================================= */
+/* BẢNG QUẢN TRỊ POPOVER - GIAO DIỆN KÍNH MỜ TRONG SUỐT TINH TẾ */
+/* ========================================================= */
 .admin-popover-panel { 
     position: absolute; top: calc(100% + 10px); right: 0; 
-    width: min(440px, calc(100vw - 24px)); 
-    max-height: calc(100vh - 180px);
+    width: min(420px, calc(100vw - 20px)); 
+    max-height: calc(100vh - 140px);
     overflow-y: auto;
-    background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
-    border-radius: 20px; padding: 18px 16px; 
-    box-shadow: 0 20px 48px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.9); 
-    z-index: 9999; border: var(--glass-border);
+    background: rgba(255, 255, 255, 0.84); 
+    backdrop-filter: blur(24px) saturate(180%); 
+    -webkit-backdrop-filter: blur(24px) saturate(180%); 
+    border-radius: 18px; 
+    padding: 13px 14px; 
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22), inset 0 1px 1px rgba(255,255,255,0.9); 
+    z-index: 9999; 
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
     visibility: hidden; opacity: 0; pointer-events: none;
-    transform: translateY(-8px) scale(0.96); transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top right;
+    transform: translateY(-8px) scale(0.96); 
+    transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1); 
+    transform-origin: top right;
 }
-.admin-popover-panel::-webkit-scrollbar { width: 5px; }
-.admin-popover-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.admin-popover-panel::-webkit-scrollbar { width: 4.5px; }
+.admin-popover-panel::-webkit-scrollbar-track { background: transparent; }
+.admin-popover-panel::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.6); border-radius: 6px; }
 .admin-popover-panel.show { visibility: visible; opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
-.admin-popover-title { font-size: 1.15rem; font-weight: 900; color: transparent; background-clip: text; -webkit-background-clip: text; background-image: linear-gradient(135deg, #0284c7 0%, #be123c 100%); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;}
+
+.admin-popover-title { 
+    font-size: 1.05rem; font-weight: 900; 
+    color: transparent; background-clip: text; -webkit-background-clip: text; 
+    background-image: linear-gradient(135deg, #0284c7 0%, #be123c 100%); 
+    display: flex; align-items: center; gap: 6px;
+}
 
 /* THANH 3 TAB QUẢN TRỊ */
-.admin-tabs { display: flex; gap: 4px; margin-bottom: 14px; background: rgba(226, 232, 240, 0.7); padding: 4px; border-radius: 14px;}
+.admin-tabs { 
+    display: flex; gap: 4px; margin-bottom: 10px; 
+    background: rgba(226, 232, 240, 0.65); 
+    padding: 3px; border-radius: 12px;
+}
 .admin-tab-btn { 
-    flex: 1; padding: 8px 3px; border: none; border-radius: 10px; 
-    font-weight: 800; font-size: 0.78rem; cursor: pointer; color: #475569; 
-    background: transparent; transition: 0.2s; font-family: inherit; 
+    flex: 1; padding: 6.5px 3px; border: none; border-radius: 9px; 
+    font-weight: 800; font-size: 0.76rem; cursor: pointer; color: #475569; 
+    background: transparent; transition: 0.18s; font-family: inherit; 
     white-space: nowrap; text-align: center;
 }
-.admin-tab-btn.active { background: #ffffff; color: var(--primary-blue); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
+.admin-tab-btn.active { 
+    background: #ffffff; color: var(--primary-blue); 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+}
 
-.admin-input-group { margin-bottom: 12px; }
-.admin-input-group label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.88rem; color: #1e293b; }
-.admin-input-group select, .admin-input-group input[type="text"], .admin-input-group input[type="file"], .admin-input-group input[type="number"], .admin-input-group input[type="datetime-local"] { width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; background: #ffffff; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #0f172a;}
-.admin-input-group select:focus, .admin-input-group input:focus { border-color: var(--primary-blue); background: #fff; }
+.admin-input-group { margin-bottom: 9px; }
+.admin-input-group label { 
+    display: block; font-weight: 800; margin-bottom: 4px; 
+    font-size: 0.8rem; color: #1e293b; 
+}
+.admin-input-group select, 
+.admin-input-group input[type="text"], 
+.admin-input-group input[type="file"], 
+.admin-input-group input[type="number"], 
+.admin-input-group input[type="datetime-local"] { 
+    width: 100%; padding: 7.5px 11px; 
+    border: 1.5px solid rgba(203, 213, 225, 0.85); 
+    border-radius: 10px; outline: none; 
+    background: rgba(255, 255, 255, 0.9); 
+    font-family: inherit; font-size: 12.5px; font-weight: 600; color: #0f172a;
+    transition: all 0.18s ease;
+}
+.admin-input-group select:focus, .admin-input-group input:focus { 
+    border-color: var(--primary-blue); background: #ffffff; 
+    box-shadow: 0 0 0 2.5px rgba(2, 132, 199, 0.18); 
+}
 
-.cat-quick-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.btn-cat-quick { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.15s; font-family: inherit; }
+.cat-quick-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.btn-cat-quick { 
+    background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; 
+    border-radius: 6px; padding: 2px 6px; font-size: 10.5px; font-weight: 800; 
+    cursor: pointer; transition: 0.15s; font-family: inherit; 
+}
 .btn-cat-quick:hover { background: #0284c7; color: #ffffff; border-color: #0284c7; }
 
-.category-checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-height: 145px; overflow-y: auto; padding: 7px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; }
-.cat-checkbox-item { display: flex; align-items: center; gap: 7px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 9px; padding: 6px 8px; cursor: pointer; font-size: 12px; font-weight: 700; color: #1e293b; user-select: none; transition: all 0.15s ease; }
+/* DANH SÁCH Ô TÍCH CHỌN LỚP GỌN GÀNG */
+.category-checkbox-grid { 
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; 
+    max-height: 110px; overflow-y: auto; padding: 5px; 
+    background: rgba(248, 250, 252, 0.7); 
+    border: 1.5px solid rgba(203, 213, 225, 0.8); border-radius: 11px; 
+}
+.category-checkbox-grid::-webkit-scrollbar { width: 3.5px; }
+.category-checkbox-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.cat-checkbox-item { 
+    display: flex; align-items: center; gap: 6px; 
+    background: rgba(255, 255, 255, 0.95); border: 1.2px solid #e2e8f0; 
+    border-radius: 8px; padding: 4.5px 7px; cursor: pointer; 
+    font-size: 11.5px; font-weight: 700; color: #1e293b; 
+    user-select: none; transition: all 0.15s ease; 
+}
 .cat-checkbox-item:hover { border-color: #38bdf8; background: #f0f9ff; }
 .cat-checkbox-item.checked { border-color: #0284c7; background: #e0f2fe; color: #0369a1; }
-.cat-checkbox-item input[type="checkbox"] { width: 15px; height: 15px; accent-color: #0284c7; cursor: pointer; flex-shrink: 0; margin: 0; }
+.cat-checkbox-item input[type="checkbox"] { width: 14px; height: 14px; accent-color: #0284c7; cursor: pointer; flex-shrink: 0; margin: 0; }
 .cat-checkbox-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.avatar-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 6px; background: rgba(241, 245, 249, 0.75); border-radius: 12px; border: 1px solid #e2e8f0; }
-.avatar-option { width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: 0.2s; background: #fff; padding: 2px;}
-.avatar-option:hover { transform: scale(1.1); }
-.avatar-option.selected { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3); transform: scale(1.06); background: #f0f9ff;}
-.admin-btn-row { display: flex; gap: 8px; margin-top: 16px; }
-.btn-admin { flex: 1; padding: 11px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; color: #fff; font-family: inherit; transition: 0.2s; font-size: 0.92rem;}
+/* DANH SÁCH ICON ĐẠI DIỆN THU GỌN CHIỀU CAO */
+.avatar-picker-grid { 
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; 
+    max-height: 85px; overflow-y: auto; padding: 5px; 
+    background: rgba(241, 245, 249, 0.65); 
+    border-radius: 11px; border: 1px solid rgba(226, 232, 240, 0.9); 
+}
+.avatar-picker-grid::-webkit-scrollbar { width: 3.5px; }
+.avatar-picker-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.avatar-option { 
+    width: 100%; aspect-ratio: 1; border-radius: 7px; 
+    object-fit: cover; cursor: pointer; border: 2px solid transparent; 
+    transition: 0.18s; background: #fff; padding: 2px;
+}
+.avatar-option:hover { transform: scale(1.12); }
+.avatar-option.selected { 
+    border-color: var(--primary-blue); 
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3); 
+    transform: scale(1.06); background: #f0f9ff;
+}
+
+.admin-btn-row { display: flex; gap: 7px; margin-top: 12px; }
+.btn-admin { 
+    flex: 1; padding: 8.5px 10px; border-radius: 10px; border: none; 
+    font-weight: 800; cursor: pointer; color: #fff; font-family: inherit; 
+    transition: 0.18s; font-size: 0.88rem;
+}
 .btn-cancel { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
 .btn-submit { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); }
 
@@ -371,7 +449,6 @@ body {
     margin-bottom: 12px; padding: 12px 14px; 
 }
 
-/* Đảm bảo khi mở bảng chọn Avatar thì toàn bộ khối cha được nâng lên trên cùng */
 .reminder-section:has(.has-active-popover),
 .reminder-section:has(.avatar-selection-popover.show),
 .dantri-nav-container:has(.has-active-popover),
@@ -406,10 +483,10 @@ body {
 }
 .btn-edit-inline-title:hover { background: #0284c7; color: #ffffff; }
 
-/* KHUNG ẢNH AVATAR VÀ THAY ĐỔI CỠ LINH HOẠT - SỬA LỖI OVERFLOW BỊ CẮT */
+/* KHUNG ẢNH AVATAR */
 .exam-thumb-box { 
     border-radius: 12px; 
-    overflow: visible !important; /* QUAN TRỌNG: Cho phép bảng chọn avatar bung ra ngoài */
+    overflow: visible !important;
     flex-shrink: 0; 
     border: 1.5px solid #e2e8f0; 
     background: #f8fafc; 
@@ -427,7 +504,6 @@ body {
     display: block;
 }
 
-/* Đưa thẻ bài lên lớp trên cùng khi mở bảng chọn avatar */
 .exam-card.has-active-popover {
     position: relative !important;
     z-index: 100000 !important;
@@ -438,7 +514,7 @@ body {
     z-index: 100001 !important;
 }
 
-/* POPOVER CẤU HÌNH AVATAR VÀ KÍCH CỠ */
+/* POPOVER CẤU HÌNH AVATAR */
 .avatar-selection-popover {
     display: none; 
     position: absolute; 
@@ -470,7 +546,6 @@ body {
 }
 .btn-close-popover-x:hover { color: #ef4444; }
 
-/* Thanh điều chỉnh kích cỡ Avatar (từ nhỏ đến rất to) */
 .avatar-size-control-box {
     background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px;
     padding: 8px 10px; margin-bottom: 10px;
@@ -529,7 +604,7 @@ body {
 }
 
 /* ========================================================= */
-/* GIAO DIỆN BÀI VIẾT BÁO DÂN TRÍ - SỬA LỖI CO RÚT BÉ TÍ     */
+/* GIAO DIỆN BÀI VIẾT BÁO DÂN TRÍ                            */
 /* ========================================================= */
 .dantri-article-modal {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
@@ -542,7 +617,7 @@ body {
     border-radius: 20px; 
     max-width: 720px; 
     width: min(720px, calc(100vw - 28px)); 
-    min-height: 360px; /* Chống co rút bé tí */
+    min-height: 360px;
     max-height: 92vh; 
     overflow-y: auto; 
     box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
@@ -595,7 +670,6 @@ body {
     border-radius: 0 12px 12px 0;
 }
 
-/* Khung hiển thị ảnh bài viết */
 .dantri-main-img-box {
     width: 100%; border-radius: 14px; overflow: hidden; background: #f8fafc;
     border: 1px solid #e2e8f0; margin-bottom: 16px; box-shadow: 0 3px 12px rgba(0,0,0,0.06);
@@ -616,7 +690,6 @@ body {
     margin-bottom: 16px;
 }
 
-/* Nút mở file tài liệu / Drive đính kèm */
 .dantri-attach-box {
     margin: 14px 0; 
     padding: 14px; 
@@ -644,7 +717,6 @@ body {
     box-shadow: 0 5px 14px rgba(2, 132, 199, 0.45);
 }
 
-/* Các trường trong ô soạn thảo admin */
 .article-edit-input-group { margin-bottom: 12px; }
 .article-edit-input-group label { display: block; font-size: 12.5px; font-weight: 800; color: #334155; margin-bottom: 5px; }
 .article-edit-input-group input, .article-edit-input-group textarea {
@@ -1187,17 +1259,63 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 .switch-mode-link { color: var(--primary-blue); font-weight: 800; text-decoration: none; cursor: pointer; }
 .switch-mode-link:hover { text-decoration: underline; }
 
-/* RESPONSIVE MOBILE FIX */
+/* ========================================================= */
+/* TỐI ƯU HÓA RESPONSIVE CHO ĐIỆN THOẠI                      */
+/* ========================================================= */
 @media (max-width: 640px) {
     body { font-size: 14px; }
     
+    /* BẢNG QUẢN TRỊ POPOVER TRÊN ĐIỆN THOẠI CỰC KỲ GỌN GÀNG */
     .admin-popover-panel { 
-        position: fixed; top: 60px; left: 8px; right: 8px; 
-        width: auto; max-width: none; max-height: calc(100vh - 80px); 
-        border-radius: 18px; padding: 14px 12px;
-        transform: translateY(-10px) scale(0.98); transform-origin: top center;
+        position: fixed; 
+        top: 50px; 
+        left: 10px; 
+        right: 10px; 
+        width: auto; 
+        max-width: 440px; 
+        margin: 0 auto;
+        max-height: calc(100vh - 70px); 
+        border-radius: 18px; 
+        padding: 11px 12px;
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28), inset 0 1px 1px rgba(255,255,255,0.9);
+        border: 1.5px solid rgba(255, 255, 255, 0.85);
+        transform: translateY(-8px) scale(0.98); 
+        transform-origin: top center;
     }
     .admin-popover-panel.show { transform: translateY(0) scale(1); }
+
+    .admin-popover-title { font-size: 0.98rem; }
+    .admin-logout-btn { padding: 4.5px 9px; font-size: 11px; }
+
+    .admin-tabs { margin-bottom: 8px; padding: 2.5px; }
+    .admin-tab-btn { font-size: 0.72rem; padding: 5.5px 2px; }
+
+    .admin-input-group { margin-bottom: 8px; }
+    .admin-input-group label { font-size: 0.78rem; margin-bottom: 3px; }
+    .admin-input-group select, 
+    .admin-input-group input[type="text"], 
+    .admin-input-group input[type="file"], 
+    .admin-input-group input[type="number"], 
+    .admin-input-group input[type="datetime-local"] { 
+        padding: 6.5px 9px; font-size: 12px; border-radius: 9px; 
+    }
+
+    .category-checkbox-grid { 
+        max-height: 98px; gap: 4px; padding: 4px; 
+    }
+    .cat-checkbox-item { 
+        padding: 3.5px 6px; font-size: 11px; border-radius: 7px; 
+    }
+    .cat-checkbox-item input[type="checkbox"] { width: 13px; height: 13px; }
+
+    .avatar-picker-grid { max-height: 72px; gap: 4px; padding: 4px; }
+    .avatar-option { border-radius: 6px; }
+
+    .admin-btn-row { margin-top: 10px; gap: 6px; }
+    .btn-admin { padding: 8px; font-size: 0.82rem; border-radius: 9px; }
 
     .banner-title { font-size: 12px; padding: 5px 12px; }
     .banner-watermark { font-size: 17px; letter-spacing: 1.5px; }
