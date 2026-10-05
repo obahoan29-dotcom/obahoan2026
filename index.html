@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -72,7 +72,7 @@
         <div class="admin-controls-wrapper">
             <div class="auth-container" id="auth-container">
                 <div class="auth-input-wrapper">
-                    <input type="password" id="admin-pass-input" class="auth-input" placeholder="Mật khẩu..." onkeypress="handleEnter(event)">
+                    <input type="password" id="admin-pass-input" class="auth-input" placeholder="Mật khẩu..." onkeypress="handleEnter(event)" autocorrect="off" autocapitalize="none">
                     <button type="button" class="eye-toggle-btn" id="eye-toggle-btn" onclick="togglePasswordVisibility()" title="Hiện/Ẩn">👁️</button>
                 </div>
                 <select id="admin-expiry-select" class="admin-duration-select" title="Thời gian duy trì trạng thái đăng nhập">
@@ -301,7 +301,7 @@
             </div>
         </div>
 
-        <!-- MÀN HÌNH ĐỌC BÀI BÁO (THEO PHONG CÁCH DÂN TRÍ) -->
+        <!-- MÀN HÌNH ĐỌC BÀI BÁO -->
         <div id="dantri-article-view-mode">
             <h1 class="dantri-view-title" id="article-view-title">Lưu ý quan trọng</h1>
             
@@ -353,7 +353,6 @@
                 <input type="file" id="edit-article-file-upload" accept="image/*" onchange="uploadArticleImageToDrive(this)">
                 <div id="article-img-upload-status" style="display:none; font-size:12px; font-weight:700; color:#0284c7; margin-top:5px;"></div>
                 
-                <!-- Khung xem trước ảnh đại diện ngay khi tải lên -->
                 <div class="article-edit-preview-box" id="article-edit-preview-box">
                     <img id="article-edit-preview-img" src="" alt="Xem trước ảnh">
                 </div>
@@ -465,7 +464,7 @@
             </div>
         </div>
         <div class="result-modal-tools">
-            <input type="text" id="result-search-input" class="result-search-input" placeholder="🔍 Tìm tên, SBD..." oninput="filterResultTable()">
+            <input type="text" id="result-search-input" class="result-search-input" placeholder="🔍 Tìm tên, SBD..." oninput="filterResultTable()" autocorrect="off" autocapitalize="none">
             
             <button type="button" id="btn-toggle-autorefresh" onclick="toggleAutoRefresh(event)" 
                 style="background: #1e293b; color: #38bdf8; border: 1.5px solid #38bdf8; border-radius: 20px; padding: 7px 12px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;" 
@@ -732,6 +731,7 @@
 
 <!-- ========================================================= -->
 <!-- MODAL ĐĂNG NHẬP THI HỌC SINH                              -->
+<!-- ĐÃ TỐI ƯU CÁC THUỘC TÍNH BÀN PHÍM ẢO CHO IPHONE          -->
 <!-- ========================================================= -->
 <div class="move-modal-overlay" id="student-login-modal">
     <div class="student-login-box">
@@ -757,7 +757,7 @@
                 <label>Tên đăng nhập / Số báo danh:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">👤</span>
-                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập tên đăng nhập hoặc SBD..." autocomplete="off">
+                    <input type="text" id="st-username-input" class="st-input-field" placeholder="Nhập tên đăng nhập hoặc SBD..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
                 </div>
             </div>
 
@@ -765,7 +765,7 @@
                 <label>Mật khẩu:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🔑</span>
-                    <input type="password" id="st-password-input" class="st-input-field" placeholder="Nhập mật khẩu..." autocomplete="new-password">
+                    <input type="password" id="st-password-input" class="st-input-field" placeholder="Nhập mật khẩu..." autocomplete="new-password" autocorrect="off" autocapitalize="none">
                     <button type="button" class="st-eye-btn" id="st-eye-btn" onclick="toggleStudentPassVisibility()">👁️</button>
                 </div>
             </div>
@@ -780,7 +780,7 @@
                 <label>Họ và tên thí sinh:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">📝</span>
-                    <input type="text" id="st-free-name-input" class="st-input-field" placeholder="VD: Nguyễn Văn An...">
+                    <input type="text" id="st-free-name-input" class="st-input-field" placeholder="VD: Nguyễn Văn An..." autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
                 </div>
             </div>
 
@@ -788,7 +788,7 @@
                 <label>Lớp học:</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🏫</span>
-                    <input type="text" id="st-free-class-input" class="st-input-field" placeholder="VD: 10A1, Tự do...">
+                    <input type="text" id="st-free-class-input" class="st-input-field" placeholder="VD: 10A1, Tự do..." autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
                 </div>
             </div>
 
@@ -796,7 +796,7 @@
                 <label>Số báo danh (SBD):</label>
                 <div class="st-input-wrapper">
                     <span class="st-input-icon">🔢</span>
-                    <input type="text" id="st-free-sbd-input" class="st-input-field" placeholder="VD: SBD01, 1001...">
+                    <input type="text" id="st-free-sbd-input" class="st-input-field" placeholder="VD: SBD01, 1001..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
                 </div>
             </div>
 
