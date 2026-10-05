@@ -2,11 +2,33 @@
 // FILE: thi-engine.js
 // BỘ MÁY ĐIỀU HÀNH BÀI THI: XÁO ĐỀ, HIỂN THỊ CÂU HỎI,
 // TÍNH ĐIỂM, ĐỒNG HỒ ĐẾM NGƯỢC, PALETTE & REVIEW LỜI GIẢI
-// ĐÃ SỬA TRIỆT ĐỂ: BẮT BUỘC FIREBASE XÁC NHẬN NỘP THÀNH CÔNG
-// MỚI ĐƯỢC PHÉP HIỂN THỊ ĐIỂM TRÊN MÀN HÌNH HỌC SINH
+// ĐÃ KHẮC PHỤC TRIỆT ĐỂ: KHAI BÁO & BỌC AN TOÀN requestWakeLock()
 // =========================================================
 
 let hasInitExamEngine = false;
+
+// =========================================================
+// SCREEN WAKE LOCK: GIỮ SÁNG MÀN HÌNH KHÔNG BỊ TẮT KHI THI
+// =========================================================
+let wakeLockSentinel = null;
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator && navigator.wakeLock) {
+            wakeLockSentinel = await navigator.wakeLock.request('screen');
+            wakeLockSentinel.addEventListener('release', () => {
+                wakeLockSentinel = null;
+            });
+        }
+    } catch (err) {
+        // Trình duyệt không hỗ trợ hoặc từ chối quyền, bỏ qua an toàn
+    }
+}
+
+document.addEventListener("visibilitychange", async function() {
+    if (wakeLockSentinel === null && !document.hidden && typeof requestWakeLock === 'function') {
+        try { await requestWakeLock(); } catch(e) {}
+    }
+});
 
 function formatQuestionText(text) {
     if (!text) return "";
@@ -68,30 +90,26 @@ async function initExamEngine() {
             throw new Error("Mã đề thi không tồn tại trên hệ thống!");
         }
         
-        // --- CHÈN THÊM XỬ LÝ CHẾ ĐỘ XEM ĐỀ GỐC (REVIEW) TẠI ĐÂY ---
+        // --- XỬ LÝ CHẾ ĐỘ XEM ĐỀ GỐC (REVIEW) ---
         if (urlParams.get('review') === "1") {
             if (examData.allowReviewOriginal !== true) {
                 hideLoading();
                 showError("Bị Khóa", "Giáo viên đã tắt tính năng xem đáp án gốc của đề thi này.");
                 return;
             }
-            // Thiết lập giả trạng thái đã nộp bài
             isSubmitted = true;
             totalQuestionsCount = examData.questions ? examData.questions.length : 0;
             
-            // Render luôn trang Review
             document.getElementById("top-navbar").style.display = "none";
             document.getElementById("quiz-content").style.display = "none";
             document.getElementById("login-box").style.display = "none";
             document.getElementById("student-card").style.display = "none";
             document.getElementById("waiting-room-card").style.display = "none";
             
-            // Gọi hàm render riêng cho Xem Đề Gốc
             renderOriginalReviewScreen();
             hideLoading();
-            return; // Dừng, không chạy vào logic thi
+            return;
         }
-        // ----------------------------------------------------------
 
         if (examData.allowFree !== undefined) {
             safeLocal.setItem(`exam_allow_free_${quizId}`, String(examData.allowFree !== false));
@@ -99,7 +117,12 @@ async function initExamEngine() {
 
         fetchExamQuestions(isAutostart);
         setupBackPrevention();
-        requestWakeLock();
+        
+        // Gọi hàm wake lock an toàn tuyệt đối
+        if (typeof requestWakeLock === 'function') {
+            try { requestWakeLock(); } catch(e) {}
+        }
+        
         checkPendingSubmissionOnLoad();
         
         await checkSessionStatus(isAutostart);
@@ -154,7 +177,10 @@ function shuffleExamData(data) {
     data.questions = [...p1, ...p2, ...p3, ...p4];
 }
 
-function trackPadletClick(qId) { padletClickedMap[qId] = true; saveExamStateToStorage(); }
+function trackPadletClick(qId) { 
+    padletClickedMap[qId] = true; 
+    saveExamStateToStorage(); 
+}
 
 function toggleSubPadlet(qId) { 
     const el = document.getElementById(`sub-padlet-dropdown-${qId}`); 
@@ -182,27 +208,21 @@ function resetToFreshLoginScreen() {
     window.location.reload(); 
 }
 
-// =========================================================
-// [ĐÃ SỬA THÊM] HÀM START EXAM ACTION BỊ THIẾU
-// Làm cầu nối giữa nút "Vào Làm Bài" ở HTML và hệ thống API
-// =========================================================
+// CẦU NỐI GIỮA NÚT "VÀO LÀM BÀI" VÀ THI-SERVICE.JS
 async function startExamAction(isAutostart = false) {
     const sId = document.getElementById("student-id").value.trim();
     const sName = document.getElementById("student-name").value.trim();
     const sClass = document.getElementById("student-class").value.trim();
 
-    // 1. Kiểm tra nhập liệu
     if (!sId || !sName || !sClass) {
         if (!isAutostart) alert("⚠️ Vui lòng nhập đầy đủ Số báo danh, Họ và tên, Lớp!");
         return;
     }
 
-    // 2. Xác định thí sinh tự do hay trong lớp
     const currentCat = typeof getExamCategory === 'function' ? getExamCategory() : "them-11";
     const checkInClass = typeof findStudentFromDatabase === 'function' ? findStudentFromDatabase(sId, currentCat) : null;
     const isFree = !checkInClass;
 
-    // 3. Nếu là tự do, kiểm tra xem đề có khóa tự do không
     if (isFree) {
         const allowFree = typeof isCurrentExamAllowFree === 'function' ? isCurrentExamAllowFree() : true;
         if (!allowFree) {
@@ -211,14 +231,12 @@ async function startExamAction(isAutostart = false) {
         }
     }
 
-    // 4. Bắt đầu đẩy lên hệ thống qua thi-service.js
     if (typeof executeStartExamAPI === 'function') {
         await executeStartExamAPI(sId, sName, sClass, isFree);
     } else {
         console.error("Lỗi: Không tìm thấy hàm executeStartExamAPI trong thi-service.js");
     }
 }
-// =========================================================
 
 async function checkSessionStatus(isAutostart = false) { 
     syncStudentFromParamsAndStorage();
@@ -273,7 +291,10 @@ async function checkSessionStatus(isAutostart = false) {
 
 function fetchExamQuestions(isAutostart = false) { 
     try { 
-        if (typeof examData === 'undefined' || !examData) { showError("Lỗi", "Không tìm thấy dữ liệu đề thi!"); return; } 
+        if (typeof examData === 'undefined' || !examData) { 
+            showError("Lỗi", "Không tìm thấy dữ liệu đề thi!"); 
+            return; 
+        } 
         if (examData.title) { 
             EXAM_NAME = examData.title; 
             document.getElementById("banner-title").innerText = EXAM_NAME; 
@@ -322,7 +343,9 @@ function fetchExamQuestions(isAutostart = false) {
         if (window.MathJax && MathJax.typesetPromise) {
             MathJax.typesetPromise().catch(() => {});
         }
-    } catch (err) { showError("Lỗi", err.message); } 
+    } catch (err) { 
+        showError("Lỗi", err.message); 
+    } 
 }
 
 function showError(title, msg) { 
@@ -536,13 +559,13 @@ function setupScrollObserver() {
     const options = { root: null, rootMargin: '-85px 0px -50% 0px', threshold: 0.1 }; 
     window._qCardObserver = new IntersectionObserver((entries) => { 
         let bestEntry = null;
-        entries.forEach(entry => { 
+        entries.forEach(entry => 
             if (entry.isIntersecting) { 
                 if (!bestEntry || entry.intersectionRatio > bestEntry.intersectionRatio) {
                     bestEntry = entry;
                 }
             } 
-        }); 
+        ); 
         if (bestEntry && bestEntry.target) {
             const id = bestEntry.target.id.replace('q-card-', ''); 
             highlightActiveCircle(id); 
@@ -734,7 +757,6 @@ async function executeSubmitExam(isForceSubmit = false) {
     if (confirmModal) confirmModal.style.display = "flex";
     if (normalView) normalView.style.display = "none";
     
-    // Tạo UI báo trạng thái nộp bài
     if (progressView) {
         progressView.innerHTML = `
             <div class="spinner" style="width:38px; height:38px; margin:0 auto 12px auto; border-top-color:#f97316;"></div>
@@ -744,9 +766,6 @@ async function executeSubmitExam(isForceSubmit = false) {
         progressView.style.display = "block";
     }
     if (actionsBox) actionsBox.innerHTML = "";
-
-    // Đừng clear timer ngay, lỡ nộp lỗi rớt mạng vẫn còn tính giờ chạy tiếp (nếu chưa hết giờ)
-    // Sẽ clear timer khi nộp thành công.
     
     const sId = document.getElementById("student-id").value.trim(); 
     const sName = document.getElementById("student-name").value.trim(); 
@@ -851,7 +870,6 @@ async function executeSubmitExam(isForceSubmit = false) {
     let firebaseConfirmed = false;
 
     try {
-        // Dùng hàm fetchWithRetry: Thử nộp bài 4 lần, thời gian tối đa chờ mỗi lần là 8 giây (Tổng max 32 giây)
         const res = await fetchWithRetry(`${FIREBASE_DB_URL}/exams/${examCode}/submissions.json`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -869,7 +887,6 @@ async function executeSubmitExam(isForceSubmit = false) {
     }
 
     if (!firebaseConfirmed) {
-        // Nếu thất bại (Rớt mạng): HIỂN THỊ NÚT THỬ LẠI, KHÔNG CHO XEM ĐIỂM
         if (progressView) {
             progressView.innerHTML = `
                 <div style="font-size:40px; margin-bottom:10px;">📶❌</div>
@@ -889,28 +906,20 @@ async function executeSubmitExam(isForceSubmit = false) {
             `;
             actionsBox.style.display = "block";
         }
-        return; // Chặn đứng tại đây, không chạy xuống dưới nữa
+        return; 
     }
 
-    // =========================================================
-    // NẾU XUỐNG ĐƯỢC TỚI ĐÂY NGHĨA LÀ FIREBASE ĐÃ XÁC NHẬN OK 100%
-    // =========================================================
-    
-    // Gửi tiếp Google Sheet dưới nền
     if (typeof postToGoogleSheet === 'function') {
         postToGoogleSheet(typeof URL2_EXAM_RESULT !== 'undefined' ? URL2_EXAM_RESULT : "", payload, 15000).catch(e => null);
     }
     
-    // Xóa presence để báo hiệu đã thi xong
     if (typeof clearPresence === 'function') {
         clearPresence(sId);
     }
     
-    // Dừng đồng hồ
     if (timerInterval) clearInterval(timerInterval); 
     if (timeWatcherInterval) clearInterval(timeWatcherInterval);
 
-    // Xóa trạng thái tạm
     safeLocal.removeItem("pending_exam_submission");
     safeLocal.removeItem(getStorageKey()); 
     safeLocal.removeItem(`shuffled_exam_${getExamCode()}`); 
@@ -923,7 +932,6 @@ async function executeSubmitExam(isForceSubmit = false) {
     isSubmitted = true; 
     if (confirmModal) confirmModal.style.display = "none"; 
     
-    // HIỂN THỊ ĐIỂM
     renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, score10Scale); 
 }
 
@@ -947,9 +955,6 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     document.getElementById("res-user-id").innerText = document.getElementById("student-id").value.trim() || "---"; 
     document.getElementById("res-spent-time").innerText = spentTimeStr; 
 
-    // =========================================================
-    // XỬ LÝ 3 CHẾ ĐỘ HIỂN THỊ KẾT QUẢ TỪ QUẢN TRỊ VIÊN
-    // =========================================================
     const resultMode = examData.resultMode || "show_all";
 
     const scoreOverviewEl = document.getElementById("res-score-overview");
@@ -961,7 +966,6 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     if (oldMsg) oldMsg.remove();
 
     if (resultMode === "hide_all") {
-        // CHẾ ĐỘ 1: TẮT TOÀN BỘ - Chỉ báo nộp bài thành công
         scoreOverviewEl.style.display = "none";
         statsCardsEl.style.display = "none";
         reviewBannerEl.style.display = "none";
@@ -980,7 +984,6 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
         document.querySelector(".result-summary-card").insertBefore(successMsg, document.querySelector(".user-details-grid"));
         
     } else if (resultMode === "score_only") {
-        // CHẾ ĐỘ 2: CHỈ HIỆN ĐIỂM - Giấu phần giải chi tiết bên dưới
         scoreOverviewEl.style.display = "block";
         statsCardsEl.style.display = "grid";
         reviewBannerEl.style.display = "none";
@@ -996,7 +999,6 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
         document.querySelector(".result-summary-card").insertBefore(successMsg, document.querySelector(".user-details-grid"));
 
     } else {
-        // CHẾ ĐỘ 3: HIỆN TẤT CẢ (MẶC ĐỊNH NHƯ CŨ)
         scoreOverviewEl.style.display = "block";
         statsCardsEl.style.display = "grid";
         reviewBannerEl.style.display = "flex";
@@ -1051,7 +1053,6 @@ function renderOriginalReviewScreen() {
     const resView = document.getElementById("result-view-container"); 
     resView.style.display = "block"; 
     
-    // Ẩn bảng điểm vì đây chỉ là xem giải gốc
     document.querySelector(".result-summary-card").style.display = "none";
 
     const reviewBannerEl = document.querySelector(".review-banner");
@@ -1061,7 +1062,6 @@ function renderOriginalReviewScreen() {
     reviewBannerEl.innerHTML = `<span>📖</span> TÀI LIỆU ĐỀ THI GỐC & LỜI GIẢI CHI TIẾT`;
     reviewBannerEl.style.background = "linear-gradient(135deg, #059669, #047857)";
 
-    // Dựng Answer Key chuẩn từ dữ liệu gốc
     let generatedAnswerKey = {};
     const letters = ["A", "B", "C", "D"]; 
     (examData.questions || []).forEach(q => {
