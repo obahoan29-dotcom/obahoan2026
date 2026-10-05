@@ -5,6 +5,8 @@
 // 2. Avatar click: Bảng chọn 20 avatar mẫu, chọn 4 cỡ ảnh (Nhỏ -> Rất to), tải ảnh từ PC
 // 3. Khắc phục lỗi che khuất popover avatar và chống tắt giao diện ngoài ý muốn
 // 4. Tự động đồng bộ ngày giờ đăng bài báo dưới tiêu đề (thay thế dấu ---)
+// 5. NÚT "View đề": ĐẶT CÙNG HÀNG VÀ BÊN TRÁI NÚT "Xem Đ.Á Gốc", DÀNH RIÊNG QUẢN TRỊ VIÊN
+//    TEST THỬ ĐỀ CHẠY NGAY KHÔNG CẦN ĐĂNG NHẬP (Tên: Obahoan29, Lớp: 42, SBD: Trying)
 // =========================================================
 
 // BỘ ĐỆM BẢO VỆ LƯU TRỮ
@@ -593,6 +595,44 @@ function getItemDisplayDate(item) {
     return "---";
 }
 
+// =========================================================
+// HÀM TEST ĐỀ THI DÀNH RIÊNG QUẢN TRỊ VIÊN (NÚT "View đề")
+// Tự động gán: Tên = Obahoan29, Lớp = 42, SBD = Trying
+// Không cần đăng nhập, bật cờ tự do tạm thời & dọn cache sạch sẽ
+// =========================================================
+function testExamAsAdmin(quizId, categoryId, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const targetCat = categoryId || "them-11";
+
+    safeLocal.removeItem("last_submission_cleared");
+    safeLocal.removeItem("saved_student_sbd");
+    safeLocal.removeItem("saved_student_name");
+    safeLocal.removeItem("saved_student_class");
+
+    safeLocal.setItem("current_exam_student", JSON.stringify({
+        sbd: "Trying",
+        name: "Obahoan29",
+        className: "42",
+        categoryId: targetCat
+    }));
+
+    // Đảm bảo không bị chặn bởi cờ thi tự do khi test thử
+    safeLocal.setItem(`exam_allow_free_${quizId}`, "true");
+
+    // Xóa session autosave cũ của đề này nếu admin từng test trước đó
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith("exam_autosave_active_session_") && key.includes(quizId)) {
+                safeLocal.removeItem(key);
+            }
+        }
+    } catch(e) {}
+
+    const testUrl = `./thi.html?id=${quizId}&cat=${encodeURIComponent(targetCat)}&sbd=Trying&name=Obahoan29&class=42&autostart=1`;
+    window.open(testUrl, "_blank");
+}
+
 function buildCardHtmlString(item, categoryId) {
     const isDoc = item.isDoc;
     const itemId = item.id || item.firebaseId || `item_${Date.now()}`;
@@ -626,13 +666,35 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
-    // Nút Xem Đề Gốc dành cho học sinh (nếu được phép)
+    // =========================================================
+    // KHỐI NÚT HÀNH ĐỘNG DƯỚI THẺ: "View đề" VÀ "Xem Đ.Á Gốc" CÙNG HÀNG
+    // "View đề" NẰM NGAY BÊN TRÁI NÚT "Xem Đ.Á Gốc", DÀNH RIÊNG QUẢN TRỊ
+    // =========================================================
+    let viewTestBtnHtml = "";
+    if (!isDoc && isAdminLoggedIn) {
+        viewTestBtnHtml = `
+            <button type="button" class="btn-test-exam-admin" onclick="testExamAsAdmin('${quizId}', '${categoryId}', event)" title="Test thử đề thi ngay lập tức (Tên: Obahoan29, Lớp: 42, SBD: Trying - Không cần đăng nhập)" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1px solid #38bdf8; padding: 4px 9px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 4px rgba(2, 132, 199, 0.25); text-decoration: none; transition: 0.15s; white-space: nowrap;" onmouseover="this.style.filter='brightness(1.12)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.filter='none'; this.style.transform='none';">
+                🚀 View đề
+            </button>
+        `;
+    }
+
     let reviewBtnHtml = "";
     if (!isDoc && item.allowReviewOriginal) {
         reviewBtnHtml = `
-            <a href="thi.html?id=${quizId}&review=1" target="_blank" onclick="event.stopPropagation()" style="display:inline-block; margin-top:6px; font-size:11px; font-weight:800; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:4px 8px; border-radius:6px; text-decoration:none; box-shadow:0 1px 3px rgba(5,150,105,0.15); transition: 0.15s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
+            <a href="thi.html?id=${quizId}&review=1" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:800; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:4px 8px; border-radius:6px; text-decoration:none; box-shadow:0 1px 3px rgba(5,150,105,0.15); transition: 0.15s; white-space: nowrap;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
                 📖 Xem Đ.Á Gốc
             </a>
+        `;
+    }
+
+    let bottomActionButtonsHtml = "";
+    if (viewTestBtnHtml || reviewBtnHtml) {
+        bottomActionButtonsHtml = `
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                ${viewTestBtnHtml}
+                ${reviewBtnHtml}
+            </div>
         `;
     }
 
@@ -790,7 +852,7 @@ function buildCardHtmlString(item, categoryId) {
                     </div>
                     <div class="exam-date">📅 ${displayDate}</div>
                     ${timeBoxHtml}
-                    ${reviewBtnHtml}
+                    ${bottomActionButtonsHtml}
                 </div>
                 <div class="arrow">›</div>
             </div>
@@ -809,7 +871,7 @@ function buildCardHtmlString(item, categoryId) {
             </div>
             <div class="exam-date">📅 ${displayDate}</div>
             ${timeBoxHtml}
-            ${reviewBtnHtml}
+            ${bottomActionButtonsHtml}
         </div>
         <div class="arrow">›</div>
     </div>`;
@@ -817,7 +879,7 @@ function buildCardHtmlString(item, categoryId) {
 
 function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, event) {
     if (event) {
-        // Ngăn click vào avatar picker, switch, các nút công cụ admin
+        // Ngăn click vào avatar picker, switch, các nút công cụ admin và nút View đề
         if (event.target.closest('.exam-thumb-box') ||
             event.target.closest('.avatar-selection-popover') ||
             event.target.closest('.free-student-toggle-wrap') || 
@@ -826,7 +888,8 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
             event.target.closest('.badge-wrapper') || 
             event.target.closest('.btn-view-results-left') || 
             event.target.closest('.left-sub-btns-row') ||
-            event.target.closest('.btn-edit-inline-title')) {
+            event.target.closest('.btn-edit-inline-title') ||
+            event.target.closest('.btn-test-exam-admin')) {
             return;
         }
     }
@@ -1868,7 +1931,7 @@ async function handleAllowReviewOriginalToggleChange(categoryId, itemId, isCheck
         await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
             method: 'PATCH', body: JSON.stringify({ allowReviewOriginal: isChecked })
         });
-        const quizId = itemId.startsWith('quiz_') ? itemId : null; // Giả sử ID đồng bộ
+        const quizId = itemId.startsWith('quiz_') ? itemId : null;
         if (quizId) {
             await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
                 method: 'PATCH', body: JSON.stringify({ allowReviewOriginal: isChecked })
