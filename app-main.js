@@ -187,6 +187,8 @@ async function loadDataFromFirebase() {
                             if (q.examStartTimeStr) l.examStartTimeStr = q.examStartTimeStr;
                             if (q.examEndTimeStr) l.examEndTimeStr = q.examEndTimeStr;
                             if (q.allowFree !== undefined) l.allowFree = q.allowFree;
+                            if (q.resultMode !== undefined) l.resultMode = q.resultMode;
+                            if (q.allowReviewOriginal !== undefined) l.allowReviewOriginal = q.allowReviewOriginal;
                         }
                     });
                 });
@@ -624,6 +626,16 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
+    // Nút Xem Đề Gốc dành cho học sinh (nếu được phép)
+    let reviewBtnHtml = "";
+    if (!isDoc && item.allowReviewOriginal) {
+        reviewBtnHtml = `
+            <a href="thi.html?id=${quizId}&review=1" target="_blank" onclick="event.stopPropagation()" style="display:inline-block; margin-top:6px; font-size:11px; font-weight:800; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:4px 8px; border-radius:6px; text-decoration:none; box-shadow:0 1px 3px rgba(5,150,105,0.15); transition: 0.15s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
+                📖 Xem Đ.Á Gốc
+            </a>
+        `;
+    }
+
     // BẢNG ĐIỀU KHIỂN AVATAR: 4 KÍCH CỠ + 20 AVATAR MẪU + TẢI TỪ MÁY TÍNH
     let avatarPopoverHtml = "";
     if (isAdminLoggedIn) {
@@ -634,7 +646,6 @@ function buildCardHtmlString(item, categoryId) {
                     <button type="button" class="btn-close-popover-x" onclick="closeAvatarPopover('${itemId}', event)">✕</button>
                 </div>
                 
-                <!-- BỘ CHỌN KÍCH CỠ AVATAR: NHỎ ĐẾN RẤT TO -->
                 <div class="avatar-size-control-box">
                     <div class="size-control-label">📏 Kích cỡ hiển thị avatar:</div>
                     <div class="avatar-size-pills">
@@ -686,6 +697,17 @@ function buildCardHtmlString(item, categoryId) {
                                 ${isAllowFree ? 'BẬT' : 'TẮT'}
                             </span>
                         </label>
+                        
+                        <label class="free-student-toggle-wrap" title="Bật/Tắt chế độ cho học sinh xem đáp án gốc không cần thi" onclick="event.stopPropagation()">
+                            <span class="free-toggle-lbl" style="color:#059669;">Xem Giải:</span>
+                            <span class="mini-switch">
+                                <input type="checkbox" id="review-toggle-${itemId}" ${item.allowReviewOriginal ? "checked" : ""} onchange="handleAllowReviewOriginalToggleChange('${categoryId}', '${itemId}', this.checked, event)">
+                                <span class="slider-toggle" style="${item.allowReviewOriginal ? 'background-color:#10b981;' : ''}"></span>
+                            </span>
+                            <span class="free-toggle-status ${item.allowReviewOriginal ? 'st-on' : 'st-off'}" id="review-status-txt-${itemId}">
+                                ${item.allowReviewOriginal ? 'MỞ' : 'TẮT'}
+                            </span>
+                        </label>
 
                         <div class="left-sub-btns-row">
                             <button type="button" class="btn-time-sub-action btn-time-sub-minutes" onclick="openEditMinutesModal('${quizId}', event)" title="Đổi số phút làm bài">
@@ -694,6 +716,23 @@ function buildCardHtmlString(item, categoryId) {
                             <button type="button" class="btn-time-sub-action btn-time-sub-schedule" onclick="openEditScheduleModal('${quizId}', event)" title="Gia hạn thời gian đóng/mở đề">
                                 📅 Gia hạn
                             </button>
+                            
+                            <div class="badge-wrapper" onclick="toggleResultModeMenu('${itemId}', event)" style="margin-left: 2px;">
+                                <button type="button" class="btn-time-sub-action" style="background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe; padding-right:12px;" title="Cấu hình hiển thị kết quả sau khi nộp bài">
+                                    👁️ Công bố KQ ▾
+                                </button>
+                                <div class="badge-dropdown-menu" id="result-mode-menu-${itemId}" style="width: 265px; white-space: normal; padding: 6px;">
+                                    <div class="b-item-btn ${item.resultMode === 'hide_all' ? 'b-hot' : 'b-none-btn'}" onclick="setResultMode('${categoryId}', '${itemId}', '${quizId}', 'hide_all', event)" style="text-align:left; line-height:1.3; margin-bottom:5px;">
+                                        <b>🚫 Tắt toàn bộ</b><br><span style="font-size:10.5px; font-weight:600;">Giấu điểm & đáp án (Chỉ báo nộp thành công)</span>
+                                    </div>
+                                    <div class="b-item-btn ${item.resultMode === 'score_only' ? 'b-moi' : 'b-none-btn'}" onclick="setResultMode('${categoryId}', '${itemId}', '${quizId}', 'score_only', event)" style="text-align:left; line-height:1.3; margin-bottom:5px;">
+                                        <b>🔢 Chỉ hiện điểm</b><br><span style="font-size:10.5px; font-weight:600;">Báo điểm số, giấu chi tiết đúng/sai từng câu</span>
+                                    </div>
+                                    <div class="b-item-btn ${(!item.resultMode || item.resultMode === 'show_all') ? 'b-start' : 'b-none-btn'}" onclick="setResultMode('${categoryId}', '${itemId}', '${quizId}', 'show_all', event)" style="text-align:left; line-height:1.3;">
+                                        <b>✅ Hiện tất cả (Mặc định)</b><br><span style="font-size:10.5px; font-weight:600;">Hiện điểm và giải thích chi tiết từng câu</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ` : (isReminder ? `
                         <button type="button" class="btn-edit-inline-title" onclick="openDantriArticleModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${categoryId}', event, true)" title="Mở trang soạn thảo bài viết phong cách Dân trí">
@@ -751,6 +790,7 @@ function buildCardHtmlString(item, categoryId) {
                     </div>
                     <div class="exam-date">📅 ${displayDate}</div>
                     ${timeBoxHtml}
+                    ${reviewBtnHtml}
                 </div>
                 <div class="arrow">›</div>
             </div>
@@ -769,6 +809,7 @@ function buildCardHtmlString(item, categoryId) {
             </div>
             <div class="exam-date">📅 ${displayDate}</div>
             ${timeBoxHtml}
+            ${reviewBtnHtml}
         </div>
         <div class="arrow">›</div>
     </div>`;
@@ -1778,3 +1819,60 @@ document.addEventListener("click", function(event) {
         }
     }
 });
+
+// CÁC HÀM CHỨC NĂNG ĐIỂM VÀ ĐÁP ÁN GỐC
+function toggleResultModeMenu(itemId, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const menu = document.getElementById(`result-mode-menu-${itemId}`);
+    if (!menu) return;
+    document.querySelectorAll(".badge-dropdown-menu.show").forEach(m => {
+        if (m !== menu) m.classList.remove("show");
+    });
+    menu.classList.toggle("show");
+}
+
+async function setResultMode(categoryId, itemId, quizId, mode, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const menu = document.getElementById(`result-mode-menu-${itemId}`);
+    if (menu) menu.classList.remove("show");
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+            method: 'PATCH', body: JSON.stringify({ resultMode: mode })
+        });
+        if (quizId && quizId !== itemId) {
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
+                method: 'PATCH', body: JSON.stringify({ resultMode: mode })
+            });
+        } else if (itemId.startsWith('quiz_')) {
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${itemId}.json`, {
+                method: 'PATCH', body: JSON.stringify({ resultMode: mode })
+            });
+        }
+        alert("✅ Đã cập nhật chế độ hiển thị kết quả thành công!");
+        window.location.reload();
+    } catch(e) {
+        alert("❌ Lỗi cập nhật: " + e.message);
+    }
+}
+
+async function handleAllowReviewOriginalToggleChange(categoryId, itemId, isChecked, event) {
+    if (event) event.stopPropagation();
+    const txt = document.getElementById(`review-status-txt-${itemId}`);
+    if (txt) {
+        txt.innerText = isChecked ? 'MỞ' : 'TẮT';
+        txt.className = `free-toggle-status ${isChecked ? 'st-on' : 'st-off'}`;
+    }
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+            method: 'PATCH', body: JSON.stringify({ allowReviewOriginal: isChecked })
+        });
+        const quizId = itemId.startsWith('quiz_') ? itemId : null; // Giả sử ID đồng bộ
+        if (quizId) {
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, {
+                method: 'PATCH', body: JSON.stringify({ allowReviewOriginal: isChecked })
+            });
+        }
+    } catch(e) { console.error(e); }
+}
