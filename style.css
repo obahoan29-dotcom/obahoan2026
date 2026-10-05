@@ -15,6 +15,7 @@
 
 *, *::before, *::after { 
     box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* KHÓA CHẶT CHỐNG TRÀN BỀ NGANG TOÀN TRANG TRÊN ĐIỆN THOẠI */
@@ -84,9 +85,7 @@ html, body {
 .admin-gear-btn:hover { background: rgba(255, 255, 255, 0.5); transform: rotate(90deg) scale(1.08); }
 .admin-gear-btn.active-gear { background: linear-gradient(135deg, #0284c7 0%, #3b82f6 100%); border-color: #fff; box-shadow: 0 0 16px rgba(2, 132, 199, 0.85); }
 
-/* ========================================================= */
-/* BẢNG QUẢN TRỊ POPOVER: CO GỌN THEO CHIỀU DỌC TRÊN LAPTOP  */
-/* ========================================================= */
+/* BẢNG QUẢN TRỊ POPOVER */
 .admin-popover-panel { 
     position: absolute; top: calc(100% + 8px); right: 0; 
     width: min(440px, calc(100vw - 20px)); 
@@ -110,7 +109,7 @@ html, body {
     margin-bottom: 7px; display: flex; align-items: center; gap: 6px;
 }
 
-/* THANH 3 TAB QUẢN TRỊ CO GỌN */
+/* THANH 3 TAB QUẢN TRỊ */
 .admin-tabs { 
     display: flex; gap: 3px; margin-bottom: 8px; 
     background: rgba(226, 232, 240, 0.7); padding: 3px; border-radius: 11px;
@@ -124,7 +123,6 @@ html, body {
 }
 .admin-tab-btn.active { background: #ffffff; color: var(--primary-blue); box-shadow: 0 2px 7px rgba(0,0,0,0.08); }
 
-/* CÁC HÀNG CHỨC NĂNG SÁT GỌN NHAU */
 .admin-input-group { margin-bottom: 7px; width: 100%; }
 .admin-input-group label { display: block; font-weight: 700; margin-bottom: 3px; font-size: 0.8rem; color: #1e293b; line-height: 1.25; }
 .admin-input-group select, 
@@ -142,7 +140,7 @@ html, body {
 .btn-cat-quick { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; border-radius: 5px; padding: 1.5px 6px; font-size: 10.5px; font-weight: 800; cursor: pointer; transition: 0.15s; font-family: inherit; }
 .btn-cat-quick:hover { background: #0284c7; color: #ffffff; border-color: #0284c7; }
 
-/* BẢNG CHỌN LỚP CO GỌN CHIỀU CAO */
+/* BẢNG CHỌN LỚP */
 .category-checkbox-grid { 
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; 
     max-height: 110px; overflow-y: auto; padding: 5px; 
@@ -160,7 +158,7 @@ html, body {
 .cat-checkbox-item input[type="checkbox"] { width: 14px; height: 14px; accent-color: #0284c7; cursor: pointer; flex-shrink: 0; margin: 0; }
 .cat-checkbox-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
-/* BẢNG ICON AVATAR CO GỌN CHIỀU CAO */
+/* BẢNG ICON AVATAR */
 .avatar-picker-grid { 
     display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; 
     max-height: 85px; overflow-y: auto; padding: 4px; 
@@ -421,16 +419,19 @@ html, body {
     margin-bottom: 12px; padding: 12px 14px; 
 }
 
-.reminder-section:has(.has-active-popover),
-.reminder-section:has(.avatar-selection-popover.show),
-.dantri-nav-container:has(.has-active-popover),
-.dantri-nav-container:has(.avatar-selection-popover.show),
-.dantri-dropdown-panel:has(.has-active-popover),
-.dantri-dropdown-panel:has(.avatar-selection-popover.show),
-.folder-section:has(.has-active-popover),
-.folder-section:has(.avatar-selection-popover.show) {
-    position: relative !important;
-    z-index: 99999 !important;
+/* BẢO VỆ CÚ PHÁP :has() TRÁNH LỖI TRÊN WEBKIT IOS CŨ */
+@supports selector(:has(*)) {
+    .reminder-section:has(.has-active-popover),
+    .reminder-section:has(.avatar-selection-popover.show),
+    .dantri-nav-container:has(.has-active-popover),
+    .dantri-nav-container:has(.avatar-selection-popover.show),
+    .dantri-dropdown-panel:has(.has-active-popover),
+    .dantri-dropdown-panel:has(.avatar-selection-popover.show),
+    .folder-section:has(.has-active-popover),
+    .folder-section:has(.avatar-selection-popover.show) {
+        position: relative !important;
+        z-index: 99999 !important;
+    }
 }
 
 .reminder-header-row-box {
@@ -1243,11 +1244,7 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 .switch-mode-link { color: var(--primary-blue); font-weight: 800; text-decoration: none; cursor: pointer; }
 .switch-mode-link:hover { text-decoration: underline; }
 
-/* ========================================================= */
-/* TỐI ƯU HÓA HOÀN TOÀN CHO ĐIỆN THOẠI (DƯỚI 640PX)          */
-/* 1. THU NHỎ BỀ NGANG BẢNG QUẢN TRỊ = 70% MÀN HÌNH         */
-/* 2. CÁC HÀNG CHỨC NĂNG SIÊU SÁT GỌN THEO CHIỀU DỌC        */
-/* ========================================================= */
+/* TỐI ƯU HÓA HOÀN TOÀN CHO ĐIỆN THOẠI (DƯỚI 640PX) */
 @media (max-width: 640px) {
     body { font-size: 14px; }
     
@@ -1256,7 +1253,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         max-width: 100vw;
     }
 
-    /* 1. BẢNG QUẢN TRỊ POPOVER TRÊN ĐIỆN THOẠI: RỘNG = 70% MÀN HÌNH, CO GỌN TỐI ĐA CHIỀU DỌC */
     .admin-popover-panel { 
         position: fixed !important; 
         top: 48px !important; 
@@ -1284,7 +1280,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         border-radius: 7px !important; 
     }
 
-    /* Tabs 3 mục thu nhỏ vừa vặn 70% */
     .admin-tabs { 
         gap: 2px !important; 
         padding: 2px !important; 
@@ -1297,7 +1292,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         border-radius: 7px !important; 
     }
 
-    /* Các hàng chức năng áp sát nhau */
     .admin-input-group { 
         margin-bottom: 5px !important; 
     }
@@ -1316,7 +1310,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         border-radius: 7px !important; 
     }
 
-    /* Bảng chọn lớp 2 cột nhỏ gọn */
     .category-checkbox-grid {
         grid-template-columns: 1fr 1fr !important;
         gap: 3px !important;
@@ -1333,7 +1326,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         width: 13px !important; height: 13px !important;
     }
 
-    /* Bảng avatar mẫu thu nhỏ */
     .avatar-picker-grid {
         grid-template-columns: repeat(5, 1fr) !important;
         gap: 3px !important;
@@ -1341,7 +1333,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         padding: 3px !important;
     }
 
-    /* Nút Đăng đề / Hủy */
     .admin-btn-row { 
         margin-top: 6px !important; 
         gap: 5px !important; 
@@ -1352,7 +1343,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         border-radius: 7px !important; 
     }
 
-    /* 2. SỬA THẺ ĐỀ THI TRONG CHẾ ĐỘ ADMIN TRÊN ĐIỆN THOẠI */
     .exam-card.admin-card-mode {
         padding: 9px 8px;
         width: 100% !important;
@@ -1442,4 +1432,52 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 @media (max-width: 380px) {
     .category-checkbox-grid { grid-template-columns: 1fr; }
     .admin-tab-btn { font-size: 9px; }
+}
+
+/* ========================================================
+   CHỈ TỰ ĐỘNG KÍCH HOẠT TRÊN IPHONE / IPAD (HỆ ĐIỀU HÀNH IOS)
+   MÁY TÍNH, LAPTOP, ANDROID GIỮ NGUYÊN 100% GIAO DIỆN & HIỆU ỨNG GỐC
+   ======================================================== */
+@supports (-webkit-touch-callout: none) {
+    /* 1. Ngăn iOS Safari tự vẽ lại nền gây lag/crash */
+    html, body {
+        background-attachment: scroll !important;
+    }
+
+    /* 2. Cố định font-size = 16px trên tất cả các ô nhập liệu để triệt tiêu Auto-zoom */
+    .st-input-field,
+    .input-group input,
+    .short-input-box,
+    .auth-input,
+    .result-search-input,
+    .article-edit-input-group input,
+    .article-edit-input-group textarea,
+    .admin-input-group input,
+    .admin-input-group select,
+    .move-modal-box select {
+        font-size: 16px !important;
+    }
+
+    /* 3. Tắt backdrop-filter lồng nhau ở các lớp phủ modal khi mở bàn phím */
+    .move-modal-overlay,
+    .visit-stats-modal-overlay,
+    .dantri-article-modal,
+    .result-fullscreen-modal,
+    .modal-overlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(15, 23, 42, 0.78) !important;
+    }
+
+    /* 4. Tắt backdrop-filter bên trong hộp thoại, dùng màu trắng đục thuần và hardware acceleration */
+    .student-login-box,
+    .move-modal-box,
+    .modal-box,
+    .visit-stats-modal-box,
+    .dantri-article-card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: #ffffff !important;
+        transform: translateZ(0);
+    }
 }
