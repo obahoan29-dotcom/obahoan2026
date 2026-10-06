@@ -459,7 +459,7 @@
                     <span>/</span>
                     <span style="color:#0f172a; font-weight:800;" id="breadcrumb-current-view">📊 Bảng kết quả</span>
                 </div>
-                <div class="result-modal-heading" id="result-modal-heading">Bảng Kết Quả Bài Thi</div>
+                <div class="result-modal-heading" id="result-modal-heading">Bảng Kết QuẢ Bài Thi</div>
                 <div class="result-modal-subheading" id="result-modal-subheading">Chi tiết kết quả làm bài & nhật ký thi trực tuyến</div>
             </div>
         </div>
@@ -533,11 +533,12 @@
                         </div>
                         <div class="slider-control-row">
                             <button type="button" class="btn-step" onclick="adjustSetting('rowPadding', -1)" title="Thu gọn dòng">−</button>
-                            <input type="range" id="slider-row-padding" min="2" max="24" value="9" step="1" oninput="onRowPaddingChange(this.value)">
+                            <input type="range" id="slider-row-padding" min="0" max="24" value="9" step="1" oninput="onRowPaddingChange(this.value)">
                             <button type="button" class="btn-step" onclick="adjustSetting('rowPadding', 1)" title="Nới rộng dòng">+</button>
                         </div>
                         <div class="preset-pills">
-                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(4)">Gọn (4px)</button>
+                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(0)">Sát nhất (0px)</button>
+                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(3)">Gọn (3px)</button>
                             <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(9)">Chuẩn (9px)</button>
                             <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(14)">Rộng (14px)</button>
                             <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(18)">Rất rộng (18px)</button>
