@@ -5,6 +5,7 @@
 // - THÍ SINH TỰ DO THI Ở LỚP NÀO THÌ CHỈ HIỆN Ở KẾT QUẢ CỦA LỚP ĐÓ
 // - KHÓA CHẶT SO KHỚP CATEGORYID CỦA LỚP VÀ ĐÚNG ĐỀ THI
 // - HỖ TRỢ NÚT XÓA HÀNG TRÊN MÀN HÌNH (KHÔNG ẢNH HƯỞNG FIREBASE, TẢI LẠI SẼ HIỆN LẠI)
+// - HỖ TRỢ CO KHOẢNG CÁCH DÒNG VỀ 0PX SÁT TUYỆT ĐỐI
 // =========================================================
 
 let currentExamResultData = {
@@ -158,7 +159,9 @@ function initTableSettings() {
         if (saved) {
             const parsed = JSON.parse(saved);
             if (parsed.fontSize) tableDisplaySettings.fontSize = parseInt(parsed.fontSize);
-            if (parsed.rowPadding) tableDisplaySettings.rowPadding = parseInt(parsed.rowPadding);
+            if (parsed.rowPadding !== undefined && parsed.rowPadding !== null) {
+                tableDisplaySettings.rowPadding = parseInt(parsed.rowPadding);
+            }
         }
     } catch(e) {}
     applyTableSettings();
@@ -215,7 +218,7 @@ function adjustSetting(type, step) {
     if (type === 'fontSize') {
         tableDisplaySettings.fontSize = Math.min(22, Math.max(10, tableDisplaySettings.fontSize + step));
     } else if (type === 'rowPadding') {
-        tableDisplaySettings.rowPadding = Math.min(26, Math.max(2, tableDisplaySettings.rowPadding + step));
+        tableDisplaySettings.rowPadding = Math.min(26, Math.max(0, tableDisplaySettings.rowPadding + step));
     }
     applyTableSettings();
 }
