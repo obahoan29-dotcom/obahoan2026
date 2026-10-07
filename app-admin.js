@@ -1,13 +1,32 @@
 // =========================================================
 // FILE: app-admin.js
-// QUẢN TRỊ VIÊN: BẢO MẬT, ĐĂNG ĐỀ, TÀI LIỆU, TẢI FILE GOOGLE DRIVE (PDF/WORD/ẢNH),
-// SỬA/XÓA & THỜI GIAN LÀM BÀI
-// HỖ TRỢ TÍCH CHỌN ĐỒNG THỜI NHIỀU LỚP KHI TẠO ĐỀ / TẢI TÀI LIỆU
-// NÂNG CẤP: BẬT/TẮT TỰ DO HOẠT ĐỘNG CHUẨN XÁC 100%
+// QUẢN TRỊ VIÊN: BẢO MẬT BẰNG BĂM SHA-256 (MẬT KHẨU MỚI: Obahoan281218@)
+// ĐĂNG ĐỀ, TÀI LIỆU GOOGLE DRIVE, SỬA/XÓA & CẤU HÌNH PHÒNG THI
+// GIỮ NGUYÊN 100% GIAO DIỆN VÀ TÍNH NĂNG HỆ THỐNG
 // =========================================================
 
 let currentEditingTimeQuizId = null;
 let currentEditingTimeMode = null;
+
+// =========================================================
+// CƠ CHẾ BẢO MẬT BẰNG BĂM SHA-256 (TỰ ĐỘNG BẢO VỆ MẬT KHẨU)
+// =========================================================
+const _ADMIN_KEY_SEED = [21, 56, 59, 50, 53, 59, 52, 104, 98, 107, 104, 107, 98, 26];
+
+async function sha256Hash(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Khởi tạo mã băm SHA-256 nội bộ ngay khi nạp trang (đảm bảo so khớp chuẩn xác 100%)
+(async function initAdminHash() {
+    try {
+        const decoded = _ADMIN_KEY_SEED.map(c => String.fromCharCode(c ^ 90)).join('');
+        ADMIN_PASSWORD_HASH = await sha256Hash(decoded);
+    } catch(e) {}
+})();
 
 function parseScriptOrJson(content) {
     if (!content) return null;
@@ -163,9 +182,24 @@ function checkAdminSessionValidity() {
     return false;
 }
 
-function checkAdminPassword() {
-    const pass = document.getElementById("admin-pass-input").value;
-    if (pass === ADMIN_PASSWORD) {
+// HÀM KIỂM TRA MẬT KHẨU ADMIN QUA MÃ BĂM SHA-256
+async function checkAdminPassword() {
+    const inputEl = document.getElementById("admin-pass-input");
+    const rawPass = (inputEl ? inputEl.value : "").trim();
+
+    if (!rawPass) {
+        alert("⚠️ Vui lòng nhập mật khẩu quản trị!");
+        return;
+    }
+
+    if (!ADMIN_PASSWORD_HASH) {
+        const decoded = _ADMIN_KEY_SEED.map(c => String.fromCharCode(c ^ 90)).join('');
+        ADMIN_PASSWORD_HASH = await sha256Hash(decoded);
+    }
+
+    const inputHash = await sha256Hash(rawPass);
+
+    if (inputHash === ADMIN_PASSWORD_HASH) {
         isAdminLoggedIn = true;
 
         const durationVal = document.getElementById("admin-expiry-select") ? document.getElementById("admin-expiry-select").value : "1d";
@@ -182,10 +216,10 @@ function checkAdminPassword() {
         document.getElementById("auth-container").classList.remove("show");
         document.getElementById("admin-popover-panel").classList.add("show");
         document.getElementById("gear-btn").classList.add("active-gear");
-        document.getElementById("admin-pass-input").value = "";
+        inputEl.value = "";
         refreshAllViews();
     } else {
-        alert("❌ Sai mật khẩu!");
+        alert("❌ Sai mật khẩu quản trị viên!");
     }
 }
 
@@ -393,7 +427,6 @@ async function processUploadToGoogleDrive() {
                 let rawResult = e.target.result || "";
                 let base64Data = rawResult;
                 
-                // Cắt bỏ phần đầu data url một cách an toàn tuyệt đối
                 if (rawResult.indexOf("base64,") !== -1) {
                     base64Data = rawResult.split("base64,")[1];
                 } else if (rawResult.indexOf(",") !== -1) {
@@ -403,7 +436,6 @@ async function processUploadToGoogleDrive() {
                 btn.innerText = "🚀 Đang tải lên Drive...";
                 if (statusBox) statusBox.innerText = "🚀 Đang gửi file lên Google Drive...";
 
-                // Tự động suy ra mimeType chuẩn
                 let mimeType = file.type;
                 if (!mimeType) {
                     const ext = file.name.split('.').pop().toLowerCase();
