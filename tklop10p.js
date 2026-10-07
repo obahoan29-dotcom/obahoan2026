@@ -49,5 +49,6 @@ window.STUDENT_ACCOUNTS["lop-10p"] = [
     { stt: 42, pass: "42", sbd: "10p42", username: "ĐINH THỊ VÂN", name: "ĐINH THỊ VÂN", className: "10P" },
     { stt: 43, pass: "43", sbd: "10p43", username: "NGUYỄN PHẠM PHƯƠNG VY", name: "NGUYỄN PHẠM PHƯƠNG VY", className: "10P" },
     { stt: 44, pass: "44", sbd: "10p44", username: "PHẠM YẾN VY", name: "PHẠM YẾN VY", className: "10P" },
-    { stt: 45, pass: "45", sbd: "10p45", username: "VŨ TƯỜNG VY", name: "VŨ TƯỜNG VY", className: "10P" }
+    { stt: 45, pass: "45", sbd: "10p45", username: "VŨ TƯỜNG VY", name: "VŨ TƯỜNG VY", className: "10P" },
+    { stt: 46, pass: "46", sbd: "10p46", username: "gì vy", name: "gì VY", className: "10P" }
 ];
