@@ -4,9 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>HỆ THỐNG THI TRẮC NGHIỆM ONLINE</title>
-    <!-- THÊM FAVICON: Logo chữ H in hoa 3 màu sặc sỡ (Mã hóa trực tiếp SVG siêu nhẹ) -->
+    <!-- FAVICON: Logo chữ H in hoa 3 màu sặc sỡ -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231e293b'/%3E%3Cpath d='M30 25v50' stroke='%2300E5FF' stroke-width='14' stroke-linecap='round'/%3E%3Cpath d='M70 25v50' stroke='%23FF007F' stroke-width='14' stroke-linecap='round'/%3E%3Cpath d='M30 50h40' stroke='%23FFEA00' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E">
     
+    <!-- ======================================================== -->
+    <!-- BỘ BẢO VỆ PHÒNG THI: CHỐNG CHUỘT PHẢI, F12, ERUDA & BẪY DEBUGGER -->
+    <!-- ======================================================== -->
+    <script>
+        (function() {
+            // 1. Chống click chuột phải trong phòng thi
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            }, { capture: true });
+
+            // 2. Chống các phím tắt thanh tra mã nguồn (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U, Ctrl+S)
+            document.addEventListener('keydown', function(e) {
+                if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+                    (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's'))
+                ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, { capture: true });
+
+            // 3. Quét định kỳ triệt tiêu bookmarklet Eruda và vConsole trên điện thoại
+            function purgeMobileHackTools() {
+                try {
+                    if (window.eruda) {
+                        try { window.eruda.destroy(); } catch(err) {}
+                        delete window.eruda;
+                        location.reload();
+                    }
+                    if (window.vConsole) {
+                        try { window.vConsole.destroy(); } catch(err) {}
+                        delete window.vConsole;
+                        location.reload();
+                    }
+                    var erudaEl = document.getElementById('eruda');
+                    if (erudaEl) erudaEl.remove();
+                    var vcEl = document.getElementById('__vconsole');
+                    if (vcEl) vcEl.remove();
+                } catch(e) {}
+            }
+            setInterval(purgeMobileHackTools, 1200);
+
+            // 4. Bẫy Debugger liên hoàn: Đóng băng DevTools nếu bị học sinh cố tình bật
+            function setupAntiDebugTrap() {
+                function runTrap() {
+                    try {
+                        var start = Date.now();
+                        (function() { return false; }["constructor"]("debugger")["call"]());
+                        // Nếu debugger kích hoạt làm trễ thực thi > 100ms
+                        if (Date.now() - start > 100) {
+                            purgeMobileHackTools();
+                        }
+                    } catch(e) {}
+                }
+                setInterval(runTrap, 600);
+            }
+            setupAntiDebugTrap();
+        })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
