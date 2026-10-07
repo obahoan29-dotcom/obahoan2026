@@ -14,7 +14,7 @@ window.STUDENT_ACCOUNTS["lop-11e"] = [
     { stt: 7, pass: "7", sbd: "11E07", username: "DOÃN ANH DŨNG", name: "DOÃN ANH DŨNG", className: "11E" },
     { stt: 8, pass: "8", sbd: "11E08", username: "ĐINH TIẾN DŨNG", name: "ĐINH TIẾN DŨNG", className: "11E" },
     { stt: 9, pass: "9", sbd: "11E09", username: "ĐINH QUỐC DUY", name: "ĐINH QUỐC DUY", className: "11E" },
-    { stt: 10, pass: "10", sbd: "11E10", username: "VŨ TRẦN KHÁNH DUY", name: "VŨ TRẦN KHÁNH DUY", className: "11E" },
+    { stt: 10, pass: "10", sbd: "11E10", username: "aaaaa", name: "aaaaaaa", className: "11E" },
     { stt: 11, pass: "11", sbd: "11E11", username: "NGUYỄN TÙNG DƯƠNG", name: "NGUYỄN TÙNG DƯƠNG", className: "11E" },
     { stt: 12, pass: "12", sbd: "11E12", username: "TẠ VĂN ĐẠT", name: "TẠ VĂN ĐẠT", className: "11E" },
     { stt: 13, pass: "13", sbd: "11E13", username: "PHẠM MINH ĐĂNG", name: "PHẠM MINH ĐĂNG", className: "11E" },
@@ -43,6 +43,7 @@ window.STUDENT_ACCOUNTS["lop-11e"] = [
     { stt: 36, pass: "36", sbd: "11E36", username: "ĐINH ĐỨC THIỆN", name: "ĐINH ĐỨC THIỆN", className: "11E" },
     { stt: 37, pass: "37", sbd: "11E37", username: "LÊ HOÀNG TÙNG", name: "LÊ HOÀNG TÙNG", className: "11E" },
     { stt: 38, pass: "38", sbd: "11E38", username: "VŨ THÀNH TÙNG", name: "VŨ THÀNH TÙNG", className: "11E" },
-    { stt: 39, pass: "39", sbd: "11E39", username: "ĐOÀN QUANG VINH", name: "ĐOÀN QUANG VINH", className: "11E" }
+    { stt: 39, pass: "39", sbd: "11E39", username: "ĐOÀN QUANG VINH", name: "ĐOÀN QUANG VINH", className: "11E" },
+    { stt: 40, pass: "40", sbd: "11E39", username: "PHƯƠNG", name: "PHƯƠNG", className: "11E" }
 ];
 
