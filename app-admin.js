@@ -1,34 +1,20 @@
 // =========================================================
 // FILE: app-admin.js
-// QUẢN TRỊ VIÊN: BẢO MẬT BẰNG BĂM SHA-256 (MẬT KHẨU: Obahoan130384@)
-// HỖ TRỢ XÁC THỰC MẬT MÃ HỌC AN TOÀN, ĐĂNG ĐỀ, TÀI LIỆU GOOGLE DRIVE
-// GIỮ NGUYÊN 100% GIAO DIỆN VÀ TÍNH NĂNG HỆ THỐNG
+// QUẢN TRỊ VIÊN: BẢO MẬT TUYỆT ĐỐI BẰNG BĂM SHA-256 MỘT CHIỀU
+// ĐĂNG ĐỀ, TÀI LIỆU GOOGLE DRIVE, SỬA/XÓA & CẤU HÌNH PHÒNG THI
+// ĐÃ LÀM SẠCH 100% MÃ NGUỒN, KHÔNG CÒN BẤT KỲ DẤU VẾT NÀO CỦA MẬT KHẨU GỐC
 // =========================================================
 
 let currentEditingTimeQuizId = null;
 let currentEditingTimeMode = null;
 
-// Hàm băm mật khẩu chuẩn SHA-256 qua Web Crypto API có sẵn trên trình duyệt
+// Hàm băm mật khẩu chuẩn SHA-256 qua Web Crypto API của trình duyệt
 async function sha256Hash(message) {
     const msgBuffer = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
-
-// Mảng hạt giống mã hóa an toàn tương ứng mật khẩu "Obahoan130384@"
-const _ADMIN_KEY_SEED = [21, 56, 59, 50, 53, 59, 52, 107, 105, 106, 105, 98, 110, 26];
-
-// Khởi tạo mã băm SHA-256 nội bộ ngay khi tải trang
-(async function initAdminHash() {
-    try {
-        const decoded = _ADMIN_KEY_SEED.map(c => String.fromCharCode(c ^ 90)).join('');
-        const computedHash = await sha256Hash(decoded);
-        if (!ADMIN_PASSWORD_HASH || ADMIN_PASSWORD_HASH.length !== 64) {
-            ADMIN_PASSWORD_HASH = computedHash;
-        }
-    } catch(e) {}
-})();
 
 function parseScriptOrJson(content) {
     if (!content) return null;
@@ -184,7 +170,7 @@ function checkAdminSessionValidity() {
     return false;
 }
 
-// HÀM KIỂM TRA MẬT KHẨU ADMIN QUA MÃ BĂM SHA-256
+// HÀM KIỂM TRA MẬT KHẨU ADMIN QUA MÃ BĂM SHA-256 THUẦN TÚY
 async function checkAdminPassword() {
     const inputEl = document.getElementById("admin-pass-input");
     const rawPass = (inputEl ? inputEl.value : "").trim();
@@ -194,26 +180,10 @@ async function checkAdminPassword() {
         return;
     }
 
+    // Băm mật khẩu người dùng gõ vào và so sánh trực tiếp với chuỗi băm trong app-config.js
     const inputHash = await sha256Hash(rawPass);
-    let isMatched = false;
 
-    // 1. So khớp trực tiếp nếu ADMIN_PASSWORD_HASH đã chứa chuỗi 64 ký tự băm
-    if (typeof ADMIN_PASSWORD_HASH === "string" && ADMIN_PASSWORD_HASH.length === 64) {
-        isMatched = (inputHash === ADMIN_PASSWORD_HASH);
-    } else {
-        // 2. Cơ chế chuyển tiếp an toàn qua mảng hạt giống mã hóa của Obahoan130384@
-        const decodedSeed = _ADMIN_KEY_SEED.map(c => String.fromCharCode(c ^ 90)).join('');
-        const seedHash = await sha256Hash(decodedSeed);
-
-        if (inputHash === seedHash) {
-            isMatched = true;
-            ADMIN_PASSWORD_HASH = seedHash;
-            // Hiện hộp thoại để thầy copy mã băm lưu vào app-config.js
-            prompt("🎉 Mật khẩu chính xác! Đây là chuỗi mã băm SHA-256 (64 ký tự) của mật khẩu Obahoan130384@. Thầy hãy copy chuỗi này dán vào biến ADMIN_PASSWORD_HASH trong app-config.js:", seedHash);
-        }
-    }
-
-    if (isMatched) {
+    if (inputHash === ADMIN_PASSWORD_HASH) {
         isAdminLoggedIn = true;
 
         const durationVal = document.getElementById("admin-expiry-select") ? document.getElementById("admin-expiry-select").value : "1d";
