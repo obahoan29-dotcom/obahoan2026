@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: app-admin.js
-// QUẢN TRỊ VIÊN: BẢO MẬT BẰNG BĂM SHA-256 (MẬT KHẨU: Donaldhoan)
+// QUẢN TRỊ VIÊN: BẢO MẬT BẰNG ...
 // HỖ TRỢ XÁC THỰC MẬT MÃ HỌC AN TOÀN, ĐĂNG ĐỀ, TÀI LIỆU GOOGLE DRIVE
 // GIỮ NGUYÊN 100% GIAO DIỆN VÀ TÍNH NĂNG HỆ THỐNG
 // =========================================================
