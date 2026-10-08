@@ -14,10 +14,6 @@ let ADMIN_PASSWORD_HASH = "4711bcbd6fbf382356a6370e814daaf87ed27a425979dca143f8c
 // ==========================================
 const _decodeUrl = (arr) => arr.map(c => String.fromCharCode(c ^ 90)).join('');
 
-// ĐƯỜNG DẪN FIREBASE REALTIME DATABASE MỚI
-const FIREBASE_DB_URL = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
-const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
-
 // TIÊU ĐỀ MẶC ĐỊNH CHO KHỐI NHẮC NHỞ QUAN TRỌNG
 let REMINDER_SECTION_TITLE = "📌 Nhắc nhở quan trọng";
 
@@ -151,6 +147,12 @@ function getCategoryDisplayName(catId) {
     };
     return map[catId] || catId;
 }
+
+// ==========================================
+// ĐƯỜNG DẪN FIREBASE REALTIME DATABASE MỚI (Được giấu sâu trong source code)
+// ==========================================
+const FIREBASE_DB_URL = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
+const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
 function parseDateString(dateStr) {
     if (!dateStr) return 0;
