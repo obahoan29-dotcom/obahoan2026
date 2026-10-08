@@ -5,7 +5,7 @@
 // ĐÃ CẬP NHẬT: KẾT NỐI TÀI KHOẢN FIREBASE MỚI (obahoan40hethongthitracnghiem)
 // ==========================================
 
-// Biến lưu mã băm SHA-256
+// Biến lưu mã... 
 let ADMIN_PASSWORD_HASH = "4711bcbd6fbf382356a6370e814daaf87ed27a425979dca143f8c94722a8a328";
 
 // ĐƯỜNG DẪN FIREBASE REALTIME DATABASE MỚI
