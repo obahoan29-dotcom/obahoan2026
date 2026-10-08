@@ -1172,7 +1172,7 @@
     }
 
     // =========================================================
-    // EXPORT CÁC HÀM CẦN THIẾT CHO GIAO DIỆN HTML GỌI
+    // EXPORT CÁC HÀM CẦN THIẾT CHO GIAO DIỆN HTML VÀ SERVICE GỌI
     // (CÁC BIẾN CHỨA ĐÁP ÁN ĐƯỢC GIỮ KÍN TUYỆT ĐỐI TRONG CLOSURE)
     // =========================================================
     window.selectOption = selectOption;
@@ -1188,6 +1188,10 @@
     window.resetToFreshLoginScreen = resetToFreshLoginScreen;
     window.checkPassword = checkPassword;
     window.startExamAction = startExamAction;
+
+    // Export hàm đếm ngược và định dạng thời gian để thi-service.js gọi chính xác
+    window.startCountdownTimer = startCountdownTimer;
+    window.formatHHMMSS = formatHHMMSS;
 
     // Cầu nối nội bộ cho thi-service.js gọi
     window.__saveExamState = saveExamStateToStorage;
