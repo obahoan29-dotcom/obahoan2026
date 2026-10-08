@@ -8,10 +8,28 @@
 // Biến lưu mã... 
 let ADMIN_PASSWORD_HASH = "4711bcbd6fbf382356a6370e814daaf87ed27a425979dca143f8c94722a8a328";
 
-// ĐƯỜNG DẪN FIREBASE REALTIME DATABASE MỚI
-const FIREBASE_DB_URL = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
-const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
+// ==========================================
+// ĐƯỜNG DẪN ĐÃ ĐƯỢC MÃ HÓA BẢO MẬT (XOR CIPHER)
+// Ngăn chặn việc copy URL trực tiếp từ mã nguồn
+// ==========================================
+const _decodeUrl = (arr) => arr.map(c => String.fromCharCode(c ^ 90)).join('');
 
+const FIREBASE_DB_URL = _decodeUrl([
+    50, 46, 46, 58, 57, 64, 117, 117, 45, 28, 27, 18, 25, 27, 20, 86, 82, 
+    18, 21, 26, 18, 25, 23, 26, 18, 19, 26, 28, 27, 25, 17, 19, 21, 23, 
+    27, 7, 31, 21, 12, 27, 21, 26, 14, 7, 28, 26, 20, 28, 77, 27, 57, 19, 
+    27, 77, 57, 25, 21, 26, 18, 21, 27, 57, 116, 7, 12, 19, 28, 21, 26, 
+    27, 57, 20, 27, 12, 27, 28, 27, 57, 21, 14, 14
+]);
+
+const GOOGLE_DRIVE_UPLOAD_GAS_URL = _decodeUrl([
+    50, 46, 46, 58, 57, 64, 117, 117, 57, 25, 28, 19, 58, 46, 78, 31, 25, 
+    25, 31, 26, 21, 78, 25, 25, 23, 117, 23, 27, 25, 28, 25, 57, 117, 57, 
+    117, 27, 17, 30, 3, 25, 28, 2, 28, 24, 56, 18, 56, 27, 54, 21, 10, 
+    25, 18, 24, 17, 16, 56, 83, 13, 7, 18, 20, 31, 44, 26, 29, 24, 11, 
+    20, 7, 52, 29, 21, 23, 56, 51, 62, 53, 5, 18, 23, 1, 11, 45, 18, 11, 
+    41, 117, 21, 0, 21, 25
+]);
 // TIÊU ĐỀ MẶC ĐỊNH CHO KHỐI NHẮC NHỞ QUAN TRỌNG
 let REMINDER_SECTION_TITLE = "📌 Nhắc nhở quan trọng";
 
