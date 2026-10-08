@@ -210,7 +210,7 @@ async function checkAdminPassword() {
         if (inputHash === seedHash) {
             isMatched = true;
             ADMIN_PASSWORD_HASH = seedHash;
-            prompt("🎉 Mật khẩu Donaldhoan chính xác! Đây là chuỗi mã băm SHA-256 (64 ký tự) mới. Thầy hãy copy chuỗi này dán vào ADMIN_PASSWORD_HASH trong app-config.js:", seedHash);
+            prompt("🎉 Mật khẩu Trên chính xác! Đây là chuỗi mã băm SHA-256 (64 ký tự) mới. Thầy hãy copy chuỗi này dán vào ADMIN_PASSWORD_HASH trong app-config.js:", seedHash);
         }
     }
 
