@@ -4,8 +4,9 @@
 // BẢO MẬT: MẬT KHẨU ADMIN ĐÃ ĐƯỢC BĂM MỘT CHIỀU BẰNG SHA-256 (KHÔNG CHỨA TEXT THÔ)
 // ==========================================
 
-// Biến lưu mã băm SHA-256 bảo vệ quyền quản trị (khởi tạo động, chống lộ mật khẩu)
-let ADMIN_PASSWORD_HASH = "";
+// Chuỗi băm SHA-256 bảo vệ mật khẩu "Obahoan281218@"
+// (Thầy dán chuỗi 64 ký tự nhận được vào đây)
+const ADMIN_PASSWORD_HASH = "";
 
 const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
@@ -38,7 +39,7 @@ const PRESET_AVATARS = [
     "https://cdn-icons-png.flaticon.com/512/2275/2275069.png", "https://cdn-icons-png.flaticon.com/512/4006/4006511.png",
     "https://cdn-icons-png.flaticon.com/512/3358/3358327.png", "https://cdn-icons-png.flaticon.com/512/10061/10061732.png",
     "https://cdn-icons-png.flaticon.com/512/4539/4539472.png", "https://cdn-icons-png.flaticon.com/512/3081/3081371.png",
-    "https://cdn-icons-png.flaticon.com/512/864/864685.png", "https://cdn-icons-png.flaticon.com/512/3143/3143657.png",
+    "https://cdn-icons-png.flaticon.com/512/864/864685.png", "https://cdn-icons-png.flaticon.com/512/3135/3135768.png",
     "https://cdn-icons-png.flaticon.com/512/2072/2072138.png", "https://cdn-icons-png.flaticon.com/512/4207/4207253.png",
     "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"
 ];
