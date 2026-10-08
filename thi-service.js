@@ -3,11 +3,14 @@
 // QUẢN LÝ KẾT NỐI MẠNG, FIREBASE REALTIME, PRESENCE, 
 // THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
 // ĐÃ BẢO MẬT: LOẠI BỎ TOÀN BỘ ĐÁP ÁN KHỎI PHẠM VI TOÀN CỤC
+// ĐÃ CẬP NHẬT: KẾT NỐI TÀI KHOẢN FIREBASE MỚI (obahoan40hethongthitracnghiem)
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
 const URL2_EXAM_RESULT  = "https://script.google.com/macros/s/AKfycbx4ezz_9YOZKt9-idYUKz8N1dXg-LeIG-_UknLYKBVZJpxCJRx3yNHwfdWEQp-yhOISog/exec";
-const FIREBASE_DB_URL   = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+// ĐƯỜNG DẪN FIREBASE REALTIME DATABASE MỚI
+const FIREBASE_DB_URL   = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
 
 // BỘ ĐỆM BẢO VỆ LƯU TRỮ TRÊN IPHONE (SAFARI PRIVATE BROWSING / IN-APP WEBVIEW)
 const safeLocal = {
