@@ -4,7 +4,7 @@
 // BẢO MẬT: MẬT KHẨU ADMIN ĐÃ ĐƯỢC BĂM MỘT CHIỀU BẰNG SHA-256 (KHÔNG CHỨA TEXT THÔ)
 // ==========================================
 
-// Biến lưu mã băm SHA-256 của mật khẩu mới "Donaldhoan"
+// Biến lưu mã băm SHA-256 của mật khẩu mới 
 // Hệ thống sẽ tự động khởi tạo và khớp chuẩn xác 100%
 let ADMIN_PASSWORD_HASH = "";
 
