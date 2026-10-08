@@ -1,17 +1,16 @@
 // ==========================================
 // FILE: app-config.js
 // CẤU HÌNH HỆ THỐNG VÀ DỮ LIỆU TĨNH DÙNG CHUNG
-// HỖ TRỢ ĐĂNG ĐỀ THI, TÀI LIỆU PDF / WORD / ẢNH GOOGLE DRIVE
+// BẢO MẬT: MẬT KHẨU ADMIN ĐƯỢC BĂM MỘT CHIỀU BẰNG SHA-256 (KHÔNG LỘ TEXT GỐC)
 // ==========================================
-const ADMIN_PASSWORD = "Hopan130384";
-const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-// URL WEB APP GAS TẢI FILE PDF / WORD / ẢNH LÊN GOOGLE DRIVE (ĐÃ CẬP NHẬT MỚI)
+// Chuỗi băm SHA-256 tương ứng với mật khẩu bí mật của thầy
+const ADMIN_PASSWORD_HASH = "4bb2dfd5f6630f4a47814c810443224da700e57f5c6e8348b4887756f7ef5eb1";
+
+const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
-// TIÊU ĐỀ MẶC ĐỊNH CHO KHỐI NHẮC NHỞ QUAN TRỌNG (ĐÃ KHAI BÁO CHỐNG LỖI TREO ĐƠ)
 let REMINDER_SECTION_TITLE = "📌 Nhắc nhở quan trọng";
-
 let isAdminLoggedIn = false;
 let selectedAvatarUrl = "";
 let currentMoveData = { oldCategory: null, quizId: null, quizData: null };
