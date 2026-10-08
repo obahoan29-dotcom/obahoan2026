@@ -16,7 +16,7 @@ async function sha256Hash(message) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Mảng hạt giống mã hóa an toàn tương ứng mật khẩu "Donaldhoan"
+// Mảng hạt giống mã hóa an toàn tương ứng ....
 const _ADMIN_KEY_SEED = [30, 53, 52, 59, 54, 62, 50, 53, 59, 52];
 
 // Khởi tạo mã băm SHA-256 nội bộ ngay khi tải trang
