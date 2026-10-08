@@ -2,13 +2,14 @@
 // FILE: app-config.js
 // CẤU HÌNH HỆ THỐNG VÀ DỮ LIỆU TĨNH DÙNG CHUNG
 // BẢO MẬT: MẬT KHẨU ADMIN ĐÃ ĐƯỢC BĂM MỘT CHIỀU BẰNG SHA-256 (KHÔNG CHỨA TEXT THÔ)
+// ĐÃ CẬP NHẬT: KẾT NỐI TÀI KHOẢN FIREBASE MỚI (obahoan40hethongthitracnghiem)
 // ==========================================
 
-// Biến lưu mã băm SHA-256 của mật khẩu mới 
-// Hệ thống sẽ tự động khởi tạo và khớp chuẩn xác 100%
+// Biến lưu mã băm SHA-256
 let ADMIN_PASSWORD_HASH = "4711bcbd6fbf382356a6370e814daaf87ed27a425979dca143f8c94722a8a328";
 
-const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
+// ĐƯỜNG DẪN FIREBASE REALTIME DATABASE MỚI
+const FIREBASE_DB_URL = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
 // TIÊU ĐỀ MẶC ĐỊNH CHO KHỐI NHẮC NHỞ QUAN TRỌNG
