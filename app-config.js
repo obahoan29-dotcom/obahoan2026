@@ -6,7 +6,7 @@
 
 // Biến lưu mã băm SHA-256 của mật khẩu "Obahoan130384@"
 // Hệ thống sẽ tự động khởi tạo và khớp chuẩn xác 100%
-let ADMIN_PASSWORD_HASH = "";
+let ADMIN_PASSWORD_HASH = "f11f99ee797fb44ec17eadf33c9a771bbc42ca8e1d5c3119575eceb9913d4dcc";
 
 const FIREBASE_DB_URL = "https://hethongthitracnghiem-518c5-default-rtdb.asia-southeast1.firebasedatabase.app";
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
