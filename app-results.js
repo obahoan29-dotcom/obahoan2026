@@ -1,5 +1,3 @@
---- START OF FILE text/javascript ---
-
 // =========================================================
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
