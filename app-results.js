@@ -1515,5 +1515,3 @@ window.addEventListener("popstate", function(event) {
     else if (hash === "#bang-ket-qua") { showMainResultTableUI(); } 
     else { closeResultModal(false); }
 });
-
---- START OF FILE text/javascript ---
