@@ -45,9 +45,9 @@ window.STUDENT_ACCOUNTS["them-10"] = [
     { stt: 38, pass: "38", sbd: "1038", username: "Luân aura", name: "Nguyễn Thanh Luân", className: "10E" },
     { stt: 39, pass: "39", sbd: "1039", username: "Nguyễn Thiện Nhân", name: "Nguyễn Thiện Nhân", className: "10C" },
     { stt: 40, pass: "40", sbd: "1040", username: "Trần Trung Anh", name: "Trần Trung Anh", className: "10D" },
-    { stt: 41, pass: "41", sbd: "1044", username: "Tuấn vũ", name: "Tuấn vũ", className: "10E" },
-    { stt: 42, pass: "42", sbd: "1044", username: "Lại Thư", name: "Lại Thư", className: "10a" },
-    { stt: 43, pass: "43", sbd: "1044", username: "Hải Yến", name: "Hải Yến", className: "10c" },
+    { stt: 41, pass: "41", sbd: "1041", username: "Tuấn vũ", name: "Tuấn vũ", className: "10E" },
+    { stt: 42, pass: "42", sbd: "1042", username: "Lại Thư", name: "Lại Thư", className: "10a" },
+    { stt: 43, pass: "43", sbd: "1043", username: "Hải Yến", name: "Hải Yến", className: "10c" },
     { stt: 44, pass: "44", sbd: "1044", username: "Sơn", name: "Sơn", className: "10c" },
     { stt: 45, pass: "45", sbd: "1019", username: "Lại Duy Phong", name: "Lại Duy Phong", className: "10b" },
         { stt: 99, pass: "99", sbd: "1045", username: "Nguyễn Doanh", name: "Nguyễn Doanh", className: "10C" }
