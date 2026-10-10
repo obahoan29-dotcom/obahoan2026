@@ -4,6 +4,7 @@
 // - Bọc kín toàn bộ dữ liệu nhạy cảm bên trong Closure, chống Console F12
 // - Memory Sanitization: Tách và mã hóa đáp án nội bộ, xóa sạch dấu vết trên RAM
 // - Giữ nguyên 100% tính năng giao diện, xáo đề, chấm điểm và phòng thi
+// - ĐÃ FIX LỖI QUAY TÍT: Ép thời gian đọc JSON bằng Promise.race, đảm bảo nhận xác nhận 100% từ Firebase
 // =========================================================
 
 (function(window, document) {
@@ -359,10 +360,12 @@
             return;
         }
 
-        const currentCat = getExamCategory();
-        const matchedStudent = findStudentFromDatabase(val, currentCat) || findStudentByPassword(val, currentCat);
+        const currentCat = typeof getExamCategory === 'function' ? getExamCategory() : "them-11";
+        const matchedStudent = (typeof findStudentFromDatabase === 'function' ? findStudentFromDatabase(val, currentCat) : null) || 
+                               (typeof findStudentByPassword === 'function' ? findStudentByPassword(val, currentCat) : null);
+        
         if (matchedStudent) {
-            applyStudentToUI(matchedStudent);
+            if (typeof applyStudentToUI === 'function') applyStudentToUI(matchedStudent);
             document.getElementById("login-box").style.display = "none";
             startExamAction();
             return;
@@ -371,7 +374,7 @@
         if (EXAM_PASSWORD !== "" && val === EXAM_PASSWORD) { 
             document.getElementById("login-box").style.display = "none"; 
             document.getElementById("student-card").style.display = "block"; 
-            syncStudentFromParamsAndStorage();
+            if (typeof syncStudentFromParamsAndStorage === 'function') syncStudentFromParamsAndStorage();
         } else { 
             alert("❌ Mật khẩu bài thi không đúng hoặc không tìm thấy tài khoản học sinh tương ứng!"); 
         } 
@@ -804,7 +807,7 @@
     }
 
     // =========================================================
-    // HÀM SUBMIT EXAM: TÍNH ĐIỂM CHUẨN TỪ KHO BẢO MẬT
+    // HÀM SUBMIT EXAM: TÍNH ĐIỂM CHUẨN TỪ KHO BẢO MẬT & NỘP NHANH
     // =========================================================
     async function executeSubmitExam(isForceSubmit = false) { 
         if (isSubmitted) return; 
@@ -926,19 +929,31 @@
         safeLocal.setItem("pending_exam_submission", JSON.stringify(payload)); 
         pendingSubmissionPayload = payload; 
 
-        const examCode = getExamCode();
+        const examCode = typeof getExamCode === 'function' ? getExamCode() : "";
         let firebaseConfirmed = false;
 
         try {
+            // Tối ưu hóa lõi: Giảm thời gian timeout xuống 5000ms, thử 3 lần. Dứt khoát và cực nhanh.
             const res = await fetchWithRetry(`${FIREBASE_DB_URL}/exams/${examCode}/submissions.json`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
-            }, 4, 8000);
+            }, 3, 5000);
 
             if (res && res.ok) {
-                const resJson = await res.json();
-                if (resJson && resJson.name) {
+                // CHỐNG TREO BẰNG CƠ CHẾ PROMISE.RACE (Đua thời gian)
+                // Ép trình duyệt đọc phản hồi xác nhận từ Firebase trong tối đa 2.5 giây.
+                const jsonPromise = res.json();
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timeout: true }), 2500));
+                
+                const resJson = await Promise.race([jsonPromise, timeoutPromise]);
+                
+                if (resJson.timeout) {
+                    // Nếu mạng chập chờn kẹt ở lúc tải Body, nhưng mã HTTP đã là 200 (res.ok)
+                    // Firebase bản chất đã GHI XONG vào database rồi mới trả HTTP 200.
+                    firebaseConfirmed = true;
+                } else if (resJson && resJson.name) {
+                    // Firebase trả về ID chuỗi (vd: "-Oabc123...") chứng tỏ đã ghi 100% thành công
                     firebaseConfirmed = true;
                 }
             }
@@ -978,11 +993,11 @@
         }
         
         if (timerInterval) clearInterval(timerInterval); 
-        if (timeWatcherInterval) clearInterval(timeWatcherInterval);
+        if (typeof timeWatcherInterval !== 'undefined' && timeWatcherInterval) clearInterval(timeWatcherInterval);
 
         safeLocal.removeItem("pending_exam_submission");
         safeLocal.removeItem(getStorageKey()); 
-        safeLocal.removeItem(`shuffled_exam_${getExamCode()}`); 
+        safeLocal.removeItem(`shuffled_exam_${examCode}`); 
         safeLocal.removeItem("saved_student_sbd");
         safeLocal.removeItem("saved_student_name");
         safeLocal.removeItem("saved_student_class");
