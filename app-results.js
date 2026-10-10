@@ -2,7 +2,7 @@
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
 // TỐI ƯU HÓA: Cập nhật Auto-refresh 15s/lần, truy vấn tối giản
-// TÍNH NĂNG MỚI: Tùy chọn xóa tạm thời / xóa vĩnh viễn bài thi
+// CẬP NHẬT: Nút Xóa tác động xóa vĩnh viễn trực tiếp lên Firebase
 // =========================================================
 
 let currentExamResultData = {
@@ -138,6 +138,7 @@ function initTableSettings() {
     } catch(e) {}
     applyTableSettings();
     
+    // Đồng bộ nút Tắt/Bật auto-refresh
     const btn = document.getElementById("btn-toggle-autorefresh");
     if (btn) {
         if (isAutoRefreshEnabled) {
@@ -269,18 +270,10 @@ function changeRankSort(mode, event) {
     filterResultTable();
 }
 
-// Bắt sự kiện click ra ngoài để đóng các menu dropdown
 document.addEventListener("click", function(e) {
     if (!e.target.closest('.rank-picker-wrapper')) {
         const menu = document.getElementById("rank-sort-dropdown-menu");
         if (menu) menu.style.display = "none";
-    }
-    
-    if (!e.target.closest('.delete-action-wrapper')) {
-        document.querySelectorAll('.delete-dropdown-menu.show').forEach(m => {
-            m.style.display = 'none';
-            m.classList.remove('show');
-        });
     }
 });
 
@@ -467,6 +460,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
         } catch(e) {}
     }
 
+    // TỐI ƯU: Chỉ lấy các code quan trọng nhất, tránh spam request Firebase
     const candidateCodesList = Array.from(new Set([quizId, cleanExamCodeKey(maDe || examTitle)].filter(Boolean)));
 
     let submissionsMap = {};
@@ -880,51 +874,9 @@ function toggleAttemptMenu(rowUid, event) {
     if (!isShown && menu) { menu.classList.add("show"); if (btn) btn.classList.add("active"); }
 }
 
-function toggleDeleteMenu(uid, event) {
-    if (event) { event.stopPropagation(); event.preventDefault(); }
-    document.querySelectorAll('.delete-dropdown-menu.show').forEach(m => {
-        if (m.id !== `delete-menu-${uid}`) {
-            m.style.display = 'none';
-            m.classList.remove('show');
-        }
-    });
-    const menu = document.getElementById(`delete-menu-${uid}`);
-    if (menu) {
-        const isShown = menu.classList.contains('show');
-        if (isShown) {
-            menu.style.display = 'none';
-            menu.classList.remove('show');
-        } else {
-            menu.style.display = 'block';
-            menu.classList.add('show');
-        }
-    }
-}
-
-function deleteLocalResultRow(rowUid, event) {
-    if (event) { event.stopPropagation(); event.preventDefault(); }
-    
-    const menu = document.getElementById(`delete-menu-${rowUid}`);
-    if (menu) { menu.style.display = 'none'; menu.classList.remove('show'); }
-
-    const rIdx = currentExamResultData.rawRows.findIndex(r => r._rowUid === rowUid);
-    if (rIdx === -1) return;
-    const rowObj = currentExamResultData.rawRows[rIdx];
-    const sName = rowObj.account?.name || "thí sinh này";
-
-    if (!confirm(`Bạn có chắc chắn muốn Xóa Tạm Thời hàng của "${sName}" khỏi màn hình?\n\n(Lưu ý: Thao tác này KHÔNG xóa dữ liệu trên hệ thống, khi ấn "Cập nhật" sẽ hiện lại)`)) { return; }
-
-    currentExamResultData.rawRows.splice(rIdx, 1);
-    calculateRanksForRows(currentExamResultData.rawRows);
-    updateStatsAndRenderTable(currentExamResultData.rawRows);
-}
-
 async function deleteResultRowPermanently(rowUid, event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
     
-    const menu = document.getElementById(`delete-menu-${rowUid}`);
-    if (menu) { menu.style.display = 'none'; menu.classList.remove('show'); }
-
     const rIdx = currentExamResultData.rawRows.findIndex(r => r._rowUid === rowUid);
     if (rIdx === -1) return;
     const rowObj = currentExamResultData.rawRows[rIdx];
@@ -941,12 +893,14 @@ async function deleteResultRowPermanently(rowUid, event) {
         return;
     }
 
-    const btnWrapper = document.getElementById(`delete-menu-${rowUid}`).parentNode;
-    const btn = btnWrapper.querySelector('.btn-delete-result-row');
-    const oldText = btn.innerHTML;
-    btn.innerHTML = "⏳ Đang xóa...";
-    btn.style.opacity = "0.7";
-    btn.style.pointerEvents = "none";
+    const targetBtn = event.currentTarget || event.target.closest('.btn-delete-result-row');
+    let oldText = "🗑️ Xóa";
+    if (targetBtn) {
+        oldText = targetBtn.innerHTML;
+        targetBtn.innerHTML = "⏳ Đang xóa...";
+        targetBtn.style.opacity = "0.7";
+        targetBtn.style.pointerEvents = "none";
+    }
 
     try {
         const url = `${FIREBASE_DB_URL}/exams/${currentSub._nodeCode}/submissions/${currentSub._keyId}.json`;
@@ -957,9 +911,11 @@ async function deleteResultRowPermanently(rowUid, event) {
     } catch (err) {
         console.error("Lỗi khi xóa:", err);
         alert("❌ Có lỗi xảy ra khi xóa dữ liệu trên máy chủ: " + err.message);
-        btn.innerHTML = oldText;
-        btn.style.opacity = "1";
-        btn.style.pointerEvents = "auto";
+        if (targetBtn) {
+            targetBtn.innerHTML = oldText;
+            targetBtn.style.opacity = "1";
+            targetBtn.style.pointerEvents = "auto";
+        }
     }
 }
 
@@ -1087,22 +1043,10 @@ function renderFilteredResultTable(rows) {
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
         let safeTitleCol10 = stripHtml(col10_cheatTime);
 
-        // NÚT XÓA MỚI VỚI DROPDOWN MENU
-        let col_action = `
-            <div class="delete-action-wrapper" style="position:relative; display:inline-block;">
-                <button type="button" class="btn-delete-result-row" onclick="toggleDeleteMenu('${uid}', event)" title="Tùy chọn xóa" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:3px 8px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:2px; transition:0.15s; box-shadow:0 1px 3px rgba(239,68,68,0.15);">🗑️ Xóa ▾</button>
-                <div class="delete-dropdown-menu" id="delete-menu-${uid}" style="display:none; position:absolute; right:0; top:calc(100% + 4px); background:#ffffff; border-radius:8px; box-shadow:0 4px 12px rgba(15,23,42,0.2); border:1px solid #cbd5e1; z-index:9999; min-width:165px; padding:4px; text-align:left;">
-                    <div onclick="deleteLocalResultRow('${uid}', event)" style="padding:7px 10px; font-size:11.5px; font-weight:700; color:#475569; cursor:pointer; border-radius:6px; transition:0.15s; margin-bottom:2px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                        👁️ Xóa tạm khỏi màn hình
-                    </div>
-                    <div onclick="deleteResultRowPermanently('${uid}', event)" style="padding:7px 10px; font-size:11.5px; font-weight:700; color:#dc2626; cursor:pointer; border-radius:6px; transition:0.15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
-                        🔥 Xóa hẳn trên máy chủ
-                    </div>
-                </div>
-            </div>
-        `;
+        // Nút xóa được cập nhật để trực tiếp xóa vĩnh viễn
+        let col_action = `<button type="button" class="btn-delete-result-row" onclick="deleteResultRowPermanently('${uid}', event)" title="Xóa vĩnh viễn dữ liệu bài thi này khỏi hệ thống" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:3px 8px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:2px; transition:0.15s; box-shadow:0 1px 3px rgba(239,68,68,0.15);">🗑️ Xóa</button>`;
 
-        tr.innerHTML = `<td class="td-stt">${col1_stt}</td><td class="td-exam-col" title="${currentExamTitle}">${col_examName}</td><td class="td-attempt-cell-wrap">${col_attemptCount}</td><td class="td-truncate" title="${stripHtml(col2_inTime)}">${col2_inTime}</td><td class="td-truncate" title="${stripHtml(col3_spentTime)}">${col3_spentTime}</td><td class="td-truncate" title="${rawName}">${col4_name}</td><td class="td-class td-truncate" title="${rawClass}">${col_class}</td><td class="td-sbd td-truncate" title="${col5_sbd}">${col5_sbd}</td><td style="text-align:center;">${col6_status}</td><td style="text-align:center;">${col7_correct}</td><td class="td-score">${col8_score}</td><td style="text-align:center;">${col_rank}</td><td class="td-tabs">${col9_tabs}</td><td class="td-tab-times td-truncate" title="${safeTitleCol10}">${col10_cheatTime}</td><td class="td-truncate">${col11_details}</td><td style="text-align:center; overflow: visible !important;">${col_action}</td>`;
+        tr.innerHTML = `<td class="td-stt">${col1_stt}</td><td class="td-exam-col" title="${currentExamTitle}">${col_examName}</td><td class="td-attempt-cell-wrap">${col_attemptCount}</td><td class="td-truncate" title="${stripHtml(col2_inTime)}">${col2_inTime}</td><td class="td-truncate" title="${stripHtml(col3_spentTime)}">${col3_spentTime}</td><td class="td-truncate" title="${rawName}">${col4_name}</td><td class="td-class td-truncate" title="${rawClass}">${col_class}</td><td class="td-sbd td-truncate" title="${col5_sbd}">${col5_sbd}</td><td style="text-align:center;">${col6_status}</td><td style="text-align:center;">${col7_correct}</td><td class="td-score">${col8_score}</td><td style="text-align:center;">${col_rank}</td><td class="td-tabs">${col9_tabs}</td><td class="td-tab-times td-truncate" title="${safeTitleCol10}">${col10_cheatTime}</td><td class="td-truncate">${col11_details}</td><td style="text-align:center;">${col_action}</td>`;
         tbody.appendChild(tr);
     });
 }
