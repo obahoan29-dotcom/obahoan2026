@@ -1,7 +1,7 @@
 // =========================================================
 // FILE: app-main.js
-// BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH & MỤC NHẮC NHỞ QUAN TRỌNG
-// TỐI ƯU HÓA BĂNG THÔNG: Bỏ tải quizzes.json, chỉ fetch exam_configs siêu nhẹ
+// BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH, HỆ THỐNG MÀU NHẬN DIỆN & MỤC NHẮC NHỞ
+// ĐỒNG BỘ MÀU SẮC NỐI LIỀN GIỮA NÚT BẤM VÀ KHỐI ĐỀ THI
 // =========================================================
 
 const safeLocal = {
@@ -15,6 +15,109 @@ const safeSession = {
     setItem(k, v) { try { sessionStorage.setItem(k, v); } catch(e) {} },
     removeItem(k) { try { localStorage.removeItem(k); } catch(e) {} }
 };
+
+// BẢNG MÃ MÀU BÓNG BẨY CHUYÊN NGHIỆP TỪNG LỚP/CHUYÊN MỤC
+const CATEGORY_THEME_PALETTE = {
+    "them-10": {
+        color: "#0284c7",
+        border: "#38bdf8",
+        bgLight: "#f0f9ff",
+        glow: "rgba(2, 132, 199, 0.25)",
+        gradient: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+        name: "Thêm 10"
+    },
+    "them-11": {
+        color: "#ea580c",
+        border: "#fb923c",
+        bgLight: "#fff7ed",
+        glow: "rgba(234, 88, 12, 0.25)",
+        gradient: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)",
+        name: "Thêm 11"
+    },
+    "them-12": {
+        color: "#8b5cf6",
+        border: "#c084fc",
+        bgLight: "#faf5ff",
+        glow: "rgba(139, 92, 246, 0.25)",
+        gradient: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+        name: "Thêm 12"
+    },
+    "lop-11a": {
+        color: "#10b981",
+        border: "#34d399",
+        bgLight: "#f0fdf4",
+        glow: "rgba(16, 185, 129, 0.25)",
+        gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+        name: "Lớp 11A"
+    },
+    "lop-11c": {
+        color: "#e11d48",
+        border: "#fb7185",
+        bgLight: "#fff1f2",
+        glow: "rgba(225, 29, 72, 0.25)",
+        gradient: "linear-gradient(135deg, #e11d48 0%, #be123c 100%)",
+        name: "Lớp 11C"
+    },
+    "lop-10p": {
+        color: "#d97706",
+        border: "#fbbf24",
+        bgLight: "#fffbeb",
+        glow: "rgba(217, 119, 6, 0.25)",
+        gradient: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+        name: "Lớp 10P"
+    },
+    "lop-11e": {
+        color: "#0d9488",
+        border: "#2dd4bf",
+        bgLight: "#f0fdfa",
+        glow: "rgba(13, 148, 136, 0.25)",
+        gradient: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+        name: "Lớp 11E"
+    },
+    "hsg-toan-11": {
+        color: "#b45309",
+        border: "#fde047",
+        bgLight: "#fefce8",
+        glow: "rgba(180, 83, 9, 0.3)",
+        gradient: "linear-gradient(135deg, #f59e0b 0%, #b45309 100%)",
+        name: "HSG Toán 11"
+    },
+    "tu-luan-padlet": {
+        color: "#7c3aed",
+        border: "#d8b4fe",
+        bgLight: "#f5f3ff",
+        glow: "rgba(124, 58, 237, 0.28)",
+        gradient: "linear-gradient(135deg, #9333ea 0%, #6b21a8 100%)",
+        name: "Nộp tự luận Padlet"
+    },
+    "nhac-nho": {
+        color: "#e11d48",
+        border: "#fecdd3",
+        bgLight: "#fff1f2",
+        glow: "rgba(225, 29, 72, 0.2)",
+        gradient: "linear-gradient(135deg, #e11d48 0%, #be123c 100%)",
+        name: "Nhắc nhở"
+    },
+    "kho-tai-lieu": {
+        color: "#0284c7",
+        border: "#bae6fd",
+        bgLight: "#f0f9ff",
+        glow: "rgba(2, 132, 199, 0.2)",
+        gradient: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+        name: "Kho tài liệu"
+    }
+};
+
+function getCategoryTheme(catId) {
+    return CATEGORY_THEME_PALETTE[catId] || {
+        color: "#0284c7",
+        border: "#38bdf8",
+        bgLight: "#f0f9ff",
+        glow: "rgba(2, 132, 199, 0.2)",
+        gradient: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+        name: catId
+    };
+}
 
 let activeDayThemCatId = null;
 let activeChinhKhoaRow1CatId = null;
@@ -94,7 +197,6 @@ function sortLinksNewestFirst(linksArray) {
     });
 }
 
-// TỐI ƯU HÓA: BỎ TẢI TOÀN BỘ KHO ĐỀ THI Ở TRANG CHỦ
 async function loadDataFromFirebase() {
     try {
         const [linksRes, metaRes] = await Promise.all([
@@ -136,7 +238,6 @@ async function loadDataFromFirebase() {
             }
         }
 
-        // CHỈ TẢI THÔNG SỐ CONFIG (GIỜ ĐÓNG MỞ) CỦA CÁC ĐỀ THI ĐANG HIỂN THỊ
         const activeQuizIds = new Set();
         [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES].forEach(cat => {
             if (cat.links) {
@@ -149,7 +250,6 @@ async function loadDataFromFirebase() {
             }
         });
 
-        // Fetch song song file config cực nhẹ (0.1KB/file) thay vì nguyên đề
         await Promise.all(Array.from(activeQuizIds).map(async (qId) => {
             try {
                 const cfgRes = await fetch(`${FIREBASE_DB_URL}/exam_configs/${qId}.json`);
@@ -280,9 +380,12 @@ function renderReminderSection() {
     renderLinksWithFold(container, links, "nhac-nho", 2);
 }
 
+// HÀM RENDER LINK CÓ NỐI LIỀN MÀU THEME CỦA LỚP
 function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
     if (!container) return;
     container.innerHTML = "";
+
+    const theme = getCategoryTheme(categoryId);
 
     if (!links || links.length === 0) {
         container.innerHTML = `<div class="empty-folder">Chưa có bài tập hoặc tài liệu nào trong mục này.</div>`;
@@ -328,19 +431,19 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
         toggleBtn.style.justifyContent = "center";
         toggleBtn.style.gap = "6px";
         toggleBtn.style.margin = "8px 0 0 0";
-        toggleBtn.style.padding = "9px 14px";
+        toggleBtn.style.padding = "10px 14px";
         toggleBtn.style.borderRadius = "12px";
-        toggleBtn.style.border = "1.5px dashed #0284c7";
-        toggleBtn.style.background = "#f0f9ff";
-        toggleBtn.style.color = "#0369a1";
+        toggleBtn.style.border = `1.5px dashed ${theme.border}`;
+        toggleBtn.style.background = theme.bgLight;
+        toggleBtn.style.color = theme.color;
         toggleBtn.style.fontWeight = "800";
         toggleBtn.style.fontSize = "13px";
         toggleBtn.style.cursor = "pointer";
-        toggleBtn.style.transition = "all 0.2s ease";
+        toggleBtn.style.transition = "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)";
 
         toggleBtn.innerHTML = isExpanded 
             ? `▲ Thu gọn lại (${remainingCount} mục)` 
-            : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
+            : `▼ Mở rộng xem tiếp ${remainingCount} mục còn lại`;
 
         toggleBtn.onclick = (e) => {
             e.stopPropagation();
@@ -349,7 +452,7 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
             hiddenBox.style.display = nowExpanded ? "flex" : "none";
             toggleBtn.innerHTML = nowExpanded 
                 ? `▲ Thu gọn lại (${remainingCount} mục)` 
-                : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
+                : `▼ Mở rộng xem tiếp ${remainingCount} mục còn lại`;
         };
 
         foldWrapper.appendChild(hiddenBox);
@@ -358,6 +461,7 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
     }
 }
 
+// CẬP NHẬT GIAO DIỆN NÚT DẠY THÊM & NỐI LIỀN MÀU SẮC
 function renderDayThemSection() {
     const bar = document.getElementById("daythem-nav-bar");
     const panel = document.getElementById("daythem-dropdown-panel");
@@ -367,9 +471,16 @@ function renderDayThemSection() {
     bar.innerHTML = "";
     DAY_THEM_CATEGORIES.forEach(cat => {
         const isActive = (activeDayThemCatId === cat.id);
+        const theme = getCategoryTheme(cat.id);
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "dantri-nav-btn" + (isActive ? " active" : "");
+        btn.className = `dantri-nav-btn cat-btn-${cat.id}` + (isActive ? " active" : "");
+        btn.setAttribute("data-cat", cat.id);
+        btn.style.setProperty("--cat-theme", theme.color);
+        btn.style.setProperty("--cat-border", theme.border);
+        btn.style.setProperty("--cat-bg", theme.bgLight);
+        btn.style.setProperty("--cat-glow", theme.glow);
+
         btn.innerHTML = `<span>${cat.title}</span> <span class="caret-icon">${isActive ? "▲" : "▼"}</span>`;
         btn.onclick = () => {
             activeDayThemCatId = (activeDayThemCatId === cat.id) ? null : cat.id;
@@ -379,9 +490,22 @@ function renderDayThemSection() {
     });
 
     list.innerHTML = "";
-    if (!activeDayThemCatId) { panel.classList.remove("show"); return; }
+    if (!activeDayThemCatId) { 
+        panel.classList.remove("show"); 
+        panel.removeAttribute("data-theme-cat");
+        return; 
+    }
 
     const activeCat = DAY_THEM_CATEGORIES.find(c => c.id === activeDayThemCatId);
+    const activeTheme = getCategoryTheme(activeDayThemCatId);
+    
+    // NỐI LIỀN MÀU PANEL VỚI NÚT ĐANG CHỌN
+    panel.setAttribute("data-theme-cat", activeDayThemCatId);
+    panel.style.setProperty("--cat-theme", activeTheme.color);
+    panel.style.setProperty("--cat-border", activeTheme.border);
+    panel.style.setProperty("--cat-bg", activeTheme.bgLight);
+    panel.style.setProperty("--cat-glow", activeTheme.glow);
+
     if (activeCat && activeCat.links && activeCat.links.length > 0) {
         renderLinksWithFold(list, activeCat.links, activeCat.id, 2);
         panel.classList.add("show");
@@ -391,6 +515,7 @@ function renderDayThemSection() {
     }
 }
 
+// CẬP NHẬT GIAO DIỆN NÚT CHÍNH KHÓA & NỐI LIỀN MÀU SẮC
 function renderChinhKhoaSection() {
     const row1Bar = document.getElementById("chinhkhoa-row1-bar");
     const row1Panel = document.getElementById("chinhkhoa-row1-dropdown");
@@ -401,9 +526,16 @@ function renderChinhKhoaSection() {
         row1Bar.innerHTML = "";
         row1Cats.forEach(cat => {
             const isActive = (activeChinhKhoaRow1CatId === cat.id);
+            const theme = getCategoryTheme(cat.id);
             const btn = document.createElement("button");
             btn.type = "button";
-            btn.className = "dantri-nav-btn" + (isActive ? " active" : "");
+            btn.className = `dantri-nav-btn cat-btn-${cat.id}` + (isActive ? " active" : "");
+            btn.setAttribute("data-cat", cat.id);
+            btn.style.setProperty("--cat-theme", theme.color);
+            btn.style.setProperty("--cat-border", theme.border);
+            btn.style.setProperty("--cat-bg", theme.bgLight);
+            btn.style.setProperty("--cat-glow", theme.glow);
+
             btn.innerHTML = `<span>${cat.title}</span> <span class="caret-icon">${isActive ? "▲" : "▼"}</span>`;
             btn.onclick = () => {
                 activeChinhKhoaRow1CatId = (activeChinhKhoaRow1CatId === cat.id) ? null : cat.id;
@@ -415,8 +547,16 @@ function renderChinhKhoaSection() {
         row1List.innerHTML = "";
         if (!activeChinhKhoaRow1CatId) {
             row1Panel.classList.remove("show");
+            row1Panel.removeAttribute("data-theme-cat");
         } else {
             const activeCat1 = row1Cats.find(c => c.id === activeChinhKhoaRow1CatId);
+            const activeTheme1 = getCategoryTheme(activeChinhKhoaRow1CatId);
+            row1Panel.setAttribute("data-theme-cat", activeChinhKhoaRow1CatId);
+            row1Panel.style.setProperty("--cat-theme", activeTheme1.color);
+            row1Panel.style.setProperty("--cat-border", activeTheme1.border);
+            row1Panel.style.setProperty("--cat-bg", activeTheme1.bgLight);
+            row1Panel.style.setProperty("--cat-glow", activeTheme1.glow);
+
             if (activeCat1 && activeCat1.links && activeCat1.links.length > 0) {
                 renderLinksWithFold(row1List, activeCat1.links, activeCat1.id, 2);
                 row1Panel.classList.add("show");
@@ -436,14 +576,16 @@ function renderChinhKhoaSection() {
         row2Bar.innerHTML = "";
         row2Cats.forEach(cat => {
             const isActive = (activeChinhKhoaRow2CatId === cat.id);
+            const theme = getCategoryTheme(cat.id);
             const btn = document.createElement("button");
             btn.type = "button";
-            let customCls = "";
-            if (cat.id === "lop-11e") customCls = " lop11e-btn";
-            else if (cat.isGold) customCls = " hsg-gold-btn";
-            else if (cat.isPurple) customCls = " padlet-purple-btn";
+            btn.className = `dantri-nav-btn cat-btn-${cat.id}` + (isActive ? " active" : "");
+            btn.setAttribute("data-cat", cat.id);
+            btn.style.setProperty("--cat-theme", theme.color);
+            btn.style.setProperty("--cat-border", theme.border);
+            btn.style.setProperty("--cat-bg", theme.bgLight);
+            btn.style.setProperty("--cat-glow", theme.glow);
 
-            btn.className = "dantri-nav-btn" + customCls + (isActive ? " active" : "");
             btn.innerHTML = `<span>${cat.title}</span> <span class="caret-icon">${isActive ? "▲" : "▼"}</span>`;
             btn.onclick = () => {
                 activeChinhKhoaRow2CatId = (activeChinhKhoaRow2CatId === cat.id) ? null : cat.id;
@@ -455,8 +597,16 @@ function renderChinhKhoaSection() {
         row2List.innerHTML = "";
         if (!activeChinhKhoaRow2CatId) {
             row2Panel.classList.remove("show");
+            row2Panel.removeAttribute("data-theme-cat");
         } else {
             const activeCat2 = row2Cats.find(c => c.id === activeChinhKhoaRow2CatId);
+            const activeTheme2 = getCategoryTheme(activeChinhKhoaRow2CatId);
+            row2Panel.setAttribute("data-theme-cat", activeChinhKhoaRow2CatId);
+            row2Panel.style.setProperty("--cat-theme", activeTheme2.color);
+            row2Panel.style.setProperty("--cat-border", activeTheme2.border);
+            row2Panel.style.setProperty("--cat-bg", activeTheme2.bgLight);
+            row2Panel.style.setProperty("--cat-glow", activeTheme2.glow);
+
             if (activeCat2 && activeCat2.links && activeCat2.links.length > 0) {
                 renderLinksWithFold(row2List, activeCat2.links, activeCat2.id, 2);
                 row2Panel.classList.add("show");
@@ -518,7 +668,6 @@ function createItemCardElement(item, categoryId) {
     return wrapper.firstElementChild;
 }
 
-// HÀM LẤY NGÀY GIỜ HIỂN THỊ CHUẨN XÁC DƯỚI TIÊU ĐỀ
 function getItemDisplayDate(item) {
     if (!item) return "---";
     let rawDate = item.date || item.articleDate || "";
@@ -542,7 +691,6 @@ function getItemDisplayDate(item) {
     return "---";
 }
 
-// TEST THỬ ĐỀ CHO ADMIN
 function testExamAsAdmin(quizId, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const targetCat = categoryId || "them-11";
@@ -575,6 +723,8 @@ function buildCardHtmlString(item, categoryId) {
     const displayDate = getItemDisplayDate(item);
     const avatarSize = parseInt(item.avatarSize, 10) || 48;
 
+    const theme = getCategoryTheme(categoryId);
+
     let badgeClass = "badge-empty";
     if (badge === "HOT") badgeClass = "b-hot";
     else if (badge === "NEW") badgeClass = "b-new";
@@ -595,7 +745,7 @@ function buildCardHtmlString(item, categoryId) {
     let viewTestBtnHtml = "";
     if (!isDoc && isAdminLoggedIn) {
         viewTestBtnHtml = `
-            <button type="button" class="btn-test-exam-admin" onclick="testExamAsAdmin('${quizId}', '${categoryId}', event)" title="Test thử đề thi ngay lập tức" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1px solid #38bdf8; padding: 4px 9px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 4px rgba(2, 132, 199, 0.25); text-decoration: none; transition: 0.15s; white-space: nowrap;" onmouseover="this.style.filter='brightness(1.12)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.filter='none'; this.style.transform='none';">
+            <button type="button" class="btn-test-exam-admin" onclick="testExamAsAdmin('${quizId}', '${categoryId}', event)" title="Test thử đề thi ngay lập tức">
                 🚀 View đề
             </button>
         `;
@@ -604,7 +754,7 @@ function buildCardHtmlString(item, categoryId) {
     let reviewBtnHtml = "";
     if (!isDoc && item.allowReviewOriginal) {
         reviewBtnHtml = `
-            <a href="thi.html?id=${quizId}&review=1" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:800; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:4px 8px; border-radius:6px; text-decoration:none; box-shadow:0 1px 3px rgba(5,150,105,0.15); transition: 0.15s; white-space: nowrap;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
+            <a href="thi.html?id=${quizId}&review=1" target="_blank" onclick="event.stopPropagation()" class="btn-review-original-tag">
                 📖 Xem Đ.Á Gốc
             </a>
         `;
@@ -660,9 +810,11 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
+    const customThemeVars = `style="--card-cat-color: ${theme.color}; --card-cat-bg: ${theme.bgLight}; --card-cat-border: ${theme.border};"`;
+
     if (isAdminLoggedIn) {
         return `
-        <div class="exam-card admin-card-mode" id="card-${itemId}">
+        <div class="exam-card admin-card-mode" id="card-${itemId}" ${customThemeVars}>
             <div class="admin-card-top-row">
                 <div class="left-admin-actions-col">
                     ${!isDoc ? `
@@ -792,7 +944,7 @@ function buildCardHtmlString(item, categoryId) {
     }
 
     return `
-    <div class="exam-card" id="card-${itemId}" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
+    <div class="exam-card" id="card-${itemId}" ${customThemeVars} onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
         <div class="exam-thumb-box" style="width: ${avatarSize}px; height: ${avatarSize}px;">
             <img src="${avatar}" class="exam-thumb" alt="icon">
         </div>
@@ -841,7 +993,6 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
     openStudentLoginModal(item, categoryId, event);
 }
 
-// CÔNG TẮC BẬT TẮT SĨ SỐ PHÒNG THI
 async function handleShowOnlineCountToggleChange(categoryId, itemId, quizId, isChecked, event) {
     if (event) event.stopPropagation();
     
@@ -871,10 +1022,6 @@ async function handleShowOnlineCountToggleChange(categoryId, itemId, quizId, isC
         }
     } catch(e) { console.error(e); }
 }
-
-// =========================================================
-// QUẢN LÝ AVATAR: 20 AVATAR MẪU, ĐỔI CỠ VÀ TẢI TỪ MÁY TÍNH
-// =========================================================
 
 function openItemAvatarPicker(itemId, event) {
     if (!isAdminLoggedIn) return;
@@ -1194,9 +1341,6 @@ async function saveArticleToFirebase(event) {
     }
 }
 
-// ==========================================
-// MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
-// ==========================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -1365,10 +1509,6 @@ async function selectBadgeOption(categoryId, itemId, badgeType, event) {
         window.location.reload();
     } catch (e) { alert("Lỗi đổi badge!"); }
 }
-
-// =========================================================
-// THỐNG KÊ LƯỢT TRUY CẬP WEBSITE
-// =========================================================
 
 function getVNDateKey(d = new Date()) {
     const tzOffset = 7 * 60; const localTime = d.getTime(); const localOffset = d.getTimezoneOffset() * 60000;
