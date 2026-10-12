@@ -1,7 +1,7 @@
 // =========================================================
 // FILE: app-main.js
-// BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH, HỆ THỐNG MÀU NHẬN DIỆN & MỤC NHẮC NHỞ
-// ĐỒNG BỘ MÀU SẮC NỐI LIỀN GIỮA NÚT BẤM VÀ KHỐI ĐỀ THI
+// BỘ MÁY ĐIỀU HÀNH GIAO DIỆN CHÍNH & MỤC NHẮC NHỞ QUAN TRỌNG
+// TỐI ƯU HÓA: ĐỒNG BỘ MÀU SẮC NỐI LIỀN GIỮA NÚT LỚP VÀ KHUNG ĐỀ THI
 // =========================================================
 
 const safeLocal = {
@@ -15,109 +15,6 @@ const safeSession = {
     setItem(k, v) { try { sessionStorage.setItem(k, v); } catch(e) {} },
     removeItem(k) { try { localStorage.removeItem(k); } catch(e) {} }
 };
-
-// BẢNG MÃ MÀU BÓNG BẨY CHUYÊN NGHIỆP TỪNG LỚP/CHUYÊN MỤC
-const CATEGORY_THEME_PALETTE = {
-    "them-10": {
-        color: "#0284c7",
-        border: "#38bdf8",
-        bgLight: "#f0f9ff",
-        glow: "rgba(2, 132, 199, 0.25)",
-        gradient: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
-        name: "Thêm 10"
-    },
-    "them-11": {
-        color: "#ea580c",
-        border: "#fb923c",
-        bgLight: "#fff7ed",
-        glow: "rgba(234, 88, 12, 0.25)",
-        gradient: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)",
-        name: "Thêm 11"
-    },
-    "them-12": {
-        color: "#8b5cf6",
-        border: "#c084fc",
-        bgLight: "#faf5ff",
-        glow: "rgba(139, 92, 246, 0.25)",
-        gradient: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
-        name: "Thêm 12"
-    },
-    "lop-11a": {
-        color: "#10b981",
-        border: "#34d399",
-        bgLight: "#f0fdf4",
-        glow: "rgba(16, 185, 129, 0.25)",
-        gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-        name: "Lớp 11A"
-    },
-    "lop-11c": {
-        color: "#e11d48",
-        border: "#fb7185",
-        bgLight: "#fff1f2",
-        glow: "rgba(225, 29, 72, 0.25)",
-        gradient: "linear-gradient(135deg, #e11d48 0%, #be123c 100%)",
-        name: "Lớp 11C"
-    },
-    "lop-10p": {
-        color: "#d97706",
-        border: "#fbbf24",
-        bgLight: "#fffbeb",
-        glow: "rgba(217, 119, 6, 0.25)",
-        gradient: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
-        name: "Lớp 10P"
-    },
-    "lop-11e": {
-        color: "#0d9488",
-        border: "#2dd4bf",
-        bgLight: "#f0fdfa",
-        glow: "rgba(13, 148, 136, 0.25)",
-        gradient: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-        name: "Lớp 11E"
-    },
-    "hsg-toan-11": {
-        color: "#b45309",
-        border: "#fde047",
-        bgLight: "#fefce8",
-        glow: "rgba(180, 83, 9, 0.3)",
-        gradient: "linear-gradient(135deg, #f59e0b 0%, #b45309 100%)",
-        name: "HSG Toán 11"
-    },
-    "tu-luan-padlet": {
-        color: "#7c3aed",
-        border: "#d8b4fe",
-        bgLight: "#f5f3ff",
-        glow: "rgba(124, 58, 237, 0.28)",
-        gradient: "linear-gradient(135deg, #9333ea 0%, #6b21a8 100%)",
-        name: "Nộp tự luận Padlet"
-    },
-    "nhac-nho": {
-        color: "#e11d48",
-        border: "#fecdd3",
-        bgLight: "#fff1f2",
-        glow: "rgba(225, 29, 72, 0.2)",
-        gradient: "linear-gradient(135deg, #e11d48 0%, #be123c 100%)",
-        name: "Nhắc nhở"
-    },
-    "kho-tai-lieu": {
-        color: "#0284c7",
-        border: "#bae6fd",
-        bgLight: "#f0f9ff",
-        glow: "rgba(2, 132, 199, 0.2)",
-        gradient: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
-        name: "Kho tài liệu"
-    }
-};
-
-function getCategoryTheme(catId) {
-    return CATEGORY_THEME_PALETTE[catId] || {
-        color: "#0284c7",
-        border: "#38bdf8",
-        bgLight: "#f0f9ff",
-        glow: "rgba(2, 132, 199, 0.2)",
-        gradient: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
-        name: catId
-    };
-}
 
 let activeDayThemCatId = null;
 let activeChinhKhoaRow1CatId = null;
@@ -380,12 +277,9 @@ function renderReminderSection() {
     renderLinksWithFold(container, links, "nhac-nho", 2);
 }
 
-// HÀM RENDER LINK CÓ NỐI LIỀN MÀU THEME CỦA LỚP
 function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
     if (!container) return;
     container.innerHTML = "";
-
-    const theme = getCategoryTheme(categoryId);
 
     if (!links || links.length === 0) {
         container.innerHTML = `<div class="empty-folder">Chưa có bài tập hoặc tài liệu nào trong mục này.</div>`;
@@ -431,19 +325,16 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
         toggleBtn.style.justifyContent = "center";
         toggleBtn.style.gap = "6px";
         toggleBtn.style.margin = "8px 0 0 0";
-        toggleBtn.style.padding = "10px 14px";
+        toggleBtn.style.padding = "9px 14px";
         toggleBtn.style.borderRadius = "12px";
-        toggleBtn.style.border = `1.5px dashed ${theme.border}`;
-        toggleBtn.style.background = theme.bgLight;
-        toggleBtn.style.color = theme.color;
         toggleBtn.style.fontWeight = "800";
         toggleBtn.style.fontSize = "13px";
         toggleBtn.style.cursor = "pointer";
-        toggleBtn.style.transition = "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)";
+        toggleBtn.style.transition = "all 0.15s ease";
 
         toggleBtn.innerHTML = isExpanded 
             ? `▲ Thu gọn lại (${remainingCount} mục)` 
-            : `▼ Mở rộng xem tiếp ${remainingCount} mục còn lại`;
+            : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
 
         toggleBtn.onclick = (e) => {
             e.stopPropagation();
@@ -452,7 +343,7 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
             hiddenBox.style.display = nowExpanded ? "flex" : "none";
             toggleBtn.innerHTML = nowExpanded 
                 ? `▲ Thu gọn lại (${remainingCount} mục)` 
-                : `▼ Mở rộng xem tiếp ${remainingCount} mục còn lại`;
+                : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
         };
 
         foldWrapper.appendChild(hiddenBox);
@@ -461,7 +352,7 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
     }
 }
 
-// CẬP NHẬT GIAO DIỆN NÚT DẠY THÊM & NỐI LIỀN MÀU SẮC
+// CẬP NHẬT GIAO DIỆN DẠY THÊM: GÁN CLASS NHẬN DIỆN MÀU CHO DROPDOWN
 function renderDayThemSection() {
     const bar = document.getElementById("daythem-nav-bar");
     const panel = document.getElementById("daythem-dropdown-panel");
@@ -471,16 +362,9 @@ function renderDayThemSection() {
     bar.innerHTML = "";
     DAY_THEM_CATEGORIES.forEach(cat => {
         const isActive = (activeDayThemCatId === cat.id);
-        const theme = getCategoryTheme(cat.id);
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = `dantri-nav-btn cat-btn-${cat.id}` + (isActive ? " active" : "");
-        btn.setAttribute("data-cat", cat.id);
-        btn.style.setProperty("--cat-theme", theme.color);
-        btn.style.setProperty("--cat-border", theme.border);
-        btn.style.setProperty("--cat-bg", theme.bgLight);
-        btn.style.setProperty("--cat-glow", theme.glow);
-
         btn.innerHTML = `<span>${cat.title}</span> <span class="caret-icon">${isActive ? "▲" : "▼"}</span>`;
         btn.onclick = () => {
             activeDayThemCatId = (activeDayThemCatId === cat.id) ? null : cat.id;
@@ -491,31 +375,22 @@ function renderDayThemSection() {
 
     list.innerHTML = "";
     if (!activeDayThemCatId) { 
-        panel.classList.remove("show"); 
-        panel.removeAttribute("data-theme-cat");
+        panel.className = "dantri-dropdown-panel";
         return; 
     }
 
     const activeCat = DAY_THEM_CATEGORIES.find(c => c.id === activeDayThemCatId);
-    const activeTheme = getCategoryTheme(activeDayThemCatId);
-    
-    // NỐI LIỀN MÀU PANEL VỚI NÚT ĐANG CHỌN
-    panel.setAttribute("data-theme-cat", activeDayThemCatId);
-    panel.style.setProperty("--cat-theme", activeTheme.color);
-    panel.style.setProperty("--cat-border", activeTheme.border);
-    panel.style.setProperty("--cat-bg", activeTheme.bgLight);
-    panel.style.setProperty("--cat-glow", activeTheme.glow);
+    // GÁN CLASS MÀU CHO BẢNG DROPDOWN NỐI LIỀN
+    panel.className = `dantri-dropdown-panel show cat-theme-${activeDayThemCatId}`;
 
     if (activeCat && activeCat.links && activeCat.links.length > 0) {
         renderLinksWithFold(list, activeCat.links, activeCat.id, 2);
-        panel.classList.add("show");
     } else {
         list.innerHTML = `<div class="empty-folder">Chưa có bài kiểm tra nào trong mục này.</div>`;
-        panel.classList.add("show");
     }
 }
 
-// CẬP NHẬT GIAO DIỆN NÚT CHÍNH KHÓA & NỐI LIỀN MÀU SẮC
+// CẬP NHẬT GIAO DIỆN CHÍNH KHÓA: GÁN CLASS NHẬN DIỆN MÀU CHO DROPDOWN
 function renderChinhKhoaSection() {
     const row1Bar = document.getElementById("chinhkhoa-row1-bar");
     const row1Panel = document.getElementById("chinhkhoa-row1-dropdown");
@@ -526,16 +401,9 @@ function renderChinhKhoaSection() {
         row1Bar.innerHTML = "";
         row1Cats.forEach(cat => {
             const isActive = (activeChinhKhoaRow1CatId === cat.id);
-            const theme = getCategoryTheme(cat.id);
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = `dantri-nav-btn cat-btn-${cat.id}` + (isActive ? " active" : "");
-            btn.setAttribute("data-cat", cat.id);
-            btn.style.setProperty("--cat-theme", theme.color);
-            btn.style.setProperty("--cat-border", theme.border);
-            btn.style.setProperty("--cat-bg", theme.bgLight);
-            btn.style.setProperty("--cat-glow", theme.glow);
-
             btn.innerHTML = `<span>${cat.title}</span> <span class="caret-icon">${isActive ? "▲" : "▼"}</span>`;
             btn.onclick = () => {
                 activeChinhKhoaRow1CatId = (activeChinhKhoaRow1CatId === cat.id) ? null : cat.id;
@@ -546,23 +414,14 @@ function renderChinhKhoaSection() {
 
         row1List.innerHTML = "";
         if (!activeChinhKhoaRow1CatId) {
-            row1Panel.classList.remove("show");
-            row1Panel.removeAttribute("data-theme-cat");
+            row1Panel.className = "dantri-dropdown-panel";
         } else {
             const activeCat1 = row1Cats.find(c => c.id === activeChinhKhoaRow1CatId);
-            const activeTheme1 = getCategoryTheme(activeChinhKhoaRow1CatId);
-            row1Panel.setAttribute("data-theme-cat", activeChinhKhoaRow1CatId);
-            row1Panel.style.setProperty("--cat-theme", activeTheme1.color);
-            row1Panel.style.setProperty("--cat-border", activeTheme1.border);
-            row1Panel.style.setProperty("--cat-bg", activeTheme1.bgLight);
-            row1Panel.style.setProperty("--cat-glow", activeTheme1.glow);
-
+            row1Panel.className = `dantri-dropdown-panel show cat-theme-${activeChinhKhoaRow1CatId}`;
             if (activeCat1 && activeCat1.links && activeCat1.links.length > 0) {
                 renderLinksWithFold(row1List, activeCat1.links, activeCat1.id, 2);
-                row1Panel.classList.add("show");
             } else {
                 row1List.innerHTML = `<div class="empty-folder">Chưa có bài tập cho lớp này.</div>`;
-                row1Panel.classList.add("show");
             }
         }
     }
@@ -576,16 +435,14 @@ function renderChinhKhoaSection() {
         row2Bar.innerHTML = "";
         row2Cats.forEach(cat => {
             const isActive = (activeChinhKhoaRow2CatId === cat.id);
-            const theme = getCategoryTheme(cat.id);
             const btn = document.createElement("button");
             btn.type = "button";
-            btn.className = `dantri-nav-btn cat-btn-${cat.id}` + (isActive ? " active" : "");
-            btn.setAttribute("data-cat", cat.id);
-            btn.style.setProperty("--cat-theme", theme.color);
-            btn.style.setProperty("--cat-border", theme.border);
-            btn.style.setProperty("--cat-bg", theme.bgLight);
-            btn.style.setProperty("--cat-glow", theme.glow);
+            let customCls = ` cat-btn-${cat.id}`;
+            if (cat.id === "lop-11e") customCls += " lop11e-btn";
+            else if (cat.isGold) customCls += " hsg-gold-btn";
+            else if (cat.isPurple) customCls += " padlet-purple-btn";
 
+            btn.className = "dantri-nav-btn" + customCls + (isActive ? " active" : "");
             btn.innerHTML = `<span>${cat.title}</span> <span class="caret-icon">${isActive ? "▲" : "▼"}</span>`;
             btn.onclick = () => {
                 activeChinhKhoaRow2CatId = (activeChinhKhoaRow2CatId === cat.id) ? null : cat.id;
@@ -596,23 +453,14 @@ function renderChinhKhoaSection() {
 
         row2List.innerHTML = "";
         if (!activeChinhKhoaRow2CatId) {
-            row2Panel.classList.remove("show");
-            row2Panel.removeAttribute("data-theme-cat");
+            row2Panel.className = "dantri-dropdown-panel";
         } else {
             const activeCat2 = row2Cats.find(c => c.id === activeChinhKhoaRow2CatId);
-            const activeTheme2 = getCategoryTheme(activeChinhKhoaRow2CatId);
-            row2Panel.setAttribute("data-theme-cat", activeChinhKhoaRow2CatId);
-            row2Panel.style.setProperty("--cat-theme", activeTheme2.color);
-            row2Panel.style.setProperty("--cat-border", activeTheme2.border);
-            row2Panel.style.setProperty("--cat-bg", activeTheme2.bgLight);
-            row2Panel.style.setProperty("--cat-glow", activeTheme2.glow);
-
+            row2Panel.className = `dantri-dropdown-panel show cat-theme-${activeChinhKhoaRow2CatId}`;
             if (activeCat2 && activeCat2.links && activeCat2.links.length > 0) {
                 renderLinksWithFold(row2List, activeCat2.links, activeCat2.id, 2);
-                row2Panel.classList.add("show");
             } else {
                 row2List.innerHTML = `<div class="empty-folder">Chưa có nội dung trong chuyên mục này.</div>`;
-                row2Panel.classList.add("show");
             }
         }
     }
@@ -623,7 +471,7 @@ function renderKhoTaiLieuSection() {
     if (!container) return;
 
     container.innerHTML = `
-        <details class="folder-section" open>
+        <details class="folder-section cat-theme-kho-tai-lieu" open>
             <summary class="folder-header">
                 <img src="${KHO_TAI_LIEU_FOLDER.folderAvatar}" class="folder-avatar" alt="Kho tài liệu">
                 <h3 class="folder-title">${KHO_TAI_LIEU_FOLDER.folderName}</h3>
@@ -723,8 +571,6 @@ function buildCardHtmlString(item, categoryId) {
     const displayDate = getItemDisplayDate(item);
     const avatarSize = parseInt(item.avatarSize, 10) || 48;
 
-    const theme = getCategoryTheme(categoryId);
-
     let badgeClass = "badge-empty";
     if (badge === "HOT") badgeClass = "b-hot";
     else if (badge === "NEW") badgeClass = "b-new";
@@ -754,7 +600,7 @@ function buildCardHtmlString(item, categoryId) {
     let reviewBtnHtml = "";
     if (!isDoc && item.allowReviewOriginal) {
         reviewBtnHtml = `
-            <a href="thi.html?id=${quizId}&review=1" target="_blank" onclick="event.stopPropagation()" class="btn-review-original-tag">
+            <a href="thi.html?id=${quizId}&review=1" target="_blank" onclick="event.stopPropagation()" class="btn-review-origin-tag">
                 📖 Xem Đ.Á Gốc
             </a>
         `;
@@ -810,11 +656,9 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
-    const customThemeVars = `style="--card-cat-color: ${theme.color}; --card-cat-bg: ${theme.bgLight}; --card-cat-border: ${theme.border};"`;
-
     if (isAdminLoggedIn) {
         return `
-        <div class="exam-card admin-card-mode" id="card-${itemId}" ${customThemeVars}>
+        <div class="exam-card admin-card-mode" id="card-${itemId}">
             <div class="admin-card-top-row">
                 <div class="left-admin-actions-col">
                     ${!isDoc ? `
@@ -944,7 +788,7 @@ function buildCardHtmlString(item, categoryId) {
     }
 
     return `
-    <div class="exam-card" id="card-${itemId}" ${customThemeVars} onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
+    <div class="exam-card" id="card-${itemId}" onclick="handleCardClick('${categoryId}', '${itemId}', ${isDoc}, '${encodeURIComponent(item.url || '')}', '${encodedData}', event)">
         <div class="exam-thumb-box" style="width: ${avatarSize}px; height: ${avatarSize}px;">
             <img src="${avatar}" class="exam-thumb" alt="icon">
         </div>
@@ -993,6 +837,7 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
     openStudentLoginModal(item, categoryId, event);
 }
 
+// CÔNG TẮC BẬT TẮT SĨ SỐ PHÒNG THI
 async function handleShowOnlineCountToggleChange(categoryId, itemId, quizId, isChecked, event) {
     if (event) event.stopPropagation();
     
@@ -1341,6 +1186,7 @@ async function saveArticleToFirebase(event) {
     }
 }
 
+// MODAL ĐĂNG NHẬP LÀM BÀI CHO HỌC SINH
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
