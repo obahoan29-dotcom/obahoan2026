@@ -2,12 +2,16 @@
 // FILE: thi-service.js
 // QUẢN LÝ KẾT NỐI MẠNG, FIREBASE REALTIME, PRESENCE, 
 // THEO DÕI ĐỔI THỜI GIAN, GIÁM SÁT TAB GIAN LẬN & HÀNG ĐỢI NỘP BÀI
-// ĐÃ BẢO MẬT: TỐI ƯU CỰC ĐẠI BĂNG THÔNG SSE VÀ PRESENCE
+// CẬP NHẬT: TÙY CHỌN TẢI FILE VỀ MÁY HOẶC GỬI QUA ZALO / MESSENGER
 // =========================================================
 
 const URL1_TAB_CHEATING = "https://script.google.com/macros/s/AKfycbzAPaLBO8gjPdbzrXOhvChUMzBHsnrhIMbJQIsDhqFtNfsW2Rf1Dki-bYJf-YCM-CCU/exec";
 const URL2_EXAM_RESULT  = "https://script.google.com/macros/s/AKfycbx4ezz_9YOZKt9-idYUKz8N1dXg-LeIG-_UknLYKBVZJpxCJRx3yNHwfdWEQp-yhOISog/exec";
 const FIREBASE_DB_URL   = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+// Thầy có thể điền link Zalo / Messenger cá nhân hoặc nhóm nếu muốn mở đích danh (để trống sẽ mở trang chủ ứng dụng)
+const TEACHER_ZALO_LINK = ""; // Ví dụ: "https://zalo.me/09xxxxxxxx"
+const TEACHER_MESSENGER_LINK = ""; // Ví dụ: "https://m.me/ten_facebook_cua_thay"
 
 const safeLocal = {
     getItem(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
@@ -350,7 +354,13 @@ function getStorageKey() { return `exam_autosave_active_session_${EXAM_NAME}_${g
 function checkPendingSubmissionOnLoad() { 
     try { 
         const raw = safeLocal.getItem("pending_exam_submission"); 
-        if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.studentName) { pendingSubmissionPayload = parsed; document.getElementById("pending-resend-bar").style.display = "block"; } } 
+        if (raw) { 
+            const parsed = JSON.parse(raw); 
+            if (parsed && (parsed.studentName || parsed.studentId)) { 
+                pendingSubmissionPayload = parsed; 
+                document.getElementById("pending-resend-bar").style.display = "block"; 
+            } 
+        } 
     } catch(e) {} 
 }
 function dismissPendingBar() { document.getElementById("pending-resend-bar").style.display = "none"; }
@@ -381,15 +391,157 @@ function sendTabSwitchLog(switchCount, durationStr, durationSec = 0) {
     fetch(`${FIREBASE_DB_URL}/exams/${getExamCode()}/cheating_logs.json`, { method: 'POST', body: JSON.stringify(payload) }).catch(e=>{}); 
 }
 
-function savePendingSubmissionToFile() { 
-    if (!pendingSubmissionPayload) return; 
-    safeLocal.setItem("pending_exam_submission", JSON.stringify(pendingSubmissionPayload)); 
-    const blob = new Blob([JSON.stringify(pendingSubmissionPayload, null, 2)], { type: "application/json;charset=utf-8" }); 
-    const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `BaiLam_${pendingSubmissionPayload.studentId}_${pendingSubmissionPayload.studentName}.json`; 
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); alert("✅ Đã lưu file bài làm tạm!"); 
+// =========================================================
+// CƠ CHẾ QUẢN LÝ LƯU & GỬI BÀI LÀM QUA ZALO / MESSENGER / TẢI VỀ MÁY
+// =========================================================
+function getPendingPayloadOrRebuild() {
+    if (pendingSubmissionPayload) return pendingSubmissionPayload;
+    try {
+        const raw = safeLocal.getItem("pending_exam_submission");
+        if (raw) {
+            pendingSubmissionPayload = JSON.parse(raw);
+            return pendingSubmissionPayload;
+        }
+    } catch(e) {}
+    return null;
 }
 
-function downloadPendingSubmissionFile() { savePendingSubmissionToFile(); }
+function getSubmissionBlobAndFileName(payload) {
+    if (!payload) return null;
+    const jsonStr = JSON.stringify(payload, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+    const sId = (payload.studentId || "sbd").replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF]/g, '_');
+    const sName = (payload.studentName || "hocsinh").replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF]/g, '_');
+    const fileName = `BaiLam_${sId}_${sName}.json`;
+    return { blob, fileName, jsonStr };
+}
+
+function executeBrowserFileDownload(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+    } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch(e) {}
+        document.body.removeChild(ta);
+    }
+}
+
+function openExportShareModal() {
+    const modal = document.getElementById("export-share-modal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeExportShareModal() {
+    const modal = document.getElementById("export-share-modal");
+    if (modal) modal.style.display = "none";
+}
+
+// Hàm được gọi khi bấm nút "💾 Tải file" trên thanh vàng hoặc modal lỗi
+function downloadPendingSubmissionFile() {
+    const payload = getPendingPayloadOrRebuild();
+    if (!payload) {
+        alert("⚠️ Chưa tìm thấy dữ liệu bài làm tạm để lưu!");
+        return;
+    }
+    openExportShareModal();
+}
+
+// 1. Tùy chọn tải trực tiếp về thiết bị
+function actionDownloadJsonDirectly() {
+    const payload = getPendingPayloadOrRebuild();
+    if (!payload) return;
+    const fileInfo = getSubmissionBlobAndFileName(payload);
+    if (!fileInfo) return;
+    executeBrowserFileDownload(fileInfo.blob, fileInfo.fileName);
+    alert(`✅ ĐÃ LƯU THÀNH CÔNG!\n\nFile "${fileInfo.fileName}" đã được tải về máy của bạn.\nHãy giữ file này gửi cho giáo viên để làm bằng chứng tính điểm.`);
+    closeExportShareModal();
+}
+
+// 2. Tùy chọn chia sẻ trực tiếp (Mobile Native Share: Zalo, Messenger, Gmail, Drive...)
+async function actionShareNativeApp() {
+    const payload = getPendingPayloadOrRebuild();
+    if (!payload) return;
+    const fileInfo = getSubmissionBlobAndFileName(payload);
+    if (!fileInfo) return;
+
+    try {
+        const fileObj = new File([fileInfo.blob], fileInfo.fileName, { type: "application/json" });
+        if (navigator.canShare && navigator.canShare({ files: [fileObj] })) {
+            await navigator.share({
+                title: `Bài thi ${payload.studentName}`,
+                text: `Thưa thầy/cô, em gửi file bài làm: ${payload.examName || 'Bài thi'} (Họ tên: ${payload.studentName} - SBD: ${payload.studentId} - Lớp: ${payload.studentClass}).`,
+                files: [fileObj]
+            });
+            closeExportShareModal();
+            return;
+        }
+    } catch(err) {
+        if (err.name !== 'AbortError') {
+            console.warn("Lỗi Web Share API:", err);
+        } else {
+            return; // Học sinh tự hủy chọn share
+        }
+    }
+
+    // Nếu trình duyệt (hoặc máy tính) không hỗ trợ share file trực tiếp, tự động tải về và hướng dẫn
+    actionDownloadJsonDirectly();
+}
+
+// 3. Tùy chọn gửi qua Zalo
+function actionSendViaZalo() {
+    const payload = getPendingPayloadOrRebuild();
+    if (!payload) return;
+    const fileInfo = getSubmissionBlobAndFileName(payload);
+    if (!fileInfo) return;
+
+    // Tự động tải file về máy trước để học sinh có sẵn file trong máy
+    executeBrowserFileDownload(fileInfo.blob, fileInfo.fileName);
+
+    const message = `Thưa thầy/cô, em gửi bài làm thi:\n- Đề thi: ${payload.examName || payload.examTitle || 'Đề thi'}\n- Họ và tên: ${payload.studentName}\n- SBD: ${payload.studentId} | Lớp: ${payload.studentClass}\n- Điểm làm bài: ${payload.score10 ?? '---'}đ\n(Em đã tải file "${fileInfo.fileName}" về máy, em gửi đính kèm cho thầy/cô ạ!)`;
+    copyTextToClipboard(message);
+
+    alert(`📋 ĐÃ CHUẨN BỊ XONG BÀI THI:\n\n1. File "${fileInfo.fileName}" đã được tải về máy của bạn.\n2. Lời nhắn bài thi đã được tự động COPY vào bộ nhớ đệm.\n\n👉 Hệ thống sẽ chuyển sang ZALO ngay bây giờ, bạn chỉ cần bấm Dán (Paste) tin nhắn và đính kèm gửi file vừa tải cho Thầy nhé!`);
+
+    closeExportShareModal();
+    const zaloUrl = TEACHER_ZALO_LINK || "https://zalo.me";
+    window.open(zaloUrl, "_blank");
+}
+
+// 4. Tùy chọn gửi qua Messenger
+function actionSendViaMessenger() {
+    const payload = getPendingPayloadOrRebuild();
+    if (!payload) return;
+    const fileInfo = getSubmissionBlobAndFileName(payload);
+    if (!fileInfo) return;
+
+    // Tự động tải file về máy
+    executeBrowserFileDownload(fileInfo.blob, fileInfo.fileName);
+
+    const message = `Thưa thầy/cô, em gửi bài làm thi:\n- Đề thi: ${payload.examName || payload.examTitle || 'Đề thi'}\n- Họ và tên: ${payload.studentName}\n- SBD: ${payload.studentId} | Lớp: ${payload.studentClass}\n- Điểm làm bài: ${payload.score10 ?? '---'}đ\n(Em đã tải file "${fileInfo.fileName}" về máy, em gửi đính kèm cho thầy/cô ạ!)`;
+    copyTextToClipboard(message);
+
+    alert(`📋 ĐÃ CHUẨN BỊ XONG BÀI THI:\n\n1. File "${fileInfo.fileName}" đã được tải về máy của bạn.\n2. Lời nhắn bài thi đã được tự động COPY vào bộ nhớ đệm.\n\n👉 Hệ thống sẽ chuyển sang MESSENGER ngay bây giờ, bạn chỉ việc Dán (Paste) và gửi file vừa tải cho Thầy nhé!`);
+
+    closeExportShareModal();
+    const fbUrl = TEACHER_MESSENGER_LINK || "https://m.me";
+    window.open(fbUrl, "_blank");
+}
 
 function retrySubmitPending() { 
     if (!pendingSubmissionPayload) { try { const raw = safeLocal.getItem("pending_exam_submission"); if (raw) pendingSubmissionPayload = JSON.parse(raw); } catch(e) {} } 
@@ -401,5 +553,7 @@ function retrySubmitPending() {
         fetch(`${FIREBASE_DB_URL}/exams/${getExamCode()}/submissions.json`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pendingSubmissionPayload) })
     ]).then(() => { 
         safeLocal.removeItem("pending_exam_submission"); pendingSubmissionPayload = null; document.getElementById("pending-resend-bar").style.display = "none"; alert("✅ Đã gửi lại dữ liệu thành công!"); 
-    }).catch((err) => { infoText.innerText = "⚠️ Lỗi khi gửi lại! Vui lòng tải file và gửi cho giáo viên."; }); 
+    }).catch((err) => { 
+        infoText.innerText = "⚠️ Lỗi khi gửi lại! Vui lòng bấm 'Tải file' để gửi qua Zalo/Messenger cho giáo viên."; 
+    }); 
 }
