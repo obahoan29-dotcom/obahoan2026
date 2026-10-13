@@ -1,8 +1,10 @@
 // =========================================================
 // FILE: app-results.js
-// QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ & XUẤT BÁO CÁO EXCEL
+// QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ, XUẤT BÁO CÁO EXCEL
+// & NẠP BÀI LÀM TỪ FILE JSON DỰ PHÒNG CỦA HỌC SINH NỘP SÓT
 // TỐI ƯU HÓA: Cập nhật Auto-refresh 15s/lần, truy vấn tối giản
 // CẬP NHẬT: Nút Xóa tác động xóa vĩnh viễn trực tiếp lên Firebase
+// CẬP NHẬT: Nút Upload JSON nộp sót - Ghi trực tiếp Firebase và hiện tức thì
 // =========================================================
 
 let currentExamResultData = {
@@ -1438,6 +1440,129 @@ async function processRegradeWithAnswers() {
     } catch(err) {
         console.error("Lỗi khi chấm lại bài:", err); alert("❌ Lỗi trong quá trình chấm lại: " + err.message);
     } finally { btn.disabled = false; btn.innerText = "🚀 Chấm lại ngay"; }
+}
+
+// =========================================================
+// CHỨC NĂNG: NẠP BÀI LÀM TỪ FILE JSON DỰ PHÒNG CỦA HỌC SINH NỘP SÓT
+// =========================================================
+function triggerUploadBackupJson(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const fileInput = document.getElementById("input-upload-backup-json");
+    if (fileInput) {
+        fileInput.value = ""; // Reset để có thể chọn lại file cùng tên
+        fileInput.click();
+    }
+}
+
+function readFileTextInternalAsync(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = err => reject(err);
+        reader.readAsText(file);
+    });
+}
+
+async function handleBackupJsonFileInput(inputEl) {
+    if (!inputEl.files || inputEl.files.length === 0) return;
+    const file = inputEl.files[0];
+
+    const btn = document.getElementById("btn-upload-json-backup");
+    let oldBtnText = "📥 Upload JSON nộp sót";
+    if (btn) {
+        oldBtnText = btn.innerHTML;
+        btn.innerHTML = "⏳ Đang nạp...";
+        btn.style.opacity = "0.7";
+        btn.style.pointerEvents = "none";
+    }
+
+    try {
+        const fileContent = await readFileTextInternalAsync(file);
+        let payload = null;
+        try {
+            payload = JSON.parse(fileContent);
+        } catch (jsonErr) {
+            throw new Error("File được chọn không đúng định dạng JSON hợp lệ!");
+        }
+
+        if (!payload || typeof payload !== 'object') {
+            throw new Error("Nội dung file JSON trống hoặc không hợp lệ!");
+        }
+
+        // Kiểm tra tính xác thực của dữ liệu bài làm
+        const studentName = payload.studentName || payload.name || "Học sinh";
+        const studentId = payload.studentId || payload.sbd || "---";
+        const studentClass = payload.studentClass || payload.className || "Tự do";
+
+        if (!payload.dataString && payload.score10 === undefined && !payload.calcMetrics) {
+            throw new Error("File JSON này không chứa dữ liệu câu trả lời hoặc điểm số của bài làm!");
+        }
+
+        const currentItem = currentExamResultData.item;
+        const currentTitle = (currentItem && currentItem.title) ? currentItem.title : "";
+        const fileExamTitle = payload.examName || payload.examTitle || "";
+
+        // Cảnh báo nếu tên đề thi trong file khác với đề đang xem
+        if (currentTitle && fileExamTitle) {
+            const normCur = normalizeName(currentTitle);
+            const normFile = normalizeName(fileExamTitle);
+            if (normCur && normFile && normCur !== normFile && !normCur.includes(normFile) && !normFile.includes(normCur)) {
+                const confirmDiff = confirm(`⚠️ CẢNH BÁO ĐỀ THI KHÁC NHAU:\n\n- Đề đang xem: "${currentTitle}"\n- Đề trong file: "${fileExamTitle}"\n\nBạn có CHẮC CHẮN muốn nạp bài làm của "${studentName}" (${studentId}) vào bảng kết quả của đề đang xem không?`);
+                if (!confirmDiff) {
+                    return;
+                }
+            }
+        }
+
+        // Xác định chính xác nodeCode để ghi vào Firebase
+        let targetCode = cleanExamCodeKey(payload.maDe);
+        if (!targetCode && currentItem) {
+            targetCode = cleanExamCodeKey(currentItem.maDe || currentItem.title);
+        }
+        if (!targetCode && payload.quizId) {
+            targetCode = cleanExamCodeKey(payload.quizId);
+        }
+        if (!targetCode) targetCode = "101";
+
+        // Chuẩn hóa và đồng bộ các trường thời gian
+        payload.createdAt = payload.createdAt || Date.now();
+        payload.timestamp = payload.timestamp || formatDateTimeFull(payload.createdAt);
+        payload.studentName = studentName;
+        payload.studentId = studentId;
+        payload.sbd = studentId;
+        payload.studentClass = studentClass;
+        payload.className = studentClass;
+        payload.categoryId = payload.categoryId || payload.cat || currentExamResultData.categoryId || "them-11";
+        payload.cat = payload.categoryId;
+
+        // Đẩy bài làm trực tiếp lên Firebase
+        const uploadUrl = `${FIREBASE_DB_URL}/exams/${targetCode}/submissions.json`;
+        const fbRes = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!fbRes.ok) {
+            throw new Error(`Máy chủ Firebase phản hồi mã lỗi HTTP ${fbRes.status}`);
+        }
+
+        alert(`🎉 NẠP BÀI THÀNH CÔNG!\n\n- Thí sinh: ${studentName}\n- SBD: ${studentId} | Lớp: ${studentClass}\n- Điểm: ${payload.score10 ?? '---'}đ\n- Thời gian làm: ${payload.completionTime || '---'}\n\nBài thi đã được ghi nhận vào hệ thống và sẽ xuất hiện ngay trong bảng kết quả!`);
+
+        // Tự động tải lại bảng điểm và sắp xếp thứ tự
+        await refreshCurrentExamResults();
+
+    } catch (err) {
+        console.error("Lỗi khi nạp file JSON nộp sót:", err);
+        alert("❌ Lỗi khi nạp bài JSON: " + err.message);
+    } finally {
+        if (btn) {
+            btn.innerHTML = oldBtnText;
+            btn.style.opacity = "1";
+            btn.style.pointerEvents = "auto";
+        }
+        inputEl.value = "";
+    }
 }
 
 window.addEventListener("popstate", function(event) {
