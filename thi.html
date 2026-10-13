@@ -283,5 +283,62 @@
         </div>
     </div>
 
+    <!-- MODAL TÙY CHỌN: TẢI FILE HOẶC GỬI QUA ZALO / MESSENGER -->
+    <div class="modal-overlay" id="export-share-modal">
+        <div class="modal-box share-export-modal-card">
+            <div class="share-modal-header">
+                <div class="share-modal-icon">📤</div>
+                <div>
+                    <h3 class="share-modal-title">Lưu & Gửi Bài Làm Dự Phòng</h3>
+                    <p class="share-modal-subtitle">Chọn hình thức gửi bài cho thầy giáo để được ghi nhận điểm</p>
+                </div>
+            </div>
+
+            <div class="share-options-list">
+                <!-- NÚT 1: TẢI FILE VỀ THIẾT BỊ -->
+                <button type="button" class="btn-share-option btn-opt-download" onclick="actionDownloadJsonDirectly()">
+                    <span class="share-opt-icon">💾</span>
+                    <div class="share-opt-text">
+                        <b>Tải file (.json) về máy</b>
+                        <span>Lưu file bài làm vào bộ nhớ điện thoại / máy tính</span>
+                    </div>
+                    <span class="share-opt-arrow">➔</span>
+                </button>
+
+                <!-- NÚT 2: CHIA SẺ TRỰC TIẾP QUA NATIVE SHARE (ZALO / MESSENGER / DRIVE) -->
+                <button type="button" class="btn-share-option btn-opt-native-share" id="btn-native-share-trigger" onclick="actionShareNativeApp()">
+                    <span class="share-opt-icon">🚀</span>
+                    <div class="share-opt-text">
+                        <b>Chia sẻ file qua App (Zalo / Messenger)</b>
+                        <span>Gửi đính kèm file trực tiếp vào cuộc trò chuyện</span>
+                    </div>
+                    <span class="share-opt-arrow">➔</span>
+                </button>
+
+                <!-- KHU VỰC XÒE TÙY CHỌN RIÊNG: ZALO / MESSENGER -->
+                <div class="share-direct-channels">
+                    <div class="share-channel-label">Hoặc mở nhanh ứng dụng gửi cho giáo viên:</div>
+                    <div class="share-channel-grid">
+                        <button type="button" class="btn-channel-btn btn-chan-zalo" onclick="actionSendViaZalo()">
+                            <span class="chan-icon">💬</span>
+                            <span>Mở Zalo</span>
+                        </button>
+                        <button type="button" class="btn-channel-btn btn-chan-messenger" onclick="actionSendViaMessenger()">
+                            <span class="chan-icon">⚡</span>
+                            <span>Mở Messenger</span>
+                        </button>
+                    </div>
+                    <div class="share-channel-tip">
+                        💡 <i>Hệ thống sẽ tự động tải sẵn file về máy và sao chép lời nhắn, bạn chỉ việc bấm gửi trong Zalo / Messenger.</i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="share-modal-footer">
+                <button type="button" class="btn-close-share-modal" onclick="closeExportShareModal()">Đóng cửa sổ</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
