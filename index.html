@@ -19,6 +19,43 @@
     <!-- CSS Giao diện -->
     <link rel="stylesheet" href="style.css">
 
+    <!-- Style bổ sung cho nút Upload JSON nộp sót -->
+    <style>
+        .btn-upload-json-backup {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 12.5px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+            transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, filter 0.16s ease;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .btn-upload-json-backup:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.08);
+            box-shadow: 0 6px 14px rgba(2, 132, 199, 0.4);
+        }
+        .btn-upload-json-backup:active {
+            transform: translateY(2px) scale(0.95) !important;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+            filter: brightness(0.92);
+        }
+        @media (max-width: 640px) {
+            .btn-upload-json-backup {
+                font-size: 11px !important;
+                padding: 6px 10px !important;
+            }
+        }
+    </style>
+
     <!-- Thư viện SheetJS xuất Excel .xlsx -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -497,6 +534,12 @@
                     </div>
                 </div>
             </div>
+
+            <!-- NÚT UPLOAD FILE JSON NỘP SÓT CẠNH NÚT CHẤM LẠI BÀI -->
+            <button type="button" class="btn-upload-json-backup" id="btn-upload-json-backup" onclick="triggerUploadBackupJson(event)" title="Nạp bài thi từ file JSON lưu dự phòng khi học sinh bị mất mạng không nộp được">
+                📥 Upload JSON nộp sót
+            </button>
+            <input type="file" id="input-upload-backup-json" accept=".json,application/json" style="display: none;" onchange="handleBackupJsonFileInput(this)">
 
             <button class="btn-export-excel" onclick="exportResultsToExcel()" title="Tải file Excel (.xlsx)">📥 Tải Excel (.xlsx)</button>
             
