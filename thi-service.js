@@ -11,7 +11,7 @@ const FIREBASE_DB_URL   = "https://obahoan40hethongthitracnghiem-default-rtdb.as
 
 // Thầy có thể điền link Zalo / Messenger cá nhân hoặc nhóm nếu muốn mở đích danh (để trống sẽ mở trang chủ ứng dụng)
 const TEACHER_ZALO_LINK = "https://zalo.me/0972952128"; // Ví dụ: "https://zalo.me/09xxxxxxxx"
-const TEACHER_MESSENGER_LINK = "https://www.facebook.com/share/19mL5tnHar/"; // Ví dụ: "https://m.me/ten_facebook_cua_thay"
+const TEACHER_MESSENGER_LINK = "https://m.me/?locale=vi_VN"; // Ví dụ: "https://m.me/ten_facebook_cua_thay"
 
 const safeLocal = {
     getItem(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
