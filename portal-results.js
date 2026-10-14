@@ -793,46 +793,14 @@ function toggleAttemptMenu(rowUid, event) {
     if (!isShown && menu) { menu.classList.add("show"); if (btn) btn.classList.add("active"); }
 }
 
-async function deleteResultRowPermanently(rowUid, event) {
+// XÓA TẠM THỜI DÒNG TRÊN BẢNG HIỂN THỊ, KHÔNG XÓA FIREBASE (BẤM CẬP NHẬT SẼ HIỆN LẠI)
+function deleteResultRowPermanently(rowUid, event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
     const rIdx = currentExamResultData.rawRows.findIndex(r => r._rowUid === rowUid);
     if (rIdx === -1) return;
-    const rowObj = currentExamResultData.rawRows[rIdx];
-    
-    const sName = rowObj.account?.name || "thí sinh này";
-    const currentSub = rowObj.allAttempts.length > 0 ? rowObj.allAttempts[rowObj.selectedAttemptIndex] : null;
-
-    if (!currentSub || !currentSub._keyId || !currentSub._nodeCode) {
-        alert(`⚠️ Thí sinh "${sName}" chưa nộp bài hoàn chỉnh để có thể xóa khỏi máy chủ!`);
-        return;
-    }
-
-    if (!confirm(`🧨 CẢNH BÁO NGUY HIỂM:\n\nBạn có CHẮC CHẮN muốn XÓA VĨNH VIỄN bài làm của học sinh "${sName}" khỏi máy chủ không?\n\n(Thao tác này KHÔNG THỂ KHÔI PHỤC)`)) {
-        return;
-    }
-
-    const targetBtn = event.currentTarget || event.target.closest('.btn-delete-result-row');
-    let oldText = "🗑️ Xóa";
-    if (targetBtn) {
-        oldText = targetBtn.innerHTML;
-        targetBtn.innerHTML = "⏳ Đang xóa...";
-        targetBtn.style.opacity = "0.7";
-        targetBtn.style.pointerEvents = "none";
-    }
-
-    try {
-        const url = `${FIREBASE_DB_URL}/exams/${currentSub._nodeCode}/submissions/${currentSub._keyId}.json`;
-        await fetch(url, { method: 'DELETE' });
-        alert(`✅ Đã xóa vĩnh viễn bài làm của "${sName}" khỏi hệ thống!`);
-        await refreshCurrentExamResults();
-    } catch (err) {
-        alert("❌ Có lỗi xảy ra khi xóa dữ liệu trên máy chủ: " + err.message);
-        if (targetBtn) {
-            targetBtn.innerHTML = oldText;
-            targetBtn.style.opacity = "1";
-            targetBtn.style.pointerEvents = "auto";
-        }
-    }
+    currentExamResultData.rawRows.splice(rIdx, 1);
+    calculateRanksForRows(currentExamResultData.rawRows);
+    updateStatsAndRenderTable(currentExamResultData.rawRows);
 }
 
 function ensureDeleteColumnHeader() {
@@ -956,7 +924,7 @@ function renderFilteredResultTable(rows) {
         let col_class = `<span class="class-badge">${rawClass}</span>`;
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
         let safeTitleCol10 = stripHtml(col10_cheatTime);
-        let col_action = `<button type="button" class="btn-delete-result-row" onclick="deleteResultRowPermanently('${uid}', event)" title="Xóa vĩnh viễn dữ liệu bài thi này khỏi hệ thống" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:3px 8px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:2px; transition:0.15s; box-shadow:0 1px 3px rgba(239,68,68,0.15);">🗑️ Xóa</button>`;
+        let col_action = `<button type="button" class="btn-delete-result-row" onclick="deleteResultRowPermanently('${uid}', event)" title="Ẩn tạm thời dòng này khỏi bảng (bấm Cập nhật để hiện lại)" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:3px 8px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:2px; transition:0.15s; box-shadow:0 1px 3px rgba(239,68,68,0.15);">🗑️ Xóa</button>`;
 
         tr.innerHTML = `<td class="td-stt">${col1_stt}</td><td class="td-exam-col" title="${currentExamTitle}">${col_examName}</td><td class="td-attempt-cell-wrap">${col_attemptCount}</td><td class="td-truncate" title="${stripHtml(col2_inTime)}">${col2_inTime}</td><td class="td-truncate" title="${stripHtml(col3_spentTime)}">${col3_spentTime}</td><td class="td-truncate" title="${rawName}">${col4_name}</td><td class="td-class td-truncate" title="${rawClass}">${col_class}</td><td class="td-sbd td-truncate" title="${col5_sbd}">${col5_sbd}</td><td style="text-align:center;">${col6_status}</td><td style="text-align:center;">${col7_correct}</td><td class="td-score">${col8_score}</td><td style="text-align:center;">${col_rank}</td><td class="td-tabs">${col9_tabs}</td><td class="td-tab-times td-truncate" title="${safeTitleCol10}">${col10_cheatTime}</td><td class="td-truncate">${col11_details}</td><td style="text-align:center;">${col_action}</td>`;
         tbody.appendChild(tr);
