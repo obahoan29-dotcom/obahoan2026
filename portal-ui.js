@@ -123,7 +123,6 @@ async function loadDataFromFirebase() {
                 allCats.forEach(cat => {
                     (cat.links || []).forEach(l => {
                         if (extractQuizIdFromItem(l) === qId) {
-                            // 1. Nạp từ file đề thi gốc (lấy đúng timeLimitMinutes: 90, ngày mở/đóng)
                             if (qData) {
                                 if (qData.timeLimitMinutes !== undefined && qData.timeLimitMinutes !== "") {
                                     l.timeLimitMinutes = qData.timeLimitMinutes;
@@ -137,7 +136,6 @@ async function loadDataFromFirebase() {
                                 if (qData.maDe) l.maDe = qData.maDe;
                             }
 
-                            // 2. Nếu giáo viên có cấu hình ghi đè từ bảng điều khiển thì ưu tiên áp dụng
                             if (cfg) {
                                 if (cfg.timeLimitMinutes !== undefined && cfg.timeLimitMinutes !== "") {
                                     l.timeLimitMinutes = cfg.timeLimitMinutes;
@@ -519,6 +517,7 @@ function getItemDisplayDate(item) {
     return "---";
 }
 
+// BỔ SUNG: Tham số &admin=1 để mở trang thi với đầy đủ công cụ upload/paste ảnh ImgBB cho Admin
 function testExamAsAdmin(quizId, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const targetCat = categoryId || "them-11";
@@ -534,7 +533,7 @@ function testExamAsAdmin(quizId, categoryId, event) {
             if (key && key.startsWith("exam_autosave_active_session_") && key.includes(quizId)) { safeLocal.removeItem(key); }
         }
     } catch(e) {}
-    window.open(`./thi.html?id=${quizId}&cat=${encodeURIComponent(targetCat)}&sbd=Trying&name=Obahoan29&class=42&autostart=1`, "_blank");
+    window.open(`./thi.html?id=${quizId}&cat=${encodeURIComponent(targetCat)}&sbd=Trying&name=Obahoan29&class=42&autostart=1&admin=1`, "_blank");
 }
 
 function buildCardHtmlString(item, categoryId) {
@@ -571,8 +570,8 @@ function buildCardHtmlString(item, categoryId) {
     let viewTestBtnHtml = "";
     if (!isDoc && isAdminLoggedIn) {
         viewTestBtnHtml = `
-            <button type="button" class="btn-test-exam-admin" onclick="testExamAsAdmin('${quizId}', '${categoryId}', event)" title="Test thử đề thi ngay lập tức">
-                🚀 View đề
+            <button type="button" class="btn-test-exam-admin" onclick="testExamAsAdmin('${quizId}', '${categoryId}', event)" title="Test thử đề thi & paste/upload ảnh trực tiếp">
+                🚀 View đề & Đổi ảnh
             </button>
         `;
     }
