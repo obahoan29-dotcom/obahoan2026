@@ -482,12 +482,11 @@
 
 <!-- ========================================================= -->
 <!-- MODAL TOÀN MÀN HÌNH: XEM BẢNG KẾT QUẢ THI CHO ADMIN      -->
-<!-- TỐI ƯU HÓA MOBILE: CO DÃN & THU PHÓNG SIÊU NHỎ NHƯ LAPTOP -->
 <!-- ========================================================= -->
 <div class="result-fullscreen-modal" id="result-fullscreen-modal">
     <div class="result-modal-header">
         <div class="result-modal-title-box">
-            <button type="button" id="btn-result-back-action" onclick="handleResultHeaderBack()">
+            <button type="button" id="btn-result-back-action" onclick="handleResultHeaderBack()" style="background:#e0f2fe; color:#0284c7; border:1.5px solid #7dd3fc; border-radius:10px; padding:7px 12px; font-weight:800; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:5px; flex-shrink:0;">
                 ← Quay lại
             </button>
             <div class="result-modal-icon">📊</div>
@@ -536,7 +535,7 @@
                 </div>
             </div>
 
-            <!-- NÚT UPLOAD FILE JSON NỘP SÓT -->
+            <!-- NÚT UPLOAD FILE JSON NỘP SÓT CẠNH NÚT CHẤM LẠI BÀI -->
             <button type="button" class="btn-upload-json-backup" id="btn-upload-json-backup" onclick="triggerUploadBackupJson(event)" title="Nạp bài thi từ file JSON lưu dự phòng khi học sinh bị mất mạng không nộp được">
                 📥 Upload JSON nộp sót
             </button>
@@ -545,38 +544,15 @@
             <button class="btn-export-excel" onclick="exportResultsToExcel()" title="Tải file Excel (.xlsx)">📥 Tải Excel (.xlsx)</button>
             
             <div class="table-settings-wrapper" id="table-settings-wrapper">
-                <button type="button" class="btn-table-settings" id="btn-table-settings" onclick="toggleTableSettingsPopover(event)" title="Tùy chỉnh cỡ chữ & thu nhỏ toàn bảng như laptop">
+                <button type="button" class="btn-table-settings" id="btn-table-settings" onclick="toggleTableSettingsPopover(event)" title="Tùy chỉnh cỡ chữ & khoảng cách giữa các dòng">
                     ⚙️
                 </button>
                 <div class="table-settings-popover" id="table-settings-popover">
                     <div class="settings-popover-header">
-                        <span>⚙️ Tùy chỉnh hiển thị & Thu phóng</span>
+                        <span>⚙️ Tùy chỉnh hiển thị bảng</span>
                         <button type="button" class="btn-close-settings" onclick="closeTableSettingsPopover(event)">✕</button>
                     </div>
 
-                    <!-- MỤC 1: THU PHÓNG TOÀN BẢNG (ZOOM SCALE) GIỐNG LAPTOP WINDOWS -->
-                    <div class="setting-item" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:10px; margin-bottom:12px;">
-                        <div class="setting-label-row">
-                            <span style="color:#166534; font-weight:800;">🔍 Thu phóng toàn bảng (Zoom):</span>
-                            <span class="setting-val-badge" id="val-zoom-scale" style="background:#dcfce7; color:#15803d;">100%</span>
-                        </div>
-                        <div class="slider-control-row">
-                            <button type="button" class="btn-step" onclick="adjustSetting('zoomScale', -10)" title="Thu nhỏ bảng">−</button>
-                            <input type="range" id="slider-zoom-scale" min="50" max="130" value="100" step="5" oninput="onZoomScaleChange(this.value)">
-                            <button type="button" class="btn-step" onclick="adjustSetting('zoomScale', 10)" title="Phóng to bảng">+</button>
-                        </div>
-                        <div class="preset-pills">
-                            <button type="button" class="preset-btn" onclick="applyZoomScalePreset(55)">Toàn cảnh (55%)</button>
-                            <button type="button" class="preset-btn" onclick="applyZoomScalePreset(75)">Gọn nhẹ (75%)</button>
-                            <button type="button" class="preset-btn" onclick="applyZoomScalePreset(100)">Chuẩn (100%)</button>
-                            <button type="button" class="preset-btn" onclick="applyZoomScalePreset(120)">Lớn (120%)</button>
-                        </div>
-                        <div style="font-size:10.5px; color:#15803d; margin-top:5px; font-style:italic;">
-                            💡 Bạn có thể dùng 2 ngón tay chụm / mở trực tiếp trên bảng để phóng to thu nhỏ tự do!
-                        </div>
-                    </div>
-
-                    <!-- MỤC 2: CỠ CHỮ -->
                     <div class="setting-item">
                         <div class="setting-label-row">
                             <span>🔤 Cỡ chữ hiển thị:</span>
@@ -584,18 +560,17 @@
                         </div>
                         <div class="slider-control-row">
                             <button type="button" class="btn-step" onclick="adjustSetting('fontSize', -1)" title="Giảm cỡ chữ">−</button>
-                            <input type="range" id="slider-font-size" min="7" max="22" value="13" step="1" oninput="onFontSizeChange(this.value)">
+                            <input type="range" id="slider-font-size" min="10" max="20" value="13" step="1" oninput="onFontSizeChange(this.value)">
                             <button type="button" class="btn-step" onclick="adjustSetting('fontSize', 1)" title="Tăng cỡ chữ">+</button>
                         </div>
                         <div class="preset-pills">
-                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(8)">Siêu nhỏ (8)</button>
-                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(10)">Nhỏ (10)</button>
+                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(11)">Nhỏ (11)</button>
                             <button type="button" class="preset-btn" onclick="applyFontSizePreset(13)">Chuẩn (13)</button>
-                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(16)">Lớn (16)</button>
+                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(15)">Lớn (15)</button>
+                            <button type="button" class="preset-btn" onclick="applyFontSizePreset(17)">Rất lớn (17)</button>
                         </div>
                     </div>
 
-                    <!-- MỤC 3: KHOẢNG CÁCH DÒNG -->
                     <div class="setting-item">
                         <div class="setting-label-row">
                             <span>↕️ Khoảng cách giữa các dòng:</span>
@@ -610,7 +585,8 @@
                             <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(0)">Sát nhất (0px)</button>
                             <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(3)">Gọn (3px)</button>
                             <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(9)">Chuẩn (9px)</button>
-                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(16)">Rộng (16px)</button>
+                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(14)">Rộng (14px)</button>
+                            <button type="button" class="preset-btn" onclick="applyRowPaddingPreset(18)">Rất rộng (18px)</button>
                         </div>
                     </div>
 
@@ -676,7 +652,7 @@
     <!-- VIEW 1: BẢNG DANH SÁCH KẾT QUẢ THI CHÍNH -->
     <div class="result-modal-body" id="result-modal-main-view">
         <div class="result-table-card">
-            <div class="result-table-scroll-wrap" id="result-table-scroll-wrap">
+            <div class="result-table-scroll-wrap">
                 <table class="result-table" id="admin-result-table">
                     <thead>
                         <tr>
@@ -801,6 +777,7 @@
 
 <!-- ========================================================= -->
 <!-- MODAL ĐĂNG NHẬP THI HỌC SINH                              -->
+<!-- ĐÃ TỐI ƯU CÁC THUỘC TÍNH BÀN PHÍM ẢO CHO IPHONE          -->
 <!-- ========================================================= -->
 <div class="move-modal-overlay" id="student-login-modal">
     <div class="student-login-box">
@@ -881,7 +858,9 @@
     </div>
 </div>
 
-<!-- MODAL CẤU HÌNH THỜI GIAN -->
+<!-- ========================================================= -->
+<!-- MODAL THAY ĐỔI THỜI GIAN THI & GIA HẠN LỊCH MỞ ĐỀ         -->
+<!-- ========================================================= -->
 <div class="move-modal-overlay" id="exam-time-modal">
     <div class="move-modal-box" style="width: 360px;">
         <h4 id="exam-time-modal-title">⏱ Cấu hình thời gian đề thi</h4>
