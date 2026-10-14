@@ -4,7 +4,7 @@
 // - Bọc kín toàn bộ dữ liệu nhạy cảm bên trong Closure, chống Console F12
 // - Memory Sanitization: Tách và mã hóa đáp án nội bộ, xóa sạch dấu vết trên RAM
 // - Tự động upload & dán ảnh Snipping Tool (Ctrl+V) qua API ImgBB cho Admin
-// - Đồng bộ thời gian thực lên Firebase Database
+// - Khắc phục 100% lỗi học sinh không thấy ảnh sau khi Admin dán
 // =========================================================
 
 (function(window, document) {
@@ -49,6 +49,43 @@
         return text.replace(/(^|[^:])\/\/\s*([^\r\n<]+)/g, function(match, prefix, content) {
             return prefix + '<span style="color: #78350f; font-weight: 800;">// ' + content.trim() + '</span>';
         });
+    }
+
+    // =========================================================
+    // HÀM TÌM ẢNH THÔNG MINH: ĐẢM BẢO HỌC SINH LUÔN THẤY ẢNH DÙ CÂU HỎI CÓ HAY KHÔNG CÓ imageKey
+    // =========================================================
+    function getEffectiveImageUrl(q, imageMap) {
+        if (!q) return "";
+        if (!imageMap || typeof imageMap !== 'object') imageMap = {};
+
+        // 1. Nếu trong câu hỏi đã có sẵn link trực tiếp
+        if (q.imageUrl && String(q.imageUrl).trim() !== "") {
+            return q.imageUrl.trim();
+        }
+
+        // 2. Tìm theo imageKey nếu có
+        if (q.imageKey && imageMap[q.imageKey] && String(imageMap[q.imageKey]).trim() !== "") {
+            return imageMap[q.imageKey].trim();
+        }
+
+        // 3. Tự động tìm theo các tiền tố do Admin dán trực tiếp trên web
+        const possibleKeys = [
+            `img_q_${q.id}`,
+            `q${q.id}`,
+            `${q.id}`,
+            `dh_p1_c${q.id}`,
+            `hy_p1_c${q.id}`,
+            `pbc_p1_c${q.id}`,
+            `dethem_p3_c${q.id}`
+        ];
+
+        for (let k of possibleKeys) {
+            if (imageMap[k] && String(imageMap[k]).trim() !== "") {
+                return imageMap[k].trim();
+            }
+        }
+
+        return "";
     }
 
     async function initExamEngine() {
@@ -324,7 +361,23 @@
             if (shouldShuffle) {
                 const cachedShuffle = safeLocal.getItem(shuffleKey);
                 if (cachedShuffle) {
-                    examData.questions = JSON.parse(cachedShuffle);
+                    try {
+                        const parsedQ = JSON.parse(cachedShuffle);
+                        // TỰ ĐỘNG ĐỒNG BỘ: Cập nhật link ảnh mới nhất từ Firebase vào bộ nhớ câu hỏi đã cache
+                        if (Array.isArray(parsedQ)) {
+                            parsedQ.forEach(q => {
+                                const freshUrl = getEffectiveImageUrl(q, examData.images || {});
+                                if (freshUrl) q.imageUrl = freshUrl;
+                            });
+                            examData.questions = parsedQ;
+                        } else {
+                            shuffleExamData(examData);
+                            safeLocal.setItem(shuffleKey, JSON.stringify(examData.questions));
+                        }
+                    } catch(e) {
+                        shuffleExamData(examData);
+                        safeLocal.setItem(shuffleKey, JSON.stringify(examData.questions));
+                    }
                 } else {
                     shuffleExamData(examData);
                     safeLocal.setItem(shuffleKey, JSON.stringify(examData.questions));
@@ -387,7 +440,7 @@
     }
 
     // =========================================================================
-    // HÀM UPLOAD ẢNH LÊN IMGBB VÀ CẬP NHẬT TỨC THÌ LÊN FIREBASE REALTIME
+    // HÀM UPLOAD ẢNH LÊN IMGBB VÀ CẬP NHẬT TỨC THÌ LÊN FIREBASE CHO HỌC SINH
     // =========================================================================
     async function uploadQuestionImageToImgBB(file, qId, imageKey, qIndex) {
         if (!file) return;
@@ -396,7 +449,7 @@
         const containerEl = document.getElementById(`img-container-${qId}`);
 
         if (!IMGBB_API_KEY || IMGBB_API_KEY.includes("THAY_API_KEY")) {
-            alert("⚠️ Thầy/bạn chưa cấu hình IMGBB_API_KEY trong file app-config.js!\nVui lòng xem hướng dẫn lấy key miễn phí tại api.imgbb.com.");
+            alert("⚠️ Thầy/bạn chưa cấu hình IMGBB_API_KEY trong file app-config.js!\nVui lòng dán API key của bạn vào app-config.js.");
             return;
         }
 
@@ -423,11 +476,20 @@
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
 
+            // 1. Cập nhật vào bộ nhớ RAM cục bộ
             const effectiveKey = imageKey || `img_q_${qId}`;
             if (!examData.images) examData.images = {};
             examData.images[effectiveKey] = directImgUrl;
 
-            // Cập nhật giao diện xem trước ngay lập tức
+            if (examData.questions) {
+                const targetQ = examData.questions.find(item => String(item.id) === String(qId));
+                if (targetQ) {
+                    targetQ.imageUrl = directImgUrl;
+                    targetQ.imageKey = effectiveKey;
+                }
+            }
+
+            // 2. Cập nhật hiển thị ảnh tức thì trên màn hình Admin
             if (imgEl) {
                 imgEl.src = directImgUrl;
                 imgEl.style.display = "inline-block";
@@ -437,26 +499,35 @@
                 containerEl.style.display = "block";
             }
 
-            // Ghi thẳng lên Firebase Realtime Database
+            // 3. Ghi đồng bộ trực tiếp lên Firebase Realtime Database
             if (quizId) {
+                // Lưu vào node /images
                 await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/images/${effectiveKey}.json`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(directImgUrl)
                 });
 
-                if (!imageKey && typeof qIndex === 'number' && qIndex >= 0) {
-                    await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/questions/${qIndex}/imageKey.json`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(effectiveKey)
-                    });
-                }
+                // Đồng thời cập nhật trực tiếp vào câu hỏi trong mảng questions của đề thi trên Firebase
+                try {
+                    const qRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/questions.json`);
+                    const qList = await qRes.json();
+                    if (Array.isArray(qList)) {
+                        const targetIdx = qList.findIndex(item => item && String(item.id) === String(qId));
+                        if (targetIdx !== -1) {
+                            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/questions/${targetIdx}.json`, {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ imageUrl: directImgUrl, imageKey: effectiveKey })
+                            });
+                        }
+                    }
+                } catch(e) {}
             }
 
             if (statusEl) {
                 statusEl.className = "admin-uploader-status success";
-                statusEl.innerText = "✅ Đã lưu ảnh ImgBB & Firebase!";
+                statusEl.innerText = "✅ Đã lưu ảnh ImgBB & đồng bộ Firebase!";
                 setTimeout(() => { if (statusEl) statusEl.innerText = ""; }, 4000);
             }
         } catch(err) {
@@ -542,7 +613,7 @@
                 delete q.correct;
                 delete q.explanation;
 
-                const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
+                const imgUrl = getEffectiveImageUrl(q, imageMap);
                 const imgHTML = buildImgHtml(imgUrl, q.id); 
                 const uploaderHTML = buildAdminImageUploader(q, qIdx);
 
@@ -560,7 +631,7 @@
             html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);"><div class="section-icon">⚖️</div><div class="section-text"><h3>PHẦN 2. TRẮC NGHIỆM ĐÚNG SAI</h3><p>Thí sinh chọn Đúng hoặc Sai cho từng mệnh đề a), b), c), d)</p></div></div>`; 
             p2List.forEach((q, qIdx) => { 
                 SECURE_VAULT.questionData[q.id] = q; 
-                const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
+                const imgUrl = getEffectiveImageUrl(q, imageMap);
                 const imgHTML = buildImgHtml(imgUrl, q.id); 
                 const uploaderHTML = buildAdminImageUploader(q, p1List.length + qIdx);
 
@@ -597,7 +668,7 @@
                     SECURE_VAULT.explanations[`q${q.id}`] = q.explanation;
                     delete q.explanation;
                 }
-                const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
+                const imgUrl = getEffectiveImageUrl(q, imageMap);
                 const imgHTML = buildImgHtml(imgUrl, q.id); 
                 const uploaderHTML = buildAdminImageUploader(q, p1List.length + p2List.length + qIdx);
 
@@ -630,7 +701,7 @@
                     SECURE_VAULT.explanations[`q${q.id}`] = q.explanation;
                     delete q.explanation;
                 }
-                const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
+                const imgUrl = getEffectiveImageUrl(q, imageMap);
                 const imgHTML = buildImgHtml(imgUrl, q.id); 
                 const uploaderHTML = buildAdminImageUploader(q, p1List.length + p2List.length + p3List.length + qIdx);
 
@@ -652,7 +723,7 @@
         setupScrollObserver(); 
         updateProgress(); 
 
-        // GẮN SỰ KIỆN LẮNG NGHE PASTE (CTRL+V) VÀ KÉO THẢ DÀNH CHO ADMIN
+        // GẮN SỰ KIỆN LẮNG NGHE PASTE (CTRL+V) CHO ADMIN
         if (isAdminMode) {
             setupAdminClipboardPasteListener();
         }
@@ -1239,7 +1310,7 @@
             }
 
             examData.questions.forEach(q => { 
-                const imgUrl = (q.imageKey && examData.images && examData.images[q.imageKey]) ? examData.images[q.imageKey] : (q.imageUrl || ""); 
+                const imgUrl = getEffectiveImageUrl(q, examData.images || {}); 
                 const imgTag = buildRevImgHtml(imgUrl); 
                 const explainText = SECURE_VAULT.explanations[`q${q.id}`] ? `<div class="explanation-box">💡 <b>Lời giải chi tiết:</b> ${SECURE_VAULT.explanations[`q${q.id}`]}</div>` : ""; 
                 
@@ -1309,7 +1380,7 @@
         }
 
         (examData.questions || []).forEach(q => { 
-            const imgUrl = (q.imageKey && examData.images && examData.images[q.imageKey]) ? examData.images[q.imageKey] : (q.imageUrl || ""); 
+            const imgUrl = getEffectiveImageUrl(q, examData.images || {}); 
             const imgTag = buildRevImgHtml(imgUrl); 
             const explainText = q.explanation ? `<div class="explanation-box">💡 <b>Lời giải chi tiết:</b> ${q.explanation}</div>` : ""; 
             
