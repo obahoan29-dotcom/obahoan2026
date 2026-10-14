@@ -3,8 +3,8 @@
 // BỘ MÁY ĐIỀU HÀNH BÀI THI BẢO MẬT CAO CẤP (SECURE CLOSURE IIFE)
 // - Bọc kín toàn bộ dữ liệu nhạy cảm bên trong Closure, chống Console F12
 // - Memory Sanitization: Tách và mã hóa đáp án nội bộ, xóa sạch dấu vết trên RAM
-// - Giữ nguyên 100% tính năng giao diện, xáo đề, chấm điểm và phòng thi
-// - Fix chống treo nộp bài: Dùng Promise.race để nhận phản hồi dứt khoát
+// - Tự động upload & dán ảnh Snipping Tool (Ctrl+V) qua API ImgBB cho Admin
+// - Đồng bộ thời gian thực lên Firebase Database
 // =========================================================
 
 (function(window, document) {
@@ -20,6 +20,22 @@
     };
 
     let hasInitExamEngine = false;
+
+    // Kiểm tra xem trang có đang mở dưới quyền Quản Trị Viên (Admin) hay không
+    function checkIsAdminPreviewMode() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('admin') === '1') return true;
+            if (typeof safeLocal !== 'undefined') {
+                const logged = safeLocal.getItem("adminLoggedInSession");
+                const expiresAt = safeLocal.getItem("admin_expires_at");
+                if (logged === "true" && expiresAt && Date.now() < parseInt(expiresAt, 10)) {
+                    return true;
+                }
+            }
+        } catch(e) {}
+        return false;
+    }
 
     // Giữ màn hình điện thoại luôn sáng khi đang thi
     document.addEventListener("visibilitychange", async function() {
@@ -302,7 +318,8 @@
             } 
             
             const shuffleKey = `shuffled_exam_${getExamCode()}`;
-            let shouldShuffle = (examData.isShuffled !== false); 
+            const isAdminMode = checkIsAdminPreviewMode();
+            let shouldShuffle = (examData.isShuffled !== false) && !isAdminMode; 
 
             if (shouldShuffle) {
                 const cachedShuffle = safeLocal.getItem(shuffleKey);
@@ -369,6 +386,88 @@
         } 
     }
 
+    // =========================================================================
+    // HÀM UPLOAD ẢNH LÊN IMGBB VÀ CẬP NHẬT TỨC THÌ LÊN FIREBASE REALTIME
+    // =========================================================================
+    async function uploadQuestionImageToImgBB(file, qId, imageKey, qIndex) {
+        if (!file) return;
+        const statusEl = document.getElementById(`img-status-${qId}`);
+        const imgEl = document.getElementById(`img-display-${qId}`);
+        const containerEl = document.getElementById(`img-container-${qId}`);
+
+        if (!IMGBB_API_KEY || IMGBB_API_KEY.includes("THAY_API_KEY")) {
+            alert("⚠️ Thầy/bạn chưa cấu hình IMGBB_API_KEY trong file app-config.js!\nVui lòng xem hướng dẫn lấy key miễn phí tại api.imgbb.com.");
+            return;
+        }
+
+        if (statusEl) {
+            statusEl.className = "admin-uploader-status loading";
+            statusEl.innerText = "⏳ Đang tải ảnh lên ImgBB...";
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append("image", file);
+
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: "POST",
+                body: formData
+            });
+
+            const json = await res.json();
+            if (!json || !json.success || !json.data || !json.data.url) {
+                throw new Error((json && json.error && json.error.message) || "Máy chủ ImgBB từ chối nhận ảnh!");
+            }
+
+            const directImgUrl = json.data.display_url || json.data.url;
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizId = urlParams.get('id');
+
+            const effectiveKey = imageKey || `img_q_${qId}`;
+            if (!examData.images) examData.images = {};
+            examData.images[effectiveKey] = directImgUrl;
+
+            // Cập nhật giao diện xem trước ngay lập tức
+            if (imgEl) {
+                imgEl.src = directImgUrl;
+                imgEl.style.display = "inline-block";
+                if (containerEl) containerEl.style.display = "block";
+            } else if (containerEl) {
+                containerEl.innerHTML = `<img src="${directImgUrl}" class="quiz-img" id="img-display-${qId}" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa">`;
+                containerEl.style.display = "block";
+            }
+
+            // Ghi thẳng lên Firebase Realtime Database
+            if (quizId) {
+                await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/images/${effectiveKey}.json`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(directImgUrl)
+                });
+
+                if (!imageKey && typeof qIndex === 'number' && qIndex >= 0) {
+                    await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/questions/${qIndex}/imageKey.json`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(effectiveKey)
+                    });
+                }
+            }
+
+            if (statusEl) {
+                statusEl.className = "admin-uploader-status success";
+                statusEl.innerText = "✅ Đã lưu ảnh ImgBB & Firebase!";
+                setTimeout(() => { if (statusEl) statusEl.innerText = ""; }, 4000);
+            }
+        } catch(err) {
+            if (statusEl) {
+                statusEl.className = "admin-uploader-status error";
+                statusEl.innerText = "❌ Lỗi: " + err.message;
+            }
+            alert("❌ Lỗi tải ảnh lên ImgBB: " + err.message);
+        }
+    }
+
     function renderQuizLayout(questions, imageMap) { 
         const container = document.getElementById('dynamic-questions-container'); 
         container.innerHTML = ''; 
@@ -379,10 +478,31 @@
         totalQuestionsCount = questions.length; 
         let displayIndex = 1; 
         let html = ""; 
+        const isAdminMode = checkIsAdminPreviewMode();
 
-        function buildImgHtml(imgUrl) {
-            if (!imgUrl) return "";
-            return `<div class="quiz-img-container"><img src="${imgUrl}" class="quiz-img" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa"></div>`;
+        function buildImgHtml(imgUrl, qId) {
+            const hasUrl = Boolean(imgUrl && String(imgUrl).trim() !== "");
+            return `<div class="quiz-img-container" id="img-container-${qId}" style="${hasUrl ? '' : 'display:none;'}"><img src="${imgUrl || ''}" class="quiz-img" id="img-display-${qId}" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa"></div>`;
+        }
+
+        // TẠO KHUNG ĐIỀU KHIỂN UPLOAD / DÁN ẢNH SNIPPING TOOL DÀNH RIÊNG CHO ADMIN
+        function buildAdminImageUploader(q, qIdx) {
+            if (!isAdminMode) return "";
+            const imgKey = q.imageKey || `img_q_${q.id}`;
+            return `
+            <div class="admin-img-uploader-zone" id="zone-q-${q.id}" tabindex="0" title="Click vào đây và bấm Ctrl+V để dán ảnh chụp màn hình từ Snipping Tool">
+                <div class="admin-uploader-btn-group">
+                    <button type="button" class="btn-admin-paste-img" onclick="triggerPastePrompt(${q.id}, '${imgKey}')">
+                        📋 Dán ảnh (Ctrl+V)
+                    </button>
+                    <button type="button" class="btn-admin-file-img" onclick="document.getElementById('input-file-q-${q.id}').click()">
+                        📁 Chọn tệp
+                    </button>
+                    <input type="file" id="input-file-q-${q.id}" accept="image/*" style="display:none;" onchange="handleAdminFileSelected(this, ${q.id}, '${imgKey}', ${qIdx})">
+                    <span class="admin-uploader-hint">💡 Cắt bằng Snipping Tool rồi bấm chuột vào đây ấn <b>Ctrl + V</b></span>
+                </div>
+                <span class="admin-uploader-status" id="img-status-${q.id}"></span>
+            </div>`;
         }
 
         function buildPart4RowHtml(qId) {
@@ -412,7 +532,7 @@
 
         if (p1List.length > 0) { 
             html += `<div class="exam-section-banner"><div class="section-icon">📑</div><div class="section-text"><h3>PHẦN 1. TRẮC NGHIỆM NHIỀU PHƯƠNG ÁN LỰA CHỌN</h3><p>Chọn duy nhất 01 phương án đúng trong các phương án A, B, C, D</p></div></div>`; 
-            p1List.forEach(q => { 
+            p1List.forEach((q, qIdx) => { 
                 SECURE_VAULT.questionData[q.id] = q; 
                 const letters = ["A", "B", "C", "D"]; 
                 
@@ -423,18 +543,27 @@
                 delete q.explanation;
 
                 const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
-                const imgHTML = buildImgHtml(imgUrl); 
-                html += `<div class="question-card" id="q-card-${q.id}"> <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> ${imgHTML} <div class="options-list grid-2"> ${q.options.map((opt, oIdx) => `<label class="opt-label" id="opt-box-${q.id}-${letters[oIdx]}" onclick="selectOption(${q.id}, '${letters[oIdx]}')"> <input type="radio" name="q${q.id}" value="${letters[oIdx]}"> <span class="opt-circle">${letters[oIdx]}</span> <span class="opt-text">${opt}</span> </label>`).join('')} </div> </div>`; 
+                const imgHTML = buildImgHtml(imgUrl, q.id); 
+                const uploaderHTML = buildAdminImageUploader(q, qIdx);
+
+                html += `<div class="question-card" id="q-card-${q.id}" data-qid="${q.id}" data-imgkey="${q.imageKey || ''}" data-qidx="${qIdx}"> 
+                    <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> 
+                    ${uploaderHTML}
+                    ${imgHTML} 
+                    <div class="options-list grid-2"> ${q.options.map((opt, oIdx) => `<label class="opt-label" id="opt-box-${q.id}-${letters[oIdx]}" onclick="selectOption(${q.id}, '${letters[oIdx]}')"> <input type="radio" name="q${q.id}" value="${letters[oIdx]}"> <span class="opt-circle">${letters[oIdx]}</span> <span class="opt-text">${opt}</span> </label>`).join('')} </div> 
+                </div>`; 
                 displayIndex++; 
             }); 
         } 
 
         if (p2List.length > 0) { 
             html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);"><div class="section-icon">⚖️</div><div class="section-text"><h3>PHẦN 2. TRẮC NGHIỆM ĐÚNG SAI</h3><p>Thí sinh chọn Đúng hoặc Sai cho từng mệnh đề a), b), c), d)</p></div></div>`; 
-            p2List.forEach(q => { 
+            p2List.forEach((q, qIdx) => { 
                 SECURE_VAULT.questionData[q.id] = q; 
                 const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
-                const imgHTML = buildImgHtml(imgUrl); 
+                const imgHTML = buildImgHtml(imgUrl, q.id); 
+                const uploaderHTML = buildAdminImageUploader(q, p1List.length + qIdx);
+
                 let rows = ""; 
                 q.statements.forEach((st) => { 
                     const subKey = `q${q.id}_${st.id}`; 
@@ -446,14 +575,19 @@
                     SECURE_VAULT.explanations[`q${q.id}`] = q.explanation;
                     delete q.explanation;
                 }
-                html += `<div class="question-card" id="q-card-${q.id}"> <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> ${imgHTML} <div class="tf-table-box"> <table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Đúng</th><th>Sai</th></tr></thead><tbody>${rows}</tbody></table> </div> </div>`; 
+                html += `<div class="question-card" id="q-card-${q.id}" data-qid="${q.id}" data-imgkey="${q.imageKey || ''}" data-qidx="${p1List.length + qIdx}"> 
+                    <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> 
+                    ${uploaderHTML}
+                    ${imgHTML} 
+                    <div class="tf-table-box"> <table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Đúng</th><th>Sai</th></tr></thead><tbody>${rows}</tbody></table> </div> 
+                </div>`; 
                 displayIndex++; 
             }); 
         } 
 
         if (p3List.length > 0) { 
             html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #0d9488, #059669);"><div class="section-icon">✍️</div><div class="section-text"><h3>PHẦN 3. TRẢ LỜI NGẮN</h3><p>Nhập đáp số chính xác vào ô trống</p></div></div>`; 
-            p3List.forEach(q => { 
+            p3List.forEach((q, qIdx) => { 
                 SECURE_VAULT.questionData[q.id] = q; 
                 if (q.correctAnswer !== undefined) {
                     SECURE_VAULT.answers[`q${q.id}`] = q.correctAnswer;
@@ -464,10 +598,13 @@
                     delete q.explanation;
                 }
                 const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
-                const imgHTML = buildImgHtml(imgUrl); 
+                const imgHTML = buildImgHtml(imgUrl, q.id); 
+                const uploaderHTML = buildAdminImageUploader(q, p1List.length + p2List.length + qIdx);
+
                 html += `
-                <div class="question-card" id="q-card-${q.id}"> 
+                <div class="question-card" id="q-card-${q.id}" data-qid="${q.id}" data-imgkey="${q.imageKey || ''}" data-qidx="${p1List.length + p2List.length + qIdx}"> 
                     <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> 
+                    ${uploaderHTML}
                     ${imgHTML} 
                     ${buildPart4RowHtml(q.id)}
                 </div>`; 
@@ -483,7 +620,7 @@
                     <p>Điền đáp số VÀ chụp ảnh bài làm tự luận nộp qua đường dẫn Padlet của lớp</p> 
                 </div> 
             </div>`; 
-            p4List.forEach(q => { 
+            p4List.forEach((q, qIdx) => { 
                 SECURE_VAULT.questionData[q.id] = q; 
                 if (q.correctAnswer !== undefined) {
                     SECURE_VAULT.answers[`q${q.id}`] = q.correctAnswer || ""; 
@@ -494,13 +631,16 @@
                     delete q.explanation;
                 }
                 const imgUrl = (q.imageKey && imageMap[q.imageKey]) ? imageMap[q.imageKey] : (q.imageUrl || ""); 
-                const imgHTML = buildImgHtml(imgUrl); 
+                const imgHTML = buildImgHtml(imgUrl, q.id); 
+                const uploaderHTML = buildAdminImageUploader(q, p1List.length + p2List.length + p3List.length + qIdx);
+
                 html += `
-                <div class="question-card" id="q-card-${q.id}"> 
+                <div class="question-card" id="q-card-${q.id}" data-qid="${q.id}" data-imgkey="${q.imageKey || ''}" data-qidx="${p1List.length + p2List.length + p3List.length + qIdx}"> 
                     <div class="q-header"> 
                         <div class="q-num-badge">${displayIndex}</div> 
                         <div class="q-content-text">${formatQuestionText(q.question)}</div> 
                     </div> 
+                    ${uploaderHTML}
                     ${imgHTML} 
                     ${buildPart4RowHtml(q.id)}
                 </div>`; 
@@ -511,7 +651,61 @@
         renderQuestionPalette(questions); 
         setupScrollObserver(); 
         updateProgress(); 
+
+        // GẮN SỰ KIỆN LẮNG NGHE PASTE (CTRL+V) VÀ KÉO THẢ DÀNH CHO ADMIN
+        if (isAdminMode) {
+            setupAdminClipboardPasteListener();
+        }
     }
+
+    // LẮNG NGHE SỰ KIỆN PASTE TRỰC TIẾP TỪ CLIPBOARD (SNIPPING TOOL) CHO ADMIN
+    function setupAdminClipboardPasteListener() {
+        document.querySelectorAll('.question-card').forEach(card => {
+            card.addEventListener('paste', function(e) {
+                const qId = this.dataset.qid;
+                const imgKey = this.dataset.imgkey || `img_q_${qId}`;
+                const qIdx = parseInt(this.dataset.qidx, 10);
+                const clipboardItems = (e.clipboardData || window.clipboardData)?.items;
+                if (!clipboardItems) return;
+
+                for (let i = 0; i < clipboardItems.length; i++) {
+                    const item = clipboardItems[i];
+                    if (item.type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        const blob = item.getAsFile();
+                        uploadQuestionImageToImgBB(blob, qId, imgKey, qIdx);
+                        break;
+                    }
+                }
+            });
+
+            // Kéo thả file ảnh trực tiếp
+            card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('dragover'); });
+            card.addEventListener('dragleave', () => { card.classList.remove('dragover'); });
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('dragover');
+                const qId = card.dataset.qid;
+                const imgKey = card.dataset.imgkey || `img_q_${qId}`;
+                const qIdx = parseInt(card.dataset.qidx, 10);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    uploadQuestionImageToImgBB(e.dataTransfer.files[0], qId, imgKey, qIdx);
+                }
+            });
+        });
+    }
+
+    window.triggerPastePrompt = function(qId, imgKey) {
+        const zone = document.getElementById(`zone-q-${qId}`);
+        if (zone) zone.focus();
+        showTimeChangeToast(`📋 Bạn vừa quét ảnh bằng Snipping Tool? Hãy bấm Ctrl + V để dán ngay cho Câu ${qId}!`);
+    };
+
+    window.handleAdminFileSelected = function(input, qId, imgKey, qIdx) {
+        if (input.files && input.files[0]) {
+            uploadQuestionImageToImgBB(input.files[0], qId, imgKey, qIdx);
+        }
+    };
 
     function renderQuestionPalette(questions) { 
         const container = document.getElementById('q-nav-scroll-container'); 
