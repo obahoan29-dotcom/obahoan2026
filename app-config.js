@@ -8,6 +8,10 @@ let ADMIN_PASSWORD_HASH = "4711bcbd6fbf382356a6370e814daaf87ed27a425979dca143f8c
 const FIREBASE_DB_URL = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
+// KEY API IMGBB DÙNG ĐỂ TỰ ĐỘNG UPLOAD ẢNH CÂU HỎI SIÊU TỐC
+// Bạn hãy thay API key của bạn vào giữa hai dấu ngoặc kép bên dưới
+const IMGBB_API_KEY = "d6342898a44c66fc29b7a1dfa52b827e"; 
+
 // Link Zalo và Messenger để học sinh gửi bài làm dự phòng khi rớt mạng
 const TEACHER_ZALO_LINK = "https://zalo.me/0972952128";
 const TEACHER_MESSENGER_LINK = "https://m.me/?locale=vi_VN";
