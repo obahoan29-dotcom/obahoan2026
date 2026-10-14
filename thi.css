@@ -574,6 +574,97 @@ mjx-container[jax="SVG"][display="true"] > svg {
 .quiz-img-container { text-align: center; margin: 10px 0; max-width: 100%; overflow: hidden; }
 .quiz-img { max-width: 100%; max-height: 360px; height: auto; object-fit: contain; border-radius: 11px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 8px rgba(0,0,0,0.05); background: #ffffff; }
 
+/* ========================================================= */
+/* KHUNG UPLOAD VÀ DÁN ẢNH SNIPPING TOOL TRỰC TIẾP DÀNH CHO ADMIN */
+/* ========================================================= */
+.admin-img-uploader-zone {
+    margin: 8px 0 12px 0;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #fdf4ff 0%, #faf5ff 100%);
+    border: 1.5px dashed #c084fc;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-shadow: 0 2px 6px rgba(168, 85, 247, 0.08);
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.admin-img-uploader-zone:focus, .admin-img-uploader-zone:focus-within {
+    border-color: #9333ea;
+    background: #f5f3ff;
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.18);
+    outline: none;
+}
+.admin-img-uploader-zone.dragover {
+    border-color: #059669;
+    background: #ecfdf5;
+}
+.admin-uploader-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.btn-admin-paste-img {
+    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+    color: #ffffff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 6px rgba(147, 51, 234, 0.25);
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+.btn-admin-paste-img:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+.btn-admin-paste-img:active {
+    transform: translateY(2px) scale(0.96);
+}
+.btn-admin-file-img {
+    background: #ffffff;
+    color: #7e22ce;
+    border: 1.5px solid #d8b4fe;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.btn-admin-file-img:hover {
+    background: #f3e8ff;
+    border-color: #c084fc;
+}
+.admin-uploader-hint {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #6b21a8;
+}
+.admin-uploader-status {
+    font-size: 0.82rem;
+    font-weight: 800;
+    margin-left: auto;
+}
+.admin-uploader-status.loading {
+    color: #0284c7;
+}
+.admin-uploader-status.success {
+    color: #16a34a;
+}
+.admin-uploader-status.error {
+    color: #dc2626;
+}
+
 /* MODAL XÁC NHẬN NỘP BÀI */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center; padding: 14px; }
 .modal-box { background: #ffffff; border-radius: 18px; max-width: 400px; width: 100%; padding: 22px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.25); animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -968,25 +1059,18 @@ mjx-container[jax="SVG"][display="true"] > svg {
    MÁY TÍNH, LAPTOP, ANDROID GIỮ NGUYÊN 100% GIAO DIỆN & HIỆU ỨNG GỐC
    ======================================================== */
 @supports (-webkit-touch-callout: none) {
-    /* 1. Ngăn iOS Safari tự vẽ lại nền gây lag/crash */
     html, body {
         background-attachment: scroll !important;
     }
-
-    /* 2. Cố định font-size = 16px trên tất cả các ô nhập liệu của phòng thi để triệt tiêu Auto-zoom */
     .input-group input,
     .short-input-box {
         font-size: 16px !important;
     }
-
-    /* 3. Tắt backdrop-filter lồng nhau ở các lớp phủ modal khi mở bàn phím */
     .modal-overlay {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         background: rgba(15, 23, 42, 0.78) !important;
     }
-
-    /* 4. Tắt backdrop-filter bên trong hộp thoại, dùng màu trắng đục thuần và hardware acceleration */
     .modal-box,
     .card-panel {
         backdrop-filter: none !important;
