@@ -2,7 +2,8 @@
 // FILE: app-results.js
 // QUẢN LÝ BẢNG KẾT QUẢ THI, THỐNG KÊ, XUẤT BÁO CÁO EXCEL
 // & NẠP BÀI LÀM TỪ FILE JSON DỰ PHÒNG CỦA HỌC SINH NỘP SÓT
-// TỐI ƯU HÓA: Cập nhật Auto-refresh 15s/lần, truy vấn tối giản
+// TỐI ƯU HÓA: CẬP NHẬT CO DÃN & THU PHÓNG SIÊU NHỎ CHO ĐIỆN THOẠI Y HỆT LAPTOP
+// TÍCH HỢP PINCH-TO-ZOOM: CHỤM 2 NGÓN TAY PHÓNG TO / THU NHỎ TỰ DO TRÊN MOBILE
 // CẬP NHẬT: Nút Xóa tác động xóa vĩnh viễn trực tiếp lên Firebase
 // CẬP NHẬT: Nút Upload JSON nộp sót - Ghi trực tiếp Firebase và hiện tức thì
 // =========================================================
@@ -17,11 +18,12 @@ let currentExamResultData = {
 
 let tableDisplaySettings = {
     fontSize: 13,
-    rowPadding: 9
+    rowPadding: 9,
+    zoomScale: 100 // Tỷ lệ thu phóng tính theo % (45% -> 140%)
 };
 
 let autoRefreshTimer = null;
-let isAutoRefreshEnabled = false; // Mặc định tắt để đỡ tốn băng thông
+let isAutoRefreshEnabled = false; // Mặc định tắt để tiết kiệm băng thông
 let scoreChartInstance = null;
 const _examResultsCache = {};
 let _regradeFileParsedAnswers = null;
@@ -127,18 +129,23 @@ function deduplicateAttempts(attempts) {
     return unique;
 }
 
+// KHỞI TẠO CẤU HÌNH HIỂN THỊ BẢNG
 function initTableSettings() {
     try {
         const saved = localStorage.getItem("admin_table_display_settings");
         if (saved) {
             const parsed = JSON.parse(saved);
-            if (parsed.fontSize) tableDisplaySettings.fontSize = parseInt(parsed.fontSize);
+            if (parsed.fontSize) tableDisplaySettings.fontSize = parseInt(parsed.fontSize, 10);
             if (parsed.rowPadding !== undefined && parsed.rowPadding !== null) {
-                tableDisplaySettings.rowPadding = parseInt(parsed.rowPadding);
+                tableDisplaySettings.rowPadding = parseInt(parsed.rowPadding, 10);
+            }
+            if (parsed.zoomScale) {
+                tableDisplaySettings.zoomScale = parseInt(parsed.zoomScale, 10);
             }
         }
     } catch(e) {}
     applyTableSettings();
+    initTablePinchZoom();
     
     // Đồng bộ nút Tắt/Bật auto-refresh
     const btn = document.getElementById("btn-toggle-autorefresh");
@@ -155,24 +162,76 @@ function initTableSettings() {
     }
 }
 
+// ÁP DỤNG CẤU HÌNH HIỂN THỊ (CỠ CHỮ, DÒNG, THU PHÓNG ZOOM SCALE)
 function applyTableSettings() {
     const table = document.getElementById("admin-result-table");
+    const zoomRatio = (tableDisplaySettings.zoomScale || 100) / 100;
+
     if (table) {
         table.style.setProperty("--table-font-size", tableDisplaySettings.fontSize + "px");
         table.style.setProperty("--table-row-padding-y", tableDisplaySettings.rowPadding + "px");
+        table.style.setProperty("--table-zoom-scale", zoomRatio);
+        table.style.zoom = zoomRatio; // Tương thích trực tiếp Blink/WebKit trên iOS & Android
     }
 
     const sliderFont = document.getElementById("slider-font-size");
     const sliderPad = document.getElementById("slider-row-padding");
+    const sliderZoom = document.getElementById("slider-zoom-scale");
+
     const valFont = document.getElementById("val-font-size");
     const valPad = document.getElementById("val-row-padding");
+    const valZoom = document.getElementById("val-zoom-scale");
 
     if (sliderFont) sliderFont.value = tableDisplaySettings.fontSize;
     if (sliderPad) sliderPad.value = tableDisplaySettings.rowPadding;
+    if (sliderZoom) sliderZoom.value = tableDisplaySettings.zoomScale;
+
     if (valFont) valFont.innerText = tableDisplaySettings.fontSize + "px";
     if (valPad) valPad.innerText = tableDisplaySettings.rowPadding + "px";
+    if (valZoom) valZoom.innerText = tableDisplaySettings.zoomScale + "%";
 
     try { localStorage.setItem("admin_table_display_settings", JSON.stringify(tableDisplaySettings)); } catch(e) {}
+}
+
+// BỘ NHẬN DIỆN CẢM ỨNG PINCH-TO-ZOOM TRÊN ĐIỆN THOẠI (CHỤM 2 NGÓN TAY PHÓNG TO / THU NHỎ)
+function initTablePinchZoom() {
+    const scrollWrap = document.getElementById("result-table-scroll-wrap");
+    if (!scrollWrap || scrollWrap._hasPinchInit) return;
+    scrollWrap._hasPinchInit = true;
+
+    let initialDistance = 0;
+    let initialZoom = 100;
+
+    scrollWrap.addEventListener("touchstart", function(e) {
+        if (e.touches.length === 2) {
+            initialDistance = Math.hypot(
+                e.touches[0].pageX - e.touches[1].pageX,
+                e.touches[0].pageY - e.touches[1].pageY
+            );
+            initialZoom = tableDisplaySettings.zoomScale || 100;
+        }
+    }, { passive: true });
+
+    scrollWrap.addEventListener("touchmove", function(e) {
+        if (e.touches.length === 2 && initialDistance > 0) {
+            const currentDistance = Math.hypot(
+                e.touches[0].pageX - e.touches[1].pageX,
+                e.touches[0].pageY - e.touches[1].pageY
+            );
+            const scaleFactor = currentDistance / initialDistance;
+            let targetZoom = Math.round(initialZoom * scaleFactor);
+            targetZoom = Math.min(140, Math.max(45, targetZoom)); // Cho phép thu nhỏ tận 45% xem toàn cảnh
+
+            tableDisplaySettings.zoomScale = targetZoom;
+            applyTableSettings();
+        }
+    }, { passive: true });
+
+    scrollWrap.addEventListener("touchend", function(e) {
+        if (e.touches.length < 2) {
+            initialDistance = 0;
+        }
+    }, { passive: true });
 }
 
 function toggleTableSettingsPopover(event) {
@@ -197,18 +256,31 @@ function closeTableSettingsPopover(event) {
     if (btn) btn.classList.remove("active");
 }
 
-function onFontSizeChange(val) { tableDisplaySettings.fontSize = parseInt(val); applyTableSettings(); }
-function onRowPaddingChange(val) { tableDisplaySettings.rowPadding = parseInt(val); applyTableSettings(); }
+function onFontSizeChange(val) { tableDisplaySettings.fontSize = parseInt(val, 10); applyTableSettings(); }
+function onRowPaddingChange(val) { tableDisplaySettings.rowPadding = parseInt(val, 10); applyTableSettings(); }
+function onZoomScaleChange(val) { tableDisplaySettings.zoomScale = parseInt(val, 10); applyTableSettings(); }
 
 function adjustSetting(type, step) {
-    if (type === 'fontSize') { tableDisplaySettings.fontSize = Math.min(22, Math.max(10, tableDisplaySettings.fontSize + step)); } 
-    else if (type === 'rowPadding') { tableDisplaySettings.rowPadding = Math.min(26, Math.max(0, tableDisplaySettings.rowPadding + step)); }
+    if (type === 'fontSize') { 
+        tableDisplaySettings.fontSize = Math.min(24, Math.max(7, tableDisplaySettings.fontSize + step)); 
+    } else if (type === 'rowPadding') { 
+        tableDisplaySettings.rowPadding = Math.min(26, Math.max(0, tableDisplaySettings.rowPadding + step)); 
+    } else if (type === 'zoomScale') {
+        tableDisplaySettings.zoomScale = Math.min(140, Math.max(45, tableDisplaySettings.zoomScale + step));
+    }
     applyTableSettings();
 }
 
 function applyFontSizePreset(size) { tableDisplaySettings.fontSize = size; applyTableSettings(); }
 function applyRowPaddingPreset(pad) { tableDisplaySettings.rowPadding = pad; applyTableSettings(); }
-function resetTableSettings() { tableDisplaySettings.fontSize = 13; tableDisplaySettings.rowPadding = 9; applyTableSettings(); }
+function applyZoomScalePreset(zoom) { tableDisplaySettings.zoomScale = zoom; applyTableSettings(); }
+
+function resetTableSettings() { 
+    tableDisplaySettings.fontSize = 13; 
+    tableDisplaySettings.rowPadding = 9; 
+    tableDisplaySettings.zoomScale = 100;
+    applyTableSettings(); 
+}
 
 function initTableResizable() {
     const table = document.getElementById("admin-result-table");
@@ -232,7 +304,7 @@ function initTableResizable() {
 
             function onMouseMove(moveEvent) {
                 const diff = moveEvent.pageX - startX;
-                const newWidth = Math.max(40, startWidth + diff);
+                const newWidth = Math.max(35, startWidth + diff);
                 th.style.width = newWidth + "px"; th.style.minWidth = newWidth + "px";
             }
             function onMouseUp() {
@@ -387,6 +459,7 @@ async function openExamResultModal(item, categoryIdOrEvent, maybeEvent) {
     }
 
     applyTableSettings();
+    initTablePinchZoom();
     renderExamPickerDropdown();
     setTimeout(initTableResizable, 50);
 
@@ -462,7 +535,6 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
         } catch(e) {}
     }
 
-    // TỐI ƯU: Chỉ lấy các code quan trọng nhất, tránh spam request Firebase
     const candidateCodesList = Array.from(new Set([quizId, cleanExamCodeKey(maDe || examTitle)].filter(Boolean)));
 
     let submissionsMap = {};
@@ -1045,7 +1117,6 @@ function renderFilteredResultTable(rows) {
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
         let safeTitleCol10 = stripHtml(col10_cheatTime);
 
-        // Nút xóa được cập nhật để trực tiếp xóa vĩnh viễn
         let col_action = `<button type="button" class="btn-delete-result-row" onclick="deleteResultRowPermanently('${uid}', event)" title="Xóa vĩnh viễn dữ liệu bài thi này khỏi hệ thống" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:3px 8px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:2px; transition:0.15s; box-shadow:0 1px 3px rgba(239,68,68,0.15);">🗑️ Xóa</button>`;
 
         tr.innerHTML = `<td class="td-stt">${col1_stt}</td><td class="td-exam-col" title="${currentExamTitle}">${col_examName}</td><td class="td-attempt-cell-wrap">${col_attemptCount}</td><td class="td-truncate" title="${stripHtml(col2_inTime)}">${col2_inTime}</td><td class="td-truncate" title="${stripHtml(col3_spentTime)}">${col3_spentTime}</td><td class="td-truncate" title="${rawName}">${col4_name}</td><td class="td-class td-truncate" title="${rawClass}">${col_class}</td><td class="td-sbd td-truncate" title="${col5_sbd}">${col5_sbd}</td><td style="text-align:center;">${col6_status}</td><td style="text-align:center;">${col7_correct}</td><td class="td-score">${col8_score}</td><td style="text-align:center;">${col_rank}</td><td class="td-tabs">${col9_tabs}</td><td class="td-tab-times td-truncate" title="${safeTitleCol10}">${col10_cheatTime}</td><td class="td-truncate">${col11_details}</td><td style="text-align:center;">${col_action}</td>`;
