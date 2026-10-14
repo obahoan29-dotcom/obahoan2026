@@ -5,6 +5,7 @@
 // TỐI ƯU HÓA: Cập nhật Auto-refresh 15s/lần, truy vấn tối giản
 // CẬP NHẬT: Nút Xóa tác động xóa vĩnh viễn trực tiếp lên Firebase
 // CẬP NHẬT: Nút Upload JSON nộp sót - Ghi trực tiếp Firebase và hiện tức thì
+// CẬP NHẬT: Hỗ trợ thanh trượt thu siêu nhỏ cỡ chữ từ 7px đến 22px
 // =========================================================
 
 let currentExamResultData = {
@@ -201,8 +202,13 @@ function onFontSizeChange(val) { tableDisplaySettings.fontSize = parseInt(val); 
 function onRowPaddingChange(val) { tableDisplaySettings.rowPadding = parseInt(val); applyTableSettings(); }
 
 function adjustSetting(type, step) {
-    if (type === 'fontSize') { tableDisplaySettings.fontSize = Math.min(22, Math.max(10, tableDisplaySettings.fontSize + step)); } 
-    else if (type === 'rowPadding') { tableDisplaySettings.rowPadding = Math.min(26, Math.max(0, tableDisplaySettings.rowPadding + step)); }
+    if (type === 'fontSize') { 
+        // Cho phép giảm về mức siêu nhỏ tối thiểu 7px
+        tableDisplaySettings.fontSize = Math.min(22, Math.max(7, tableDisplaySettings.fontSize + step)); 
+    } 
+    else if (type === 'rowPadding') { 
+        tableDisplaySettings.rowPadding = Math.min(26, Math.max(0, tableDisplaySettings.rowPadding + step)); 
+    }
     applyTableSettings();
 }
 
