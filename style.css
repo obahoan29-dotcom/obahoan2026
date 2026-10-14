@@ -190,7 +190,7 @@ html, body {
 .btn-admin:active { transform: translateY(2px) scale(0.96); }
 
 /* =========================================================
-   HỆ THỐNG NÚT BẤM SQUIRCLE 3D BÓNG BẨY & ĐỘ LÚN XÚC GIÁC (TACTILE)
+   HỆ THỐNG NÚT BẤM SQUIRCLE 3D BÓNG BẨY & ĐỘ LÚN XÚC GIÁC
    ========================================================= */
 .section-header-title { font-size: 16px; font-weight: 800; margin: 14px 0 8px 0; display: flex; align-items: center; gap: 8px; padding-left: 4px; }
 .section-header-title.red-title { color: var(--primary-red-dark); }
@@ -201,16 +201,13 @@ html, body {
 .dantri-scroll-bar::-webkit-scrollbar { display: none; }
 .full-width-nav-row { display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 10px; }
 
-/* NÚT THỂ LOẠI THẺ NỔI HIỆN ĐẠI (SQUIRCLE 13PX) VỚI ĐỘ LÚN MƯỢT */
 .dantri-nav-btn { 
     display: inline-flex; align-items: center; justify-content: center; gap: 6px; 
     padding: 10px 10px; min-height: 44px; font-size: 13.5px; font-weight: 800; 
     color: #1e293b; background: rgba(255, 255, 255, 0.95); 
-    border-radius: 13px; /* Không dùng dạng viên thuốc */
+    border-radius: 13px;
     cursor: pointer; text-transform: none; 
     user-select: none; flex-shrink: 0; font-family: inherit; 
-    
-    /* Hiệu ứng 3D bóng bẩy */
     box-shadow: 0 4px 10px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 0 rgba(0, 0, 0, 0.05);
     transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), 
                 box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -223,13 +220,11 @@ html, body {
     border-radius: 13px;
 }
 
-/* Hover: Nhấc nhẹ */
 .dantri-nav-btn:hover { 
     transform: translateY(-2px); 
     box-shadow: 0 7px 18px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95); 
 }
 
-/* ACTIVE: ĐỘ LÚN XÚC GIÁC CHÂN THẬT (TACTILE CLICK) */
 .dantri-nav-btn:active { 
     transform: translateY(3px) scale(0.975) !important; 
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.15) !important; 
@@ -238,7 +233,6 @@ html, body {
 .dantri-nav-btn .caret-icon { font-size: 11px; transition: transform 0.22s ease; color: inherit; opacity: 0.8; flex-shrink: 0; }
 .dantri-nav-btn.active .caret-icon { transform: rotate(180deg); opacity: 1; }
 
-/* MÀU SẮC ĐẶC TRƯNG TỪNG LỚP TRÊN NÚT BẤM (BÓNG BẨY) */
 #daythem-nav-bar .cat-btn-them-10,
 #daythem-nav-bar .dantri-nav-btn:nth-child(1) {
     background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
@@ -353,7 +347,6 @@ html, body {
 @keyframes expandDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 .dantri-sub-header { font-size: 15px; font-weight: 800; color: #047857; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
-/* 1. MÀU NỐI LIỀN: THÊM 10 (CYAN SKY) */
 .dantri-dropdown-panel.cat-theme-them-10 {
     border-color: #0284c7; box-shadow: 0 12px 30px rgba(2, 132, 199, 0.2);
     background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
@@ -368,7 +361,6 @@ html, body {
     border-color: #38bdf8; color: #0284c7; background: #f0f9ff;
 }
 
-/* 2. MÀU NỐI LIỀN: THÊM 11 (SUNSET ORANGE) */
 .dantri-dropdown-panel.cat-theme-them-11 {
     border-color: #ea580c; box-shadow: 0 12px 30px rgba(234, 88, 12, 0.2);
     background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
@@ -383,7 +375,6 @@ html, body {
     border-color: #fb923c; color: #c2410c; background: #fff7ed;
 }
 
-/* 3. MÀU NỐI LIỀN: THÊM 12 (VIOLET PURPLE) */
 .dantri-dropdown-panel.cat-theme-them-12 {
     border-color: #9333ea; box-shadow: 0 12px 30px rgba(147, 51, 234, 0.2);
     background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%);
@@ -398,7 +389,6 @@ html, body {
     border-color: #c084fc; color: #7e22ce; background: #faf5ff;
 }
 
-/* 4. MÀU NỐI LIỀN: LỚP 11A (EMERALD GREEN) */
 .dantri-dropdown-panel.cat-theme-lop-11a {
     border-color: #16a34a; box-shadow: 0 12px 30px rgba(22, 163, 74, 0.2);
     background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
@@ -413,7 +403,6 @@ html, body {
     border-color: #4ade80; color: #15803d; background: #f0fdf4;
 }
 
-/* 5. MÀU NỐI LIỀN: LỚP 11C (RUBY RED/ROSE) */
 .dantri-dropdown-panel.cat-theme-lop-11c {
     border-color: #e11d48; box-shadow: 0 12px 30px rgba(225, 29, 72, 0.2);
     background: linear-gradient(180deg, #fff1f2 0%, #ffffff 100%);
@@ -428,7 +417,6 @@ html, body {
     border-color: #fb7185; color: #be123c; background: #fff1f2;
 }
 
-/* 6. MÀU NỐI LIỀN: LỚP 10P (GOLD AMBER) */
 .dantri-dropdown-panel.cat-theme-lop-10p {
     border-color: #ca8a04; box-shadow: 0 12px 30px rgba(202, 138, 4, 0.2);
     background: linear-gradient(180deg, #fefce8 0%, #ffffff 100%);
@@ -443,7 +431,6 @@ html, body {
     border-color: #facc15; color: #854d0e; background: #fefce8;
 }
 
-/* 7. MÀU NỐI LIỀN: LỚP 11E (TEAL AQUA) */
 .dantri-dropdown-panel.cat-theme-lop-11e {
     border-color: #0d9488; box-shadow: 0 12px 30px rgba(13, 148, 136, 0.2);
     background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%);
@@ -458,7 +445,6 @@ html, body {
     border-color: #2dd4bf; color: #0f766e; background: #f0fdfa;
 }
 
-/* 8. MÀU NỐI LIỀN: HSG TOÁN 11 (METALLIC GOLD) */
 .dantri-dropdown-panel.cat-theme-hsg-toan-11 {
     border-color: #f59e0b; box-shadow: 0 12px 30px rgba(245, 158, 11, 0.25);
     background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
@@ -473,7 +459,6 @@ html, body {
     border-color: #fde047; color: #b45309; background: #fffbeb;
 }
 
-/* 9. MÀU NỐI LIỀN: TỰ LUẬN PADLET (VIBRANT PURPLE) */
 .dantri-dropdown-panel.cat-theme-tu-luan-padlet {
     border-color: #8b5cf6; box-shadow: 0 12px 30px rgba(139, 92, 246, 0.25);
     background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%);
@@ -1031,7 +1016,7 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 .btn-refresh-visits:hover { background: #0284c7; color: #fff; }
 
 /* =========================================================
-   GIAO DIỆN BÀI BÁO PHONG CÁCH DÂN TRÍ
+   MODAL BÀI BÁO PHONG CÁCH DÂN TRÍ
    ========================================================= */
 .dantri-article-modal {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
@@ -1213,6 +1198,7 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 #btn-toggle-autorefresh {
     transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, filter 0.16s ease !important;
     user-select: none;
+    white-space: nowrap;
 }
 #btn-toggle-autorefresh:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25); filter: brightness(1.08); }
 #btn-toggle-autorefresh:active { transform: translateY(2px) scale(0.95) !important; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important; filter: brightness(0.9); }
@@ -1518,6 +1504,7 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 
 /* =========================================================
    TỐI ƯU HÓA HOÀN TOÀN CHO ĐIỆN THOẠI (DƯỚI 640PX)
+   BẢNG KẾT QUẢ THU NHỎ SIÊU GỌN - CHỐNG TRÀN VÀ VỠ NÚT
    ========================================================= */
 @media (max-width: 640px) {
     body { font-size: 14px; }
@@ -1682,10 +1669,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .admin-duration-select { font-size: 11px; padding: 6px 5px; }
     
     .exam-title-text { font-size: 13.5px; }
-    .result-search-input { width: 110px; }
-    .result-search-input:focus { width: 140px; }
-    .btn-regrade-exam { font-size: 11px; padding: 6px 10px; }
-    .table-settings-popover { width: 280px; right: -50px; }
     
     .mid-autumn-badge { right: 2px; }
     .lantern-stick { width: 34px; height: 3.5px; }
@@ -1701,6 +1684,185 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .dantri-view-title { font-size: 18.5px; }
     .dantri-sapo-text { font-size: 14px; }
     .avatar-selection-popover { width: 285px; max-width: calc(100vw - 28px); }
+
+    /* =========================================================
+       TỐI ƯU ĐẶC BIỆT: BẢNG KẾT QUẢ THI SIÊU NHỎ TRÊN MOBILE
+       ========================================================= */
+    .result-modal-header {
+        padding: 6px 8px !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+    }
+    .result-modal-title-box {
+        min-width: 0 !important;
+        gap: 6px !important;
+    }
+    #btn-result-back-action {
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+        border-radius: 8px !important;
+    }
+    .result-modal-icon {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 14px !important;
+        border-radius: 8px !important;
+    }
+    .result-modal-heading {
+        font-size: 12.5px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 160px !important;
+    }
+    .result-modal-subheading {
+        display: none !important;
+    }
+
+    .result-modal-tools {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        max-width: 58vw !important;
+        padding-bottom: 2px !important;
+    }
+    .result-modal-tools::-webkit-scrollbar { display: none; }
+
+    .result-search-input {
+        width: 85px !important;
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+        border-radius: 12px !important;
+    }
+    .result-search-input:focus {
+        width: 110px !important;
+    }
+
+    /* Khắc phục nút Auto-refresh bị co thành hình tháp */
+    #btn-toggle-autorefresh {
+        padding: 4px 8px !important;
+        font-size: 10.5px !important;
+        height: 28px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .btn-refresh-result,
+    .btn-regrade-exam,
+    .btn-upload-json-backup,
+    .btn-export-excel {
+        padding: 4px 7px !important;
+        font-size: 11px !important;
+        height: 28px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+    .btn-refresh-result::after {
+        font-size: 11px !important;
+    }
+    .btn-table-settings,
+    .btn-close-result-modal {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 13px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .table-settings-popover {
+        width: 280px !important;
+        right: 0 !important;
+    }
+
+    /* Thu gọn thanh thống kê */
+    .result-modal-stats-bar {
+        padding: 4px 8px !important;
+        font-size: 10.5px !important;
+        gap: 4px !important;
+    }
+    .stat-badge-item {
+        padding: 2px 5px !important;
+        font-size: 10.5px !important;
+        border-radius: 6px !important;
+    }
+
+    /* Bảng dữ liệu siêu nén */
+    .result-modal-body {
+        padding: 4px !important;
+    }
+    .result-table-card {
+        border-radius: 8px !important;
+    }
+    .result-table {
+        --table-font-size: 10.5px !important;
+        --table-row-padding-y: 4px !important;
+        font-size: var(--table-font-size) !important;
+    }
+    .result-table thead th {
+        padding: 6px 4px !important;
+        font-size: 10px !important;
+    }
+    .result-table tbody td {
+        padding: 4px 4px !important;
+    }
+
+    /* Thu gọn cột "Số đề thi" để lộ cột Họ tên, SBD, Điểm */
+    .result-table thead th:nth-child(2),
+    .result-table tbody td.td-exam-col {
+        width: 75px !important;
+        max-width: 75px !important;
+        font-size: 9.5px !important;
+    }
+    .btn-exam-picker {
+        padding: 2px 4px !important;
+        font-size: 9.5px !important;
+    }
+
+    .td-stt {
+        width: 32px !important;
+        font-size: 10px !important;
+        padding: 4px 2px !important;
+    }
+
+    .attempt-badge-single, .btn-attempt-trigger {
+        font-size: 9px !important;
+        padding: 2px 5px !important;
+    }
+    .status-pill {
+        font-size: 9.5px !important;
+        padding: 2px 5px !important;
+    }
+    .score-pill-high, .score-pill-mid, .score-pill-low {
+        padding: 2px 5px !important;
+        font-size: 11px !important;
+    }
+
+    /* Ghim cố định cột Họ và tên (Sticky) */
+    .result-table thead th:nth-child(6) {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 35 !important;
+        background: #0f172a !important;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+    }
+    .result-table tbody td:nth-child(6) {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 10 !important;
+        background: #ffffff !important;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.08);
+        font-weight: 800 !important;
+    }
+    .result-table tbody tr:nth-child(even) td:nth-child(6) {
+        background: #eaf1f8 !important;
+    }
+    .result-table tbody tr:hover td:nth-child(6) {
+        background: #bae6fd !important;
+    }
 }
 
 @media (max-width: 380px) {
@@ -1710,15 +1872,11 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
 
 /* ========================================================
    CHỈ TỰ ĐỘNG KÍCH HOẠT TRÊN IPHONE / IPAD (HỆ ĐIỀU HÀNH IOS)
-   MÁY TÍNH, LAPTOP, ANDROID GIỮ NGUYÊN 100% GIAO DIỆN & HIỆU ỨNG GỐC
    ======================================================== */
 @supports (-webkit-touch-callout: none) {
-    /* 1. Ngăn iOS Safari tự vẽ lại nền gây lag/crash */
     html, body {
         background-attachment: scroll !important;
     }
-
-    /* 2. Cố định font-size = 16px trên tất cả các ô nhập liệu để triệt tiêu Auto-zoom */
     .st-input-field,
     .input-group input,
     .short-input-box,
@@ -1731,8 +1889,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     .move-modal-box select {
         font-size: 16px !important;
     }
-
-    /* 3. Tắt backdrop-filter lồng nhau ở các lớp phủ modal khi mở bàn phím */
     .move-modal-overlay,
     .visit-stats-modal-overlay,
     .dantri-article-modal,
@@ -1742,8 +1898,6 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         -webkit-backdrop-filter: none !important;
         background: rgba(15, 23, 42, 0.78) !important;
     }
-
-    /* 4. Tắt backdrop-filter bên trong hộp thoại, dùng màu trắng đục thuần và hardware acceleration */
     .student-login-box,
     .move-modal-box,
     .modal-box,
