@@ -97,7 +97,7 @@ async function loadDataFromFirebase() {
         }
 
         const activeQuizIds = new Set();
-        [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES].forEach(cat => {
+        [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES, KHO_TAI_LIEU_FOLDER].forEach(cat => {
             if (cat.links) {
                 cat.links.forEach(l => {
                     if (!l.isDoc) {
@@ -108,27 +108,50 @@ async function loadDataFromFirebase() {
             }
         });
 
+        // ĐỒNG BỘ CHUẨN XÁC: Lấy timeLimitMinutes, thời gian mở/đóng từ quizzes/{qId}.json và exam_configs
         await Promise.all(Array.from(activeQuizIds).map(async (qId) => {
             try {
-                const cfgRes = await fetch(`${FIREBASE_DB_URL}/exam_configs/${qId}.json`);
-                if (cfgRes.ok) {
-                    const cfg = await cfgRes.json();
-                    if (cfg) {
-                        [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES].forEach(cat => {
-                            (cat.links || []).forEach(l => {
-                                if (extractQuizIdFromItem(l) === qId) {
-                                    if (cfg.timeLimitMinutes) l.timeLimitMinutes = cfg.timeLimitMinutes;
-                                    if (cfg.examStartTimeStr) l.examStartTimeStr = cfg.examStartTimeStr;
-                                    if (cfg.examEndTimeStr) l.examEndTimeStr = cfg.examEndTimeStr;
-                                    if (cfg.allowFree !== undefined) l.allowFree = cfg.allowFree;
-                                    if (cfg.resultMode !== undefined) l.resultMode = cfg.resultMode;
-                                    if (cfg.allowReviewOriginal !== undefined) l.allowReviewOriginal = cfg.allowReviewOriginal;
-                                    if (cfg.showOnlineCount !== undefined) l.showOnlineCount = cfg.showOnlineCount;
+                const [qRes, cfgRes] = await Promise.all([
+                    fetch(`${FIREBASE_DB_URL}/quizzes/${qId}.json`).catch(() => null),
+                    fetch(`${FIREBASE_DB_URL}/exam_configs/${qId}.json`).catch(() => null)
+                ]);
+
+                const qData = qRes && qRes.ok ? await qRes.json().catch(() => null) : null;
+                const cfg = cfgRes && cfgRes.ok ? await cfgRes.json().catch(() => null) : null;
+
+                const allCats = [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES, KHO_TAI_LIEU_FOLDER];
+                allCats.forEach(cat => {
+                    (cat.links || []).forEach(l => {
+                        if (extractQuizIdFromItem(l) === qId) {
+                            // 1. Nạp từ file đề thi gốc (lấy đúng timeLimitMinutes: 90, ngày mở/đóng)
+                            if (qData) {
+                                if (qData.timeLimitMinutes !== undefined && qData.timeLimitMinutes !== "") {
+                                    l.timeLimitMinutes = qData.timeLimitMinutes;
                                 }
-                            });
-                        });
-                    }
-                }
+                                if (qData.examStartTimeStr) l.examStartTimeStr = qData.examStartTimeStr;
+                                if (qData.examEndTimeStr) l.examEndTimeStr = qData.examEndTimeStr;
+                                if (qData.allowFree !== undefined) l.allowFree = qData.allowFree;
+                                if (qData.resultMode !== undefined) l.resultMode = qData.resultMode;
+                                if (qData.allowReviewOriginal !== undefined) l.allowReviewOriginal = qData.allowReviewOriginal;
+                                if (qData.showOnlineCount !== undefined) l.showOnlineCount = qData.showOnlineCount;
+                                if (qData.maDe) l.maDe = qData.maDe;
+                            }
+
+                            // 2. Nếu giáo viên có cấu hình ghi đè từ bảng điều khiển thì ưu tiên áp dụng
+                            if (cfg) {
+                                if (cfg.timeLimitMinutes !== undefined && cfg.timeLimitMinutes !== "") {
+                                    l.timeLimitMinutes = cfg.timeLimitMinutes;
+                                }
+                                if (cfg.examStartTimeStr) l.examStartTimeStr = cfg.examStartTimeStr;
+                                if (cfg.examEndTimeStr) l.examEndTimeStr = cfg.examEndTimeStr;
+                                if (cfg.allowFree !== undefined) l.allowFree = cfg.allowFree;
+                                if (cfg.resultMode !== undefined) l.resultMode = cfg.resultMode;
+                                if (cfg.allowReviewOriginal !== undefined) l.allowReviewOriginal = cfg.allowReviewOriginal;
+                                if (cfg.showOnlineCount !== undefined) l.showOnlineCount = cfg.showOnlineCount;
+                            }
+                        }
+                    });
+                });
             } catch(e) {}
         }));
 
