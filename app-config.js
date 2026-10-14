@@ -10,7 +10,7 @@ const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxr
 
 // KEY API IMGBB DÙNG ĐỂ TỰ ĐỘNG UPLOAD ẢNH CÂU HỎI SIÊU TỐC
 // Bạn hãy thay API key của bạn vào giữa hai dấu ngoặc kép bên dưới
-const IMGBB_API_KEY = "d6342898a44c66fc29b7a1dfa52b827e"; 
+const IMGBB_API_KEY = "548b05b895acef8ad88e645fd274c574"; 
 
 // Link Zalo và Messenger để học sinh gửi bài làm dự phòng khi rớt mạng
 const TEACHER_ZALO_LINK = "https://zalo.me/0972952128";
