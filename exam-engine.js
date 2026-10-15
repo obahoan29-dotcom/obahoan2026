@@ -4,11 +4,60 @@
 // - Bọc kín toàn bộ dữ liệu nhạy cảm bên trong Closure, chống Console F12
 // - Memory Sanitization: Tách và mã hóa đáp án nội bộ, xóa sạch dấu vết trên RAM
 // - Tự động upload & dán ảnh Snipping Tool (Ctrl+V) qua API ImgBB cho Admin
-// - Khắc phục 100% lỗi học sinh không thấy ảnh sau khi Admin dán
+// - Nhận diện thông báo màu đỏ cho câu có ảnh đề gốc & Nút Xóa ảnh từng câu
 // =========================================================
 
 (function(window, document) {
     "use strict";
+
+    // Tự động tiêm style giao diện cho thông báo ảnh đỏ và nút xóa ảnh Admin
+    (function injectAdminUploaderStyles() {
+        const styleId = "admin-img-uploader-custom-styles";
+        if (document.getElementById(styleId)) return;
+        const style = document.createElement("style");
+        style.id = styleId;
+        style.innerHTML = `
+            .btn-admin-del-img {
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                color: #ffffff !important;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 8px;
+                font-weight: 800;
+                font-size: 0.82rem;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+                transition: transform 0.15s ease, filter 0.15s ease;
+                user-select: none;
+            }
+            .btn-admin-del-img:hover {
+                filter: brightness(1.1);
+                transform: translateY(-1px);
+            }
+            .btn-admin-del-img:active {
+                transform: translateY(2px) scale(0.96);
+            }
+            .admin-badge-has-img {
+                background: #fef2f2;
+                color: #dc2626;
+                border: 1.5px solid #f87171;
+                border-radius: 8px;
+                padding: 4px 10px;
+                font-size: 0.8rem;
+                font-weight: 900;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 1px 4px rgba(239, 68, 68, 0.18);
+                letter-spacing: -0.2px;
+                user-select: none;
+            }
+        `;
+        document.head.appendChild(style);
+    })();
 
     // Kho lưu trữ đáp án nội bộ bảo mật (Không thể bị lộ khi học sinh mở Console F12)
     const SECURE_VAULT = {
@@ -499,6 +548,12 @@
                 containerEl.style.display = "block";
             }
 
+            // Cập nhật trạng thái hiển thị của nút Xóa ảnh và huy hiệu đỏ
+            const delBtn = document.getElementById(`btn-del-img-${qId}`);
+            if (delBtn) delBtn.style.display = "inline-flex";
+            const badgeEl = document.getElementById(`badge-has-img-${qId}`);
+            if (badgeEl) badgeEl.style.display = "inline-flex";
+
             // 3. Ghi đồng bộ trực tiếp lên Firebase Realtime Database
             if (quizId) {
                 // Lưu vào node /images
@@ -539,6 +594,106 @@
         }
     }
 
+    // =========================================================================
+    // HÀM XÓA ẢNH TỪNG CÂU VÀ ĐỒNG BỘ LÊN FIREBASE REALTIME
+    // =========================================================================
+    async function deleteQuestionImage(qId, imageKey, qIdx) {
+        const effectiveKey = imageKey || `img_q_${qId}`;
+        const statusEl = document.getElementById(`img-status-${qId}`);
+        const imgEl = document.getElementById(`img-display-${qId}`);
+        const containerEl = document.getElementById(`img-container-${qId}`);
+        const delBtn = document.getElementById(`btn-del-img-${qId}`);
+        const badgeEl = document.getElementById(`badge-has-img-${qId}`);
+
+        const currentImgUrl = (imgEl && imgEl.src && imgEl.style.display !== "none") ? imgEl.src : (examData && examData.images && examData.images[effectiveKey]);
+        if (!currentImgUrl) {
+            alert("⚠️ Câu này hiện tại không có ảnh để xóa!");
+            return;
+        }
+
+        if (!confirm("⚠️ Bạn có chắc chắn muốn XÓA ảnh của câu này không?")) return;
+
+        if (statusEl) {
+            statusEl.className = "admin-uploader-status loading";
+            statusEl.innerText = "⏳ Đang xóa ảnh...";
+        }
+
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizId = urlParams.get('id');
+
+            // 1. Xóa trong bộ nhớ RAM
+            if (examData && examData.images) {
+                delete examData.images[effectiveKey];
+                delete examData.images[`img_q_${qId}`];
+                delete examData.images[`q${qId}`];
+                delete examData.images[`${qId}`];
+            }
+            if (examData && examData.questions) {
+                const targetQ = examData.questions.find(item => String(item.id) === String(qId));
+                if (targetQ) {
+                    targetQ.imageUrl = "";
+                }
+            }
+
+            // 2. Cập nhật DOM ẩn ảnh
+            if (imgEl) {
+                imgEl.src = "";
+                imgEl.style.display = "none";
+            }
+            if (containerEl) {
+                containerEl.style.display = "none";
+            }
+            if (delBtn) {
+                delBtn.style.display = "none";
+            }
+            if (badgeEl) {
+                badgeEl.style.display = "none";
+            }
+
+            // Cập nhật lại cache shuffle nếu có
+            const examCode = typeof getExamCode === 'function' ? getExamCode() : "";
+            const shuffleKey = `shuffled_exam_${examCode}`;
+            if (safeLocal.getItem(shuffleKey) && examData && examData.questions) {
+                safeLocal.setItem(shuffleKey, JSON.stringify(examData.questions));
+            }
+
+            // 3. Xóa trên Firebase Realtime Database
+            if (quizId) {
+                await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/images/${effectiveKey}.json`, {
+                    method: "DELETE"
+                });
+
+                try {
+                    const qRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/questions.json`);
+                    const qList = await qRes.json();
+                    if (Array.isArray(qList)) {
+                        const targetIdx = qList.findIndex(item => item && String(item.id) === String(qId));
+                        if (targetIdx !== -1) {
+                            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/questions/${targetIdx}.json`, {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ imageUrl: "" })
+                            });
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            if (statusEl) {
+                statusEl.className = "admin-uploader-status success";
+                statusEl.innerText = "🗑️ Đã xóa ảnh thành công!";
+                setTimeout(() => { if (statusEl) statusEl.innerText = ""; }, 3500);
+            }
+        } catch(err) {
+            if (statusEl) {
+                statusEl.className = "admin-uploader-status error";
+                statusEl.innerText = "❌ Lỗi xóa ảnh: " + err.message;
+            }
+            alert("❌ Lỗi khi xóa ảnh: " + err.message);
+        }
+    }
+
     function renderQuizLayout(questions, imageMap) { 
         const container = document.getElementById('dynamic-questions-container'); 
         container.innerHTML = ''; 
@@ -556,10 +711,20 @@
             return `<div class="quiz-img-container" id="img-container-${qId}" style="${hasUrl ? '' : 'display:none;'}"><img src="${imgUrl || ''}" class="quiz-img" id="img-display-${qId}" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa"></div>`;
         }
 
-        // TẠO KHUNG ĐIỀU KHIỂN UPLOAD / DÁN ẢNH SNIPPING TOOL DÀNH RIÊNG CHO ADMIN
+        // TẠO KHUNG ĐIỀU KHIỂN UPLOAD / DÁN ẢNH / XÓA ẢNH / HUY HIỆU ĐỎ CHO ADMIN
         function buildAdminImageUploader(q, qIdx) {
             if (!isAdminMode) return "";
             const imgKey = q.imageKey || `img_q_${q.id}`;
+            const currentImg = getEffectiveImageUrl(q, imageMap);
+
+            // Kiểm tra câu trong đề gốc có ảnh hay không
+            const hasOriginalImg = Boolean(
+                (currentImg && currentImg.trim() !== "") ||
+                (q.imageKey && String(q.imageKey).trim() !== "") ||
+                (q.imageUrl && String(q.imageUrl).trim() !== "")
+            );
+            const hasActiveImg = Boolean(currentImg && currentImg.trim() !== "");
+
             return `
             <div class="admin-img-uploader-zone" id="zone-q-${q.id}" tabindex="0" title="Click vào đây và bấm Ctrl+V để dán ảnh chụp màn hình từ Snipping Tool">
                 <div class="admin-uploader-btn-group">
@@ -569,7 +734,19 @@
                     <button type="button" class="btn-admin-file-img" onclick="document.getElementById('input-file-q-${q.id}').click()">
                         📁 Chọn tệp
                     </button>
+                    <button type="button" class="btn-admin-del-img" id="btn-del-img-${q.id}" onclick="deleteQuestionImage(${q.id}, '${imgKey}', ${qIdx})" style="${hasActiveImg ? 'display:inline-flex;' : 'display:none;'}">
+                        🗑️ Xóa ảnh
+                    </button>
                     <input type="file" id="input-file-q-${q.id}" accept="image/*" style="display:none;" onchange="handleAdminFileSelected(this, ${q.id}, '${imgKey}', ${qIdx})">
+                    
+                    ${hasOriginalImg ? `
+                    <span class="admin-badge-has-img" id="badge-has-img-${q.id}">
+                        🔴 [CÂU NÀY CÓ ẢNH / HÌNH VẼ MINH HỌA]
+                    </span>` : `
+                    <span class="admin-badge-has-img" id="badge-has-img-${q.id}" style="display:none;">
+                        🔴 [CÂU NÀY CÓ ẢNH / HÌNH VẼ MINH HỌA]
+                    </span>`}
+                    
                     <span class="admin-uploader-hint">💡 Cắt bằng Snipping Tool rồi bấm chuột vào đây ấn <b>Ctrl + V</b></span>
                 </div>
                 <span class="admin-uploader-status" id="img-status-${q.id}"></span>
@@ -777,6 +954,8 @@
             uploadQuestionImageToImgBB(input.files[0], qId, imgKey, qIdx);
         }
     };
+
+    window.deleteQuestionImage = deleteQuestionImage;
 
     function renderQuestionPalette(questions) { 
         const container = document.getElementById('q-nav-scroll-container'); 
