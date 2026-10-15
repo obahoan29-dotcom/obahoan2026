@@ -93,7 +93,8 @@ let CHINH_KHOA_CATEGORIES = [
         links: [ 
             { id: "padlet_1", firebaseId: "padlet_1", categoryId: "tu-luan-padlet", title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
             { id: "padlet_2", firebaseId: "padlet_2", categoryId: "tu-luan-padlet", title: "11C chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11c-nop-tu-luan-padlet-160926-s023me1v17byc9z8qj13", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-            { id: "padlet_3", firebaseId: "padlet_3", categoryId: "tu-luan-padlet", title: "10P chụp tự luận Padlet", date: "05/09/2026 - 08:00", url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
+            { id: "padlet_3", firebaseId: "padlet_3", categoryId: "tu-luan-padlet", title: "10P chụp tự luận Padlet", date: "05/09/2026 - 08:00", url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+            { id: "padlet_4", firebaseId: "padlet_4", categoryId: "tu-luan-padlet", title: "11E chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan42/nop-tu-luan-11e-padlet-s024j7r2sdb80rqmahq7", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
         ] 
     }
 ];
