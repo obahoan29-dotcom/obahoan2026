@@ -5,6 +5,7 @@
 // - Memory Sanitization: Tách và mã hóa đáp án nội bộ, xóa sạch dấu vết trên RAM
 // - Tự động upload & dán ảnh Snipping Tool (Ctrl+V) qua API ImgBB cho Admin
 // - Nhận diện thông báo màu đỏ cho câu có ảnh đề gốc & Nút Xóa ảnh từng câu
+// - Đồng bộ ngầm ảnh thời gian thực (Zero-Polling SSE) siêu tiết kiệm băng thông
 // =========================================================
 
 (function(window, document) {
@@ -69,6 +70,7 @@
     };
 
     let hasInitExamEngine = false;
+    let imageSyncEventSource = null;
 
     // Kiểm tra xem trang có đang mở dưới quyền Quản Trị Viên (Admin) hay không
     function checkIsAdminPreviewMode() {
@@ -101,23 +103,23 @@
     }
 
     // =========================================================
-    // HÀM TÌM ẢNH THÔNG MINH: ĐẢM BẢO HỌC SINH LUÔN THẤY ẢNH DÙ CÂU HỎI CÓ HAY KHÔNG CÓ imageKey
+    // HÀM TÌM ẢNH THÔNG MINH
     // =========================================================
     function getEffectiveImageUrl(q, imageMap) {
         if (!q) return "";
         if (!imageMap || typeof imageMap !== 'object') imageMap = {};
 
-        // 1. Nếu trong câu hỏi đã có sẵn link trực tiếp
+        // 1. Link trực tiếp trong câu
         if (q.imageUrl && String(q.imageUrl).trim() !== "") {
             return q.imageUrl.trim();
         }
 
-        // 2. Tìm theo imageKey nếu có
+        // 2. Tìm theo imageKey
         if (q.imageKey && imageMap[q.imageKey] && String(imageMap[q.imageKey]).trim() !== "") {
             return imageMap[q.imageKey].trim();
         }
 
-        // 3. Tự động tìm theo các tiền tố do Admin dán trực tiếp trên web
+        // 3. Tự động tìm theo các tiền tố
         const possibleKeys = [
             `img_q_${q.id}`,
             `q${q.id}`,
@@ -135,6 +137,124 @@
         }
 
         return "";
+    }
+
+    // =========================================================
+    // CƠ CHẾ ĐỒNG BỘ ẢNH NGẦM THỜI GIAN THỰC (TỐI ƯU BĂNG THÔNG)
+    // =========================================================
+    function startImageSyncWatcher(quizId) {
+        if (!quizId) return;
+        if (imageSyncEventSource) {
+            imageSyncEventSource.close();
+            imageSyncEventSource = null;
+        }
+
+        // Kênh stream thời gian thực SSE: chỉ tốn vài chục bytes khi có biến động ảnh
+        const streamUrl = `${FIREBASE_DB_URL}/quizzes/${quizId}/image_sync.json`;
+        imageSyncEventSource = new EventSource(streamUrl);
+
+        const handleSyncEvent = function(e) {
+            try {
+                if (!e.data) return;
+                const parsed = JSON.parse(e.data);
+                if (!parsed) return;
+                let syncData = parsed.path === "/" ? (parsed.data || {}) : parsed.data;
+                if (!syncData || typeof syncData !== 'object' || !syncData.qId) return;
+
+                applyRealtimeImageUpdate(syncData);
+            } catch(err) {}
+        };
+
+        imageSyncEventSource.addEventListener('put', handleSyncEvent);
+        imageSyncEventSource.addEventListener('patch', handleSyncEvent);
+    }
+
+    function applyRealtimeImageUpdate(syncData) {
+        const qId = syncData.qId;
+        const action = syncData.action; // "set" hoặc "delete"
+        const newUrl = syncData.imageUrl || "";
+        const imgKey = syncData.imageKey || `img_q_${qId}`;
+        const isDeleteAction = (action === "delete" || !newUrl);
+
+        // 1. Cập nhật trong bộ nhớ RAM examData
+        if (examData) {
+            if (!examData.images) examData.images = {};
+            if (isDeleteAction) {
+                delete examData.images[imgKey];
+                delete examData.images[`img_q_${qId}`];
+                delete examData.images[`q${qId}`];
+                delete examData.images[`${qId}`];
+                if (syncData.origKey) delete examData.images[syncData.origKey];
+            } else {
+                examData.images[imgKey] = newUrl;
+            }
+
+            if (Array.isArray(examData.questions)) {
+                const targetQ = examData.questions.find(item => item && String(item.id) === String(qId));
+                if (targetQ) {
+                    targetQ.imageUrl = isDeleteAction ? "" : newUrl;
+                    if (isDeleteAction && targetQ.imageKey) {
+                        delete examData.images[targetQ.imageKey];
+                    }
+                }
+            }
+        }
+
+        // 2. Dọn sạch cache lưu tạm trong localStorage để không bị lưu ảnh cũ
+        try {
+            const examCode = typeof getExamCode === 'function' ? getExamCode() : "";
+            const shuffleKey = `shuffled_exam_${examCode}`;
+            const rawCached = safeLocal.getItem(shuffleKey);
+            if (rawCached) {
+                const parsedList = JSON.parse(rawCached);
+                if (Array.isArray(parsedList)) {
+                    const qInCache = parsedList.find(item => item && String(item.id) === String(qId));
+                    if (qInCache) {
+                        qInCache.imageUrl = isDeleteAction ? "" : newUrl;
+                        safeLocal.setItem(shuffleKey, JSON.stringify(parsedList));
+                    }
+                }
+            }
+        } catch(e) {}
+
+        // 3. Cập nhật DOM tức thì trên màn hình học sinh và admin
+        const containerEl = document.getElementById(`img-container-${qId}`);
+        const imgEl = document.getElementById(`img-display-${qId}`);
+        const delBtn = document.getElementById(`btn-del-img-${qId}`);
+        const badgeEl = document.getElementById(`badge-has-img-${qId}`);
+
+        if (isDeleteAction) {
+            // Xóa ảnh tức thì
+            if (imgEl) {
+                imgEl.src = "";
+                imgEl.style.display = "none";
+            }
+            if (containerEl) {
+                containerEl.style.display = "none";
+            }
+            if (delBtn) {
+                delBtn.style.display = "none";
+            }
+            if (badgeEl) {
+                badgeEl.style.display = "none";
+            }
+        } else {
+            // Hiển thị ảnh mới tức thì
+            if (imgEl) {
+                imgEl.src = newUrl;
+                imgEl.style.display = "inline-block";
+                if (containerEl) containerEl.style.display = "block";
+            } else if (containerEl) {
+                containerEl.innerHTML = `<img src="${newUrl}" class="quiz-img" id="img-display-${qId}" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa">`;
+                containerEl.style.display = "block";
+            }
+            if (delBtn) {
+                delBtn.style.display = "inline-flex";
+            }
+            if (badgeEl) {
+                badgeEl.style.display = "inline-flex";
+            }
+        }
     }
 
     async function initExamEngine() {
@@ -219,6 +339,7 @@
             checkPendingSubmissionOnLoad();
             await checkSessionStatus(isAutostart);
             startTimeWatcherRealtime(quizId);
+            startImageSyncWatcher(quizId); // Kích hoạt kênh đồng bộ ngầm ảnh
         } catch (error) {
             clearTimeout(failsafeTimer);
             hideLoading();
@@ -416,7 +537,7 @@
                         if (Array.isArray(parsedQ)) {
                             parsedQ.forEach(q => {
                                 const freshUrl = getEffectiveImageUrl(q, examData.images || {});
-                                if (freshUrl) q.imageUrl = freshUrl;
+                                q.imageUrl = freshUrl || ""; // Nếu ảnh đã xóa thì cập nhật rỗng chuẩn xác
                             });
                             examData.questions = parsedQ;
                         } else {
@@ -489,13 +610,11 @@
     }
 
     // =========================================================================
-    // HÀM UPLOAD ẢNH LÊN IMGBB VÀ CẬP NHẬT TỨC THÌ LÊN FIREBASE CHO HỌC SINH
+    // HÀM UPLOAD ẢNH LÊN IMGBB VÀ ĐỒNG BỘ NGẦM TỚI HỌC SINH TỨC THÌ
     // =========================================================================
     async function uploadQuestionImageToImgBB(file, qId, imageKey, qIndex) {
         if (!file) return;
         const statusEl = document.getElementById(`img-status-${qId}`);
-        const imgEl = document.getElementById(`img-display-${qId}`);
-        const containerEl = document.getElementById(`img-container-${qId}`);
 
         if (!IMGBB_API_KEY || IMGBB_API_KEY.includes("THAY_API_KEY")) {
             alert("⚠️ Thầy/bạn chưa cấu hình IMGBB_API_KEY trong file app-config.js!\nVui lòng dán API key của bạn vào app-config.js.");
@@ -504,7 +623,7 @@
 
         if (statusEl) {
             statusEl.className = "admin-uploader-status loading";
-            statusEl.innerText = "⏳ Đang tải ảnh lên ImgBB...";
+            statusEl.innerText = "⏳ Đang tải ảnh lên ImgBB & thông báo học sinh...";
         }
 
         try {
@@ -524,44 +643,41 @@
             const directImgUrl = json.data.display_url || json.data.url;
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
-
-            // 1. Cập nhật vào bộ nhớ RAM cục bộ
             const effectiveKey = imageKey || `img_q_${qId}`;
-            if (!examData.images) examData.images = {};
-            examData.images[effectiveKey] = directImgUrl;
 
-            if (examData.questions) {
-                const targetQ = examData.questions.find(item => String(item.id) === String(qId));
-                if (targetQ) {
-                    targetQ.imageUrl = directImgUrl;
-                    targetQ.imageKey = effectiveKey;
-                }
-            }
+            // 1. Áp dụng ngay trên máy Admin
+            applyRealtimeImageUpdate({
+                qId: qId,
+                imageKey: effectiveKey,
+                imageUrl: directImgUrl,
+                action: "set"
+            });
 
-            // 2. Cập nhật hiển thị ảnh tức thì trên màn hình Admin
-            if (imgEl) {
-                imgEl.src = directImgUrl;
-                imgEl.style.display = "inline-block";
-                if (containerEl) containerEl.style.display = "block";
-            } else if (containerEl) {
-                containerEl.innerHTML = `<img src="${directImgUrl}" class="quiz-img" id="img-display-${qId}" referrerpolicy="no-referrer" loading="lazy" alt="Hình minh họa">`;
-                containerEl.style.display = "block";
-            }
-
-            // Cập nhật trạng thái hiển thị của nút Xóa ảnh và huy hiệu đỏ
-            const delBtn = document.getElementById(`btn-del-img-${qId}`);
-            if (delBtn) delBtn.style.display = "inline-flex";
-            const badgeEl = document.getElementById(`badge-has-img-${qId}`);
-            if (badgeEl) badgeEl.style.display = "inline-flex";
-
-            // 3. Ghi đồng bộ trực tiếp lên Firebase Realtime Database
+            // 2. Gửi thông báo ngầm SSE tới học sinh & ghi Firebase song song
             if (quizId) {
-                // Lưu vào node /images
-                await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/images/${effectiveKey}.json`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(directImgUrl)
-                });
+                const syncPayload = {
+                    qId: qId,
+                    imageKey: effectiveKey,
+                    origKey: imageKey || "",
+                    imageUrl: directImgUrl,
+                    action: "set",
+                    ts: Date.now()
+                };
+
+                await Promise.all([
+                    // Ghi đè vào node images
+                    fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/images/${effectiveKey}.json`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(directImgUrl)
+                    }),
+                    // Gửi thông báo ngầm cho học sinh cập nhật ngay lập tức
+                    fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/image_sync.json`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(syncPayload)
+                    })
+                ]);
 
                 // Đồng thời cập nhật trực tiếp vào câu hỏi trong mảng questions của đề thi trên Firebase
                 try {
@@ -582,7 +698,7 @@
 
             if (statusEl) {
                 statusEl.className = "admin-uploader-status success";
-                statusEl.innerText = "✅ Đã lưu ảnh ImgBB & đồng bộ Firebase!";
+                statusEl.innerText = "✅ Đã lưu ảnh & đồng bộ tới học sinh!";
                 setTimeout(() => { if (statusEl) statusEl.innerText = ""; }, 4000);
             }
         } catch(err) {
@@ -595,17 +711,20 @@
     }
 
     // =========================================================================
-    // HÀM XÓA ẢNH TỪNG CÂU VÀ ĐỒNG BỘ LÊN FIREBASE REALTIME
+    // HÀM XÓA ẢNH TỪNG CÂU VÀ THÔNG BÁO NGẦM TỚI HỌC SINH TỨC THÌ
     // =========================================================================
     async function deleteQuestionImage(qId, imageKey, qIdx) {
-        const effectiveKey = imageKey || `img_q_${qId}`;
+        const targetQ = examData && examData.questions ? examData.questions.find(item => item && String(item.id) === String(qId)) : null;
+        const origKey = targetQ ? targetQ.imageKey : "";
+        const effectiveKey = imageKey || origKey || `img_q_${qId}`;
+
         const statusEl = document.getElementById(`img-status-${qId}`);
         const imgEl = document.getElementById(`img-display-${qId}`);
-        const containerEl = document.getElementById(`img-container-${qId}`);
-        const delBtn = document.getElementById(`btn-del-img-${qId}`);
-        const badgeEl = document.getElementById(`badge-has-img-${qId}`);
 
-        const currentImgUrl = (imgEl && imgEl.src && imgEl.style.display !== "none") ? imgEl.src : (examData && examData.images && examData.images[effectiveKey]);
+        const currentImgUrl = (imgEl && imgEl.src && imgEl.style.display !== "none") 
+            ? imgEl.src 
+            : (examData && examData.images && (examData.images[effectiveKey] || (origKey && examData.images[origKey])));
+
         if (!currentImgUrl) {
             alert("⚠️ Câu này hiện tại không có ảnh để xóa!");
             return;
@@ -615,55 +734,53 @@
 
         if (statusEl) {
             statusEl.className = "admin-uploader-status loading";
-            statusEl.innerText = "⏳ Đang xóa ảnh...";
+            statusEl.innerText = "⏳ Đang xóa ảnh & đồng bộ máy học sinh...";
         }
 
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
 
-            // 1. Xóa trong bộ nhớ RAM
-            if (examData && examData.images) {
-                delete examData.images[effectiveKey];
-                delete examData.images[`img_q_${qId}`];
-                delete examData.images[`q${qId}`];
-                delete examData.images[`${qId}`];
-            }
-            if (examData && examData.questions) {
-                const targetQ = examData.questions.find(item => String(item.id) === String(qId));
-                if (targetQ) {
-                    targetQ.imageUrl = "";
-                }
-            }
+            // 1. Áp dụng ngay trên máy Admin
+            applyRealtimeImageUpdate({
+                qId: qId,
+                imageKey: effectiveKey,
+                origKey: origKey,
+                imageUrl: "",
+                action: "delete"
+            });
 
-            // 2. Cập nhật DOM ẩn ảnh
-            if (imgEl) {
-                imgEl.src = "";
-                imgEl.style.display = "none";
-            }
-            if (containerEl) {
-                containerEl.style.display = "none";
-            }
-            if (delBtn) {
-                delBtn.style.display = "none";
-            }
-            if (badgeEl) {
-                badgeEl.style.display = "none";
-            }
-
-            // Cập nhật lại cache shuffle nếu có
-            const examCode = typeof getExamCode === 'function' ? getExamCode() : "";
-            const shuffleKey = `shuffled_exam_${examCode}`;
-            if (safeLocal.getItem(shuffleKey) && examData && examData.questions) {
-                safeLocal.setItem(shuffleKey, JSON.stringify(examData.questions));
-            }
-
-            // 3. Xóa trên Firebase Realtime Database
+            // 2. Gửi thông báo ngầm SSE tới học sinh & xóa trên Firebase
             if (quizId) {
-                await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/images/${effectiveKey}.json`, {
-                    method: "DELETE"
-                });
+                const syncPayload = {
+                    qId: qId,
+                    imageKey: effectiveKey,
+                    origKey: origKey || "",
+                    imageUrl: "",
+                    action: "delete",
+                    ts: Date.now()
+                };
 
+                const deleteTasks = [
+                    // Gửi thông báo ngầm cập nhật tức thì tới học sinh
+                    fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/image_sync.json`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(syncPayload)
+                    }),
+                    // Xóa ảnh ở node images
+                    fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/images/${effectiveKey}.json`, {
+                        method: "DELETE"
+                    })
+                ];
+
+                if (origKey && origKey !== effectiveKey) {
+                    deleteTasks.push(fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/images/${origKey}.json`, { method: "DELETE" }));
+                }
+
+                await Promise.all(deleteTasks);
+
+                // Đồng thời cập nhật trường questions trên Firebase
                 try {
                     const qRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/questions.json`);
                     const qList = await qRes.json();
@@ -682,7 +799,7 @@
 
             if (statusEl) {
                 statusEl.className = "admin-uploader-status success";
-                statusEl.innerText = "🗑️ Đã xóa ảnh thành công!";
+                statusEl.innerText = "🗑️ Đã xóa ảnh & đồng bộ tới học sinh!";
                 setTimeout(() => { if (statusEl) statusEl.innerText = ""; }, 3500);
             }
         } catch(err) {
@@ -1398,6 +1515,7 @@
         if (typeof clearPresence === 'function') clearPresence(sId);
         if (timerInterval) clearInterval(timerInterval); 
         if (typeof timeWatcherInterval !== 'undefined' && timeWatcherInterval) clearInterval(timeWatcherInterval);
+        if (imageSyncEventSource) { imageSyncEventSource.close(); imageSyncEventSource = null; }
 
         safeLocal.removeItem("pending_exam_submission");
         safeLocal.removeItem(getStorageKey()); 
