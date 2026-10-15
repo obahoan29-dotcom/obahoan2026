@@ -890,6 +890,9 @@
                         <a href="https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${qId})"> 
                             📌 10P nộp Padlet 
                         </a> 
+                        <a href="https://padlet.com/obahoan42/nop-tu-luan-11e-padlet-s024j7r2sdb80rqmahq7" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${qId})"> 
+                            📌 11E chụp tự luận Padlet 
+                        </a> 
                     </div> 
                 </div> 
             </div>`;
