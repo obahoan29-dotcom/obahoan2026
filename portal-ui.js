@@ -15,11 +15,67 @@ let currentTargetAvatarCatId = "nhac-nho";
 
 const categoryExpandedState = {};
 
+// 4 LINK PADLET CHUẨN ĐÚNG THỨ TỰ TỪ CÁC ĐỀ THI
+const DEFAULT_PADLET_LINKS = [
+    {
+        id: "padlet_11a",
+        firebaseId: "padlet_11a",
+        categoryId: "tu-luan-padlet",
+        title: "11A nộp tự luận Padlet",
+        date: "16/09/2026 - 10:00",
+        timestamp: 1773630004,
+        url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4",
+        badgeText: "HOT",
+        isDoc: true,
+        avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png"
+    },
+    {
+        id: "padlet_11c",
+        firebaseId: "padlet_11c",
+        categoryId: "tu-luan-padlet",
+        title: "11C nộp tự luận Padlet",
+        date: "16/09/2026 - 10:00",
+        timestamp: 1773630003,
+        url: "https://padlet.com/obahoan29/11c-nop-tu-luan-padlet-160926-s023me1v17byc9z8qj13",
+        badgeText: "HOT",
+        isDoc: true,
+        avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png"
+    },
+    {
+        id: "padlet_10p",
+        firebaseId: "padlet_10p",
+        categoryId: "tu-luan-padlet",
+        title: "10P nộp tự luận Padlet",
+        date: "16/09/2026 - 10:00",
+        timestamp: 1773630002,
+        url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0",
+        badgeText: "HOT",
+        isDoc: true,
+        avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png"
+    },
+    {
+        id: "padlet_11e",
+        firebaseId: "padlet_11e",
+        categoryId: "tu-luan-padlet",
+        title: "11E nộp tự luận Padlet",
+        date: "16/09/2026 - 10:00",
+        timestamp: 1773630001,
+        url: "https://padlet.com/obahoan42/nop-tu-luan-11e-padlet-s024j7r2sdb80rqmahq7",
+        badgeText: "HOT",
+        isDoc: true,
+        avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png"
+    }
+];
+
 document.addEventListener("DOMContentLoaded", async function() {
     initBannerAndAvatars();
     if (typeof initTableSettings === "function") initTableSettings();
     if (typeof initAvatarGrid === "function") initAvatarGrid();
     if (typeof checkAdminSessionValidity === "function") checkAdminSessionValidity();
+
+    // Khởi tạo trước 4 link padlet để hiển thị tức thì
+    const padletCat = CHINH_KHOA_CATEGORIES.find(c => c.id === "tu-luan-padlet");
+    if (padletCat) padletCat.links = [...DEFAULT_PADLET_LINKS];
 
     refreshAllViews();
     await loadDataFromFirebase();
@@ -73,15 +129,27 @@ async function loadDataFromFirebase() {
             if (customLinksData["nhac-nho"]) {
                 const rLinks = Object.keys(customLinksData["nhac-nho"]).map(k => ({
                     id: k, firebaseId: k, ...customLinksData["nhac-nho"][k], categoryId: "nhac-nho"
-                }));
+                })).filter(l => l && l.title && l.title !== "undefined");
                 if (rLinks.length > 0) REMINDER_CATEGORY.links = sortLinksNewestFirst(rLinks);
             }
 
             [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES].forEach(cat => {
+                // Bảo vệ riêng cho mục Nộp tự luận Padlet
+                if (cat.id === "tu-luan-padlet") {
+                    let customPadlet = [];
+                    if (customLinksData[cat.id]) {
+                        customPadlet = Object.keys(customLinksData[cat.id]).map(k => ({
+                            id: k, firebaseId: k, ...customLinksData[cat.id][k], categoryId: cat.id
+                        })).filter(l => l && l.title && l.title !== "undefined" && String(l.title).trim() !== "");
+                    }
+                    cat.links = customPadlet.length > 0 ? sortLinksNewestFirst(customPadlet) : [...DEFAULT_PADLET_LINKS];
+                    return;
+                }
+
                 if (customLinksData[cat.id]) {
                     let list = Object.keys(customLinksData[cat.id]).map(k => ({
                         id: k, firebaseId: k, ...customLinksData[cat.id][k], categoryId: cat.id
-                    }));
+                    })).filter(l => l && l.title && l.title !== "undefined" && String(l.title).trim() !== "");
                     cat.links = sortLinksNewestFirst(list);
                 } else if (cat.links) {
                     cat.links = sortLinksNewestFirst(cat.links);
@@ -91,7 +159,7 @@ async function loadDataFromFirebase() {
             if (customLinksData["kho-tai-lieu"]) {
                 let list = Object.keys(customLinksData["kho-tai-lieu"]).map(k => ({
                     id: k, firebaseId: k, ...customLinksData["kho-tai-lieu"][k], categoryId: "kho-tai-lieu"
-                }));
+                })).filter(l => l && l.title && l.title !== "undefined");
                 KHO_TAI_LIEU_FOLDER.links = sortLinksNewestFirst(list);
             }
         }
@@ -108,7 +176,6 @@ async function loadDataFromFirebase() {
             }
         });
 
-        // ĐỒNG BỘ CHUẨN XÁC: Lấy timeLimitMinutes, thời gian mở/đóng từ quizzes/{qId}.json và exam_configs
         await Promise.all(Array.from(activeQuizIds).map(async (qId) => {
             try {
                 const [qRes, cfgRes] = await Promise.all([
@@ -517,7 +584,6 @@ function getItemDisplayDate(item) {
     return "---";
 }
 
-// BỔ SUNG: Tham số &admin=1 để mở trang thi với đầy đủ công cụ upload/paste ảnh ImgBB cho Admin
 function testExamAsAdmin(quizId, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const targetCat = categoryId || "them-11";
