@@ -128,7 +128,7 @@ async function loadDataFromFirebase() {
         if (customLinksData && typeof customLinksData === "object") {
             if (customLinksData["nhac-nho"]) {
                 const rLinks = Object.keys(customLinksData["nhac-nho"]).map(k => ({
-                    id: k, firebaseId: k, ...customLinksData["nhac-nho"][k], categoryId: "nhac-nho"
+                    id: k, firebaseId: k, ...customLinksData["nhac-nho"][k], categoryId: "nhac-nho", isDoc: true
                 })).filter(l => l && l.title && l.title !== "undefined");
                 if (rLinks.length > 0) REMINDER_CATEGORY.links = sortLinksNewestFirst(rLinks);
             }
@@ -294,7 +294,7 @@ function renderDantriDropdown() {
 
 async function editReminderSectionTitle(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Nhắc nhở quan trọng:", REMINDER_SECTION_TITLE);
+    let newTitle = prompt("✏️ Nhập tiêu đề mới cho khối Bản tin thường ngày:", REMINDER_SECTION_TITLE);
     if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== REMINDER_SECTION_TITLE) {
         REMINDER_SECTION_TITLE = newTitle.trim();
         const titleEl = document.getElementById("reminder-section-title-text");
@@ -310,19 +310,78 @@ async function editReminderSectionTitle(event) {
     }
 }
 
+// HÀM TẠO VÀ SOẠN THẢO BÀI VIẾT MỚI VÀO BẢN TIN THƯỜNG NGÀY
+function addNewReminderArticle(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const newItemId = "rem_" + Date.now();
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} - ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    const newItem = {
+        id: newItemId,
+        firebaseId: newItemId,
+        categoryId: "nhac-nho",
+        title: "",
+        articleTitle: "",
+        author: "Thầy Hoan",
+        articleTime: formatDantriDateTime(now),
+        date: dateStr,
+        timestamp: Date.now(),
+        badgeText: "MỚI",
+        isHot: false,
+        isDoc: true,
+        avatar: PRESET_20_AVATARS[0],
+        sapo: "",
+        articleImg: "",
+        articleImgCaption: "",
+        articleBody: "",
+        url: "#"
+    };
+
+    openDantriArticleModal(newItem, "nhac-nho", event, true);
+}
+
 function renderReminderSection() {
     const container = document.getElementById("reminder-container");
     const titleEl = document.getElementById("reminder-section-title-text");
     const editHeadBtn = document.getElementById("btn-edit-reminder-head");
 
-    if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE || "📌 Nhắc nhở quan trọng";
+    if (titleEl) titleEl.innerText = REMINDER_SECTION_TITLE || "📌 Bản tin thường ngày";
     if (editHeadBtn) editHeadBtn.style.display = isAdminLoggedIn ? "inline-flex" : "none";
+
+    // Tự động gắn nút Đăng bài mới cạnh nút Sửa tiêu đề khi Admin đăng nhập
+    const headerRow = document.querySelector(".reminder-header-row-box");
+    if (headerRow) {
+        let addBtn = document.getElementById("btn-add-reminder-post");
+        if (!addBtn) {
+            addBtn = document.createElement("button");
+            addBtn.type = "button";
+            addBtn.id = "btn-add-reminder-post";
+            addBtn.className = "btn-edit-reminder-head";
+            addBtn.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+            addBtn.style.color = "#ffffff";
+            addBtn.style.borderColor = "#10b981";
+            addBtn.style.marginRight = "6px";
+            addBtn.title = "Viết và đăng thêm bài viết mới vào Bản tin thường ngày";
+            addBtn.onclick = (e) => addNewReminderArticle(e);
+
+            if (editHeadBtn && editHeadBtn.parentNode) {
+                editHeadBtn.parentNode.insertBefore(addBtn, editHeadBtn);
+            } else {
+                headerRow.appendChild(addBtn);
+            }
+        }
+        addBtn.innerHTML = "➕ Đăng bài mới";
+        addBtn.style.display = isAdminLoggedIn ? "inline-flex" : "none";
+    }
 
     if (!container) return;
     container.innerHTML = "";
 
     const links = sortLinksNewestFirst(REMINDER_CATEGORY.links || []);
-    renderLinksWithFold(container, links, "nhac-nho", 2);
+    // Bản tin thường ngày: Chỉ hiển thị 1 bài mới nhất (limit = 1)
+    renderLinksWithFold(container, links, "nhac-nho", 1);
 }
 
 function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
@@ -336,9 +395,10 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
 
     const sortedLinks = sortLinksNewestFirst(links);
     const total = sortedLinks.length;
+    const isReminder = (categoryId === "nhac-nho");
 
-    const firstTwo = sortedLinks.slice(0, visibleLimit);
-    firstTwo.forEach(item => {
+    const firstPortion = sortedLinks.slice(0, visibleLimit);
+    firstPortion.forEach(item => {
         container.appendChild(createItemCardElement(item, categoryId));
     });
 
@@ -380,18 +440,30 @@ function renderLinksWithFold(container, links, categoryId, visibleLimit = 2) {
         toggleBtn.style.cursor = "pointer";
         toggleBtn.style.transition = "all 0.15s ease";
 
-        toggleBtn.innerHTML = isExpanded 
-            ? `▲ Thu gọn lại (${remainingCount} mục)` 
-            : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
+        if (isReminder) {
+            toggleBtn.innerHTML = isExpanded 
+                ? `▲ Thu gọn bài viết (${remainingCount} bài)` 
+                : `▼ Xem tiếp ${remainingCount} bài viết cũ hơn`;
+        } else {
+            toggleBtn.innerHTML = isExpanded 
+                ? `▲ Thu gọn lại (${remainingCount} mục)` 
+                : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
+        }
 
         toggleBtn.onclick = (e) => {
             e.stopPropagation();
             categoryExpandedState[categoryId] = !categoryExpandedState[categoryId];
             const nowExpanded = categoryExpandedState[categoryId];
             hiddenBox.style.display = nowExpanded ? "flex" : "none";
-            toggleBtn.innerHTML = nowExpanded 
-                ? `▲ Thu gọn lại (${remainingCount} mục)` 
-                : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
+            if (isReminder) {
+                toggleBtn.innerHTML = nowExpanded 
+                    ? `▲ Thu gọn bài viết (${remainingCount} bài)` 
+                    : `▼ Xem tiếp ${remainingCount} bài viết cũ hơn`;
+            } else {
+                toggleBtn.innerHTML = nowExpanded 
+                    ? `▲ Thu gọn lại (${remainingCount} mục)` 
+                    : `▼ Ấn vào đây để xem tiếp ${remainingCount} mục còn lại`;
+            }
         };
 
         foldWrapper.appendChild(hiddenBox);
@@ -603,7 +675,9 @@ function testExamAsAdmin(quizId, categoryId, event) {
 }
 
 function buildCardHtmlString(item, categoryId) {
-    const isDoc = item.isDoc;
+    const isReminder = (categoryId === "nhac-nho");
+    // Nhắc nhở / Bản tin luôn được đảm bảo là tài liệu bài viết (isDoc: true), tránh hiện nhầm các nút thi cử
+    const isDoc = isReminder || item.isDoc;
     const itemId = item.id || item.firebaseId || `item_${Date.now()}`;
     const quizId = extractQuizIdFromItem(item) || itemId;
     const badge = item.badgeText || (item.isHot ? "HOT" : "NONE");
@@ -611,7 +685,6 @@ function buildCardHtmlString(item, categoryId) {
     const encodedData = encodeURIComponent(JSON.stringify(item));
     const isAllowFree = (item.allowFree !== false);
     const showOnlineCount = (item.showOnlineCount !== false);
-    const isReminder = (categoryId === "nhac-nho");
     
     const displayDate = getItemDisplayDate(item);
     const avatarSize = parseInt(item.avatarSize, 10) || 48;
@@ -1117,17 +1190,42 @@ async function saveArticleToFirebase(event) {
         cardDateStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
+    const itemId = currentActiveArticleItem.id || currentActiveArticleItem.firebaseId;
+
     const payload = {
-        title: titleVal, articleTitle: titleVal, author: authorVal, articleTime: timeVal,
-        date: cardDateStr, timestamp: currentActiveArticleItem.timestamp || Date.now(),
-        sapo: sapoVal, articleImg: directImgVal, articleImgCaption: captionVal, articleBody: bodyVal
+        title: titleVal, 
+        articleTitle: titleVal, 
+        author: authorVal, 
+        articleTime: timeVal,
+        date: cardDateStr, 
+        timestamp: currentActiveArticleItem.timestamp || Date.now(),
+        sapo: sapoVal, 
+        articleImg: directImgVal, 
+        articleImgCaption: captionVal, 
+        articleBody: bodyVal,
+        isDoc: true,
+        badgeText: currentActiveArticleItem.badgeText || "MỚI",
+        avatar: currentActiveArticleItem.avatar || PRESET_20_AVATARS[0],
+        categoryId: currentActiveArticleCatId || "nhac-nho"
     };
 
     try {
-        const itemId = currentActiveArticleItem.id || currentActiveArticleItem.firebaseId;
         await fetch(`${FIREBASE_DB_URL}/custom_links/${currentActiveArticleCatId}/${itemId}.json`, {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
+
+        // Cập nhật bộ nhớ cục bộ
+        if (currentActiveArticleCatId === "nhac-nho") {
+            if (!REMINDER_CATEGORY.links) REMINDER_CATEGORY.links = [];
+            const exIdx = REMINDER_CATEGORY.links.findIndex(l => l.id === itemId || l.firebaseId === itemId);
+            if (exIdx !== -1) {
+                REMINDER_CATEGORY.links[exIdx] = { id: itemId, firebaseId: itemId, ...payload };
+            } else {
+                REMINDER_CATEGORY.links.unshift({ id: itemId, firebaseId: itemId, ...payload });
+            }
+            REMINDER_CATEGORY.links = sortLinksNewestFirst(REMINDER_CATEGORY.links);
+        }
+
         Object.assign(currentActiveArticleItem, payload);
         alert("🎉 Đã lưu bài viết theo phong cách báo Dân trí thành công!");
         window.location.reload();
