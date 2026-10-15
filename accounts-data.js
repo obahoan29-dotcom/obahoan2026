@@ -321,7 +321,7 @@ window.STUDENT_ACCOUNTS["lop-11e"] = [
     { stt: 37, pass: "37", sbd: "11E37", username: "LÊ HOÀNG TÙNG", name: "LÊ HOÀNG TÙNG", className: "11E" },
     { stt: 38, pass: "38", sbd: "11E38", username: "VŨ THÀNH TÙNG", name: "VŨ THÀNH TÙNG", className: "11E" },
     { stt: 39, pass: "39", sbd: "11E39", username: "ĐOÀN QUANG VINH", name: "ĐOÀN QUANG VINH", className: "11E" },
-    { stt: 40, pass: "40", sbd: "11E39", username: "PHƯƠNG", name: "PHƯƠNG", className: "11E" }
+    { stt: 40, pass: "40", sbd: "11E40", username: "PHƯƠNG", name: "PHƯƠNG", className: "11E" }
 ];
 
 function getAccountsForCategory(categoryId) {
