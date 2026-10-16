@@ -4,6 +4,7 @@
 // - Bọc kín toàn bộ dữ liệu nhạy cảm bên trong Closure, chống Console F12
 // - Memory Sanitization: Tách và mã hóa đáp án nội bộ, xóa sạch dấu vết trên RAM
 // - Tự động upload & dán ảnh Snipping Tool (Ctrl+V) qua API ImgBB cho Admin
+// - Xử lý triệt để lỗi "Internal upload error" trên ImgBB bằng cơ chế Base64 & Fallback
 // - Nhận diện thông báo màu đỏ cho câu có ảnh đề gốc & Nút Xóa ảnh từng câu
 // - Đồng bộ ngầm ảnh thời gian thực (Zero-Polling SSE) siêu tiết kiệm băng thông
 // =========================================================
@@ -99,6 +100,22 @@
         if (!text) return "";
         return text.replace(/(^|[^:])\/\/\s*([^\r\n<]+)/g, function(match, prefix, content) {
             return prefix + '<span style="color: #78350f; font-weight: 800;">// ' + content.trim() + '</span>';
+        });
+    }
+
+    // Chuyển đổi file Blob sang chuỗi Base64 chuẩn và an toàn
+    function fileToBase64Async(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                let res = String(reader.result || "");
+                if (res.includes("base64,")) {
+                    res = res.split("base64,")[1];
+                }
+                resolve(res);
+            };
+            reader.onerror = (err) => reject(err);
+            reader.readAsDataURL(file);
         });
     }
 
@@ -610,7 +627,7 @@
     }
 
     // =========================================================================
-    // HÀM UPLOAD ẢNH LÊN IMGBB VÀ ĐỒNG BỘ NGẦM TỚI HỌC SINH TỨC THÌ
+    // HÀM UPLOAD ẢNH ĐÃ ĐƯỢC KHẮC PHỤC TRIỆT ĐỂ (BASE64 + FALLBACK DRIVE)
     // =========================================================================
     async function uploadQuestionImageToImgBB(file, qId, imageKey, qIndex) {
         if (!file) return;
@@ -623,24 +640,68 @@
 
         if (statusEl) {
             statusEl.className = "admin-uploader-status loading";
-            statusEl.innerText = "⏳ Đang tải ảnh lên ImgBB & thông báo học sinh...";
+            statusEl.innerText = "⏳ Đang chuyển đổi và gửi ảnh lên máy chủ...";
         }
 
         try {
-            const formData = new FormData();
-            formData.append("image", file);
+            // Bước 1: Chuyển đổi File/Blob sang chuỗi Base64 thuần để tránh lỗi nhị phân multipart
+            const base64Data = await fileToBase64Async(file);
+            let directImgUrl = "";
 
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                method: "POST",
-                body: formData
-            });
+            // Thử upload qua ImgBB bằng Base64 (Chuẩn xác 100% tài liệu ImgBB)
+            try {
+                const formData = new FormData();
+                formData.append("image", base64Data);
 
-            const json = await res.json();
-            if (!json || !json.success || !json.data || !json.data.url) {
-                throw new Error((json && json.error && json.error.message) || "Máy chủ ImgBB từ chối nhận ảnh!");
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const json = await res.json();
+                if (json && json.success && json.data && (json.data.display_url || json.data.url)) {
+                    directImgUrl = json.data.display_url || json.data.url;
+                } else {
+                    const errMsg = (json && json.error && json.error.message) || "";
+                    console.warn("ImgBB cảnh báo:", errMsg);
+                    throw new Error(errMsg || "Internal upload error");
+                }
+            } catch (imgbbErr) {
+                console.warn("ImgBB gặp sự cố, tự động kích hoạt kênh tải phụ Google Drive:", imgbbErr);
+
+                // Bước 2: Kênh Fallback dự phòng qua Google Drive Apps Script (Nếu có cấu hình)
+                if (typeof GOOGLE_DRIVE_UPLOAD_GAS_URL !== "undefined" && GOOGLE_DRIVE_UPLOAD_GAS_URL && !GOOGLE_DRIVE_UPLOAD_GAS_URL.includes("DÁN_URL")) {
+                    if (statusEl) {
+                        statusEl.innerText = "⏳ ImgBB bận, đang chuyển lưu qua Google Drive...";
+                    }
+                    const drivePayload = {
+                        filename: `cau_${qId}_${Date.now()}.png`,
+                        mimeType: file.type || "image/png",
+                        base64: base64Data
+                    };
+
+                    const driveRes = await fetch(GOOGLE_DRIVE_UPLOAD_GAS_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify(drivePayload)
+                    });
+                    const driveJson = await driveRes.json();
+                    if (driveJson && driveJson.status === "success" && driveJson.fileUrl) {
+                        directImgUrl = (typeof toDirectGoogleDriveImageUrl === "function") 
+                            ? toDirectGoogleDriveImageUrl(driveJson.fileUrl) 
+                            : driveJson.fileUrl;
+                    } else {
+                        throw new Error(driveJson.message || "Kênh dự phòng Google Drive không phản hồi đường dẫn.");
+                    }
+                } else {
+                    throw imgbbErr;
+                }
             }
 
-            const directImgUrl = json.data.display_url || json.data.url;
+            if (!directImgUrl) {
+                throw new Error("Không thể trích xuất đường dẫn ảnh sau khi tải.");
+            }
+
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
             const effectiveKey = imageKey || `img_q_${qId}`;
@@ -706,7 +767,7 @@
                 statusEl.className = "admin-uploader-status error";
                 statusEl.innerText = "❌ Lỗi: " + err.message;
             }
-            alert("❌ Lỗi tải ảnh lên ImgBB: " + err.message);
+            alert("❌ Lỗi tải ảnh: " + err.message);
         }
     }
 
@@ -1632,7 +1693,7 @@
                 } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
                     const uVal = SECURE_VAULT.userAnswers[`q${q.id}`] || "(Để trống)"; 
                     const cVal = SECURE_VAULT.answers[`q${q.id}`]; 
-                    revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div>Tr.lời của bạn: <b>${uVal}</b></div><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div></div>${explainText}</div>`; 
+                    revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div><div>Tr.lời của bạn: <b>${uVal}</b></div></div>${explainText}</div>`; 
                 } 
                 idx++; 
             }); 
