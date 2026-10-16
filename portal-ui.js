@@ -1,6 +1,7 @@
 // =========================================================
 // FILE: portal-ui.js
 // QUẢN LÝ GIAO DIỆN CHÍNH, BẢNG MÀU NỐI LIỀN, CARD & BÀI BÁO DÂN TRÍ
+// (ĐÃ TỐI ƯU HÓA: NẠP TỨC THÌ KHO TÀI LIỆU & DANH SÁCH KHÔNG ĐỘ TRỄ)
 // =========================================================
 
 let activeDayThemCatId = null;
@@ -77,6 +78,14 @@ document.addEventListener("DOMContentLoaded", async function() {
     const padletCat = CHINH_KHOA_CATEGORIES.find(c => c.id === "tu-luan-padlet");
     if (padletCat) padletCat.links = [...DEFAULT_PADLET_LINKS];
 
+    // Nạp ngay dữ liệu từ cache cục bộ (nếu có) để Kho tài liệu & đề thi mở ra lập tức trong 0s
+    try {
+        const rawCachedLinks = safeLocal.getItem("cached_custom_links");
+        if (rawCachedLinks) {
+            applyCustomLinksToCategories(JSON.parse(rawCachedLinks));
+        }
+    } catch(e) {}
+
     refreshAllViews();
     await loadDataFromFirebase();
     if (typeof initSiteVisitTracker === "function") initSiteVisitTracker();
@@ -111,6 +120,47 @@ function sortLinksNewestFirst(linksArray) {
     });
 }
 
+function applyCustomLinksToCategories(customLinksData) {
+    if (!customLinksData || typeof customLinksData !== "object") return;
+
+    if (customLinksData["nhac-nho"]) {
+        const rLinks = Object.keys(customLinksData["nhac-nho"]).map(k => ({
+            id: k, firebaseId: k, ...customLinksData["nhac-nho"][k], categoryId: "nhac-nho", isDoc: true
+        })).filter(l => l && l.title && l.title !== "undefined");
+        if (rLinks.length > 0) REMINDER_CATEGORY.links = sortLinksNewestFirst(rLinks);
+    }
+
+    [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES].forEach(cat => {
+        // Bảo vệ riêng cho mục Nộp tự luận Padlet
+        if (cat.id === "tu-luan-padlet") {
+            let customPadlet = [];
+            if (customLinksData[cat.id]) {
+                customPadlet = Object.keys(customLinksData[cat.id]).map(k => ({
+                    id: k, firebaseId: k, ...customLinksData[cat.id][k], categoryId: cat.id
+                })).filter(l => l && l.title && l.title !== "undefined" && String(l.title).trim() !== "");
+            }
+            cat.links = customPadlet.length > 0 ? sortLinksNewestFirst(customPadlet) : [...DEFAULT_PADLET_LINKS];
+            return;
+        }
+
+        if (customLinksData[cat.id]) {
+            let list = Object.keys(customLinksData[cat.id]).map(k => ({
+                id: k, firebaseId: k, ...customLinksData[cat.id][k], categoryId: cat.id
+            })).filter(l => l && l.title && l.title !== "undefined" && String(l.title).trim() !== "");
+            cat.links = sortLinksNewestFirst(list);
+        } else if (cat.links) {
+            cat.links = sortLinksNewestFirst(cat.links);
+        }
+    });
+
+    if (customLinksData["kho-tai-lieu"]) {
+        let list = Object.keys(customLinksData["kho-tai-lieu"]).map(k => ({
+            id: k, firebaseId: k, ...customLinksData["kho-tai-lieu"][k], categoryId: "kho-tai-lieu"
+        })).filter(l => l && l.title && l.title !== "undefined");
+        KHO_TAI_LIEU_FOLDER.links = sortLinksNewestFirst(list);
+    }
+}
+
 async function loadDataFromFirebase() {
     try {
         const [linksRes, metaRes] = await Promise.all([
@@ -126,42 +176,15 @@ async function loadDataFromFirebase() {
         }
 
         if (customLinksData && typeof customLinksData === "object") {
-            if (customLinksData["nhac-nho"]) {
-                const rLinks = Object.keys(customLinksData["nhac-nho"]).map(k => ({
-                    id: k, firebaseId: k, ...customLinksData["nhac-nho"][k], categoryId: "nhac-nho", isDoc: true
-                })).filter(l => l && l.title && l.title !== "undefined");
-                if (rLinks.length > 0) REMINDER_CATEGORY.links = sortLinksNewestFirst(rLinks);
-            }
+            // Lưu cache ngay vào safeLocal để lần sau vào trang web có sẵn tức thì 0s
+            try {
+                safeLocal.setItem("cached_custom_links", JSON.stringify(customLinksData));
+            } catch(e) {}
 
-            [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES].forEach(cat => {
-                // Bảo vệ riêng cho mục Nộp tự luận Padlet
-                if (cat.id === "tu-luan-padlet") {
-                    let customPadlet = [];
-                    if (customLinksData[cat.id]) {
-                        customPadlet = Object.keys(customLinksData[cat.id]).map(k => ({
-                            id: k, firebaseId: k, ...customLinksData[cat.id][k], categoryId: cat.id
-                        })).filter(l => l && l.title && l.title !== "undefined" && String(l.title).trim() !== "");
-                    }
-                    cat.links = customPadlet.length > 0 ? sortLinksNewestFirst(customPadlet) : [...DEFAULT_PADLET_LINKS];
-                    return;
-                }
+            applyCustomLinksToCategories(customLinksData);
 
-                if (customLinksData[cat.id]) {
-                    let list = Object.keys(customLinksData[cat.id]).map(k => ({
-                        id: k, firebaseId: k, ...customLinksData[cat.id][k], categoryId: cat.id
-                    })).filter(l => l && l.title && l.title !== "undefined" && String(l.title).trim() !== "");
-                    cat.links = sortLinksNewestFirst(list);
-                } else if (cat.links) {
-                    cat.links = sortLinksNewestFirst(cat.links);
-                }
-            });
-
-            if (customLinksData["kho-tai-lieu"]) {
-                let list = Object.keys(customLinksData["kho-tai-lieu"]).map(k => ({
-                    id: k, firebaseId: k, ...customLinksData["kho-tai-lieu"][k], categoryId: "kho-tai-lieu"
-                })).filter(l => l && l.title && l.title !== "undefined");
-                KHO_TAI_LIEU_FOLDER.links = sortLinksNewestFirst(list);
-            }
+            // Render giao diện Kho tài liệu và các mục ngay lập tức mà không phải chờ loop quiz
+            refreshAllViews();
         }
 
         const activeQuizIds = new Set();
@@ -176,51 +199,58 @@ async function loadDataFromFirebase() {
             }
         });
 
-        await Promise.all(Array.from(activeQuizIds).map(async (qId) => {
-            try {
-                const [qRes, cfgRes] = await Promise.all([
-                    fetch(`${FIREBASE_DB_URL}/quizzes/${qId}.json`).catch(() => null),
-                    fetch(`${FIREBASE_DB_URL}/exam_configs/${qId}.json`).catch(() => null)
-                ]);
+        if (activeQuizIds.size > 0) {
+            let hasConfigUpdates = false;
+            await Promise.all(Array.from(activeQuizIds).map(async (qId) => {
+                try {
+                    const [qRes, cfgRes] = await Promise.all([
+                        fetch(`${FIREBASE_DB_URL}/quizzes/${qId}.json`).catch(() => null),
+                        fetch(`${FIREBASE_DB_URL}/exam_configs/${qId}.json`).catch(() => null)
+                    ]);
 
-                const qData = qRes && qRes.ok ? await qRes.json().catch(() => null) : null;
-                const cfg = cfgRes && cfgRes.ok ? await cfgRes.json().catch(() => null) : null;
+                    const qData = qRes && qRes.ok ? await qRes.json().catch(() => null) : null;
+                    const cfg = cfgRes && cfgRes.ok ? await cfgRes.json().catch(() => null) : null;
 
-                const allCats = [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES, KHO_TAI_LIEU_FOLDER];
-                allCats.forEach(cat => {
-                    (cat.links || []).forEach(l => {
-                        if (extractQuizIdFromItem(l) === qId) {
-                            if (qData) {
-                                if (qData.timeLimitMinutes !== undefined && qData.timeLimitMinutes !== "") {
-                                    l.timeLimitMinutes = qData.timeLimitMinutes;
+                    const allCats = [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES, KHO_TAI_LIEU_FOLDER];
+                    allCats.forEach(cat => {
+                        (cat.links || []).forEach(l => {
+                            if (extractQuizIdFromItem(l) === qId) {
+                                if (qData) {
+                                    if (qData.timeLimitMinutes !== undefined && qData.timeLimitMinutes !== "") {
+                                        l.timeLimitMinutes = qData.timeLimitMinutes;
+                                    }
+                                    if (qData.examStartTimeStr) l.examStartTimeStr = qData.examStartTimeStr;
+                                    if (qData.examEndTimeStr) l.examEndTimeStr = qData.examEndTimeStr;
+                                    if (qData.allowFree !== undefined) l.allowFree = qData.allowFree;
+                                    if (qData.resultMode !== undefined) l.resultMode = qData.resultMode;
+                                    if (qData.allowReviewOriginal !== undefined) l.allowReviewOriginal = qData.allowReviewOriginal;
+                                    if (qData.showOnlineCount !== undefined) l.showOnlineCount = qData.showOnlineCount;
+                                    if (qData.maDe) l.maDe = qData.maDe;
+                                    hasConfigUpdates = true;
                                 }
-                                if (qData.examStartTimeStr) l.examStartTimeStr = qData.examStartTimeStr;
-                                if (qData.examEndTimeStr) l.examEndTimeStr = qData.examEndTimeStr;
-                                if (qData.allowFree !== undefined) l.allowFree = qData.allowFree;
-                                if (qData.resultMode !== undefined) l.resultMode = qData.resultMode;
-                                if (qData.allowReviewOriginal !== undefined) l.allowReviewOriginal = qData.allowReviewOriginal;
-                                if (qData.showOnlineCount !== undefined) l.showOnlineCount = qData.showOnlineCount;
-                                if (qData.maDe) l.maDe = qData.maDe;
-                            }
 
-                            if (cfg) {
-                                if (cfg.timeLimitMinutes !== undefined && cfg.timeLimitMinutes !== "") {
-                                    l.timeLimitMinutes = cfg.timeLimitMinutes;
+                                if (cfg) {
+                                    if (cfg.timeLimitMinutes !== undefined && cfg.timeLimitMinutes !== "") {
+                                        l.timeLimitMinutes = cfg.timeLimitMinutes;
+                                    }
+                                    if (cfg.examStartTimeStr) l.examStartTimeStr = cfg.examStartTimeStr;
+                                    if (cfg.examEndTimeStr) l.examEndTimeStr = cfg.examEndTimeStr;
+                                    if (cfg.allowFree !== undefined) l.allowFree = cfg.allowFree;
+                                    if (cfg.resultMode !== undefined) l.resultMode = cfg.resultMode;
+                                    if (cfg.allowReviewOriginal !== undefined) l.allowReviewOriginal = cfg.allowReviewOriginal;
+                                    if (cfg.showOnlineCount !== undefined) l.showOnlineCount = cfg.showOnlineCount;
+                                    hasConfigUpdates = true;
                                 }
-                                if (cfg.examStartTimeStr) l.examStartTimeStr = cfg.examStartTimeStr;
-                                if (cfg.examEndTimeStr) l.examEndTimeStr = cfg.examEndTimeStr;
-                                if (cfg.allowFree !== undefined) l.allowFree = cfg.allowFree;
-                                if (cfg.resultMode !== undefined) l.resultMode = cfg.resultMode;
-                                if (cfg.allowReviewOriginal !== undefined) l.allowReviewOriginal = cfg.allowReviewOriginal;
-                                if (cfg.showOnlineCount !== undefined) l.showOnlineCount = cfg.showOnlineCount;
                             }
-                        }
+                        });
                     });
-                });
-            } catch(e) {}
-        }));
+                } catch(e) {}
+            }));
 
-        refreshAllViews();
+            if (hasConfigUpdates) {
+                refreshAllViews();
+            }
+        }
     } catch (e) {
         console.warn("Lỗi tải dữ liệu Firebase:", e);
         refreshAllViews();
