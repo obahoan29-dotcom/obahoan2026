@@ -4,8 +4,8 @@
 // - Bọc kín toàn bộ dữ liệu nhạy cảm bên trong Closure, chống Console F12
 // - Memory Sanitization: Tách và mã hóa đáp án nội bộ, xóa sạch dấu vết trên RAM
 // - Tự động upload & dán ảnh Snipping Tool (Ctrl+V) cho Admin
-// - CƠ CHẾ UPLOAD TỐI ƯU: Ưu tiên ImgBB (timeout cứng đúng 4 giây),
-//   sau 4s không xong hoặc lỗi sẽ chuyển ngay sang Google Drive
+// - CƠ CHẾ UPLOAD TỐI ƯU: Ưu tiên ImgBB (timeout cứng 4s), nếu quá 4s hoặc lỗi
+//   sẽ chuyển ngay sang Google Drive (timeout an toàn 45s, xử lý triệt để lỗi abort)
 // - Gắn nhãn nhận diện nguồn lưu (ImgBB / Google Drive) ở góc phải mỗi hình
 // - Đồng bộ ngầm ảnh thời gian thực (Zero-Polling SSE) siêu tiết kiệm băng thông
 // =========================================================
@@ -600,7 +600,9 @@
     }
 
     // =========================================================================
-    // HÀM UPLOAD ẢNH TỐI ƯU: ƯU TIÊN IMGBB (TIMEOUT ĐÚNG 4S), NẾU QUÁ 4S LẬP TỨC SANG DRIVE
+    // HÀM UPLOAD ẢNH TỐI ƯU:
+    // - Ưu tiên ImgBB (timeout đúng 4s)
+    // - Quá 4s hoặc lỗi sẽ chuyển ngay sang Google Drive (timeout 45s, xử lý triệt để lỗi abort)
     // =========================================================================
     async function uploadQuestionImageToImgBB(file, qId, imageKey, qIndex) {
         if (!file) return;
@@ -628,13 +630,13 @@
 
             let imgbbSuccess = false;
 
-            // 1. Thử gửi ImgBB trước, ngắt cứng nếu quá 4 giây
+            // 1. Thử gửi ImgBB trước (ngắt cứng sau 4 giây)
             if (hasValidImgbbKey) {
                 if (statusEl) statusEl.innerText = "⏳ Đang gửi ảnh lên ImgBB (chờ tối đa 4s)...";
 
                 const imgbbAbortController = new AbortController();
                 const timeoutId = setTimeout(() => {
-                    imgbbAbortController.abort();
+                    try { imgbbAbortController.abort(); } catch(e) {}
                 }, 4000); // 4 GIÂY TIMEOUT CỨNG
 
                 try {
@@ -659,7 +661,7 @@
                     }
                 } catch (imgbbErr) {
                     clearTimeout(timeoutId);
-                    console.warn(`ImgBB quá 4 giây hoặc lỗi, chuyển ngay sang Google Drive.`);
+                    console.warn("ImgBB quá 4 giây hoặc lỗi, chuyển ngay sang Google Drive.");
                 }
             }
 
@@ -678,25 +680,36 @@
                     base64: base64Data
                 };
 
+                // Nới timeout Google Drive lên 45 giây để đảm bảo ảnh chất lượng cao không bị ngắt giữa chừng
                 const driveController = new AbortController();
-                const driveTimer = setTimeout(() => driveController.abort(), 16000);
+                const driveTimer = setTimeout(() => {
+                    try { driveController.abort(); } catch(e) {}
+                }, 45000);
 
-                const driveRes = await fetch(GOOGLE_DRIVE_UPLOAD_GAS_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(drivePayload),
-                    signal: driveController.signal
-                });
+                try {
+                    const driveRes = await fetch(GOOGLE_DRIVE_UPLOAD_GAS_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify(drivePayload),
+                        signal: driveController.signal
+                    });
 
-                clearTimeout(driveTimer);
-                const driveJson = await driveRes.json();
+                    clearTimeout(driveTimer);
+                    const driveJson = await driveRes.json();
 
-                if (driveJson && driveJson.status === "success" && driveJson.fileUrl) {
-                    directImgUrl = (typeof toDirectGoogleDriveImageUrl === "function") 
-                        ? toDirectGoogleDriveImageUrl(driveJson.fileUrl) 
-                        : driveJson.fileUrl;
-                } else {
-                    throw new Error(driveJson.message || "Máy chủ Google Drive không phản hồi đường dẫn.");
+                    if (driveJson && driveJson.status === "success" && driveJson.fileUrl) {
+                        directImgUrl = (typeof toDirectGoogleDriveImageUrl === "function") 
+                            ? toDirectGoogleDriveImageUrl(driveJson.fileUrl) 
+                            : driveJson.fileUrl;
+                    } else {
+                        throw new Error(driveJson.message || "Máy chủ Google Drive không phản hồi đường dẫn.");
+                    }
+                } catch (driveErr) {
+                    clearTimeout(driveTimer);
+                    if (driveErr.name === 'AbortError' || String(driveErr.message).includes('abort')) {
+                        throw new Error("Google Drive phản hồi quá 45 giây do mạng chậm. Vui lòng thử lại!");
+                    }
+                    throw driveErr;
                 }
             }
 
@@ -762,11 +775,15 @@
                 setTimeout(() => { if (statusEl) statusEl.innerText = ""; }, 4000);
             }
         } catch(err) {
+            let errMsg = err.message || "";
+            if (err.name === 'AbortError' || errMsg.includes('abort')) {
+                errMsg = "Quá thời gian kết nối máy chủ (mạng yếu hoặc máy chủ bận). Vui lòng thử lại!";
+            }
             if (statusEl) {
                 statusEl.className = "admin-uploader-status error";
-                statusEl.innerText = "❌ Lỗi: " + err.message;
+                statusEl.innerText = "❌ Lỗi: " + errMsg;
             }
-            alert("❌ Lỗi tải ảnh: " + err.message);
+            alert("❌ Lỗi tải ảnh: " + errMsg);
         } finally {
             if (zoneEl) zoneEl.style.pointerEvents = "auto";
         }
