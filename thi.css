@@ -447,6 +447,7 @@ mjx-container[jax="SVG"][display="true"] > svg {
     margin-top: 2px;
 }
 
+/* NỘI DUNG CÂU HỎI: HỖ TRỢ TRƯỢT NGANG KHI CÔNG THỨC DÀI */
 .q-content-text { 
     font-size: 1.08rem; 
     line-height: 1.46; 
@@ -461,6 +462,30 @@ mjx-container[jax="SVG"][display="true"] > svg {
     letter-spacing: -0.1px;
     text-align: justify;
     text-justify: inter-word;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.q-content-text::-webkit-scrollbar,
+.opt-text::-webkit-scrollbar,
+.explanation-box::-webkit-scrollbar {
+    height: 3px;
+}
+.q-content-text::-webkit-scrollbar-track,
+.opt-text::-webkit-scrollbar-track,
+.explanation-box::-webkit-scrollbar-track {
+    background: transparent;
+}
+.q-content-text::-webkit-scrollbar-thumb,
+.opt-text::-webkit-scrollbar-thumb,
+.explanation-box::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
 }
 
 .options-list { 
@@ -530,6 +555,10 @@ mjx-container[jax="SVG"][display="true"] > svg {
     min-width: 0;
     flex: 1;
     text-align: justify;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
 }
 
 /* BẢNG ĐÚNG SAI (PHẦN II) */
@@ -754,7 +783,7 @@ mjx-container[jax="SVG"][display="true"] > svg {
 .opt-label.is-correct .opt-circle { background: #22c55e !important; color: #fff !important; border-color: #22c55e !important; }
 .opt-label.is-wrong { background: #fef2f2 !important; border-color: #ef4444 !important; color: #b91c1c !important; font-weight: 800;}
 .opt-label.is-wrong .opt-circle { background: #ef4444 !important; color: #fff !important; border-color: #ef4444 !important; }
-.explanation-box { background: #fefce8; border-left: 4px solid #eab308; padding: 10px 14px; border-radius: 9px; margin-top: 12px; font-size: 0.98rem; color: #713f12; line-height: 1.5; font-weight: 600;}
+.explanation-box { background: #fefce8; border-left: 4px solid #eab308; padding: 10px 14px; border-radius: 9px; margin-top: 12px; font-size: 0.98rem; color: #713f12; line-height: 1.5; font-weight: 600; overflow-x: auto; -webkit-overflow-scrolling: touch;}
 
 @keyframes spin { 100% { transform: rotate(360deg); } }
 @keyframes pulseWait { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
@@ -985,7 +1014,14 @@ mjx-container[jax="SVG"][display="true"] > svg {
     .q-content-text { 
         font-size: 1.02rem; 
         line-height: 1.42; 
+        text-align: left;
     } 
+
+    /* Thu nhẹ kích thước công thức SVG trên màn hình nhỏ để tăng độ vừa vặn */
+    mjx-container[jax="SVG"] {
+        max-width: 100%;
+        font-size: 96% !important;
+    }
 
     .opt-label { 
         padding: 7px 10px; 
@@ -996,6 +1032,7 @@ mjx-container[jax="SVG"][display="true"] > svg {
     .opt-text { 
         font-size: 0.96rem; 
         line-height: 1.36; 
+        text-align: left;
     } 
 
     .short-input-box { font-size: 0.98rem; padding: 8px 11px; } 
