@@ -706,8 +706,15 @@ function toggleExamExportMenu(itemId, event) {
     const menu = document.getElementById(`export-menu-${itemId}`);
     if (!menu) return;
     const isShown = menu.classList.contains("show");
+    
     document.querySelectorAll(".exam-export-menu.show").forEach(m => m.classList.remove("show"));
-    if (!isShown) menu.classList.add("show");
+    document.querySelectorAll(".exam-card.has-active-export").forEach(c => c.classList.remove("has-active-export"));
+
+    if (!isShown) {
+        menu.classList.add("show");
+        const card = document.getElementById(`card-${itemId}`);
+        if (card) card.classList.add("has-active-export");
+    }
 }
 
 function getEffectiveImageUrlForExport(q, imageMap) {
@@ -745,8 +752,8 @@ async function fetchFullExamData(quizId) {
 async function handleExportExamAction(categoryId, itemId, format, includeKey, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     document.querySelectorAll(".exam-export-menu.show").forEach(m => m.classList.remove("show"));
+    document.querySelectorAll(".exam-card.has-active-export").forEach(c => c.classList.remove("has-active-export"));
 
-    const quizId = itemId.startsWith("quiz_") ? itemId : itemId;
     let targetItem = null;
     const allCats = [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES, KHO_TAI_LIEU_FOLDER];
     for (const c of allCats) {
@@ -2012,6 +2019,7 @@ document.addEventListener("click", function(event) {
     const exportWrapper = event.target.closest(".exam-export-dropdown-wrapper");
     if (!exportWrapper) {
         document.querySelectorAll(".exam-export-menu.show").forEach(m => m.classList.remove("show"));
+        document.querySelectorAll(".exam-card.has-active-export").forEach(c => c.classList.remove("has-active-export"));
     }
     const visitModal = document.getElementById("visit-stats-modal");
     if (visitModal && visitModal.style.display === "flex") { if (event.target === visitModal) { closeVisitStatsModal(); } }
