@@ -495,12 +495,16 @@ html, body {
 @supports selector(:has(*)) {
     .reminder-section:has(.has-active-popover),
     .reminder-section:has(.avatar-selection-popover.show),
+    .reminder-section:has(.exam-export-menu.show),
     .dantri-nav-container:has(.has-active-popover),
     .dantri-nav-container:has(.avatar-selection-popover.show),
+    .dantri-nav-container:has(.exam-export-menu.show),
     .dantri-dropdown-panel:has(.has-active-popover),
     .dantri-dropdown-panel:has(.avatar-selection-popover.show),
+    .dantri-dropdown-panel:has(.exam-export-menu.show),
     .folder-section:has(.has-active-popover),
-    .folder-section:has(.avatar-selection-popover.show) {
+    .folder-section:has(.avatar-selection-popover.show),
+    .folder-section:has(.exam-export-menu.show) {
         position: relative !important;
         z-index: 99999 !important;
     }
@@ -648,7 +652,7 @@ html, body {
 }
 
 /* =========================================================
-   THẺ BÀI VIẾT / ĐỀ THI (.EXAM-CARD)
+   THẺ BÀI VIẾT / ĐỀ THI (.EXAM-CARD) VÀ KHẮC PHỤC CHỒNG LỚP
    ========================================================= */
 .exam-card { 
     position: relative; 
@@ -667,7 +671,16 @@ html, body {
 .exam-card:active {
     transform: translateY(1.5px) scale(0.99);
 }
-.exam-card.active-dropdown { z-index: 1000 !important; }
+
+/* ĐẢM BẢO THẺ ĐANG MỞ MENU LUÔN NỔI LÊN TRƯỚC CÁC THẺ KHÁC */
+.exam-card.active-dropdown,
+.exam-card.has-active-popover,
+.exam-card.has-active-export,
+.exam-card:has(.exam-export-menu.show),
+.exam-card:has(.badge-dropdown-menu.show) { 
+    position: relative !important; 
+    z-index: 100000 !important; 
+}
 
 .exam-card.admin-card-mode {
     display: flex; flex-direction: column; align-items: stretch; gap: 8px;
@@ -762,11 +775,12 @@ html, body {
 .btn-review-origin-tag:hover { background: #d1fae5; }
 
 /* =========================================================
-   NÚT & DROPDOWN XUẤT ĐỀ THI (PDF / WORD)
+   NÚT & DROPDOWN XUẤT ĐỀ THI (PDF / WORD) - Z-INDEX NỔI LÊN ĐẦU
    ========================================================= */
 .exam-export-dropdown-wrapper {
     position: relative;
     display: inline-block;
+    z-index: 100001;
 }
 .btn-export-exam-trigger {
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
@@ -801,8 +815,8 @@ html, body {
     width: 275px;
     background: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.28), 0 0 0 1px #cbd5e1;
-    z-index: 999999;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.32), 0 0 0 1.5px #94a3b8;
+    z-index: 100002;
     padding: 6px;
     animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     text-align: left;
