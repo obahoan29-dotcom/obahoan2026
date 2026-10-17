@@ -52,6 +52,10 @@ window.STUDENT_ACCOUNTS["them-10"] = [
     { stt: 44, pass: "44", sbd: "1044", username: "Sơn", name: "Sơn", className: "10c" },
     { stt: 45, pass: "45", sbd: "1045", username: "Quỳnh", name: "Quỳnh", className: "10k" },
     { stt: 46, pass: "46", sbd: "1046", username: "Bảo Trâm", name: "Bảo Trâm kd", className: "10b-ymoa" },
+    { stt: 47, pass: "47", sbd: "1047", username: "Ánh Tuyết", name: "Trần Ánh Tuyết", className: "10h" },
+    { stt: 48, pass: "48", sbd: "1048", username: "Hồng Vân", name: "Hồng Vân", className: "10h" },
+    { stt: 49, pass: "49", sbd: "1049", username: "Tường Vy", name: "Tường Vy", className: "10a11-yka" },
+    
     { stt: 99, pass: "99", sbd: "1099", username: "Nguyễn Doanh", name: "Nguyễn Doanh", className: "10C" }
 ];
 
