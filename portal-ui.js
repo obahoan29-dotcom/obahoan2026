@@ -221,6 +221,7 @@ async function loadDataFromFirebase() {
                                     if (qData.resultMode !== undefined) l.resultMode = qData.resultMode;
                                     if (qData.allowReviewOriginal !== undefined) l.allowReviewOriginal = qData.allowReviewOriginal;
                                     if (qData.showOnlineCount !== undefined) l.showOnlineCount = qData.showOnlineCount;
+                                    if (qData.allowExportExam !== undefined) l.allowExportExam = qData.allowExportExam;
                                     if (qData.maDe) l.maDe = qData.maDe;
                                     hasConfigUpdates = true;
                                 }
@@ -235,6 +236,7 @@ async function loadDataFromFirebase() {
                                     if (cfg.resultMode !== undefined) l.resultMode = cfg.resultMode;
                                     if (cfg.allowReviewOriginal !== undefined) l.allowReviewOriginal = cfg.allowReviewOriginal;
                                     if (cfg.showOnlineCount !== undefined) l.showOnlineCount = cfg.showOnlineCount;
+                                    if (cfg.allowExportExam !== undefined) l.allowExportExam = cfg.allowExportExam;
                                     hasConfigUpdates = true;
                                 }
                             }
@@ -1358,6 +1360,9 @@ function buildCardHtmlString(item, categoryId) {
     const isAllowFree = (item.allowFree !== false);
     const showOnlineCount = (item.showOnlineCount !== false);
     
+    // MẶC ĐỊNH MỞ RA NÚT GẠT XUẤT ĐỀ Ở BÊN TRÁI (TẮT / ẨN ĐỐI VỚI HỌC SINH)
+    const allowExportExam = (item.allowExportExam === true);
+    
     const displayDate = getItemDisplayDate(item);
     const avatarSize = parseInt(item.avatarSize, 10) || 48;
 
@@ -1396,9 +1401,10 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
-    // NÚT XUẤT ĐỀ THI (PDF / WORD) CHO TỪNG ĐỀ THI TRONG MỖI LỚP
+    // NÚT XUẤT ĐỀ THI (PDF / WORD):
+    // Chỉ hiện ra khi Admin gạt sang phải (allowExportExam = true) hoặc đang ở chế độ Admin
     let exportExamBtnHtml = "";
-    if (!isDoc) {
+    if (!isDoc && (allowExportExam || isAdminLoggedIn)) {
         exportExamBtnHtml = `
             <div class="exam-export-dropdown-wrapper" onclick="event.stopPropagation()">
                 <button type="button" class="btn-export-exam-trigger" onclick="toggleExamExportMenu('${itemId}', event)" title="Xuất đề thi ra bản in PDF hoặc file Word chuẩn đẹp">
@@ -1531,6 +1537,18 @@ function buildCardHtmlString(item, categoryId) {
                             </span>
                             <span class="free-toggle-status ${item.allowReviewOriginal ? 'st-on' : 'st-off'}" id="review-status-txt-${itemId}">
                                 ${item.allowReviewOriginal ? 'MỞ' : 'TẮT'}
+                            </span>
+                        </label>
+
+                        <!-- NÚT GẠT BẬT/TẮT HIỆN NÚT XUẤT ĐỀ CHO HỌC SINH (MẶC ĐỊNH BÊN TRÁI = TẮT) -->
+                        <label class="free-student-toggle-wrap" title="Bật/Tắt hiển thị nút Xuất đề thi (PDF/Word) cho học sinh" onclick="event.stopPropagation()">
+                            <span class="free-toggle-lbl" style="color:#047857;">Hiện xuất đề:</span>
+                            <span class="mini-switch">
+                                <input type="checkbox" id="export-toggle-${itemId}" ${allowExportExam ? "checked" : ""} onchange="handleAllowExportExamToggleChange('${categoryId}', '${itemId}', '${quizId}', this.checked, event)">
+                                <span class="slider-toggle" style="${allowExportExam ? 'background-color:#10b981;' : ''}"></span>
+                            </span>
+                            <span class="free-toggle-status ${allowExportExam ? 'st-on' : 'st-off'}" id="export-status-txt-${itemId}" style="${allowExportExam ? 'color:#16a34a;' : ''}">
+                                ${allowExportExam ? 'HIỆN' : 'ẨN'}
                             </span>
                         </label>
 
@@ -1671,6 +1689,53 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
     }
 
     openStudentLoginModal(item, categoryId, event);
+}
+
+// HÀM XỬ LÝ BẬT/TẮT CÔNG TẮC GẠT HIỆN XUẤT ĐỀ CHO HỌC SINH
+async function handleAllowExportExamToggleChange(categoryId, itemId, quizId, isChecked, event) {
+    if (event) event.stopPropagation();
+
+    const txt = document.getElementById(`export-status-txt-${itemId}`);
+    if (txt) {
+        txt.innerText = isChecked ? 'HIỆN' : 'ẨN';
+        txt.className = `free-toggle-status ${isChecked ? 'st-on' : 'st-off'}`;
+        txt.style.color = isChecked ? '#16a34a' : '';
+    }
+
+    const slider = document.querySelector(`#export-toggle-${itemId} ~ .slider-toggle`);
+    if (slider) slider.style.backgroundColor = isChecked ? '#10b981' : '#cbd5e1';
+
+    // Cập nhật ngay trong dữ liệu RAM cục bộ
+    const allCats = [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES, KHO_TAI_LIEU_FOLDER];
+    allCats.forEach(cat => {
+        if (cat.links) {
+            const found = cat.links.find(l => (l.firebaseId === itemId || l.id === itemId));
+            if (found) found.allowExportExam = isChecked;
+        }
+    });
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/custom_links/${categoryId}/${itemId}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ allowExportExam: isChecked })
+        });
+        const effectiveQuizId = quizId || (itemId.startsWith('quiz_') ? itemId : null);
+        if (effectiveQuizId) {
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${effectiveQuizId}.json`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ allowExportExam: isChecked })
+            }).catch(() => null);
+            await fetch(`${FIREBASE_DB_URL}/exam_configs/${effectiveQuizId}.json`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ allowExportExam: isChecked })
+            }).catch(() => null);
+        }
+    } catch(e) {
+        console.error("Lỗi cập nhật trạng thái xuất đề:", e);
+    }
 }
 
 async function handleShowOnlineCountToggleChange(categoryId, itemId, quizId, isChecked, event) {
