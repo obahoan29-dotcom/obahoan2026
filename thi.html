@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>HỆ THỐNG THI TRẮC NGHIỆM ONLINE</title>
+    <!-- FAVICON: Logo chữ H in hoa 3 màu sặc sỡ -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231e293b'/%3E%3Cpath d='M30 25v50' stroke='%2300E5FF' stroke-width='14' stroke-linecap='round'/%3E%3Cpath d='M70 25v50' stroke='%23FF007F' stroke-width='14' stroke-linecap='round'/%3E%3Cpath d='M30 50h40' stroke='%23FFEA00' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E">
+    
+    <!-- BỘ BẢO VỆ PHÒNG THI: CHỐNG CHUỘT PHẢI, F12 & DEBUGGER -->
+    <script>
+        (function() {
+            document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, { capture: true });
+
+            document.addEventListener('keydown', function(e) {
+                if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+                    (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's'))
+                ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, { capture: true });
+
+            function purgeMobileHackTools() {
+                try {
+                    if (window.eruda) { try { window.eruda.destroy(); } catch(err) {} delete window.eruda; location.reload(); }
+                    if (window.vConsole) { try { window.vConsole.destroy(); } catch(err) {} delete window.vConsole; location.reload(); }
+                    var erudaEl = document.getElementById('eruda'); if (erudaEl) erudaEl.remove();
+                    var vcEl = document.getElementById('__vconsole'); if (vcEl) vcEl.remove();
+                } catch(e) {}
+            }
+            setInterval(purgeMobileHackTools, 1200);
+
+            function setupAntiDebugTrap() {
+                function runTrap() {
+                    try {
+                        var start = Date.now();
+                        (function() { return false; }["constructor"]("debugger")["call"]());
+                        if (Date.now() - start > 100) purgeMobileHackTools();
+                    } catch(e) {}
+                }
+                setInterval(runTrap, 600);
+            }
+            setupAntiDebugTrap();
+        })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- CSS Phòng thi riêng biệt đã tách nhỏ -->
+    <link rel="stylesheet" href="thi-layout.css">
+    <link rel="stylesheet" href="thi-exam.css">
+
+    <!-- CSDL Danh sách tài khoản học sinh dùng chung -->
+    <script src="accounts-data.js"></script>
+
+    <!-- Cấu hình hiển thị công thức Toán MathJax SVG -->
+    <script>
+        window.MathJax = { 
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']], 
+                displayMath: [['$$', '$$'], ['\\[', '\\]']], 
+                processEscapes: true 
+            },
+            svg: {
+                scale: 1.05,
+                displayAlign: 'center',
+                fontCache: 'global'
+            },
+            options: { 
+                enableMenu: false 
+            } 
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <!-- CÁC MODULE PHÒNG THI ĐÃ TỔ CHỨC LẠI -->
+    <script src="app-config.js"></script>
+    <script src="app-utils.js"></script>
+    <script src="exam-api.js"></script>
+    <script src="exam-export.js"></script>
+    
+    <!-- MODULE ĐỘNG CƠ THI ĐÃ TÁCH NHỎ -->
+    <script src="exam-img-uploader.js"></script>
+    <script src="exam-render.js"></script>
+    <script src="exam-engine-core.js"></script>
+</head>
+<body>
+    
+    <div id="global-loading">
+        <div class="spinner"></div>
+        <h2 style="color: #0369a1; font-weight: 800; font-size: 1.2rem;">Đang tải dữ liệu đề thi...</h2>
+    </div>
+
+    <!-- TOAST THÔNG BÁO KHI GIÁO VIÊN ĐỔI PHÚT / GIA HẠN LỊCH -->
+    <div class="time-change-toast" id="time-change-toast">
+        <span>⏱</span> <span id="time-change-toast-msg">Giáo viên vừa cập nhật thời gian làm bài!</span>
+    </div>
+
+    <div class="network-status-bar" id="net-status-banner">⚠️ Mất kết nối Internet! Bài làm đang được lưu an toàn trên máy.</div>
+    <div class="pending-status-bar" id="pending-resend-bar">
+        <span id="pending-info-txt">📌 Đang gửi hoặc có bài làm tạm chưa nộp...</span>
+        <div style="margin-top: 6px; display: flex; gap: 8px; justify-content: center;">
+            <button onclick="retrySubmitPending()" style="background:#0284c7; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">🚀 Thử gửi lại</button>
+            <button onclick="downloadPendingSubmissionFile()" style="background:#0d9488; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">💾 Tải file</button>
+            <button onclick="dismissPendingBar()" style="background:#cbd5e1; color:#334155; border:none; padding:6px 10px; border-radius:8px; font-weight:700; font-size:0.8rem; cursor:pointer;">Đóng</button>
+        </div>
+    </div>
+    
+    <header class="top-navbar-wrapper" id="top-navbar" style="display: none;">
+        <div class="nav-solid-part">
+            <div class="navbar-container">
+                <div class="nav-top-row">
+                    <div class="user-badge">
+                        <div class="user-avatar">👤</div>
+                        <div class="user-info">
+                            <div class="u-row"><span class="u-label">Họ tên:</span> <span class="u-value" id="nav-student-name">Thí sinh</span></div>
+                            <div class="u-row"><span class="u-label">SBD:</span> <span class="u-value" id="nav-student-id">---</span> <span class="u-label" style="margin-left: 6px;">Lớp:</span> <span class="u-value" id="nav-student-class">---</span></div>
+                        </div>
+                    </div>
+                    <div class="nav-right-tools">
+                        <div class="clock-pill" id="nav-timer-box"><span class="clock-icon">⏰</span> <span class="clock-val" id="nav-timer-val">00:45:00</span></div>
+                        <button type="button" class="btn-top-submit" onclick="showSubmitConfirmModal()">📝 Nộp</button>
+                    </div>
+                </div>
+                <div class="q-nav-bar">
+                    <button type="button" class="q-nav-arrow" onclick="scrollQPalette(-100)">‹</button>
+                    <div class="q-nav-scroll" id="q-nav-scroll-container"></div>
+                    <button type="button" class="q-nav-arrow" onclick="scrollQPalette(100)">›</button>
+                </div>
+            </div>
+        </div>
+        <div class="nav-floating-part">
+            <div class="navbar-container nav-bottom-row">
+                <div class="exam-code-pill"><span style="font-size: 0.95rem;">📑</span> <span id="nav-exam-code-text">Đề: ---</span></div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <div class="progress-pill" id="nav-online-box" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-color: #1d4ed8; pointer-events: none;" title="Số học sinh đang làm bài">
+                        <span class="progress-icon">👥</span>
+                        <span class="progress-val" id="nav-online-val">1</span>
+                    </div>
+                    <div class="progress-pill" id="nav-progress-box" onclick="showSubmitConfirmModal()">
+                        <span class="progress-icon">✅</span> <span class="progress-val" id="nav-progress-val">0/0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="error-card" class="card-panel" style="display: none; border-left: 6px solid #ef4444; background: #fff5f5;">
+            <h3 id="error-title" style="color: #dc2626; margin-bottom: 8px; font-size: 1.15rem; font-weight: 900;">⚠️ Lỗi nạp bài thi</h3>
+            <p id="error-msg" style="color: #7f1d1d; line-height: 1.5; font-size: 1rem; font-weight: 600;"></p>
+        </div>
+
+        <div id="login-box" class="card-panel" style="display: none;">
+            <h2 style="font-size: 1.3rem; font-weight: 900; color: #0284c7; margin-bottom: 16px;">🔒 Mật Khẩu Bài Thi</h2>
+            <div class="input-group">
+                <label>Nhập mật khẩu do giáo viên cung cấp (hoặc mã học sinh):</label>
+                <input type="password" id="exam-pass-input" placeholder="Nhập mật khẩu bài thi..." onkeydown="if(event.key==='Enter') checkPassword()" autocorrect="off" autocapitalize="none">
+            </div>
+            <button class="btn-action-main" onclick="checkPassword()">Tiếp Tục</button>
+        </div>
+
+        <div id="student-card" class="card-panel" style="display: none;">
+            <div style="text-align: center; margin-bottom: 22px;">
+                <div style="font-size: 40px; line-height: 1; margin-bottom: 8px;">🎯⚡</div>
+                <h2 id="banner-title" style="font-size: 1.35rem; font-weight: 900; color: #0369a1; text-transform: uppercase;">BÀI THI TRẮC NGHIỆM</h2>
+                <div id="exam-time-notice" style="color: #ea580c; font-size: 0.95rem; font-weight: 800; margin-top: 8px; display: none; background: #ffedd5; padding: 8px; border-radius: 10px; display: inline-block;"></div>
+            </div>
+            <h3 style="font-size: 1.12rem; font-weight: 900; color: #334155; margin-bottom: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">👤 Thông Tin Học Sinh</h3>
+            
+            <div class="input-group">
+                <label>Số báo danh (*):</label>
+                <input type="text" id="student-id" placeholder="Ví dụ: 1001, 1016, 1137" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+            </div>
+            <div class="input-group">
+                <label>Họ và tên học sinh (*):</label>
+                <input type="text" id="student-name" placeholder="Ví dụ: Nguyễn Văn Nam" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
+            </div>
+            <div class="input-group">
+                <label>Lớp (*):</label>
+                <input type="text" id="student-class" placeholder="Ví dụ: 10B, 11A" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
+            </div>
+            
+            <button class="btn-action-main" id="btn-start-exam" onclick="startExamAction()" style="margin-top: 20px; font-size: 1.15rem;">Vào Làm Bài</button>
+        </div>
+
+        <div id="waiting-room-card" class="card-panel" style="display: none; text-align: center; padding: 40px 16px;">
+            <div style="font-size: 54px; margin-bottom: 16px; animation: pulseWait 1.5s infinite;">⏳</div>
+            <h2 id="waiting-title" style="font-size: 1.35rem; font-weight: 900; color: #0369a1; margin-bottom: 12px; text-transform: uppercase;">Chưa đến giờ làm bài...</h2>
+            <p style="font-size: 1.05rem; color: #475569; margin-bottom: 20px; font-weight: 600;">Bài thi sẽ tự động bắt đầu sau:</p>
+            <div id="waiting-countdown" style="font-size: 3rem; font-weight: 900; color: #ef4444; font-family: 'Courier New', Courier, monospace; background: #fef2f2; border: 2px solid #fecaca; display: inline-block; padding: 14px 28px; border-radius: 18px; margin-bottom: 20px; box-shadow: 0 4px 18px rgba(239, 68, 68, 0.18);">00:00:00</div>
+            <p style="font-size: 0.95rem; color: #64748b; font-style: italic; font-weight: 600;">⚠️ Vui lòng giữ nguyên màn hình, không tải lại trang để tránh gián đoạn.</p>
+        </div>
+
+        <div id="quiz-content" style="display: none;">
+            <form id="quiz-form">
+                <div id="dynamic-questions-container"></div>
+                <div style="margin-top: 26px;">
+                    <button type="button" class="btn-action-main" style="background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-hover)); font-size: 1.18rem; padding: 17px;" onclick="showSubmitConfirmModal()">🚀 NỘP BÀI KIỂM TRA</button>
+                </div>
+            </form>
+        </div>
+        
+        <div id="result-view-container" style="display: none;">
+            <div class="result-summary-card">
+                <div class="result-exam-title-badge" id="res-exam-title-badge">
+                    <span>📑</span> <span id="res-exam-title">BÀI THI TRẮC NGHIỆM</span>
+                </div>
+
+                <div class="result-summary-title" id="res-score-overview">Đúng 0/0 câu</div>
+                <div class="stats-cards-grid">
+                    <div class="stat-box green"><span class="stat-num" id="res-stat-correct">0</span><span class="stat-lbl">Đúng</span></div>
+                    <div class="stat-box red"><span class="stat-num" id="res-stat-wrong">0</span><span class="stat-lbl">Sai</span></div>
+                    <div class="stat-box blue"><span class="stat-num" id="res-stat-time">0</span><span class="stat-lbl">Phút</span></div>
+                </div>
+                <div class="user-details-grid">
+                    <div><b style="color: #0f172a;">Họ tên:</b> <span id="res-user-name">--</span></div>
+                    <div><b style="color: #0f172a;">Lớp:</b> <span id="res-user-class">--</span></div>
+                    <div><b style="color: #0f172a;">SBD:</b> <span id="res-user-id">--</span></div>
+                    <div><b style="color: #0f172a;">Th.gian:</b> <span id="res-spent-time">0m 0s</span></div>
+                </div>
+                <button class="btn-home-return" onclick="resetToFreshLoginScreen()">← Về đăng nhập làm lại</button>
+            </div>
+            <div class="review-banner"><span>📑</span> Xem lại lời giải & đáp án chi tiết</div>
+            <div class="review-container" id="review-container-body"></div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="submit-confirm-modal">
+        <div class="modal-box">
+            <div class="modal-icon" id="modal-submit-icon">📝</div>
+            <div class="modal-title" id="modal-submit-main-title">Xác nhận nộp bài?</div>
+            <div class="modal-body-text">
+                <div id="modal-normal-submit-view">
+                    <div>Thời gian còn lại:</div>
+                    <div class="modal-time-highlight" id="modal-remain-time">00:00:00</div>
+                    <div>Đã trả lời: <b id="modal-answered-count" style="color: #0f172a; font-weight: 900;">0/0</b> câu</div>
+                    <div class="modal-warning" id="modal-unanswered-warning">⚠️ Còn X câu chưa làm!</div>
+                    <div id="modal-submit-status-msg" style="margin-top: 14px; font-weight: 800; color: #1e293b;">Bạn có chắc chắn muốn kết thúc và nộp bài?</div>
+                </div>
+                <div id="modal-submitting-progress-view" style="display:none; padding:15px 0;">
+                    <div class="spinner" style="width:38px; height:38px; margin:0 auto 12px auto; border-top-color:#f97316;"></div>
+                    <div style="font-weight:900; color:#0284c7; font-size:1.1rem;" id="submit-progress-text">Đang kiểm tra kết nối với máy chủ...</div>
+                    <div style="font-size:0.9rem; color:#64748b; margin-top:6px; font-weight:600;">Vui lòng giữ kết nối để bảo lưu bài thi thành công 100%.</div>
+                </div>
+            </div>
+            <div class="modal-actions" id="modal-actions-container">
+                <div class="modal-btn-row">
+                    <button type="button" class="btn-modal-cancel" id="btn-modal-cancel-action" onclick="closeSubmitConfirmModal()">Tiếp tục làm</button>
+                    <button type="button" class="btn-modal-confirm" id="btn-modal-submit-now" onclick="executeSubmitExam()">✓ Nộp bài</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DỰ PHÒNG BÀI LÀM -->
+    <div class="modal-overlay" id="export-share-modal">
+        <div class="modal-box share-export-modal-card">
+            <div class="share-modal-header">
+                <div class="share-modal-icon">📤</div>
+                <div>
+                    <h3 class="share-modal-title">Lưu & Gửi Bài Làm Dự Phòng</h3>
+                    <p class="share-modal-subtitle">Chọn hình thức gửi bài cho thầy giáo để được ghi nhận điểm</p>
+                </div>
+            </div>
+
+            <div class="share-options-list">
+                <button type="button" class="btn-share-option btn-opt-download" onclick="actionDownloadJsonDirectly()">
+                    <span class="share-opt-icon">💾</span>
+                    <div class="share-opt-text">
+                        <b>Tải file (.json) về máy</b>
+                        <span>Lưu file bài làm vào bộ nhớ điện thoại / máy tính</span>
+                    </div>
+                    <span class="share-opt-arrow">➔</span>
+                </button>
+
+                <button type="button" class="btn-share-option btn-opt-native-share" id="btn-native-share-trigger" onclick="actionShareNativeApp()">
+                    <span class="share-opt-icon">🚀</span>
+                    <div class="share-opt-text">
+                        <b>Chia sẻ file qua App (Zalo / Messenger)</b>
+                        <span>Gửi đính kèm file trực tiếp vào cuộc trò chuyện</span>
+                    </div>
+                    <span class="share-opt-arrow">➔</span>
+                </button>
+
+                <div class="share-direct-channels">
+                    <div class="share-channel-label">Hoặc mở nhanh ứng dụng gửi cho giáo viên:</div>
+                    <div class="share-channel-grid">
+                        <button type="button" class="btn-channel-btn btn-chan-zalo" onclick="actionSendViaZalo()">
+                            <span class="chan-icon">💬</span>
+                            <span>Mở Zalo</span>
+                        </button>
+                        <button type="button" class="btn-channel-btn btn-chan-messenger" onclick="actionSendViaMessenger()">
+                            <span class="chan-icon">⚡</span>
+                            <span>Mở Messenger</span>
+                        </button>
+                    </div>
+                    <div class="share-channel-tip">
+                        💡 <i>Hệ thống sẽ tự động tải sẵn file về máy và sao chép lời nhắn, bạn chỉ việc bấm gửi trong Zalo / Messenger.</i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="share-modal-footer">
+                <button type="button" class="btn-close-share-modal" onclick="closeExportShareModal()">Đóng cửa sổ</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
