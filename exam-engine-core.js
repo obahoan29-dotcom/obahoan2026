@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: exam-engine-core.js
-// ĐỘNG CƠ BÀI THI BẢO MẬT, KHÓA CỨNG KHI NỘP, ĐỒNG HỒ & TÍNH ĐIỂM
+// ĐỘNG CƠ BÀI THI BẢO MẬT, CƠ CHẾ NỘP BÀI ĐA KÊNH AN TOÀN TUYỆT ĐỐI
 // =========================================================
 
 window.SECURE_VAULT = window.SECURE_VAULT || {
@@ -14,6 +14,7 @@ window.SECURE_VAULT = window.SECURE_VAULT || {
 let hasInitExamEngine = false;
 let isExamLocked = false;
 let lockedDurationSec = 0;
+let isSubmittingInProgress = false;
 
 (function injectLockStyles() {
     const styleId = "exam-engine-lock-styles";
@@ -117,7 +118,7 @@ async function initExamEngine() {
         const gl = document.getElementById('global-loading');
         if (gl && gl.style.display !== 'none') {
             hideLoading();
-            showError("Kết nối chậm", "Máy chủ phản hồi chậm hoặc mạng Internet 4G/Wifi bị gián đoạn. Vui lòng kiểm tra lại mạng và tải lại trang!");
+            showError("Kết nối chậm", "Máy chủ phản hồi chậm hoặc mạng Internet bị gián đoạn. Vui lòng kiểm tra lại mạng 4G/Wifi và tải lại trang!");
         }
     }, 8500);
 
@@ -604,6 +605,7 @@ function showSubmitConfirmModal() {
 }
 
 function closeSubmitConfirmModal() { 
+    if (isSubmittingInProgress) return;
     document.getElementById("submit-confirm-modal").style.display = "none"; 
 }
 
@@ -674,9 +676,13 @@ function restoreExamStateFromStorage() {
     return false; 
 }
 
+// =========================================================
+// THUẬT TOÁN NỘP BÀI ĐA KÊNH & XÁC THỰC 2 CHIỀU CHỐNG MẤT BÀI
+// =========================================================
 async function executeSubmitExam(isForceSubmit = false) { 
-    if (isSubmitted) return; 
+    if (isSubmitted || isSubmittingInProgress) return; 
 
+    isSubmittingInProgress = true;
     lockExamInteractions();
     saveExamStateToStorage();
     
@@ -687,23 +693,27 @@ async function executeSubmitExam(isForceSubmit = false) {
 
     if (confirmModal) confirmModal.style.display = "flex";
     if (normalView) normalView.style.display = "none";
-    
-    if (progressView) {
-        progressView.innerHTML = `
-            <div class="spinner" style="width:38px; height:38px; margin:0 auto 12px auto; border-top-color:#f97316;"></div>
-            <div style="font-weight:900; color:#0284c7; font-size:1.1rem;" id="submit-progress-text">⏳ Đang nộp bài thi...</div>
-            <div style="font-size:0.9rem; color:#64748b; margin-top:6px; font-weight:600;">Vui lòng giữ kết nối để bảo lưu bài thi thành công 100%.</div>
-        `;
-        progressView.style.display = "block";
-    }
     if (actionsBox) actionsBox.innerHTML = "";
-    
+
+    const updateProgressStatus = (text, subtext = "Vui lòng giữ kết nối để bảo lưu bài thi thành công 100%.") => {
+        if (progressView) {
+            progressView.innerHTML = `
+                <div class="spinner" style="width:38px; height:38px; margin:0 auto 12px auto; border-top-color:#0284c7;"></div>
+                <div style="font-weight:900; color:#0284c7; font-size:1.1rem;" id="submit-progress-text">${text}</div>
+                <div style="font-size:0.88rem; color:#64748b; margin-top:6px; font-weight:600;">${subtext}</div>
+            `;
+            progressView.style.display = "block";
+        }
+    };
+
+    updateProgressStatus("⏳ Đang chuẩn bị gói dữ liệu bài thi...");
+
     const sId = document.getElementById("student-id").value.trim(); 
     const sName = document.getElementById("student-name").value.trim(); 
     const sClass = document.getElementById("student-class").value.trim(); 
     const currentCat = typeof getExamCategory === 'function' ? getExamCategory() : "them-11";
     const urlParams = new URLSearchParams(window.location.search);
-    const currentQuizId = urlParams.get('id') || "";
+    const currentQuizId = urlParams.get('id') || (examData && examData.id) || "exam";
 
     const isClassAcc = typeof findStudentFromDatabase === 'function' ? !!findStudentFromDatabase(sId, currentCat) : false;
     const isFreeStudent = !isClassAcc;
@@ -713,7 +723,7 @@ async function executeSubmitExam(isForceSubmit = false) {
     const spentSecs = durationSec % 60; 
     const completionTimeStr = `${spentMins} phút ${spentSecs} giây`; 
     
-    // TÍNH ĐIỂM THEO BIỂU ĐIỂM CẤU HÌNH (FALLBACK MẶC ĐỊNH OPTION 1 NẾU CHƯA CÓ)
+    // TÍNH ĐIỂM BÀI LÀM
     let scoreResult = null;
     if (typeof calculateExamScoreWithConfig === 'function') {
         scoreResult = calculateExamScoreWithConfig(
@@ -724,7 +734,7 @@ async function executeSubmitExam(isForceSubmit = false) {
         );
     } else {
         let correctCount = 0; let wrongCount = 0; let totalRawScore = 0; let maxTotalScore = 0; let dataDetails = [];
-        examData.questions.forEach(q => {
+        (examData.questions || []).forEach(q => {
             maxTotalScore += 1.0;
             if (q.type === "multiple_choice") {
                 const userVal = window.SECURE_VAULT.userAnswers[`q${q.id}`] || "Chưa chọn";
@@ -733,7 +743,7 @@ async function executeSubmitExam(isForceSubmit = false) {
                 else { wrongCount++; dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal}]`); }
             } else if (q.type === "true_false") {
                 let cSt = 0;
-                q.statements.forEach(st => {
+                (q.statements || []).forEach(st => {
                     const sub = `q${q.id}_${st.id}`; const uVal = window.SECURE_VAULT.userAnswers[sub] || "Chưa chọn"; const cVal = window.SECURE_VAULT.answers[sub];
                     if (uVal === cVal) { cSt++; dataDetails.push(`${q.id}${st.id}-${uVal} [ĐÚNG]`); }
                     else { dataDetails.push(`${q.id}${st.id}-${uVal} [SAI]`); }
@@ -750,14 +760,18 @@ async function executeSubmitExam(isForceSubmit = false) {
                 else { wrongCount++; dataDetails.push(`${q.id}-${uVal || "Trống"} [SAI: ${cVal}]`); }
             }
         });
-        const score10Scale = Math.round(((totalRawScore / maxTotalScore) * 10) * 10) / 10;
+        const score10Scale = Math.round(((totalRawScore / (maxTotalScore || 1)) * 10) * 10) / 10;
         scoreResult = { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore: score10Scale, maxScale: 10.0, dataDetails };
     }
 
     const { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore, maxScale, dataDetails } = scoreResult;
     dataDetails.push(`Tab Switch: ${tabSwitchCount}`);
 
+    const safeIdClean = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
+    const submissionFixedKey = `sub_${safeIdClean}_${Date.now()}`;
+
     const payload = { 
+        submissionId: submissionFixedKey,
         quizId: currentQuizId,
         maDe: getMaDe(), 
         completionTime: completionTimeStr, 
@@ -777,6 +791,7 @@ async function executeSubmitExam(isForceSubmit = false) {
         scoringMode: (examData.scoringConfig && examData.scoringConfig.mode) ? examData.scoringConfig.mode : "option1",
         tabSwitchCount: `${tabSwitchCount} lần`, 
         dataString: dataDetails.join(" | "), 
+        userAnswers: window.SECURE_VAULT.userAnswers || {},
         calcMetrics: { correctCount, wrongCount, spentMins, completionTimeStr, score10Scale: finalScore, maxScale }, 
         timestamp: new Date().toLocaleString("vi-VN"), 
         createdAt: Date.now() 
@@ -785,45 +800,91 @@ async function executeSubmitExam(isForceSubmit = false) {
     safeLocal.setItem("pending_exam_submission", JSON.stringify(payload)); 
     pendingSubmissionPayload = payload; 
 
-    const examCode = typeof getExamCode === 'function' ? getExamCode() : "";
-    let firebaseConfirmed = false;
+    const examCode = typeof getExamCode === 'function' ? getExamCode() : "101";
 
-    try {
-        const res = await fetchWithRetry(`${FIREBASE_DB_URL}/exams/${examCode}/submissions.json`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        }, 3, 5000);
+    // DANH SÁCH CÁC NODE BẮT BUỘC GHI ĐỒNG BỘ ĐỂ ADMIN KHÔNG THỂ BỊ SÓT
+    const targetNodes = Array.from(new Set([
+        `${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${submissionFixedKey}.json`,
+        `${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${submissionFixedKey}.json`,
+        `${FIREBASE_DB_URL}/exams/${examCode}/submissions/${submissionFixedKey}.json`
+    ]));
 
-        if (res && res.ok) {
-            const jsonPromise = res.json();
-            const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timeout: true }), 2500));
-            const resJson = await Promise.race([jsonPromise, timeoutPromise]);
-            
-            if (resJson.timeout || (resJson && resJson.name)) {
-                firebaseConfirmed = true;
+    let firebaseVerified = false;
+    let attemptsCount = 0;
+    const maxSendAttempts = 3;
+
+    while (attemptsCount < maxSendAttempts && !firebaseVerified) {
+        attemptsCount++;
+        updateProgressStatus(`⏳ Đang nộp lên máy chủ Firebase (Lần ${attemptsCount}/${maxSendAttempts})...`, "Vui lòng giữ màn hình, không tải lại trang.");
+
+        try {
+            // Gửi đồng thời đa điểm bằng phương thức PUT
+            const putPromises = targetNodes.map(url => {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 6000);
+                return fetch(url, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                }).then(res => {
+                    clearTimeout(timer);
+                    return res.ok;
+                }).catch(() => {
+                    clearTimeout(timer);
+                    return false;
+                });
+            });
+
+            const results = await Promise.all(putPromises);
+            const atLeastOneSuccess = results.some(ok => ok === true);
+
+            if (atLeastOneSuccess) {
+                // XÁC MINH NGAY LẬP TỨC: Đọc lại từ máy chủ Firebase để chắc chắn 100% dữ liệu đã ghi nhận
+                updateProgressStatus("🔍 Máy chủ đang kiểm tra xác thực bài làm...");
+                try {
+                    const verifyUrl = `${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${submissionFixedKey}.json`;
+                    const verifyRes = await fetch(verifyUrl, { cache: "no-store" });
+                    if (verifyRes && verifyRes.ok) {
+                        const verifiedData = await verifyRes.json();
+                        if (verifiedData && (verifiedData.score10 !== undefined || verifiedData.studentName)) {
+                            firebaseVerified = true;
+                            break;
+                        }
+                    }
+                } catch(vErr) {
+                    // Nếu GET kiểm tra nhanh thất bại nhưng PUT trả về 200, ta vẫn chấp nhận
+                    firebaseVerified = true;
+                    break;
+                }
             }
+        } catch(netErr) {
+            console.warn(`Lần nộp ${attemptsCount} gặp lỗi mạng:`, netErr);
         }
-    } catch(err) {
-        console.warn("Nộp bài Firebase thất bại sau nhiều lần thử:", err);
+
+        if (!firebaseVerified && attemptsCount < maxSendAttempts) {
+            await new Promise(r => setTimeout(r, 1500));
+        }
     }
 
-    if (!firebaseConfirmed) {
+    // NẾU SAU NHIỀU LẦN VẪN CHƯA THỂ XÁC NHẬN BÀI NỘP TRÊN FIREBASE
+    if (!firebaseVerified) {
+        isSubmittingInProgress = false;
         if (progressView) {
             progressView.innerHTML = `
-                <div style="font-size:40px; margin-bottom:10px;">📶❌</div>
-                <div style="font-weight:900; color:#ef4444; font-size:1.1rem;">LỖI MẠNG! CHƯA THỂ NỘP BÀI</div>
-                <div style="font-size:0.9rem; color:#475569; margin-top:6px; font-weight:600; line-height: 1.4;">
-                    Hệ thống không thể kết nối tới máy chủ. Điểm của bạn CHƯA được ghi nhận.<br>
-                    Vui lòng kiểm tra lại 4G/Wifi và bấm thử lại!
+                <div style="font-size:42px; margin-bottom:8px;">📶⚠️</div>
+                <div style="font-weight:900; color:#ef4444; font-size:1.15rem;">CHƯA THỂ NỘP LÊN MÁY CHỦ!</div>
+                <div style="font-size:0.92rem; color:#334155; margin-top:8px; font-weight:700; line-height:1.45;">
+                    Mạng 4G/Wifi của bạn bị chập chờn nên máy chủ chưa gửi phản hồi xác nhận.<br>
+                    <span style="color:#0284c7;">Bài làm của bạn vẫn được lưu nguyên vẹn an toàn trên máy.</span>
                 </div>
             `;
         }
         if (actionsBox) {
             actionsBox.innerHTML = `
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button type="button" onclick="executeSubmitExam(${isForceSubmit})" style="flex:1; padding:10px; background:#0284c7; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">🔄 Thử gửi lại</button>
-                    <button type="button" onclick="downloadPendingSubmissionFile()" style="flex:1; padding:10px; background:#0d9488; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">💾 Tải file dự phòng</button>
+                <div style="margin-top: 15px; display: flex; flex-direction:column; gap: 8px; width:100%;">
+                    <button type="button" onclick="executeSubmitExam(${isForceSubmit})" style="width:100%; padding:12px; background:linear-gradient(135deg, #0284c7, #0369a1); color:#fff; border:none; border-radius:10px; font-weight:900; font-size:1rem; cursor:pointer; box-shadow:0 3px 10px rgba(2,132,199,0.3);">🔄 Thử nộp lại ngay</button>
+                    <button type="button" onclick="downloadPendingSubmissionFile()" style="width:100%; padding:10px; background:#f1f5f9; color:#0f172a; border:1.5px solid #cbd5e1; border-radius:10px; font-weight:800; font-size:0.9rem; cursor:pointer;">💾 Lưu file dự phòng gửi Thầy</button>
                 </div>
             `;
             actionsBox.style.display = "block";
@@ -831,10 +892,12 @@ async function executeSubmitExam(isForceSubmit = false) {
         return; 
     }
 
-    if (typeof postToGoogleSheet === 'function') {
-        postToGoogleSheet(typeof URL2_EXAM_RESULT !== 'undefined' ? URL2_EXAM_RESULT : "", payload, 15000).catch(() => null);
+    // ĐÃ XÁC NHẬN THÀNH CÔNG 100%: Gửi tiếp sang Google Sheet dự phòng chạy nền
+    if (typeof postToGoogleSheet === 'function' && typeof URL2_EXAM_RESULT !== 'undefined' && URL2_EXAM_RESULT) {
+        postToGoogleSheet(URL2_EXAM_RESULT, payload, 15000).catch(() => null);
     }
     
+    // Xóa phiên làm việc trong active_sessions (CHỈ XÓA KHI ĐÃ GHI THÀNH CÔNG BÀI LÀM)
     if (typeof clearPresence === 'function') clearPresence(sId);
     if (timerInterval) clearInterval(timerInterval); 
     if (typeof timeWatcherInterval !== 'undefined' && timeWatcherInterval) clearInterval(timeWatcherInterval);
@@ -850,6 +913,7 @@ async function executeSubmitExam(isForceSubmit = false) {
     safeLocal.setItem("last_submission_cleared", "true");
     
     isSubmitted = true; 
+    isSubmittingInProgress = false;
     if (confirmModal) confirmModal.style.display = "none"; 
     
     renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, finalScore, maxScale); 
@@ -928,7 +992,7 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
         let revHTML = ""; 
         let idx = 1; 
 
-        examData.questions.forEach(q => { 
+        (examData.questions || []).forEach(q => { 
             const imgUrl = getEffectiveImageUrl(q, examData.images || {}); 
             const imgTag = buildImgHtml(imgUrl, `rev_${q.id}`); 
             const explainText = window.SECURE_VAULT.explanations[`q${q.id}`] ? `<div class="explanation-box">💡 <b>Lời giải chi tiết:</b> ${window.SECURE_VAULT.explanations[`q${q.id}`]}</div>` : ""; 
@@ -940,7 +1004,7 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
                 revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge" style="background:${uAns===cAns?'#22c55e':'#ef4444'}">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="options-list grid-2">${q.options.map((opt, oIdx) => { const L = letters[oIdx]; let cls = ""; let icon = ""; if (L === cAns) { cls = "is-correct"; icon = " ✓"; } else if (L === uAns && uAns !== cAns) { cls = "is-wrong"; icon = " ✗"; } return `<div class="opt-label ${cls}"><span class="opt-circle">${L}</span><span class="opt-text">${opt} <b>${icon}</b></span></div>`; }).join('')}</div>${explainText}</div>`; 
             } else if (q.type === "true_false") { 
                 let rows = ""; 
-                q.statements.forEach(st => { 
+                (q.statements || []).forEach(st => { 
                     const sub = `q${q.id}_${st.id}`; 
                     const uVal = window.SECURE_VAULT.userAnswers[sub] || "Chưa chọn"; 
                     const cVal = window.SECURE_VAULT.answers[sub]; 
@@ -982,7 +1046,7 @@ function renderOriginalReviewScreen() {
         if (q.type === "multiple_choice") {
             generatedAnswerKey[`q${q.id}`] = typeof q.correct === 'number' ? letters[q.correct] : q.correct;
         } else if (q.type === "true_false") {
-            q.statements.forEach(st => {
+            (q.statements || []).forEach(st => {
                 generatedAnswerKey[`q${q.id}_${st.id}`] = st.correct ? "Đúng" : "Sai";
             });
         } else {
@@ -1003,7 +1067,7 @@ function renderOriginalReviewScreen() {
             revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="options-list grid-2">${q.options.map((opt, oIdx) => { const L = letters[oIdx]; let cls = ""; let icon = ""; if (L === cAns) { cls = "is-correct"; icon = " ✓ Đ.Án"; } return `<div class="opt-label ${cls}"><span class="opt-circle">${L}</span><span class="opt-text">${opt} <b>${icon}</b></span></div>`; }).join('')}</div>${explainText}</div>`; 
         } else if (q.type === "true_false") { 
             let rows = ""; 
-            q.statements.forEach(st => { 
+            (q.statements || []).forEach(st => { 
                 const sub = `q${q.id}_${st.id}`; 
                 const cVal = generatedAnswerKey[sub]; 
                 rows += `<tr><td><b>${st.id})</b> ${st.statement}</td><td align="center" style="color:#15803d; font-weight:800;">${cVal}</td></tr>`; 
