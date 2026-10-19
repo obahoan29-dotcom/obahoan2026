@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: portal-results-core.js
-// QUẢN LÝ DỮ LIỆU KẾT QUẢ THI, CACHE VÀ NẠP TỪ FIREBASE
+// QUẢN LÝ DỮ LIỆU KẾT QUẢ THI, CACHE VÀ NẠP ĐA ĐIỂM TỪ FIREBASE
 // =========================================================
 
 let currentExamResultData = {
@@ -67,7 +67,7 @@ function deduplicateAttempts(attempts) {
             let exStrTime = String(existing.timestamp || "").trim();
             let exScore = (existing.score10 !== undefined) ? String(existing.score10) : "";
             if (subStrTime && exStrTime && subStrTime === exStrTime) return true;
-            if (subTime > 0 && exTime > 0 && Math.abs(subTime - exTime) < 40000 && subScore === exScore) return true;
+            if (subTime > 0 && exTime > 0 && Math.abs(subTime - exTime) < 30000 && subScore === exScore) return true;
             return false;
         });
 
@@ -81,7 +81,7 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
     const subQuizId = String(sub.quizId || sub.id || "").trim();
     const curQuizId = String(examInfo.quizId || "").trim();
 
-    if (subQuizId && curQuizId) return subQuizId === curQuizId;
+    if (subQuizId && curQuizId && subQuizId === curQuizId) return true;
     if (sub._nodeCode && curQuizId && sub._nodeCode === curQuizId) return true;
 
     const subTitle = sub.examName || sub.examTitle || sub.title || "";
@@ -96,7 +96,7 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
 
         const subNormCode = extractNormalizedExamCode(subTitle || sub.maDe || "");
         const curNormCode = examInfo.normCode || extractNormalizedExamCode(curTitle || examInfo.maDe || "");
-        if (subNormCode && curNormCode) return subNormCode === curNormCode;
+        if (subNormCode && curNormCode && subNormCode === curNormCode) return true;
 
         if (subNormTitle.length >= 8 && curNormTitle.length >= 8) {
             const subNums = subTitle.match(/\d+/g) || [];
@@ -110,13 +110,14 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
     const curMaDe = examInfo.maDe || "";
     if (subMaDe && curMaDe && subMaDe !== "101" && curMaDe !== "101") return subMaDe === curMaDe;
 
-    return false;
+    // Fallback: nếu cùng quizId lưu ở các node con
+    return (!subQuizId && !curQuizId);
 }
 
 async function fetchAndRenderExamResults(item, isSilent = false) {
     if (!item) return;
 
-    let quizId = extractQuizIdFromItem(item) || "";
+    let quizId = extractQuizIdFromItem(item) || item.firebaseId || item.id || "";
     let maDe = "";
     let examTitle = item.title || "";
 
@@ -131,12 +132,38 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
         } catch(e) {}
     }
 
-    const candidateCodesList = Array.from(new Set([quizId, cleanExamCodeKey(maDe || examTitle)].filter(Boolean)));
+    // QUÉT TOÀN DIỆN MỌI NODE MÀ HỌC SINH CÓ THỂ LƯU BÀI
+    const candidateCodesList = Array.from(new Set([
+        quizId,
+        cleanExamCodeKey(maDe),
+        cleanExamCodeKey(examTitle),
+        "101"
+    ].filter(Boolean)));
+
     let submissionsMap = {};
     let cheatingLogsData = {};
     let activeSessionsData = {};
 
     try {
+        // 1. Quét thẳng node chính quizzes/${quizId}/submissions
+        if (quizId) {
+            try {
+                const qSubRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions.json`);
+                if (qSubRes && qSubRes.ok) {
+                    const qSubJson = await qSubRes.json();
+                    if (qSubJson && typeof qSubJson === 'object') {
+                        for (let k in qSubJson) {
+                            if (qSubJson[k]) {
+                                qSubJson[k]._nodeCode = quizId;
+                                submissionsMap[k] = qSubJson[k];
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // 2. Quét các node exams/${code}/submissions và active_sessions
         const fetchTasks = candidateCodesList.map(async (code) => {
             const [sRes, cRes, aRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
@@ -150,7 +177,8 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
                     for (let subId in sJson) {
                         let subObj = sJson[subId];
                         if (subObj && typeof subObj === 'object') {
-                            subObj._nodeCode = code; submissionsMap[subId] = subObj;
+                            subObj._nodeCode = code;
+                            submissionsMap[subId] = subObj;
                         }
                     }
                 }
@@ -162,7 +190,8 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
                     for (let cId in cJson) {
                         let cObj = cJson[cId];
                         if (cObj && typeof cObj === 'object') {
-                            cObj._nodeCode = code; cheatingLogsData[cId] = cObj;
+                            cObj._nodeCode = code;
+                            cheatingLogsData[cId] = cObj;
                         }
                     }
                 }
@@ -174,7 +203,8 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
                     for (let aId in aJson) {
                         let aObj = aJson[aId];
                         if (typeof aObj === 'object' && aObj !== null) {
-                            aObj._nodeCode = code; activeSessionsData[`${code}_${aId}`] = aObj;
+                            aObj._nodeCode = code;
+                            activeSessionsData[`${code}_${aId}`] = aObj;
                         } else {
                             activeSessionsData[`${code}_${aId}`] = { lastPing: aObj, _nodeCode: code };
                         }
@@ -204,7 +234,7 @@ function getSubmissionTimestamp(sub) {
     return parseDateString(sub.timestamp) || 0;
 }
 
-// BỘ XỬ LÝ GHÉP NỐI TOÀN BỘ KẾT QUẢ THI TỪ FIREBASE VÀO TÀI KHOẢN LỚP
+// BỘ XỬ LÝ GHÉP NỐI BÀI THI: ƯU TIÊN SỐ BÁO DANH VÀ HỌ TÊN - CHỐNG BỊ MẤT BÀI
 function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap, examItem, examMeta = {}) {
     const classAccounts = getAccountsForCategory(categoryId);
     const targetCatId = String(categoryId || "").trim();
@@ -267,11 +297,8 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         if (!sess || typeof sess !== 'object') continue;
         if (!isSubmissionMatchingCurrentExam(sess, currentExamInfo)) continue;
 
-        let sessCat = sess.categoryId || sess.cat;
-        if (sessCat && !isStrictSameCategory(sessCat, targetCatId)) continue;
-
         let lastPing = (typeof sess === 'number') ? sess : (sess.lastPing || sess.startTime || sess.loginTime || 0);
-        let isRecentlyActive = (nowMs - lastPing < 300000) || (sess.startTime && (nowMs - sess.startTime < 7200000) && (nowMs - lastPing < 600000));
+        let isRecentlyActive = (nowMs - lastPing < 360000) || (sess.startTime && (nowMs - sess.startTime < 7200000) && (nowMs - lastPing < 600000));
 
         if (isRecentlyActive) {
             let sessSbd = String(sess.sbd || "").trim().toLowerCase();
@@ -296,6 +323,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
+    // 1. GHÉP BÀI THEO DANH SÁCH LỚP
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -307,23 +335,24 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let matchedSubs = [];
         for (let sub of submissionsList) {
             if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
-            let subCat = sub.categoryId || sub.cat;
-            if (subCat && !isStrictSameCategory(subCat, targetCatId)) continue;
-
-            let subClass = normalizeName(sub.studentClass || sub.className);
-            let accClass = normalizeName(acc.className);
-            if (subClass && accClass && subClass !== accClass && !isStrictSameCategory(subClass, targetCatId)) continue;
 
             let subSbd = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
             let subNameNorm = normalizeName(sub.studentName);
 
+            // KHỚP CHÍNH XÁC THEO SỐ BÁO DANH HOẶC HỌ TÊN - KHÔNG LOẠI BỎ DO TÊN LỚP
             let isMatch = false;
-            if (accSbdLower && subSbd && subSbd === accSbdLower) { isMatch = true; } 
-            else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
-                if (!subSbd || subSbd === "---" || subSbd === "free" || subSbd === accSbdLower) { isMatch = true; }
+            if (accSbdLower && subSbd && subSbd === accSbdLower) { 
+                isMatch = true; 
+            } else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
+                if (!subSbd || subSbd === "---" || subSbd === "free" || subSbd === accSbdLower) { 
+                    isMatch = true; 
+                }
             }
 
-            if (isMatch) { matchedSubs.push(sub); usedSubmissionKeys.add(sub._keyId); }
+            if (isMatch) { 
+                matchedSubs.push(sub); 
+                usedSubmissionKeys.add(sub._keyId); 
+            }
         }
 
         matchedSubs = deduplicateAttempts(matchedSubs);
@@ -332,8 +361,10 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         let safeSbd = accSbdLower.replace(/[^a-zA-Z0-9]/g, '_');
         let activeSess = activeUsersMap[accSbdLower] || activeUsersMap[safeSbd] || activeUsersMap[accNameNorm] || activeUsersMap[accUserNorm];
         
+        // CHỈ HIỆN ĐANG LÀM KHI CHƯA NỘP BÀI
         if (matchedSubs.length === 0 && activeSess) {
-            isDoing = true; doingStartTime = activeSess.startTime || activeSess.loginTime || activeSess.lastPing || Date.now();
+            isDoing = true; 
+            doingStartTime = activeSess.startTime || activeSess.loginTime || activeSess.lastPing || Date.now();
         }
 
         let cheatDurations = (accSbdLower && cheatHistoryBySbd[accSbdLower]) ? cheatHistoryBySbd[accSbdLower] : ((accNameNorm && cheatHistoryBySbd[accNameNorm]) ? cheatHistoryBySbd[accNameNorm] : []);
@@ -354,6 +385,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     });
 
+    // 2. GHÉP BÀI CỦA THÍ SINH TỰ DO (CHƯA ĐƯỢC GHÉP VÀO LỚP)
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
@@ -361,16 +393,17 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         if (usedSubmissionKeys.has(sub._keyId)) continue;
         if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
 
-        let subCat = sub.categoryId || sub.cat;
-        if (!subCat || !isStrictSameCategory(subCat, targetCatId)) continue;
-
         let subSbd = String(sub.sbd || sub.studentId || "free").trim().toLowerCase();
         let subName = normalizeName(sub.studentName) || "free_student";
         let groupKey = (subSbd !== "---" && subSbd !== "chuanhap" && subSbd !== "free") ? subSbd : subName;
 
         if (!freeGroups[groupKey]) {
             freeGroups[groupKey] = {
-                account: { sbd: sub.sbd || sub.studentId || "---", name: sub.studentName || "Thí sinh tự do", className: sub.studentClass || sub.className || "Tự do" },
+                account: { 
+                    sbd: sub.sbd || sub.studentId || "---", 
+                    name: sub.studentName || "Thí sinh tự do", 
+                    className: sub.studentClass || sub.className || "Tự do" 
+                },
                 attempts: []
             };
         }
@@ -402,12 +435,11 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
+    // 3. THÍ SINH TỰ DO ĐANG TRONG PHÒNG THI (ACTIVE SESSIONS)
     for (let aKey in activeUsersMap) {
         let session = activeUsersMap[aKey];
         if (!session || typeof session !== 'object') continue;
-
-        let sessCat = session.categoryId || session.cat;
-        if (!sessCat || !isStrictSameCategory(sessCat, targetCatId)) continue;
+        if (!isSubmissionMatchingCurrentExam(session, currentExamInfo)) continue;
 
         let sSbd = String(session.sbd || "").trim().toLowerCase();
         let sName = session.name || "";
