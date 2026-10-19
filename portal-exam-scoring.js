@@ -22,44 +22,52 @@ let currentScoringQuizData = null;
             color: #ffffff !important;
         }
         .scoring-modal-card {
-            max-width: 540px !important;
-            width: min(540px, calc(100vw - 24px)) !important;
-            padding: 22px !important;
-            border-radius: 20px !important;
+            max-width: 480px !important;
+            width: min(480px, calc(100vw - 16px)) !important;
+            max-height: calc(100vh - 28px) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding: 14px 16px !important;
+            border-radius: 16px !important;
             text-align: left !important;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35) !important;
+            box-sizing: border-box !important;
         }
+        .scoring-modal-card::-webkit-scrollbar { width: 4px; }
+        .scoring-modal-card::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .scoring-q-count-banner {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             flex-wrap: wrap;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            padding: 8px 12px;
-            border-radius: 12px;
-            margin-bottom: 14px;
-            font-size: 12px;
+            padding: 5px 8px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 11px;
             font-weight: 700;
             color: #475569;
         }
         .scoring-q-badge {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            border-radius: 8px;
+            gap: 2px;
+            padding: 2px 6px;
+            border-radius: 6px;
             background: #ffffff;
             border: 1px solid #cbd5e1;
             font-weight: 800;
             color: #0f172a;
+            font-size: 10.5px;
         }
         .scoring-option-card {
             border: 1.5px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 12px 14px;
-            margin-bottom: 10px;
+            border-radius: 11px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
             background: #ffffff;
         }
         .scoring-option-card:hover {
@@ -69,88 +77,98 @@ let currentScoringQuizData = null;
         .scoring-option-card.selected {
             border-color: #0284c7;
             background: #f0f9ff;
-            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+            box-shadow: 0 0 0 1.5px rgba(2, 132, 199, 0.2);
         }
         .scoring-option-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: 900;
-            font-size: 13.5px;
+            gap: 7px;
+            font-weight: 800;
+            font-size: 12px;
             color: #0f172a;
+            line-height: 1.3;
         }
         .scoring-option-header input[type="radio"] {
-            width: 17px;
-            height: 17px;
+            width: 15px;
+            height: 15px;
             accent-color: #0284c7;
             cursor: pointer;
             margin: 0;
+            flex-shrink: 0;
         }
         .scoring-option-desc {
-            font-size: 11.5px;
+            font-size: 10.5px;
             color: #64748b;
             font-weight: 600;
-            margin-top: 4px;
-            line-height: 1.45;
-            padding-left: 27px;
+            margin-top: 3px;
+            line-height: 1.35;
+            padding-left: 22px;
         }
         .scoring-inputs-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-            padding-left: 27px;
-        }
-        @media (max-width: 480px) {
-            .scoring-inputs-grid { grid-template-columns: 1fr; }
+            gap: 6px;
+            margin-top: 6px;
+            padding-left: 0;
         }
         .scoring-part-box {
             background: #ffffff;
-            border: 1.5px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 8px 10px;
+            border: 1.2px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 5px 7px;
         }
         .scoring-part-label {
-            font-size: 11.5px;
+            font-size: 10px;
             font-weight: 800;
             color: #334155;
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .scoring-part-input {
             width: 100%;
-            padding: 6px 10px;
-            border: 1.5px solid #cbd5e1;
-            border-radius: 8px;
+            padding: 4px 6px;
+            border: 1.2px solid #cbd5e1;
+            border-radius: 6px;
             font-weight: 800;
-            font-size: 13.5px;
+            font-size: 12px;
             outline: none;
             color: #0f172a;
             box-sizing: border-box;
+            height: 28px;
         }
         .scoring-part-input:focus { border-color: #0284c7; }
         .scoring-part-hint {
-            font-size: 10.5px;
+            font-size: 9.5px;
             font-weight: 700;
             color: #0284c7;
-            margin-top: 4px;
-            line-height: 1.35;
+            margin-top: 2px;
+            line-height: 1.25;
             white-space: pre-line;
         }
         .scoring-total-box {
             background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 1.5px solid #86efac;
-            border-radius: 12px;
-            padding: 10px 14px;
-            margin-top: 12px;
+            border: 1.2px solid #86efac;
+            border-radius: 9px;
+            padding: 6px 10px;
+            margin-top: 6px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-        .scoring-total-title { font-size: 13px; font-weight: 800; color: #166534; }
-        .scoring-total-val { font-size: 18px; font-weight: 900; color: #15803d; }
+        .scoring-total-title { font-size: 11px; font-weight: 800; color: #166534; }
+        .scoring-total-val { font-size: 14px; font-weight: 900; color: #15803d; }
+        @media (max-width: 640px) {
+            .scoring-modal-card {
+                padding: 10px 12px !important;
+                border-radius: 14px !important;
+            }
+            .scoring-inputs-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 5px;
+            }
+        }
     `;
     document.head.appendChild(style);
 })();
@@ -162,24 +180,24 @@ function ensureScoringModalInDOM() {
     modalDiv.id = "exam-scoring-modal";
     modalDiv.innerHTML = `
     <div class="move-modal-box scoring-modal-card">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px;">
-            <h4 style="margin:0; font-size: 16px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+            <h4 style="margin:0; font-size: 13.5px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 6px;">
                 <span>🎯</span> Cấu Hình Biểu Điểm Đề Thi
             </h4>
-            <button type="button" onclick="closeGradingScaleModal()" style="background:none; border:none; font-size:18px; font-weight:900; color:#94a3b8; cursor:pointer;">✕</button>
+            <button type="button" onclick="closeGradingScaleModal()" style="background:none; border:none; font-size:16px; font-weight:900; color:#94a3b8; cursor:pointer; padding:0 4px;">✕</button>
         </div>
 
-        <div style="font-size: 12.5px; font-weight: 700; color: #0284c7; margin-bottom: 8px;" id="scoring-modal-exam-title">
+        <div style="font-size: 11.5px; font-weight: 700; color: #0284c7; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="scoring-modal-exam-title">
             📑 Đang nạp đề thi...
         </div>
 
         <div class="scoring-q-count-banner" id="scoring-q-count-banner">
-            <span>Cấu trúc câu:</span>
-            <span class="scoring-q-badge" id="badge-count-p1">P1: -- câu</span>
-            <span class="scoring-q-badge" id="badge-count-p2">P2: -- câu</span>
-            <span class="scoring-q-badge" id="badge-count-p3">P3: -- câu</span>
-            <span class="scoring-q-badge" id="badge-count-p4">P4: -- câu</span>
-            <span class="scoring-q-badge" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc;" id="badge-count-total">Tổng: -- câu</span>
+            <span>Cấu trúc:</span>
+            <span class="scoring-q-badge" id="badge-count-p1">P1: --</span>
+            <span class="scoring-q-badge" id="badge-count-p2">P2: --</span>
+            <span class="scoring-q-badge" id="badge-count-p3">P3: --</span>
+            <span class="scoring-q-badge" id="badge-count-p4">P4: --</span>
+            <span class="scoring-q-badge" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc;" id="badge-count-total">Tổng: --</span>
         </div>
 
         <!-- LỰA CHỌN 1 -->
@@ -189,66 +207,66 @@ function ensureScoringModalInDOM() {
                 <label for="scoring-mode-opt1" style="cursor:pointer;">Lựa chọn 1: Mỗi câu 1 điểm (Quy đổi thang 10)</label>
             </div>
             <div class="scoring-option-desc">
-                Tất cả các câu P1, P3, P4 đúng được 1 điểm. Riêng mỗi câu P2 (Đúng/Sai): đúng 1 ý = <b>0.1đ</b>, 2 ý = <b>0.25đ</b>, 3 ý = <b>0.5đ</b>, 4 ý = <b>1.0đ</b>. Điểm cuối cùng quy về thang 10: <code>(Tổng điểm / Tổng câu) × 10</code>.
+                P1, P3, P4 đúng được 1đ. Riêng P2: đúng 1 ý = <b>0.1đ</b>, 2 ý = <b>0.25đ</b>, 3 ý = <b>0.5đ</b>, 4 ý = <b>1.0đ</b>. Quy thang 10: <code>(Tổng điểm / Tổng câu) × 10</code>.
             </div>
         </div>
 
-        <!-- LỰA CHỌN 3: MẪU BỘ GD&ĐT -->
+        <!-- LỰA CHỌN 2: MẪU CHUẨN BỘ GD&ĐT -->
         <div class="scoring-option-card" id="card-scoring-opt3" onclick="handleScoringModeChange('option3')">
             <div class="scoring-option-header">
                 <input type="radio" name="scoring-mode" id="scoring-mode-opt3" value="option3" onchange="handleScoringModeChange('option3')">
-                <label for="scoring-mode-opt3" style="cursor:pointer;">Lựa chọn 3: Mẫu chuẩn Bộ GD&ĐT (3 - 4 - 3 - 0)</label>
+                <label for="scoring-mode-opt3" style="cursor:pointer;">Lựa chọn 2: Mẫu chuẩn Bộ GD&ĐT (3 - 4 - 3 - 0)</label>
             </div>
             <div class="scoring-option-desc">
-                Định dạng cấu trúc chuẩn: <b>Phần 1: 3.0đ</b> (0.25đ/câu) • <b>Phần 2: 4.0đ</b> (1.0đ/câu: 0.1 - 0.25 - 0.5 - 1.0) • <b>Phần 3: 3.0đ</b> (0.5đ/câu) • <b>Phần 4: 0đ</b>. Tổng tròn <b>10.0 điểm</b>.
+                Chuẩn: <b>P1: 3.0đ</b> (0.25đ/câu) • <b>P2: 4.0đ</b> (1.0đ/câu: 0.1 - 0.25 - 0.5 - 1.0) • <b>P3: 3.0đ</b> (0.5đ/câu) • <b>P4: 0đ</b>. Tổng tròn <b>10.0đ</b>.
             </div>
         </div>
 
-        <!-- LỰA CHỌN 2: TỰ NHẬP -->
+        <!-- LỰA CHỌN 3: TỰ NHẬP ĐIỂM -->
         <div class="scoring-option-card" id="card-scoring-opt2" onclick="handleScoringModeChange('option2')">
             <div class="scoring-option-header">
                 <input type="radio" name="scoring-mode" id="scoring-mode-opt2" value="option2" onchange="handleScoringModeChange('option2')">
-                <label for="scoring-mode-opt2" style="cursor:pointer;">Lựa chọn 2: Tự nhập điểm theo từng phần (Tổng P1 + P2 + P3 + P4)</label>
+                <label for="scoring-mode-opt2" style="cursor:pointer;">Lựa chọn 3: Tự nhập điểm theo từng phần (Tổng P1 + P2 + P3 + P4)</label>
             </div>
             <div class="scoring-option-desc">
-                Tự nhập điểm cho từng phần. Hệ thống tự động chia đều cho số câu. Trong P2: 1 ý = 10%, 2 ý = 25%, 3 ý = 50%, 4 ý = 100% điểm của 1 câu. Tổng điểm là tổng 4 phần, <b>có thể lớn hơn 10</b>.
+                Tự nhập điểm từng phần, tự động chia đều. P2: 1 ý=10%, 2 ý=25%, 3 ý=50%, 4 ý=100%. Tổng điểm 4 phần, <b>có thể lớn hơn 10</b>.
             </div>
 
             <div class="scoring-inputs-grid" id="scoring-inputs-custom-view" style="display:none;">
                 <div class="scoring-part-box">
-                    <div class="scoring-part-label"><span>Phần 1 (Trắc nghiệm 4 Đ.Á):</span></div>
-                    <input type="number" step="0.05" min="0" max="100" class="scoring-part-input" id="score-input-p1" placeholder="Nhập điểm..." oninput="updateScoringPreview()">
+                    <div class="scoring-part-label"><span>P1 (4 Đ.Á):</span></div>
+                    <input type="number" step="0.05" min="0" max="100" class="scoring-part-input" id="score-input-p1" placeholder="Điểm..." oninput="updateScoringPreview()">
                     <div class="scoring-part-hint" id="hint-p1">-- đ/câu</div>
                 </div>
 
                 <div class="scoring-part-box">
-                    <div class="scoring-part-label"><span>Phần 2 (Đúng / Sai):</span></div>
-                    <input type="number" step="0.05" min="0" max="100" class="scoring-part-input" id="score-input-p2" placeholder="Nhập điểm..." oninput="updateScoringPreview()">
+                    <div class="scoring-part-label"><span>P2 (Đúng / Sai):</span></div>
+                    <input type="number" step="0.05" min="0" max="100" class="scoring-part-input" id="score-input-p2" placeholder="Điểm..." oninput="updateScoringPreview()">
                     <div class="scoring-part-hint" id="hint-p2">-- đ/câu</div>
                 </div>
 
                 <div class="scoring-part-box">
-                    <div class="scoring-part-label"><span>Phần 3 (Trả lời ngắn):</span></div>
-                    <input type="number" step="0.05" min="0" max="100" class="scoring-part-input" id="score-input-p3" placeholder="Nhập điểm..." oninput="updateScoringPreview()">
+                    <div class="scoring-part-label"><span>P3 (Trả lời ngắn):</span></div>
+                    <input type="number" step="0.05" min="0" max="100" class="scoring-part-input" id="score-input-p3" placeholder="Điểm..." oninput="updateScoringPreview()">
                     <div class="scoring-part-hint" id="hint-p3">-- đ/câu</div>
                 </div>
 
                 <div class="scoring-part-box">
-                    <div class="scoring-part-label"><span>Phần 4 (Tự luận / Điền kết quả):</span></div>
-                    <input type="number" step="0.05" min="0" max="100" class="scoring-part-input" id="score-input-p4" placeholder="Nhập điểm..." oninput="updateScoringPreview()">
+                    <div class="scoring-part-label"><span>P4 (Tự luận):</span></div>
+                    <input type="number" step="0.05" min="0" max="100" class="scoring-part-input" id="score-input-p4" placeholder="Điểm..." oninput="updateScoringPreview()">
                     <div class="scoring-part-hint" id="hint-p4">-- đ/câu</div>
                 </div>
             </div>
 
             <div class="scoring-total-box" id="scoring-total-box" style="display:none;">
-                <span class="scoring-total-title">🎯 TỔNG ĐIỂM TỐI ĐA CỦA ĐỀ THI:</span>
+                <span class="scoring-total-title">🎯 TỔNG ĐIỂM TỐI ĐA:</span>
                 <span class="scoring-total-val" id="scoring-total-preview-val">10.0 điểm</span>
             </div>
         </div>
 
-        <div class="move-btn-row" style="margin-top: 14px;">
-            <button type="button" class="move-btn-cancel" onclick="closeGradingScaleModal()">Hủy</button>
-            <button type="button" class="move-btn-submit" id="btn-save-grading-scale" onclick="saveGradingScaleConfig()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">💾 Lưu Biểu Điểm</button>
+        <div class="move-btn-row" style="margin-top: 8px;">
+            <button type="button" class="move-btn-cancel" onclick="closeGradingScaleModal()" style="padding: 7px 10px; font-size: 12px; border-radius: 9px;">Hủy</button>
+            <button type="button" class="move-btn-submit" id="btn-save-grading-scale" onclick="saveGradingScaleConfig()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 7px 10px; font-size: 12px; border-radius: 9px;">💾 Lưu Biểu Điểm</button>
         </div>
     </div>`;
     document.body.appendChild(modalDiv);
@@ -386,7 +404,7 @@ function updateScoringPreview() {
             const sc2 = round3(p2PerQ * 0.25);
             const sc3 = round3(p2PerQ * 0.5);
             const sc4 = round3(p2PerQ * 1.0);
-            h2.innerText = `💡 ${counts.p2} câu ➔ ${round3(p2PerQ)} đ/câu\n(1 ý = ${sc1}đ | 2 ý = ${sc2}đ | 3 ý = ${sc3}đ | 4 ý = ${sc4}đ)`;
+            h2.innerText = `💡 ${counts.p2} câu ➔ ${round3(p2PerQ)} đ/câu\n(1 ý=${sc1}đ | 2 ý=${sc2}đ | 3 ý=${sc3}đ | 4 ý=${sc4}đ)`;
         } else {
             h2.innerText = "Đề không có câu P2";
         }
