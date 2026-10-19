@@ -67,10 +67,21 @@ function getExamCategory() {
 function findStudentFromDatabase(query, preferredCat = null) {
     if (!query || !window.STUDENT_ACCOUNTS) return null;
     const q = String(query).trim().toLowerCase();
+    
+    // Tìm trong chuyên mục ưu tiên
     if (preferredCat && window.STUDENT_ACCOUNTS[preferredCat]) {
         const list = window.STUDENT_ACCOUNTS[preferredCat];
         const matched = list.find(acc => (acc.sbd && String(acc.sbd).trim().toLowerCase() === q) || (acc.username && String(acc.username).trim().toLowerCase() === q) || (acc.name && String(acc.name).trim().toLowerCase() === q));
         if (matched) return matched;
+    }
+    
+    // Quét toàn bộ các lớp còn lại nếu chưa tìm thấy
+    for (let c in window.STUDENT_ACCOUNTS) {
+        const list = window.STUDENT_ACCOUNTS[c];
+        if (Array.isArray(list)) {
+            const m = list.find(acc => (acc.sbd && String(acc.sbd).trim().toLowerCase() === q) || (acc.username && String(acc.username).trim().toLowerCase() === q) || (acc.name && String(acc.name).trim().toLowerCase() === q));
+            if (m) return m;
+        }
     }
     return null;
 }
@@ -82,6 +93,13 @@ function findStudentByPassword(passQuery, preferredCat = null) {
         const list = window.STUDENT_ACCOUNTS[preferredCat];
         const matched = list.find(acc => String(acc.pass).trim().toLowerCase() === p);
         if (matched) return matched;
+    }
+    for (let c in window.STUDENT_ACCOUNTS) {
+        const list = window.STUDENT_ACCOUNTS[c];
+        if (Array.isArray(list)) {
+            const m = list.find(acc => String(acc.pass).trim().toLowerCase() === p);
+            if (m) return m;
+        }
     }
     return null;
 }
@@ -160,6 +178,9 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         const primaryRes = await fetchWithRetry(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(presencePayload) }, 3, 5000);
         if (primaryRes && primaryRes.ok) {
             isFirebaseConfirmed = true;
+            if (currentQuizId && currentQuizId !== examCode) {
+                fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, { method: 'PUT', body: JSON.stringify(presencePayload) }).catch(() => null);
+            }
             fetch(`${FIREBASE_DB_URL}/exams/${examCode}/cheating_logs.json`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logPayload) }).catch(() => null);
         }
     } catch(e) {}
@@ -209,13 +230,23 @@ async function updatePresence(examCode, safeId) {
 
         const presencePayload = { sbd: sId, name: sName, className: sClass, cat: currentCat, categoryId: currentCat, isFree: isFree, quizId: currentQuizId, maDe: getMaDe(), examName: EXAM_NAME, examTitle: EXAM_NAME, startTime: examStartTime || Date.now(), lastPing: Date.now() };
         fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, { method: 'PUT', body: JSON.stringify(presencePayload) }).catch(() => null);
+        if (currentQuizId && currentQuizId !== examCode) {
+            fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, { method: 'PUT', body: JSON.stringify(presencePayload) }).catch(() => null);
+        }
     } catch(e) {}
 }
 
 function clearPresence(sId) {
     if (presenceInterval) clearInterval(presenceInterval);
     const safeId = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
-    fetch(`${FIREBASE_DB_URL}/active_sessions/${getExamCode()}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
+    const examCode = getExamCode();
+    const urlParams = new URLSearchParams(window.location.search); 
+    const currentQuizId = urlParams.get('id') || "";
+
+    fetch(`${FIREBASE_DB_URL}/active_sessions/${examCode}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
+    if (currentQuizId && currentQuizId !== examCode) {
+        fetch(`${FIREBASE_DB_URL}/active_sessions/${currentQuizId}/${safeId}.json`, { method: 'DELETE' }).catch(e=>{});
+    }
 }
 
 function showTimeChangeToast(message) {
