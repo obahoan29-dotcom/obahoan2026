@@ -713,63 +713,49 @@ async function executeSubmitExam(isForceSubmit = false) {
     const spentSecs = durationSec % 60; 
     const completionTimeStr = `${spentMins} phút ${spentSecs} giây`; 
     
-    let correctCount = 0; 
-    let wrongCount = 0; 
-    let totalRawScore = 0; 
-    let maxTotalScore = 0; 
-    let dataDetails = []; 
+    // TÍNH ĐIỂM THEO BIỂU ĐIỂM CẤU HÌNH (FALLBACK MẶC ĐỊNH OPTION 1 NẾU CHƯA CÓ)
+    let scoreResult = null;
+    if (typeof calculateExamScoreWithConfig === 'function') {
+        scoreResult = calculateExamScoreWithConfig(
+            examData.questions || [],
+            window.SECURE_VAULT.userAnswers || {},
+            window.SECURE_VAULT.answers || {},
+            examData.scoringConfig || { mode: 'option1' }
+        );
+    } else {
+        let correctCount = 0; let wrongCount = 0; let totalRawScore = 0; let maxTotalScore = 0; let dataDetails = [];
+        examData.questions.forEach(q => {
+            maxTotalScore += 1.0;
+            if (q.type === "multiple_choice") {
+                const userVal = window.SECURE_VAULT.userAnswers[`q${q.id}`] || "Chưa chọn";
+                const correctVal = window.SECURE_VAULT.answers[`q${q.id}`];
+                if (userVal === correctVal) { correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${userVal} [ĐÚNG]`); }
+                else { wrongCount++; dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal}]`); }
+            } else if (q.type === "true_false") {
+                let cSt = 0;
+                q.statements.forEach(st => {
+                    const sub = `q${q.id}_${st.id}`; const uVal = window.SECURE_VAULT.userAnswers[sub] || "Chưa chọn"; const cVal = window.SECURE_VAULT.answers[sub];
+                    if (uVal === cVal) { cSt++; dataDetails.push(`${q.id}${st.id}-${uVal} [ĐÚNG]`); }
+                    else { dataDetails.push(`${q.id}${st.id}-${uVal} [SAI]`); }
+                });
+                let qScore = 0;
+                if (cSt === 1) qScore = 0.1; else if (cSt === 2) qScore = 0.25; else if (cSt === 3) qScore = 0.5; else if (cSt === 4) qScore = 1.0;
+                totalRawScore += qScore;
+                if (cSt === 4) correctCount++; else wrongCount++;
+            } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") {
+                const uVal = (window.SECURE_VAULT.userAnswers[`q${q.id}`] || "").replace(',', '.');
+                const cVal = String(window.SECURE_VAULT.answers[`q${q.id}`] || "").replace(',', '.');
+                const isRight = (uVal.trim() === cVal.trim()) || (cVal !== "" && Number(uVal) === Number(cVal) && uVal !== "");
+                if (isRight) { correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${uVal} [ĐÚNG]`); }
+                else { wrongCount++; dataDetails.push(`${q.id}-${uVal || "Trống"} [SAI: ${cVal}]`); }
+            }
+        });
+        const score10Scale = Math.round(((totalRawScore / maxTotalScore) * 10) * 10) / 10;
+        scoreResult = { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore: score10Scale, maxScale: 10.0, dataDetails };
+    }
 
-    examData.questions.forEach(q => { 
-        maxTotalScore += 1.0; 
-        if (q.type === "multiple_choice") { 
-            const userVal = window.SECURE_VAULT.userAnswers[`q${q.id}`] || "Chưa chọn"; 
-            const correctVal = window.SECURE_VAULT.answers[`q${q.id}`]; 
-            if (userVal === correctVal) { 
-                correctCount++; 
-                totalRawScore += 1.0; 
-                dataDetails.push(`${q.id}-${userVal} [ĐÚNG]`); 
-            } else { 
-                wrongCount++; 
-                dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal}]`); 
-            } 
-        } else if (q.type === "true_false") { 
-            let cSt = 0; 
-            q.statements.forEach(st => { 
-                const sub = `q${q.id}_${st.id}`; 
-                const uVal = window.SECURE_VAULT.userAnswers[sub] || "Chưa chọn"; 
-                const cVal = window.SECURE_VAULT.answers[sub]; 
-                if (uVal === cVal) { 
-                    cSt++; 
-                    dataDetails.push(`${q.id}${st.id}-${uVal} [ĐÚNG]`); 
-                } else { 
-                    dataDetails.push(`${q.id}${st.id}-${uVal} [SAI]`); 
-                } 
-            }); 
-            let qScore = 0; 
-            if (cSt === 1) qScore = 0.1; 
-            else if (cSt === 2) qScore = 0.25; 
-            else if (cSt === 3) qScore = 0.5; 
-            else if (cSt === 4) qScore = 1.0; 
-            totalRawScore += qScore; 
-            if (cSt === 4) correctCount++; 
-            else wrongCount++; 
-        } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
-            const uVal = (window.SECURE_VAULT.userAnswers[`q${q.id}`] || "").replace(',', '.'); 
-            const cVal = String(window.SECURE_VAULT.answers[`q${q.id}`] || "").replace(',', '.'); 
-            const isRight = (uVal.trim() === cVal.trim()) || (cVal !== "" && Number(uVal) === Number(cVal) && uVal !== ""); 
-            if (isRight) { 
-                correctCount++; 
-                totalRawScore += 1.0; 
-                dataDetails.push(`${q.id}-${uVal} [ĐÚNG]`); 
-            } else { 
-                wrongCount++; 
-                dataDetails.push(`${q.id}-${uVal || "Trống"} [SAI: ${cVal}]`); 
-            } 
-        } 
-    }); 
-
-    const score10Scale = Math.round(((totalRawScore / maxTotalScore) * 10) * 10) / 10; 
-    dataDetails.push(`Tab Switch: ${tabSwitchCount}`); 
+    const { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore, maxScale, dataDetails } = scoreResult;
+    dataDetails.push(`Tab Switch: ${tabSwitchCount}`);
 
     const payload = { 
         quizId: currentQuizId,
@@ -786,10 +772,12 @@ async function executeSubmitExam(isForceSubmit = false) {
         className: sClass,
         isFree: isFreeStudent,
         rawScore: Math.round(totalRawScore * 100) / 100, 
-        score10: score10Scale, 
+        score10: finalScore, 
+        maxScale: maxScale,
+        scoringMode: (examData.scoringConfig && examData.scoringConfig.mode) ? examData.scoringConfig.mode : "option1",
         tabSwitchCount: `${tabSwitchCount} lần`, 
         dataString: dataDetails.join(" | "), 
-        calcMetrics: { correctCount, wrongCount, spentMins, completionTimeStr, score10Scale }, 
+        calcMetrics: { correctCount, wrongCount, spentMins, completionTimeStr, score10Scale: finalScore, maxScale }, 
         timestamp: new Date().toLocaleString("vi-VN"), 
         createdAt: Date.now() 
     }; 
@@ -864,10 +852,10 @@ async function executeSubmitExam(isForceSubmit = false) {
     isSubmitted = true; 
     if (confirmModal) confirmModal.style.display = "none"; 
     
-    renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, score10Scale); 
+    renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, finalScore, maxScale); 
 }
 
-function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, finalScore) { 
+function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, finalScore, maxScale = 10.0) { 
     document.getElementById("top-navbar").style.display = "none"; 
     document.getElementById("quiz-content").style.display = "none"; 
     const resView = document.getElementById("result-view-container"); 
@@ -876,7 +864,11 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     const resExamTitle = document.getElementById("res-exam-title");
     if (resExamTitle) resExamTitle.innerText = EXAM_NAME || "BÀI THI TRẮC NGHIỆM";
 
-    document.getElementById("res-score-overview").innerText = `Đúng ${correct}/${totalQuestionsCount} câu (${finalScore} điểm)`; 
+    const scoreTitle = (maxScale && maxScale !== 10.0)
+        ? `Đúng ${correct}/${totalQuestionsCount} câu (${finalScore} / ${maxScale} điểm)`
+        : `Đúng ${correct}/${totalQuestionsCount} câu (${finalScore} điểm)`;
+
+    document.getElementById("res-score-overview").innerText = scoreTitle; 
     document.getElementById("res-stat-correct").innerText = correct; 
     document.getElementById("res-stat-wrong").innerText = wrong; 
     document.getElementById("res-stat-time").innerText = spentMins; 

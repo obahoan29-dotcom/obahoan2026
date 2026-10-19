@@ -186,6 +186,7 @@ async function processUpload() {
 
         parsedExam.isShuffled = true;
         parsedExam.allowFree = true;
+        parsedExam.scoringConfig = parsedExam.scoringConfig || { mode: 'option1' };
 
         const quizId = "quiz_" + Date.now();
         await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { 
@@ -208,7 +209,8 @@ async function processUpload() {
                 timestamp: Date.now(), 
                 isShuffled: true,
                 allowFree: true,
-                categoryId: cat 
+                categoryId: cat,
+                scoringConfig: parsedExam.scoringConfig
             };
             return fetch(`${FIREBASE_DB_URL}/custom_links/${cat}/${quizId}.json`, { 
                 method: 'PUT', body: JSON.stringify(linkData) 

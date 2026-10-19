@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: portal-ui-cards.js
-// QUẢN LÝ THẺ BÀI THI, TÀI LIỆU, CÔNG TẮC GẠT & POPOVER AVATAR
+// QUẢN LÝ THẺ BÀI THI, TÀI LIỆU, CÔNG TẮC GẠT, BIỂU ĐIỂM & POPOVER AVATAR
 // =========================================================
 
 function createItemCardElement(item, categoryId) {
@@ -254,6 +254,9 @@ function buildCardHtmlString(item, categoryId) {
                             </button>
                             <button type="button" class="btn-time-sub-action btn-time-sub-schedule" onclick="openEditScheduleModal('${quizId}', event)" title="Gia hạn thời gian đóng/mở đề">
                                 📅 Gia hạn
+                            </button>
+                            <button type="button" class="btn-time-sub-action btn-time-sub-score" onclick="openGradingScaleModal('${quizId}', '${categoryId}', event)" title="Cấu hình thang điểm và phân bổ điểm cho đề thi">
+                                🎯 Biểu điểm
                             </button>
                             
                             <div class="badge-wrapper" onclick="toggleResultModeMenu('${itemId}', event)" style="margin-left: 2px;">

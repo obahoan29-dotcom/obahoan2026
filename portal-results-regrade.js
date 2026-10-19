@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: portal-results-regrade.js
-// CHẤM LẠI BÀI THI, TỰ ĐỘNG LÀM MỚI & NẠP FILE JSON DỰ PHÒNG
+// CHẤM LẠI BÀI THI THEO BIỂU ĐIỂM, TỰ ĐỘNG LÀM MỚI & NẠP FILE JSON DỰ PHÒNG
 // =========================================================
 
 function closeResultModal(triggerHistoryBack = true) {
@@ -103,7 +103,7 @@ async function processRegradeWithAnswers() {
     let quizId = extractQuizIdFromItem(currentItem);
     if (!quizId) { alert("⚠️ Đề thi này không liên kết với cơ sở dữ liệu câu hỏi quiz trực tuyến!"); return; }
 
-    btn.disabled = true; btn.innerText = "⏳ Đang nạp đề gốc...";
+    btn.disabled = true; btn.innerText = "⏳ Đang nạp đề gốc & biểu điểm...";
 
     try {
         const qRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
@@ -123,6 +123,8 @@ async function processRegradeWithAnswers() {
                 if (q.correctAnswer !== undefined) { newAnswerKey[`q${q.id}`] = String(q.correctAnswer).trim(); }
             }
         });
+
+        const scoringConfig = quizObj.scoringConfig || (currentItem && currentItem.scoringConfig) || { mode: 'option1' };
 
         btn.innerText = "⏳ Đang tải bài làm...";
         const examTitle = quizObj.title || currentItem.title || "";
@@ -167,47 +169,56 @@ async function processRegradeWithAnswers() {
             }
             if (sub.userAnswers && typeof sub.userAnswers === 'object') { Object.assign(userAnswersMap, sub.userAnswers); }
 
-            let correctCount = 0; let wrongCount = 0; let totalRawScore = 0; let maxTotalScore = 0; let dataDetails = [];
-
-            quizObj.questions.forEach(q => {
-                maxTotalScore += 1.0;
-                if (q.type === "multiple_choice") {
-                    const userVal = userAnswersMap[`q${q.id}`] || "Chưa chọn"; const correctVal = newAnswerKey[`q${q.id}`];
-                    if (correctVal && userVal.toUpperCase() === correctVal.toUpperCase()) {
-                        correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${userVal} [ĐÚNG]`);
-                    } else {
-                        wrongCount++; dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal || "---"}]`);
+            let scoreRes = null;
+            if (typeof calculateExamScoreWithConfig === 'function') {
+                scoreRes = calculateExamScoreWithConfig(quizObj.questions, userAnswersMap, newAnswerKey, scoringConfig);
+            } else {
+                let correctCount = 0; let wrongCount = 0; let totalRawScore = 0; let maxTotalScore = 0; let dataDetails = [];
+                quizObj.questions.forEach(q => {
+                    maxTotalScore += 1.0;
+                    if (q.type === "multiple_choice") {
+                        const userVal = userAnswersMap[`q${q.id}`] || "Chưa chọn"; const correctVal = newAnswerKey[`q${q.id}`];
+                        if (correctVal && userVal.toUpperCase() === correctVal.toUpperCase()) {
+                            correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${userVal} [ĐÚNG]`);
+                        } else {
+                            wrongCount++; dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal || "---"}]`);
+                        }
+                    } else if (q.type === "true_false") {
+                        let cSt = 0;
+                        (q.statements || []).forEach(st => {
+                            const subKey = `q${q.id}_${st.id}`; const uVal = userAnswersMap[subKey] || "Chưa chọn"; const cVal = newAnswerKey[subKey];
+                            if (cVal && uVal === cVal) { cSt++; dataDetails.push(`${q.id}${st.id}-${uVal} [ĐÚNG]`); } 
+                            else { dataDetails.push(`${q.id}${st.id}-${uVal} [SAI]`); }
+                        });
+                        let qScore = 0;
+                        if (cSt === 1) qScore = 0.1; else if (cSt === 2) qScore = 0.25; else if (cSt === 3) qScore = 0.5; else if (cSt === 4) qScore = 1.0;
+                        totalRawScore += qScore;
+                        if (cSt === (q.statements ? q.statements.length : 4)) correctCount++; else wrongCount++;
+                    } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") {
+                        const uVal = String(userAnswersMap[`q${q.id}`] || "").trim().replace(',', '.'); const cVal = String(newAnswerKey[`q${q.id}`] || "").trim().replace(',', '.');
+                        const isRight = (uVal !== "" && cVal !== "" && (uVal === cVal || Number(uVal) === Number(cVal)));
+                        if (isRight) {
+                            correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${uVal} [ĐÚNG]`);
+                        } else {
+                            wrongCount++; dataDetails.push(`${q.id}-${uVal || "Trống"} [SAI: ${cVal || "---"}]`);
+                        }
                     }
-                } else if (q.type === "true_false") {
-                    let cSt = 0;
-                    (q.statements || []).forEach(st => {
-                        const subKey = `q${q.id}_${st.id}`; const uVal = userAnswersMap[subKey] || "Chưa chọn"; const cVal = newAnswerKey[subKey];
-                        if (cVal && uVal === cVal) { cSt++; dataDetails.push(`${q.id}${st.id}-${uVal} [ĐÚNG]`); } 
-                        else { dataDetails.push(`${q.id}${st.id}-${uVal} [SAI]`); }
-                    });
-                    let qScore = 0;
-                    if (cSt === 1) qScore = 0.1; else if (cSt === 2) qScore = 0.25; else if (cSt === 3) qScore = 0.5; else if (cSt === 4) qScore = 1.0;
-                    totalRawScore += qScore;
-                    if (cSt === (q.statements ? q.statements.length : 4)) correctCount++; else wrongCount++;
-                } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") {
-                    const uVal = String(userAnswersMap[`q${q.id}`] || "").trim().replace(',', '.'); const cVal = String(newAnswerKey[`q${q.id}`] || "").trim().replace(',', '.');
-                    const isRight = (uVal !== "" && cVal !== "" && (uVal === cVal || Number(uVal) === Number(cVal)));
-                    if (isRight) {
-                        correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${uVal} [ĐÚNG]`);
-                    } else {
-                        wrongCount++; dataDetails.push(`${q.id}-${uVal || "Trống"} [SAI: ${cVal || "---"}]`);
-                    }
-                }
-            });
+                });
+                const score10Scale = Math.round(((totalRawScore / (maxTotalScore || 1)) * 10) * 10) / 10;
+                scoreRes = { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore: score10Scale, maxScale: 10.0, dataDetails };
+            }
 
-            const score10Scale = Math.round(((totalRawScore / (maxTotalScore || 1)) * 10) * 10) / 10;
+            const { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore, maxScale, dataDetails } = scoreRes;
             const originalTab = parseInt(sub.tabSwitchCount, 10) || extractTabCountFromDataString(sub.dataString) || 0;
             dataDetails.push(`Tab Switch: ${originalTab}`);
 
             const patchPayload = {
-                score10: score10Scale, rawScore: Math.round(totalRawScore * 100) / 100, correctCount: correctCount,
+                score10: finalScore,
+                rawScore: Math.round(totalRawScore * 100) / 100,
+                maxScale: maxScale,
+                correctCount: correctCount,
                 dataString: dataDetails.join(" | "),
-                calcMetrics: { ...(sub.calcMetrics || {}), correctCount: correctCount, wrongCount: wrongCount, score10Scale: score10Scale },
+                calcMetrics: { ...(sub.calcMetrics || {}), correctCount: correctCount, wrongCount: wrongCount, score10Scale: finalScore, maxScale: maxScale },
                 regradedAt: Date.now()
             };
 
@@ -215,7 +226,7 @@ async function processRegradeWithAnswers() {
         });
 
         await Promise.all(regradeTasks);
-        alert(`🎉 CHẤM LẠI THÀNH CÔNG!\n\n- Đã cập nhật đáp án mới vào đề thi gốc.\n- Đã tính lại điểm và cập nhật đồng bộ ${updatedCount} bài làm của học sinh.`);
+        alert(`🎉 CHẤM LẠI THÀNH CÔNG!\n\n- Đã cập nhật đáp án mới vào đề thi gốc.\n- Đã tính lại điểm và cập nhật đồng bộ ${updatedCount} bài làm của học sinh theo đúng Biểu điểm của đề.`);
         closeRegradeModal(); await refreshCurrentExamResults();
     } catch(err) {
         alert("❌ Lỗi trong quá trình chấm lại: " + err.message);
