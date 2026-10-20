@@ -56,6 +56,74 @@
     <link rel="stylesheet" href="thi-layout.css">
     <link rel="stylesheet" href="thi-exam.css">
 
+    <style>
+        /* THANH ĐIỀU KHIỂN SAO LƯU VÀ GỬI LẠI TRÊN CÙNG */
+        .universal-backup-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10005;
+            background: #ffffff;
+            border-bottom: 2px solid #e2e8f0;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .backup-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #1e293b;
+        }
+        .backup-status-indicator.synced { color: #16a34a; }
+        .backup-status-indicator.pending { color: #dc2626; }
+        .btn-always-download-backup {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.28);
+            transition: all 0.15s ease;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .btn-always-download-backup:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-always-download-backup:active { transform: translateY(2px) scale(0.96); }
+
+        .btn-universal-resend {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #ffffff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+            animation: pulseWarningBtn 1.2s infinite;
+            white-space: nowrap;
+        }
+        @keyframes pulseWarningBtn {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+            50% { transform: scale(1.03); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2); }
+        }
+    </style>
+
     <!-- CSDL Danh sách tài khoản học sinh dùng chung -->
     <script src="accounts-data.js"></script>
 
@@ -79,14 +147,14 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
-    <!-- CÁC MODULE PHÒNG THI ĐÃ TỔ CHỨC LẠI -->
+    <!-- CÁC MODULE PHÒNG THI -->
     <script src="app-config.js"></script>
     <script src="app-utils.js"></script>
     <script src="portal-exam-scoring.js"></script>
     <script src="exam-api.js"></script>
     <script src="exam-export.js"></script>
     
-    <!-- MODULE ĐỘNG CƠ THI ĐÃ TÁCH NHỎ -->
+    <!-- MODULE ĐỘNG CƠ THI -->
     <script src="exam-img-uploader.js"></script>
     <script src="exam-render.js"></script>
     <script src="exam-engine-core.js"></script>
@@ -98,20 +166,28 @@
         <h2 style="color: #0369a1; font-weight: 800; font-size: 1.2rem;">Đang tải dữ liệu đề thi...</h2>
     </div>
 
+    <!-- THANH ĐIỀU KHIỂN DỰ PHÒNG & NỘP LẠI LUÔN HIỆN TRÊN CÙNG -->
+    <div class="universal-backup-topbar" id="universal-backup-topbar">
+        <div class="backup-status-indicator" id="backup-status-indicator">
+            <span id="backup-status-icon">🛡️</span>
+            <span id="backup-status-text">Bài làm được tự động lưu tạm trên máy</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" class="btn-universal-resend" id="btn-universal-resend" onclick="executeSubmitExam(false)">
+                🚀 Gửi lại bài
+            </button>
+            <button type="button" class="btn-always-download-backup" id="btn-always-download-backup" onclick="downloadCompletedOrDraftSubmission()">
+                💾 Tải file dự phòng bài làm (.json)
+            </button>
+        </div>
+    </div>
+
     <!-- TOAST THÔNG BÁO KHI GIÁO VIÊN ĐỔI PHÚT / GIA HẠN LỊCH -->
     <div class="time-change-toast" id="time-change-toast">
         <span>⏱</span> <span id="time-change-toast-msg">Giáo viên vừa cập nhật thời gian làm bài!</span>
     </div>
 
     <div class="network-status-bar" id="net-status-banner">⚠️ Mất kết nối Internet! Bài làm đang được lưu an toàn trên máy.</div>
-    <div class="pending-status-bar" id="pending-resend-bar">
-        <span id="pending-info-txt">📌 Đang gửi hoặc có bài làm tạm chưa nộp...</span>
-        <div style="margin-top: 6px; display: flex; gap: 8px; justify-content: center;">
-            <button onclick="retrySubmitPending()" style="background:#0284c7; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">🚀 Thử gửi lại</button>
-            <button onclick="downloadPendingSubmissionFile()" style="background:#0d9488; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">💾 Tải file</button>
-            <button onclick="dismissPendingBar()" style="background:#cbd5e1; color:#334155; border:none; padding:6px 10px; border-radius:8px; font-weight:700; font-size:0.8rem; cursor:pointer;">Đóng</button>
-        </div>
-    </div>
     
     <header class="top-navbar-wrapper" id="top-navbar" style="display: none;">
         <div class="nav-solid-part">
@@ -248,8 +324,8 @@
                 </div>
                 <div id="modal-submitting-progress-view" style="display:none; padding:15px 0;">
                     <div class="spinner" style="width:38px; height:38px; margin:0 auto 12px auto; border-top-color:#f97316;"></div>
-                    <div style="font-weight:900; color:#0284c7; font-size:1.1rem;" id="submit-progress-text">Đang kiểm tra kết nối với máy chủ...</div>
-                    <div style="font-size:0.9rem; color:#64748b; margin-top:6px; font-weight:600;">Vui lòng giữ kết nối để bảo lưu bài thi thành công 100%.</div>
+                    <div style="font-weight:900; color:#0284c7; font-size:1.1rem;" id="submit-progress-text">Đang kết nối và chờ máy chủ xác nhận lưu bài...</div>
+                    <div style="font-size:0.9rem; color:#64748b; margin-top:6px; font-weight:600;">Hệ thống đang kiểm tra xác thực 2 chiều an toàn 100%.</div>
                 </div>
             </div>
             <div class="modal-actions" id="modal-actions-container">
@@ -257,60 +333,6 @@
                     <button type="button" class="btn-modal-cancel" id="btn-modal-cancel-action" onclick="closeSubmitConfirmModal()">Tiếp tục làm</button>
                     <button type="button" class="btn-modal-confirm" id="btn-modal-submit-now" onclick="executeSubmitExam()">✓ Nộp bài</button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DỰ PHÒNG BÀI LÀM -->
-    <div class="modal-overlay" id="export-share-modal">
-        <div class="modal-box share-export-modal-card">
-            <div class="share-modal-header">
-                <div class="share-modal-icon">📤</div>
-                <div>
-                    <h3 class="share-modal-title">Lưu & Gửi Bài Làm Dự Phòng</h3>
-                    <p class="share-modal-subtitle">Chọn hình thức gửi bài cho thầy giáo để được ghi nhận điểm</p>
-                </div>
-            </div>
-
-            <div class="share-options-list">
-                <button type="button" class="btn-share-option btn-opt-download" onclick="actionDownloadJsonDirectly()">
-                    <span class="share-opt-icon">💾</span>
-                    <div class="share-opt-text">
-                        <b>Tải file (.json) về máy</b>
-                        <span>Lưu file bài làm vào bộ nhớ điện thoại / máy tính</span>
-                    </div>
-                    <span class="share-opt-arrow">➔</span>
-                </button>
-
-                <button type="button" class="btn-share-option btn-opt-native-share" id="btn-native-share-trigger" onclick="actionShareNativeApp()">
-                    <span class="share-opt-icon">🚀</span>
-                    <div class="share-opt-text">
-                        <b>Chia sẻ file qua App (Zalo / Messenger)</b>
-                        <span>Gửi đính kèm file trực tiếp vào cuộc trò chuyện</span>
-                    </div>
-                    <span class="share-opt-arrow">➔</span>
-                </button>
-
-                <div class="share-direct-channels">
-                    <div class="share-channel-label">Hoặc mở nhanh ứng dụng gửi cho giáo viên:</div>
-                    <div class="share-channel-grid">
-                        <button type="button" class="btn-channel-btn btn-chan-zalo" onclick="actionSendViaZalo()">
-                            <span class="chan-icon">💬</span>
-                            <span>Mở Zalo</span>
-                        </button>
-                        <button type="button" class="btn-channel-btn btn-chan-messenger" onclick="actionSendViaMessenger()">
-                            <span class="chan-icon">⚡</span>
-                            <span>Mở Messenger</span>
-                        </button>
-                    </div>
-                    <div class="share-channel-tip">
-                        💡 <i>Hệ thống sẽ tự động tải sẵn file về máy và sao chép lời nhắn, bạn chỉ việc bấm gửi trong Zalo / Messenger.</i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="share-modal-footer">
-                <button type="button" class="btn-close-share-modal" onclick="closeExportShareModal()">Đóng cửa sổ</button>
             </div>
         </div>
     </div>
