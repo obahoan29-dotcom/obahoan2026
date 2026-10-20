@@ -77,38 +77,10 @@
             filter: brightness(0.92);
         }
 
-        .btn-admin-open-cleanup {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: #ffffff;
-            border: none;
-            border-radius: 9px;
-            padding: 4px 10px;
-            font-size: 11px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            box-shadow: 0 2px 5px rgba(245, 158, 11, 0.3);
-        }
-        .btn-admin-open-cleanup:hover {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
-        }
-        .btn-admin-open-cleanup:active {
-            transform: translateY(2px) scale(0.96);
-        }
-
         @media (max-width: 640px) {
             .btn-upload-json-backup, .btn-auto-collect-drafts {
                 font-size: 11px !important;
                 padding: 6px 10px !important;
-            }
-            .btn-admin-open-cleanup {
-                padding: 2.5px 6px !important;
-                font-size: 9.5px !important;
-                border-radius: 7px !important;
             }
         }
     </style>
@@ -197,14 +169,9 @@
 
             <!-- BẢNG QUẢN TRỊ XÒE RA -->
             <div class="admin-popover-panel" id="admin-popover-panel">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 6px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
                     <div class="admin-popover-title" style="margin-bottom: 0;">🚀 Đăng đề thi & tài liệu</div>
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <button type="button" class="btn-admin-open-cleanup" onclick="openCleanupDatabaseModal(event)" title="Dọn sạch phiên kẹt, bản nháp và node rác an toàn">
-                            🧹 Dọn rác CSDL
-                        </button>
-                        <button type="button" class="admin-logout-btn" onclick="logoutAdmin(event)" title="Khóa quyền quản trị ngay lập tức">🔒 Khóa lại</button>
-                    </div>
+                    <button type="button" class="admin-logout-btn" onclick="logoutAdmin(event)" title="Khóa quyền quản trị ngay lập tức">🔒 Khóa lại</button>
                 </div>
                 
                 <div class="admin-tabs">
@@ -564,7 +531,7 @@
 
             <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
             
-            <!-- NÚT THU BÀI TỰ ĐỘNG TỪ LIVE DRAFTS CLOUD -->
+            <!-- NÚT THU BÀI TỰ ĐỘNG TỪ LIVE DRAFTS CLOUD (MỚI BỔ SUNG) -->
             <button type="button" class="btn-auto-collect-drafts" id="btn-auto-collect-drafts" onclick="triggerAutoCollectDrafts(event)" 
                 title="Tự động thu bài và chấm điểm từ bản lưu nháp Realtime cho các em học sinh quên nộp hoặc gặp sự cố mạng">
                 ⚡ Thu bài tự động
@@ -990,140 +957,6 @@
 </div>
 
 <input type="file" id="reminder-custom-avatar-input" accept="image/*" style="display: none;" onchange="handleReminderCustomAvatarUploaded(this)">
-
-<!-- =========================================================
-     MODAL DỌN RÁC CƠ SỞ DỮ LIỆU FIREBASE AN TOÀN (MỚI BỔ SUNG)
-     ========================================================= -->
-<div class="cleanup-modal-overlay" id="cleanup-database-modal" style="display: none;">
-    <div class="cleanup-modal-box">
-        <div class="cleanup-modal-header">
-            <div class="cleanup-modal-title">
-                <span class="cleanup-icon">🧹</span>
-                <div>
-                    <h3 style="margin:0; font-size:16px; font-weight:900; color:#0f172a;">Dọn Dẹp CSDL Firebase An Toàn</h3>
-                    <p style="margin:2px 0 0 0; font-size:12px; color:#64748b; font-weight:600;">Làm sạch phiên kẹt, bản nháp và node rác mà không ảnh hưởng tới đề thi và điểm số</p>
-                </div>
-            </div>
-            <button type="button" class="btn-close-cleanup-modal" onclick="closeCleanupDatabaseModal(event)">✕</button>
-        </div>
-
-        <!-- THANH BẢO VỆ AN TOÀN TUYỆT ĐỐI -->
-        <div class="cleanup-shield-banner">
-            <div class="shield-icon">🛡️</div>
-            <div class="shield-text">
-                <b>CAM KẾT AN TOÀN 100%:</b> Quá trình dọn dẹp chỉ xóa các dữ liệu tạm thời (phiên kẹt, nháp trôi nổi, log chuyển tab). 
-                <span style="color:#15803d; font-weight:800;">Tuyệt đối KHÔNG xóa câu hỏi đề thi, danh mục trang chủ hay điểm số chính thức của học sinh!</span>
-            </div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-            <span style="font-size:12.5px; font-weight:800; color:#334155;">📋 Các vị trí dữ liệu rác trên hệ thống:</span>
-            <button type="button" class="btn-scan-garbage" id="btn-scan-garbage-trigger" onclick="scanFirebaseGarbage()">
-                🔍 Quét kiểm tra
-            </button>
-        </div>
-
-        <!-- DANH SÁCH CÁC MỤC DỌN RÁC KÈM CHÚ THÍCH TỪNG CHI TIẾT -->
-        <div class="cleanup-items-list" id="cleanup-items-container">
-            <!-- 1. active_sessions -->
-            <div class="cleanup-item-card">
-                <div class="cleanup-item-top">
-                    <div class="cleanup-item-name">
-                        <span class="node-tag">Node: active_sessions</span>
-                        <b style="color:#0f172a;">Phiên học sinh đang làm bài thi</b>
-                    </div>
-                    <span class="cleanup-status-badge" id="badge-count-active-sessions">Chưa quét</span>
-                </div>
-                <div class="cleanup-item-explanation">
-                    <div class="exp-row"><b>🎯 Mục đích:</b> Lưu tạm thời tên & SBD của các thí sinh đang online mở đề thi để hiện sĩ số phòng thi.</div>
-                    <div class="exp-row exp-loss"><b>⚠️ Nếu xóa thì sao:</b> Bảng kết quả sẽ tạm thời không hiện chữ "Đang làm bài" (chuyển sang "Chưa thi") cho đến khi máy học sinh đang thi gửi tín hiệu ping tự động tiếp theo (sau tối đa 45 giây). Điểm thi và bài đã nộp chính thức <span style="color:#15803d; font-weight:800;">HOÀN TOÀN KHÔNG BỊ MẤT</span>.</div>
-                    <div class="exp-row exp-advise"><b>💡 Khi nào nên dọn:</b> Nên xóa sau mỗi buổi thi để dọn sạch các học sinh đã thoát trình duyệt hoặc tắt máy mà không bấm nộp bài.</div>
-                </div>
-                <div class="cleanup-item-actions">
-                    <button type="button" class="btn-clean-single" onclick="cleanSingleGarbageNode('active_sessions')">🗑️ Dọn sạch phiên kẹt</button>
-                </div>
-            </div>
-
-            <!-- 2. live_drafts -->
-            <div class="cleanup-item-card">
-                <div class="cleanup-item-top">
-                    <div class="cleanup-item-name">
-                        <span class="node-tag">Node: quizzes/.../live_drafts</span>
-                        <b style="color:#0f172a;">Bản nháp tự động lưu bài thi Realtime</b>
-                    </div>
-                    <span class="cleanup-status-badge" id="badge-count-live-drafts">Chưa quét</span>
-                </div>
-                <div class="cleanup-item-explanation">
-                    <div class="exp-row"><b>🎯 Mục đích:</b> Tự động lưu đáp án nháp từng câu lên mây mỗi khi học sinh tích chọn (dùng cho tính năng "Thu bài tự động" khi mất mạng).</div>
-                    <div class="exp-row exp-loss"><b>⚠️ Nếu xóa thì sao:</b> Toàn bộ câu trả lời nháp của các học sinh <i>chưa kịp bấm nộp bài</i> trên các đề thi sẽ bị xóa sạch khỏi đám mây. Thầy sẽ không thể bấm "Thu bài tự động" cho các em này được nữa. Còn các bài đã nộp chính thức trước đó thì <span style="color:#15803d; font-weight:800;">AN TOÀN 100%</span>.</div>
-                    <div class="exp-row exp-advise"><b>💡 Khi nào nên dọn:</b> Chỉ nên dọn khi đợt thi đã hoàn tất, tất cả học sinh đã nộp bài và Thầy đã chốt xong bảng điểm.</div>
-                </div>
-                <div class="cleanup-item-actions">
-                    <button type="button" class="btn-clean-single" onclick="cleanSingleGarbageNode('live_drafts')">🗑️ Dọn toàn bộ bản nháp cũ</button>
-                </div>
-            </div>
-
-            <!-- 3. cheating_logs -->
-            <div class="cleanup-item-card">
-                <div class="cleanup-item-top">
-                    <div class="cleanup-item-name">
-                        <span class="node-tag">Node: exams/.../cheating_logs</span>
-                        <b style="color:#0f172a;">Nhật ký chuyển tab & cảnh báo gian lận</b>
-                    </div>
-                    <span class="cleanup-status-badge" id="badge-count-cheating-logs">Chưa quét</span>
-                </div>
-                <div class="cleanup-item-explanation">
-                    <div class="exp-row"><b>🎯 Mục đích:</b> Ghi lại số giây và thời điểm học sinh chuyển tab hoặc rời màn hình làm bài thi.</div>
-                    <div class="exp-row exp-loss"><b>⚠️ Nếu xóa thì sao:</b> Cột "Thời gian chuyển tab" trên bảng kết quả của Thầy sẽ trở về mặc định ("0s" hoặc "---"). Điểm số, câu đúng, câu sai và xếp hạng của học sinh <span style="color:#15803d; font-weight:800;">KHÔNG BỊ ẢNH HƯỞNG</span>.</div>
-                    <div class="exp-row exp-advise"><b>💡 Khi nào nên dọn:</b> Dọn định kỳ sau mỗi kỳ thi khi Thầy đã xem xong nhật ký và không cần đối chiếu vi phạm nữa.</div>
-                </div>
-                <div class="cleanup-item-actions">
-                    <button type="button" class="btn-clean-single" onclick="cleanSingleGarbageNode('cheating_logs')">🗑️ Làm sạch nhật ký chuyển tab</button>
-                </div>
-            </div>
-
-            <!-- 4. legacy_nodes & image_sync -->
-            <div class="cleanup-item-card">
-                <div class="cleanup-item-top">
-                    <div class="cleanup-item-name">
-                        <span class="node-tag">Node: visitor_stats & image_sync</span>
-                        <b style="color:#0f172a;">Node rác thừa & Tín hiệu đồng bộ ảnh cũ</b>
-                    </div>
-                    <span class="cleanup-status-badge" id="badge-count-legacy-nodes">Chưa quét</span>
-                </div>
-                <div class="cleanup-item-explanation">
-                    <div class="exp-row"><b>🎯 Mục đích:</b> Node `visitor_stats` là cấu trúc đếm cũ trước đây đã ngừng dùng (hệ thống hiện tại dùng `site_visits`). `image_sync` là tín hiệu SSE bắn tạm thời khi tải ảnh câu hỏi.</div>
-                    <div class="exp-row exp-loss"><b>⚠️ Nếu xóa thì sao:</b> Giải phóng dung lượng database. Ảnh minh họa câu hỏi của đề thi <span style="color:#15803d; font-weight:800;">KHÔNG BỊ MẤT</span> (vì ảnh được lưu trong `images` và `questions`). Bộ đếm lượt xem hôm nay cũng <span style="color:#15803d; font-weight:800;">KHÔNG BỊ TỤT</span> (lưu ở `site_visits`).</div>
-                    <div class="exp-row exp-advise"><b>💡 Khi nào nên dọn:</b> Có thể dọn bất kỳ lúc nào để cây dữ liệu Firebase gọn gàng nhất.</div>
-                </div>
-                <div class="cleanup-item-actions">
-                    <button type="button" class="btn-clean-single" onclick="cleanSingleGarbageNode('legacy_nodes')">🗑️ Dọn các node rác thừa</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- KHUNG TỔNG HỢP AN TOÀN TUYỆT ĐỐI -->
-        <div class="cleanup-whitelist-box">
-            <div style="font-size:11.5px; font-weight:900; color:#15803d; margin-bottom:4px; text-transform:uppercase;">
-                🛡️ DANH SÁCH BẢO VỆ VĨNH VIỄN (HỆ THỐNG KHÔNG BAO GIỜ XÓA):
-            </div>
-            <ul style="margin:0; padding-left:18px; font-size:11.5px; color:#334155; line-height:1.45;">
-                <li><b>/quizzes</b>: Toàn bộ đề thi, nội dung câu hỏi, hình vẽ minh họa, đáp án và lời giải gốc.</li>
-                <li><b>/quizzes/{id}/submissions & /exams/{code}/submissions</b>: Toàn bộ bài làm nộp chính thức, điểm số và bài thi của học sinh.</li>
-                <li><b>/custom_links</b>: Danh sách các đề thi, link tài liệu và bài tập hiển thị trên Trang chủ.</li>
-                <li><b>/site_meta</b>: Tiêu đề nhắc nhở và cấu hình website.</li>
-                <li><b>/site_visits</b>: Toàn bộ số lượt truy cập hôm nay, 7 ngày qua và toàn thời gian của website.</li>
-            </ul>
-        </div>
-
-        <div class="cleanup-modal-footer">
-            <button type="button" class="btn-close-cleanup-modal-text" onclick="closeCleanupDatabaseModal(event)">Đóng lại</button>
-            <button type="button" class="btn-clean-all-safe" id="btn-clean-all-garbage-trigger" onclick="cleanAllGarbageSafe()">
-                ⚡ DỌN SẠCH TẤT CẢ RÁC AN TOÀN (1-CLICK)
-            </button>
-        </div>
-    </div>
-</div>
 
 </body>
 </html>
