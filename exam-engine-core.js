@@ -808,7 +808,7 @@ async function executeSubmitExam(isForceSubmit = false) {
     safeLocal.setItem("pending_exam_submission", JSON.stringify(payload));
     pendingSubmissionPayload = payload;
 
-    // GHI ĐỒNG THỜI VÀO TẤT CẢ CÁC NODE LIÊN QUAN ĐỂ ADMIN ĐỒNG BỘ 100% VÀ KHÔNG BỊ MẤT BÀI
+    // GHI ĐỒNG THỜI VÀO CÁC NODE LIÊN QUAN
     const targetNodesSet = new Set([
         `${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${cleanSbd}.json`,
         `${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${cleanSbd}.json`
@@ -850,7 +850,7 @@ async function executeSubmitExam(isForceSubmit = false) {
             const results = await Promise.all(putPromises);
             const atLeastOneSuccess = results.some(ok => ok === true);
 
-            // BƯỚC XÁC THỰC 2 CHIỀU: Kiểm tra đọc ngược lại xem máy chủ đã thực sự ghi bài chưa
+            // BƯỚC XÁC THỰC 2 CHIỀU: Đọc ngược lại kiểm tra máy chủ đã lưu
             if (atLeastOneSuccess) {
                 const verifyRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${cleanSbd}/createdAt.json`);
                 if (verifyRes && verifyRes.ok) {
