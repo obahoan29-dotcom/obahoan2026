@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: portal-results-core.js
-// QUẢN LÝ DỮ LIỆU KẾT QUẢ THI, SMART MATCH & TÍNH NĂNG THU BÀI TỰ ĐỘNG
+// QUẢN LÝ DỮ LIỆU KẾT QUẢ THI, SMART MATCH & REALTIME SSE ĐỒNG BỘ TỨC THÌ
 // =========================================================
 
 let currentExamResultData = {
@@ -8,11 +8,14 @@ let currentExamResultData = {
 };
 
 let autoRefreshTimer = null;
-let isAutoRefreshEnabled = false;
+let isAutoRefreshEnabled = true;
 let scoreChartInstance = null;
 const _examResultsCache = {};
 let _regradeFileParsedAnswers = null;
 let currentRankSortMode = 'default';
+
+let realtimeSubmissionsEventSource = null;
+let realtimeDraftsEventSource = null;
 
 function normalizeCategoryKey(cat) {
     if (!cat) return "";
@@ -24,7 +27,6 @@ function isStrictSameCategory(catA, catB) {
     return normalizeCategoryKey(catA) === normalizeCategoryKey(catB);
 }
 
-// Tra cứu xem học sinh (theo SBD hoặc Họ tên) chính thức thuộc lớp nào trong hệ thống
 function findCategoryForStudent(sbd, name) {
     if (!window.STUDENT_ACCOUNTS) return null;
     const cleanSbd = String(sbd || "").trim().toLowerCase();
@@ -46,14 +48,12 @@ function findCategoryForStudent(sbd, name) {
     return null;
 }
 
-// BỘ LỌC THÔNG MINH MỚI: NẾU HỌC SINH CÓ TÊN TRONG DANH SÁCH LỚP ĐANG XEM THÌ LUÔN LUÔN NHẬN BÀI (KHÔNG BAO GIỜ BỊ ẨN)
 function isSubmissionMatchingCategory(sub, targetCatId) {
     if (!targetCatId) return true;
     const classAccounts = getAccountsForCategory(targetCatId);
     const subSbdClean = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
     const subNameNorm = normalizeName(sub.studentName);
 
-    // 1. Nếu SBD hoặc Họ tên trùng với học sinh trong danh sách lớp đang xem -> LUÔN CHẤP NHẬN
     const inThisClass = classAccounts.some(acc => {
         const aSbd = String(acc.sbd || "").trim().toLowerCase();
         const aName = normalizeName(acc.name);
@@ -66,13 +66,11 @@ function isSubmissionMatchingCategory(sub, targetCatId) {
     });
     if (inThisClass) return true;
 
-    // 2. Đối chiếu trực tiếp categoryId
     const rawSubCat = sub.categoryId || sub.cat || "";
     if (rawSubCat) {
         return normalizeCategoryKey(rawSubCat) === normalizeCategoryKey(targetCatId);
     }
 
-    // 3. Tra cứu lớp chính thức
     const studentCat = findCategoryForStudent(sub.sbd || sub.studentId, sub.studentName);
     if (studentCat) {
         return normalizeCategoryKey(studentCat) === normalizeCategoryKey(targetCatId);
@@ -189,6 +187,50 @@ function getSubmissionTimestamp(sub) {
     return parseDateString(sub.timestamp) || 0;
 }
 
+// BẬT KÊNH THỜI GIAN THỰC (SSE) VÀO FIREBASE: HỌC SINH NỘP LÀ BẢNG ADMIN NHẢY NGAY LẬP TỨC
+function startRealtimeSubmissionsListener(quizId) {
+    if (realtimeSubmissionsEventSource) {
+        realtimeSubmissionsEventSource.close();
+        realtimeSubmissionsEventSource = null;
+    }
+    if (realtimeDraftsEventSource) {
+        realtimeDraftsEventSource.close();
+        realtimeDraftsEventSource = null;
+    }
+
+    if (!quizId) return;
+
+    try {
+        const streamUrlSub = `${FIREBASE_DB_URL}/quizzes/${quizId}/submissions.json`;
+        realtimeSubmissionsEventSource = new EventSource(streamUrlSub);
+
+        const onDataUpdated = function() {
+            if (currentExamResultData.item) {
+                fetchAndRenderExamResults(currentExamResultData.item, true);
+            }
+        };
+
+        realtimeSubmissionsEventSource.addEventListener('put', onDataUpdated);
+        realtimeSubmissionsEventSource.addEventListener('patch', onDataUpdated);
+
+        const streamUrlDrafts = `${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts.json`;
+        realtimeDraftsEventSource = new EventSource(streamUrlDrafts);
+        realtimeDraftsEventSource.addEventListener('put', onDataUpdated);
+        realtimeDraftsEventSource.addEventListener('patch', onDataUpdated);
+    } catch(e) {}
+}
+
+function stopRealtimeSubmissionsListener() {
+    if (realtimeSubmissionsEventSource) {
+        realtimeSubmissionsEventSource.close();
+        realtimeSubmissionsEventSource = null;
+    }
+    if (realtimeDraftsEventSource) {
+        realtimeDraftsEventSource.close();
+        realtimeDraftsEventSource = null;
+    }
+}
+
 async function fetchAndRenderExamResults(item, isSilent = false) {
     if (!item) return;
 
@@ -219,7 +261,6 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     let activeSessionsData = {};
 
     try {
-        // 1. Quét node chuẩn nhất: /quizzes/${quizId}/submissions.json
         if (quizId) {
             try {
                 const qSubRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions.json`);
@@ -237,7 +278,6 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             } catch(e) {}
         }
 
-        // 2. Quét các node tương thích cũ
         const fetchTasks = candidateCodesList.map(async (code) => {
             const [sRes, cRes, aRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
@@ -301,7 +341,6 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     if (searchInput && searchInput.value.trim() !== "") filterResultTable();
 }
 
-// BỘ XỬ LÝ GHÉP NỐI THÔNG MINH (SMART MATCH): KHÔNG BAO GIỜ BỎ SÓT HỌC SINH
 function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap, examItem, examMeta = {}) {
     const classAccounts = getAccountsForCategory(categoryId);
     const targetCatId = String(categoryId || "").trim();
@@ -397,7 +436,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // 1. GHÉP BÀI THEO DANH SÁCH LỚP (SMART MATCH: KHỚP SBD, KHỚP STT HOẶC KHỚP HỌ TÊN)
+    // GHÉP BÀI THEO DANH SÁCH LỚP
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -414,16 +453,11 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             let subNameNorm = normalizeName(sub.studentName);
 
             let isMatch = false;
-            // 1. Khớp chính xác SBD gốc (ví dụ: 1018 === 1018)
             if (accSbdLower && subSbd && subSbd === accSbdLower) { 
                 isMatch = true; 
-            }
-            // 2. Khớp nếu học sinh gõ nhầm STT vào ô SBD (ví dụ: gõ "18" hoặc "04")
-            else if (subSbd && (subSbd === accSttStr || subSbd === accSttPadded)) {
+            } else if (subSbd && (subSbd === accSttStr || subSbd === accSttPadded)) {
                 isMatch = true;
-            }
-            // 3. Khớp nếu trùng Họ Tên với học sinh trong lớp
-            else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
+            } else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
                 isMatch = true;
             }
 
@@ -462,7 +496,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     });
 
-    // 2. GHÉP THÍ SINH TỰ DO (CHỈ LẤY THÍ SINH CHƯA ĐƯỢC GHÉP VÀO LỚP)
+    // GHÉP THÍ SINH TỰ DO
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
@@ -511,7 +545,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // 3. THÍ SINH ĐANG LÀM BÀI TRỰC TIẾP
+    // THÍ SINH ĐANG LÀM TRỰC TIẾP
     for (let aKey in activeUsersMap) {
         let session = activeUsersMap[aKey];
         if (!session || typeof session !== 'object') continue;
@@ -553,9 +587,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     if (typeof updateStatsAndRenderTable === 'function') updateStatsAndRenderTable(finalRows);
 }
 
-// =========================================================
-// TÍNH NĂNG: THU BÀI TỰ ĐỘNG TỪ BẢN LƯU NHÁP CLOUD REALTIME
-// =========================================================
+// THU BÀI TỰ ĐỘNG TỪ BẢN LƯU NHÁP CLOUD REALTIME
 async function triggerAutoCollectDrafts(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const currentItem = currentExamResultData.item;
@@ -575,10 +607,7 @@ async function triggerAutoCollectDrafts(event) {
     }
 
     const btn = document.getElementById("btn-auto-collect-drafts");
-    if (btn) {
-        btn.disabled = true;
-        btn.innerText = "⏳ Đang thu bài...";
-    }
+    if (btn) { btn.disabled = true; btn.innerText = "⏳ Đang thu bài..."; }
 
     try {
         const [draftsRes, quizRes, subsRes] = await Promise.all([
@@ -600,14 +629,11 @@ async function triggerAutoCollectDrafts(event) {
             throw new Error("Không thể tải cấu trúc đề thi gốc để chấm điểm!");
         }
 
-        // Tạo answer vault chuẩn xác 100% để chấm điểm
         const answerVault = {};
         const letters = ["A", "B", "C", "D"];
         quizObj.questions.forEach(q => {
             if (q.type === "multiple_choice" && q.correct !== undefined) {
-                answerVault[`q${q.id}`] = typeof q.correct === 'number' 
-                    ? letters[q.correct] 
-                    : String(q.correct).trim().toUpperCase();
+                answerVault[`q${q.id}`] = typeof q.correct === 'number' ? letters[q.correct] : String(q.correct).trim().toUpperCase();
             } else if (q.type === "true_false" && q.statements) {
                 q.statements.forEach(st => {
                     answerVault[`q${q.id}_${st.id}`] = (st.correct === true || String(st.correct).toLowerCase() === 'đúng' || String(st.correct).toLowerCase() === 'true') ? "Đúng" : "Sai";
@@ -623,19 +649,11 @@ async function triggerAutoCollectDrafts(event) {
         const tasks = Object.keys(drafts).map(async (cleanSbd) => {
             const draft = drafts[cleanSbd];
             if (!draft || !draft.userAnswers || Object.keys(draft.userAnswers).length === 0) return;
-
-            // Nếu đã có bài nộp chính thức rồi thì bỏ qua
             if (existingSubs && existingSubs[cleanSbd]) return;
 
-            // Tính điểm tự động từ câu trả lời nháp
-            const scoreResult = calculateExamScoreWithConfig(
-                quizObj.questions,
-                draft.userAnswers,
-                answerVault,
-                scoringConfig
-            );
-
+            const scoreResult = calculateExamScoreWithConfig(quizObj.questions, draft.userAnswers, answerVault, scoringConfig);
             const sbd = draft.sbd || cleanSbd;
+
             const payload = {
                 sbd: sbd,
                 studentId: sbd,
@@ -662,7 +680,6 @@ async function triggerAutoCollectDrafts(event) {
                 createdAt: Date.now()
             };
 
-            // LƯU ĐỒNG BỘ VÀO CẢ 2 NODE FIREBASE (CHỐNG LỆCH VÀ BẢO ĐẢM TOÀN DIỆN 100%)
             const targetNodes = [
                 `${FIREBASE_DB_URL}/quizzes/${quizId}/submissions/${cleanSbd}.json`,
                 `${FIREBASE_DB_URL}/exams/${quizId}/submissions/${cleanSbd}.json`
@@ -676,18 +693,14 @@ async function triggerAutoCollectDrafts(event) {
                 }).catch(() => null)
             ));
 
-            // Xóa bản nháp sau khi đã nộp thành công
-            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts/${cleanSbd}.json`, {
-                method: "DELETE"
-            }).catch(() => null);
-
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts/${cleanSbd}.json`, { method: "DELETE" }).catch(() => null);
             collectedCount++;
         });
 
         await Promise.all(tasks);
 
         if (collectedCount > 0) {
-            alert(`🎉 THU BÀI THÀNH CÔNG!\n\nĐã thu bài và tính điểm tự động cho ${collectedCount} học sinh từ bản nháp đám mây! Bảng kết quả sẽ được cập nhật ngay.`);
+            alert(`🎉 THU BÀI THÀNH CÔNG!\n\nĐã thu bài và tính điểm tự động cho ${collectedCount} học sinh từ bản nháp đám mây! Bảng kết quả sẽ cập nhật ngay.`);
             await refreshCurrentExamResults();
         } else {
             alert("ℹ️ Tất cả học sinh có bản nháp đều đã nộp bài chính thức trước đó rồi!");
@@ -695,11 +708,10 @@ async function triggerAutoCollectDrafts(event) {
     } catch(err) {
         alert("❌ Lỗi khi thu bài tự động: " + err.message);
     } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = "⚡ Thu bài tự động";
-        }
+        if (btn) { btn.disabled = false; btn.innerText = "⚡ Thu bài tự động"; }
     }
 }
 
 window.triggerAutoCollectDrafts = triggerAutoCollectDrafts;
+window.startRealtimeSubmissionsListener = startRealtimeSubmissionsListener;
+window.stopRealtimeSubmissionsListener = stopRealtimeSubmissionsListener;
