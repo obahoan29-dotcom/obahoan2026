@@ -51,7 +51,7 @@ function getSubmissionBlobAndFileName(payload) {
 
     const jsonStr = JSON.stringify(securedPayload, null, 2);
     const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
-    const sId = (payload.studentId || "sbd").replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF]/g, '_');
+    const sId = (payload.studentId || payload.sbd || "sbd").replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF]/g, '_');
     const sName = (payload.studentName || "hocsinh").replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF]/g, '_');
     const fileName = `BaiLam_${sId}_${sName}.json`;
     return { blob, fileName, jsonStr, securedPayload };
@@ -83,7 +83,6 @@ function copyTextToClipboard(text) {
     }
 }
 
-// Bổ sung nút "Sao chép mã bài làm" vào Modal nếu chưa có trong DOM
 function ensureCopyCodeOptionInModal() {
     const list = document.querySelector("#export-share-modal .share-options-list");
     if (!list || document.getElementById("btn-opt-copy-raw-json")) return;
@@ -132,7 +131,6 @@ function downloadPendingSubmissionFile() {
     openExportShareModal();
 }
 
-// TÍNH NĂNG TẢI FILE TRỰC TIẾP (HỖ TRỢ SAVE AS CHỌN THƯ MỤC NẾU TRÌNH DUYỆT HỖ TRỢ)
 async function actionDownloadJsonDirectly() {
     const payload = getPendingPayloadOrRebuild();
     if (!payload) return;
@@ -166,9 +164,6 @@ async function actionDownloadJsonDirectly() {
     closeExportShareModal();
 }
 
-// =========================================================
-// TÍNH NĂNG ĐƯỢC CẢI TIẾN: SAO CHÉP DẠNG FILE .JSON VÀ GỬI AN TOÀN
-// =========================================================
 async function actionCopyRawJsonToClipboard() {
     const payload = getPendingPayloadOrRebuild();
     if (!payload) return;
@@ -177,7 +172,6 @@ async function actionCopyRawJsonToClipboard() {
 
     const fileObj = new File([fileInfo.blob], fileInfo.fileName, { type: "application/json" });
 
-    // 1. Nếu trên máy tính hỗ trợ copy File vào Clipboard
     let clipboardFileSuccess = false;
     if (navigator.clipboard && window.ClipboardItem) {
         try {
@@ -191,7 +185,6 @@ async function actionCopyRawJsonToClipboard() {
         }
     }
 
-    // 2. Nếu trên điện thoại hoặc trình duyệt hỗ trợ Web Share API -> Mở luôn danh sách gửi file trực tiếp
     if (navigator.canShare && navigator.canShare({ files: [fileObj] })) {
         try {
             await navigator.share({
@@ -206,7 +199,6 @@ async function actionCopyRawJsonToClipboard() {
         }
     }
 
-    // 3. Tự động tải file về máy để chắc chắn trong máy luôn có file .json
     executeBrowserFileDownload(fileInfo.blob, fileInfo.fileName);
 
     if (clipboardFileSuccess) {
@@ -230,7 +222,7 @@ async function actionShareNativeApp() {
         if (navigator.canShare && navigator.canShare({ files: [fileObj] })) {
             await navigator.share({
                 title: `Bài thi ${payload.studentName}`,
-                text: `Thưa thầy/cô, em gửi file bài làm: ${payload.examName || 'Bài thi'} (Họ tên: ${payload.studentName} - SBD: ${payload.studentId} - Lớp: ${payload.studentClass}).`,
+                text: `Thưa thầy/cô, em gửi file bài làm: ${payload.examName || payload.examTitle || 'Bài thi'} (Họ tên: ${payload.studentName} - SBD: ${payload.studentId || payload.sbd} - Lớp: ${payload.studentClass || payload.className}).`,
                 files: [fileObj]
             });
             closeExportShareModal();
@@ -250,9 +242,7 @@ function actionSendViaZalo() {
     const fileInfo = getSubmissionBlobAndFileName(payload);
     if (!fileInfo) return;
 
-    // Tự động tải file về máy
     executeBrowserFileDownload(fileInfo.blob, fileInfo.fileName);
-
     alert(`📋 ĐÃ CHUẨN BỊ XONG BÀI THI:\n\n1. File "${fileInfo.fileName}" đã được tải về máy của bạn.\n2. Hệ thống sẽ tự động chuyển sang Zalo của Thầy.\n\n👉 Bạn chỉ cần chọn biểu tượng đính kèm File (Tệp) trên Zalo và gửi file "${fileInfo.fileName}" vừa tải nhé!`);
 
     closeExportShareModal();
@@ -266,9 +256,7 @@ function actionSendViaMessenger() {
     const fileInfo = getSubmissionBlobAndFileName(payload);
     if (!fileInfo) return;
 
-    // Tự động tải file về máy
     executeBrowserFileDownload(fileInfo.blob, fileInfo.fileName);
-
     alert(`📋 ĐÃ CHUẨN BỊ XONG BÀI THI:\n\n1. File "${fileInfo.fileName}" đã được tải về máy của bạn.\n2. Hệ thống sẽ tự động chuyển sang Messenger của Thầy.\n\n👉 Bạn chỉ cần bấm vào biểu tượng đính kèm File và gửi file "${fileInfo.fileName}" cho Thầy nhé!`);
 
     closeExportShareModal();
@@ -276,6 +264,7 @@ function actionSendViaMessenger() {
     window.open(messUrl, "_blank");
 }
 
+// GỬI LẠI BÀI KHI CÓ MẠNG: CHUẨN HÓA VÀO ĐỊA CHỈ DUY NHẤT TRÊN FIREBASE
 function retrySubmitPending() { 
     if (!pendingSubmissionPayload) { 
         try { 
@@ -290,14 +279,21 @@ function retrySubmitPending() {
     const infoText = document.getElementById("pending-info-txt"); 
     infoText.innerText = "⏳ Đang thử gửi lại dữ liệu..."; 
 
-    const examCode = typeof getExamCode === 'function' ? getExamCode() : "101";
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizId = urlParams.get('id') || pendingSubmissionPayload.quizId || "exam";
+    const cleanSbd = String(pendingSubmissionPayload.sbd || pendingSubmissionPayload.studentId || "user").replace(/[^a-zA-Z0-9]/g, '_');
 
     Promise.all([ 
         (typeof postToGoogleSheet === 'function' && typeof URL2_EXAM_RESULT !== 'undefined') 
             ? postToGoogleSheet(URL2_EXAM_RESULT, pendingSubmissionPayload, 15000).catch(() => null) 
             : Promise.resolve(), 
-        fetch(`${FIREBASE_DB_URL}/exams/${examCode}/submissions.json`, { 
-            method: 'POST', 
+        fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions/${cleanSbd}.json`, { 
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(pendingSubmissionPayload) 
+        }),
+        fetch(`${FIREBASE_DB_URL}/exams/${quizId}/submissions/${cleanSbd}.json`, { 
+            method: 'PUT', 
             headers: { 'Content-Type': 'application/json' }, 
             body: JSON.stringify(pendingSubmissionPayload) 
         })
@@ -305,7 +301,7 @@ function retrySubmitPending() {
         safeLocal.removeItem("pending_exam_submission"); 
         pendingSubmissionPayload = null; 
         document.getElementById("pending-resend-bar").style.display = "none"; 
-        alert("✅ Đã gửi lại dữ liệu thành công!"); 
+        alert("✅ Đã gửi lại bài thi lên máy chủ thành công!"); 
     }).catch(() => { 
         infoText.innerText = "⚠️ Lỗi khi gửi lại! Vui lòng bấm 'Tải file' để gửi qua Zalo/Messenger cho giáo viên."; 
     }); 
