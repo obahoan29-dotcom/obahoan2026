@@ -27,11 +27,14 @@ function isStrictSameCategory(catA, catB) {
     return normalizeCategoryKey(catA) === normalizeCategoryKey(catB);
 }
 
-// TÌM XEM HỌC SINH CÓ THUỘC LỚP NÀO TRONG CSDL HỆ THỐNG KHÔNG
-function findCategoryForStudent(sbd, name) {
+// XÁC ĐỊNH CHÍNH XÁC XEM CÓ PHẢI HỌC SINH CỦA MỘT LỚP KHÁC KHÔNG (KHÔNG SO SÁNH VỚI STT 1 CHỮ SỐ)
+function identifyOfficialStudentCategory(sbd, name) {
     if (!window.STUDENT_ACCOUNTS) return null;
     const cleanSbd = String(sbd || "").trim().toLowerCase();
     const normName = normalizeName(name);
+
+    // SBD chính thức của các lớp luôn dài từ 4 ký tự trở lên (ví dụ: 1108, 11C31, 10p01)
+    const isStandardSbd = cleanSbd && cleanSbd.length >= 4 && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap";
 
     for (let catId in window.STUDENT_ACCOUNTS) {
         const list = window.STUDENT_ACCOUNTS[catId];
@@ -40,14 +43,9 @@ function findCategoryForStudent(sbd, name) {
             const accSbd = String(acc.sbd || "").trim().toLowerCase();
             const accName = normalizeName(acc.name);
             const accUser = normalizeName(acc.username);
-            const accStt = String(acc.stt || "");
-            const accSttPadded = accStt.padStart(2, '0');
 
-            if (cleanSbd && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap") {
-                if (accSbd === cleanSbd) return true;
-                if (cleanSbd === accStt || cleanSbd === accSttPadded) return true;
-            }
-            if (normName && (accName === normName || accUser === normName)) return true;
+            if (isStandardSbd && accSbd === cleanSbd) return true;
+            if (normName && normName.length >= 5 && (accName === normName || accUser === normName)) return true;
             return false;
         });
         if (found) return catId;
@@ -55,50 +53,44 @@ function findCategoryForStudent(sbd, name) {
     return null;
 }
 
-// BỘ LỌC CHUẨN XÁC 100%: BÀI CỦA LỚP NÀO CHỈ HIỂN THỊ ĐÚNG TRONG LỚP ĐÓ
+// BỘ LỌC CATEGORY: HỌC SINH LỚP NÀO VỀ ĐÚNG LỚP ĐÓ, THÍ SINH TỰ DO (NHƯ TÊN 3) ĐƯỢC HIỂN THỊ ĐẦY ĐỦ
 function isSubmissionMatchingCategory(sub, targetCatId) {
     if (!targetCatId) return true;
     const normTarget = normalizeCategoryKey(targetCatId);
     const subSbdClean = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
     const subNameNorm = normalizeName(sub.studentName || sub.name);
 
-    // 1. Kiểm tra xem học sinh có thuộc danh sách của chính lớp targetCatId này không:
+    // 1. Nếu học sinh nằm trong danh sách của chính lớp targetCatId này -> Luôn hiển thị
     const classAccounts = getAccountsForCategory(targetCatId);
     const inThisClass = classAccounts.some(acc => {
         const aSbd = String(acc.sbd || "").trim().toLowerCase();
         const aName = normalizeName(acc.name);
         const aUser = normalizeName(acc.username);
-        const aStt = String(acc.stt || "");
-        const aSttPadded = aStt.padStart(2, '0');
         return (aSbd && aSbd === subSbdClean) || 
-               (subSbdClean && (subSbdClean === aStt || subSbdClean === aSttPadded)) ||
-               (subNameNorm && (aName === subNameNorm || aUser === subNameNorm));
+               (subNameNorm && subNameNorm.length >= 5 && (aName === subNameNorm || aUser === subNameNorm));
     });
     if (inThisClass) return true;
 
-    // 2. Kiểm tra xem học sinh này có thuộc một lớp KHÁC trong hệ thống không:
-    // (Ví dụ: SBD 11C... hoặc 11E... thì BẮT BUỘC chỉ được hiện ở lớp 11C hoặc 11E, không hiện ở Thêm 11)
-    const officialStudentCat = findCategoryForStudent(sub.sbd || sub.studentId, sub.studentName || sub.name);
-    if (officialStudentCat) {
-        return normalizeCategoryKey(officialStudentCat) === normTarget;
+    // 2. Nếu học sinh thuộc về MỘT LỚP KHÁC trong hệ thống (SBD 11C..., 11E...) -> Bắt buộc chỉ hiển thị ở lớp đó
+    const officialCat = identifyOfficialStudentCategory(sub.sbd || sub.studentId, sub.studentName || sub.name);
+    if (officialCat) {
+        return normalizeCategoryKey(officialCat) === normTarget;
     }
 
-    // 3. Nếu không thuộc bất kỳ lớp nào trong hệ thống -> Đây là THÍ SINH TỰ DO:
-    // Thí sinh tự do PHẢI CÓ categoryId / cat trùng khớp với lớp đang mở:
+    // 3. Nếu là thí sinh tự do (như tên 3, SBD 3, lớp 3):
+    // Cho phép hiển thị ở lớp đang mở nếu khớp categoryId hoặc nếu bài nộp nằm ở đề này
     const rawSubCat = sub.categoryId || sub.cat || "";
-    if (rawSubCat) {
-        return normalizeCategoryKey(rawSubCat) === normTarget;
+    if (rawSubCat && normalizeCategoryKey(rawSubCat) === normTarget) {
+        return true;
     }
 
-    // 4. Nếu bài nộp không gắn categoryId, kiểm tra lớp nhập tay của thí sinh tự do:
+    // Nếu thí sinh tự do ghi rõ tên lớp khác (ví dụ "11C", "11E") thì loại khỏi các lớp khác
     const rawClass = normalizeCategoryKey(sub.studentClass || sub.className || "");
     if (rawClass) {
         if (rawClass.includes("11c") && normTarget !== "lop11c") return false;
         if (rawClass.includes("11e") && normTarget !== "lop11e") return false;
         if (rawClass.includes("11a") && normTarget !== "lop11a") return false;
         if (rawClass.includes("10p") && normTarget !== "lop10p") return false;
-        if (rawClass.includes("10") && normTarget.includes("11")) return false;
-        if (rawClass.includes("12") && normTarget.includes("11")) return false;
     }
 
     return true;
@@ -108,23 +100,19 @@ function getExamPossibleQuizIds(examItem, examMeta) {
     const ids = new Set();
     if (examMeta && examMeta.quizId) ids.add(String(examMeta.quizId).trim());
     if (examItem) {
+        let extracted = extractQuizIdFromItem(examItem);
+        if (extracted) ids.add(String(extracted).trim());
         if (examItem.firebaseId) ids.add(String(examItem.firebaseId).trim());
         if (examItem.id) ids.add(String(examItem.id).trim());
-        if (examItem.url && examItem.url.includes("?id=")) {
-            try {
-                let u = new URL(examItem.url, window.location.href);
-                let qId = u.searchParams.get("id");
-                if (qId) ids.add(String(qId).trim());
-            } catch(e) {}
-        }
     }
     return Array.from(ids).filter(Boolean);
 }
 
-// BỘ LỌC ĐỐI SOÁT ĐỀ THI
+// BỘ LỌC ĐỐI SOÁT ĐỀ THI: AN TOÀN TUYỆT ĐỐI VỚI CÁC MÃ ĐỀ NHƯ TONG28_GHK1...
 function isSubmissionMatchingCurrentExam(sub, examInfo) {
     if (!sub || typeof sub !== 'object') return false;
 
+    // Nếu bài nộp được đọc trực tiếp từ node của đề thi này -> 100% khớp
     if (sub._isDirectExamNode || sub._isQuizNode) return true;
 
     const subQuizId = String(sub.quizId || sub.id || "").trim();
@@ -214,7 +202,6 @@ function getSubmissionTimestamp(sub) {
     return parseDateString(sub.timestamp) || 0;
 }
 
-// BẬT KÊNH THỜI GIAN THỰC (SSE) VÀO FIREBASE
 function startRealtimeSubmissionsListener(quizId) {
     if (realtimeSubmissionsEventSource) {
         realtimeSubmissionsEventSource.close();
@@ -479,14 +466,12 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         });
     }
 
-    // 1. GHÉP BÀI THEO DANH SÁCH LỚP CỦA CHUYÊN MỤC ĐANG XEM
+    // 1. GHÉP BÀI THEO DANH SÁCH LỚP CỦA CHUYÊN MỤC ĐANG XEM (CHỈ KHỚP SBD CHÍNH THỨC HOẶC TÊN CHÍNH XÁC)
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
         const accNameNorm = normalizeName(acc.name);
         const accUserNorm = normalizeName(acc.username);
-        const accSttStr = String(acc.stt || (idx + 1)).trim();
-        const accSttPadded = accSttStr.padStart(2, '0');
 
         let matchedSubs = [];
         for (let sub of submissionsList) {
@@ -494,12 +479,11 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
             let subNameNorm = normalizeName(sub.studentName);
 
             let isMatch = false;
-            if (accSbdLower && subSbd && subSbd === accSbdLower) { 
+            // Chỉ khớp SBD khi là SBD chuẩn của học sinh lớp (dài >= 4 ký tự)
+            if (accSbdLower && subSbd && subSbd.length >= 4 && subSbd === accSbdLower) { 
                 isMatch = true; 
-            } else if (subSbd && (subSbd === accSttStr || subSbd === accSttPadded)) {
-                isMatch = true;
-            } else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
-                isMatch = true;
+            } else if (subNameNorm && subNameNorm.length >= 5 && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
+                isMatch = true; 
             }
 
             if (isMatch) { 
@@ -542,7 +526,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         });
     });
 
-    // 2. GHÉP CÁC BÀI TỰ DO THỰC SỰ THUỘC CHUYÊN MỤC NÀY
+    // 2. GHÉP CÁC BÀI TỰ DO (BAO GỒM CẢ CÁC BẠN NHẬP TÊN "3", SBD "3")
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
