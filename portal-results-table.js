@@ -190,6 +190,11 @@ async function switchExamResult(examItem) {
     if (headSub) headSub.innerText = `Chuyên mục: ${displayCatName} | Ngày cập nhật: ${examItem.date || "---"}`;
     if (currentExamBtnText) currentExamBtnText.innerText = `📑 ${examItem.title}`;
 
+    const effectiveQuizId = extractQuizIdFromItem(examItem) || examItem.firebaseId || examItem.id;
+    if (typeof startRealtimeSubmissionsListener === 'function') {
+        startRealtimeSubmissionsListener(effectiveQuizId);
+    }
+
     renderExamPickerDropdown();
     await refreshCurrentExamResults();
 }
@@ -251,6 +256,11 @@ async function openExamResultModal(item, categoryIdOrEvent, maybeEvent) {
     applyTableSettings();
     renderExamPickerDropdown();
     setTimeout(initTableResizable, 50);
+
+    const effectiveQuizId = extractQuizIdFromItem(item) || item.firebaseId || item.id;
+    if (typeof startRealtimeSubmissionsListener === 'function') {
+        startRealtimeSubmissionsListener(effectiveQuizId);
+    }
 
     await fetchAndRenderExamResults(item, true);
     startAutoRefreshResult();
@@ -431,7 +441,7 @@ function renderFilteredResultTable(rows) {
         let col_class = `<span class="class-badge">${rawClass}</span>`;
         let col5_sbd = acc.sbd || (currentSub ? (currentSub.sbd || currentSub.studentId) : "---");
         let safeTitleCol10 = stripHtml(col10_cheatTime);
-        let col_action = `<button type="button" class="btn-delete-result-row" onclick="deleteResultRowPermanently('${uid}', event)" title="Ẩn tạm thời dòng này khỏi bảng (bấm Cập nhật để hiện lại)" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:3px 8px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:2px; transition:0.15s; box-shadow:0 1px 3px rgba(239,68,68,0.15);">🗑️ Xóa</button>`;
+        let col_action = `<button type="button" class="btn-delete-result-row" onclick="deleteResultRowPermanently('${uid}', event)" title="Ẩn tạm thời dòng này khỏi bảng" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:3px 8px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:2px; transition:0.15s; box-shadow:0 1px 3px rgba(239,68,68,0.15);">🗑️ Xóa</button>`;
 
         tr.innerHTML = `<td class="td-stt">${col1_stt}</td><td class="td-exam-col" title="${currentExamTitle}">${col_examName}</td><td class="td-attempt-cell-wrap">${col_attemptCount}</td><td class="td-truncate" title="${stripHtml(col2_inTime)}">${col2_inTime}</td><td class="td-truncate" title="${stripHtml(col3_spentTime)}">${col3_spentTime}</td><td class="td-truncate" title="${rawName}">${col4_name}</td><td class="td-class td-truncate" title="${rawClass}">${col_class}</td><td class="td-sbd td-truncate" title="${col5_sbd}">${col5_sbd}</td><td style="text-align:center;">${col6_status}</td><td style="text-align:center;">${col7_correct}</td><td class="td-score">${col8_score}</td><td style="text-align:center;">${col_rank}</td><td class="td-tabs">${col9_tabs}</td><td class="td-tab-times td-truncate" title="${safeTitleCol10}">${col10_cheatTime}</td><td class="td-truncate">${col11_details}</td><td style="text-align:center;">${col_action}</td>`;
         tbody.appendChild(tr);
