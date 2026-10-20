@@ -90,12 +90,19 @@ function renderQuizLayout(questions, imageMap) {
         </div>`;
     }
 
+    // PHẦN 1: TRẮC NGHIỆM 4 PHƯƠNG ÁN
     if (p1List.length > 0) { 
         html += `<div class="exam-section-banner"><div class="section-icon">📑</div><div class="section-text"><h3>PHẦN 1. TRẮC NGHIỆM NHIỀU PHƯƠNG ÁN LỰA CHỌN</h3><p>Chọn duy nhất 01 phương án đúng trong các phương án A, B, C, D</p></div></div>`; 
         p1List.forEach((q, qIdx) => { 
             window.SECURE_VAULT.questionData[q.id] = q; 
             const letters = ["A", "B", "C", "D"]; 
-            if (q.correct !== undefined) window.SECURE_VAULT.answers[`q${q.id}`] = letters[q.correct];
+            
+            // XỬ LÝ AN TOÀN CHO CẢ DẠNG SỐ (0, 1, 2, 3) VÀ DẠNG CHỮ ("A", "B", "C", "D")
+            if (q.correct !== undefined) {
+                window.SECURE_VAULT.answers[`q${q.id}`] = (typeof q.correct === 'number') 
+                    ? letters[q.correct] 
+                    : String(q.correct).trim().toUpperCase();
+            }
             if (q.explanation) window.SECURE_VAULT.explanations[`q${q.id}`] = q.explanation;
             delete q.correct;
             delete q.explanation;
@@ -114,6 +121,7 @@ function renderQuizLayout(questions, imageMap) {
         }); 
     } 
 
+    // PHẦN 2: TRẮC NGHIỆM ĐÚNG SAI
     if (p2List.length > 0) { 
         html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);"><div class="section-icon">⚖️</div><div class="section-text"><h3>PHẦN 2. TRẮC NGHIỆM ĐÚNG SAI</h3><p>Thí sinh chọn Đúng hoặc Sai cho từng mệnh đề a), b), c), d)</p></div></div>`; 
         p2List.forEach((q, qIdx) => { 
@@ -125,7 +133,9 @@ function renderQuizLayout(questions, imageMap) {
             let rows = ""; 
             q.statements.forEach((st) => { 
                 const subKey = `q${q.id}_${st.id}`; 
-                if (st.correct !== undefined) window.SECURE_VAULT.answers[subKey] = st.correct ? "Đúng" : "Sai";
+                if (st.correct !== undefined) {
+                    window.SECURE_VAULT.answers[subKey] = (st.correct === true || String(st.correct).toLowerCase() === 'đúng' || String(st.correct).toLowerCase() === 'true') ? "Đúng" : "Sai";
+                }
                 delete st.correct;
                 rows += `<tr><td><b>${st.id})</b> ${st.statement}</td> <td width="70" align="center"><input type="radio" name="${subKey}" value="Đúng" onchange="onStatementChange('${subKey}')"></td> <td width="70" align="center"><input type="radio" name="${subKey}" value="Sai" onchange="onStatementChange('${subKey}')"></td></tr>`; 
             }); 
@@ -143,12 +153,13 @@ function renderQuizLayout(questions, imageMap) {
         }); 
     } 
 
+    // PHẦN 3: TRẢ LỜI NGẮN
     if (p3List.length > 0) { 
         html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #0d9488, #059669);"><div class="section-icon">✍️</div><div class="section-text"><h3>PHẦN 3. TRẢ LỜI NGẮN</h3><p>Nhập đáp số chính xác vào ô trống</p></div></div>`; 
         p3List.forEach((q, qIdx) => { 
             window.SECURE_VAULT.questionData[q.id] = q; 
             if (q.correctAnswer !== undefined) {
-                window.SECURE_VAULT.answers[`q${q.id}`] = q.correctAnswer;
+                window.SECURE_VAULT.answers[`q${q.id}`] = String(q.correctAnswer).trim();
                 delete q.correctAnswer;
             }
             if (q.explanation) {
@@ -170,6 +181,7 @@ function renderQuizLayout(questions, imageMap) {
         }); 
     } 
 
+    // PHẦN 4: TỰ LUẬN
     if (p4List.length > 0) { 
         html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #ea580c, #c2410c);"> 
             <div class="section-icon">📝</div> 
@@ -181,7 +193,7 @@ function renderQuizLayout(questions, imageMap) {
         p4List.forEach((q, qIdx) => { 
             window.SECURE_VAULT.questionData[q.id] = q; 
             if (q.correctAnswer !== undefined) {
-                window.SECURE_VAULT.answers[`q${q.id}`] = q.correctAnswer || ""; 
+                window.SECURE_VAULT.answers[`q${q.id}`] = String(q.correctAnswer).trim(); 
                 delete q.correctAnswer;
             }
             if (q.explanation) {
