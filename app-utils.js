@@ -123,16 +123,22 @@ function stripHtml(html) {
     return tmp.textContent || tmp.innerText || "";
 }
 
+// TRÍCH XUẤT CHUẨN XÁC MÃ ĐỀ: NHẬN DIỆN CẢ CÁC ĐỀ DẠNG TONG28_GHK1... VÀ QUIZ_...
 function extractQuizIdFromItem(item) {
     if (!item) return null;
-    if (item.firebaseId && String(item.firebaseId).startsWith('quiz_')) return item.firebaseId;
-    if (item.id && String(item.id).startsWith('quiz_')) return item.id;
     if (item.url && item.url.includes("?id=")) {
         try {
             let u = new URL(item.url, window.location.href);
-            return u.searchParams.get("id");
-        } catch(e) {}
+            let qId = u.searchParams.get("id");
+            if (qId && qId.trim() !== "") return qId.trim();
+        } catch(e) {
+            let m = item.url.match(/[?&]id=([^&#]+)/);
+            if (m && m[1]) return decodeURIComponent(m[1]).trim();
+        }
     }
+    if (item.quizId && String(item.quizId).trim() !== "") return String(item.quizId).trim();
+    if (item.firebaseId && String(item.firebaseId).trim() !== "") return String(item.firebaseId).trim();
+    if (item.id && String(item.id).trim() !== "") return String(item.id).trim();
     return null;
 }
 
