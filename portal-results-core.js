@@ -27,6 +27,7 @@ function isStrictSameCategory(catA, catB) {
     return normalizeCategoryKey(catA) === normalizeCategoryKey(catB);
 }
 
+// TÌM XEM HỌC SINH CÓ THUỘC LỚP NÀO TRONG CSDL HỆ THỐNG KHÔNG
 function findCategoryForStudent(sbd, name) {
     if (!window.STUDENT_ACCOUNTS) return null;
     const cleanSbd = String(sbd || "").trim().toLowerCase();
@@ -39,7 +40,13 @@ function findCategoryForStudent(sbd, name) {
             const accSbd = String(acc.sbd || "").trim().toLowerCase();
             const accName = normalizeName(acc.name);
             const accUser = normalizeName(acc.username);
-            if (cleanSbd && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap" && accSbd === cleanSbd) return true;
+            const accStt = String(acc.stt || "");
+            const accSttPadded = accStt.padStart(2, '0');
+
+            if (cleanSbd && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap") {
+                if (accSbd === cleanSbd) return true;
+                if (cleanSbd === accStt || cleanSbd === accSttPadded) return true;
+            }
             if (normName && (accName === normName || accUser === normName)) return true;
             return false;
         });
@@ -48,14 +55,15 @@ function findCategoryForStudent(sbd, name) {
     return null;
 }
 
-// BỘ LỌC CATEGORY THÔNG MINH: ĐẢM BẢO KHÔNG BAO GIỜ BỎ SÓT THÍ SINH ĐÃ NỘP BÀI
+// BỘ LỌC CHUẨN XÁC 100%: BÀI CỦA LỚP NÀO CHỈ HIỂN THỊ ĐÚNG TRONG LỚP ĐÓ
 function isSubmissionMatchingCategory(sub, targetCatId) {
     if (!targetCatId) return true;
-    const classAccounts = getAccountsForCategory(targetCatId);
+    const normTarget = normalizeCategoryKey(targetCatId);
     const subSbdClean = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
-    const subNameNorm = normalizeName(sub.studentName);
+    const subNameNorm = normalizeName(sub.studentName || sub.name);
 
-    // 1. Nếu học sinh nằm trong danh sách lớp của chuyên mục này -> Luôn hiển thị
+    // 1. Kiểm tra xem học sinh có thuộc danh sách của chính lớp targetCatId này không:
+    const classAccounts = getAccountsForCategory(targetCatId);
     const inThisClass = classAccounts.some(acc => {
         const aSbd = String(acc.sbd || "").trim().toLowerCase();
         const aName = normalizeName(acc.name);
@@ -68,15 +76,29 @@ function isSubmissionMatchingCategory(sub, targetCatId) {
     });
     if (inThisClass) return true;
 
-    // 2. Nếu bài nộp ghi nhận cùng categoryId với đề đang mở -> Luôn hiển thị
-    const rawSubCat = sub.categoryId || sub.cat || "";
-    if (rawSubCat && normalizeCategoryKey(rawSubCat) === normalizeCategoryKey(targetCatId)) {
-        return true;
+    // 2. Kiểm tra xem học sinh này có thuộc một lớp KHÁC trong hệ thống không:
+    // (Ví dụ: SBD 11C... hoặc 11E... thì BẮT BUỘC chỉ được hiện ở lớp 11C hoặc 11E, không hiện ở Thêm 11)
+    const officialStudentCat = findCategoryForStudent(sub.sbd || sub.studentId, sub.studentName || sub.name);
+    if (officialStudentCat) {
+        return normalizeCategoryKey(officialStudentCat) === normTarget;
     }
 
-    // 3. Nếu là bài nộp chính thức của đề thi này (đã qua bước lọc đề) -> Luôn giữ lại để đưa vào nhóm Thí sinh tự do
-    if (sub.score10 !== undefined || sub.userAnswers || sub.dataString) {
-        return true;
+    // 3. Nếu không thuộc bất kỳ lớp nào trong hệ thống -> Đây là THÍ SINH TỰ DO:
+    // Thí sinh tự do PHẢI CÓ categoryId / cat trùng khớp với lớp đang mở:
+    const rawSubCat = sub.categoryId || sub.cat || "";
+    if (rawSubCat) {
+        return normalizeCategoryKey(rawSubCat) === normTarget;
+    }
+
+    // 4. Nếu bài nộp không gắn categoryId, kiểm tra lớp nhập tay của thí sinh tự do:
+    const rawClass = normalizeCategoryKey(sub.studentClass || sub.className || "");
+    if (rawClass) {
+        if (rawClass.includes("11c") && normTarget !== "lop11c") return false;
+        if (rawClass.includes("11e") && normTarget !== "lop11e") return false;
+        if (rawClass.includes("11a") && normTarget !== "lop11a") return false;
+        if (rawClass.includes("10p") && normTarget !== "lop10p") return false;
+        if (rawClass.includes("10") && normTarget.includes("11")) return false;
+        if (rawClass.includes("12") && normTarget.includes("11")) return false;
     }
 
     return true;
@@ -99,11 +121,10 @@ function getExamPossibleQuizIds(examItem, examMeta) {
     return Array.from(ids).filter(Boolean);
 }
 
-// BỘ LỌC ĐỐI SOÁT ĐỀ THI: AN TOÀN, LINH HOẠT VÀ CHÍNH XÁC TUYỆT ĐỐI
+// BỘ LỌC ĐỐI SOÁT ĐỀ THI
 function isSubmissionMatchingCurrentExam(sub, examInfo) {
     if (!sub || typeof sub !== 'object') return false;
 
-    // Nếu bài nộp được đọc trực tiếp từ node của đề thi này -> 100% khớp
     if (sub._isDirectExamNode || sub._isQuizNode) return true;
 
     const subQuizId = String(sub.quizId || sub.id || "").trim();
@@ -262,7 +283,6 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
         "101"
     ].filter(Boolean)));
 
-    // SỬ DỤNG BẢNG ÁNH XẠ KHÔNG GHI ĐÈ BÀI NỘP HỢP LỆ
     let submissionsListRaw = [];
     let cheatingLogsData = {};
     let activeSessionsData = {};
@@ -402,7 +422,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         }
     }
 
-    // TẬP HỢP VÀ KHỬ TRÙNG CÁC BÀI NỘP CỦA ĐỀ THI
+    // TẬP HỢP VÀ LỌC ĐÚNG BÀI NỘP THUỘC LỚP ĐANG XEM
     let submissionsList = [];
     const seenSubFingerprints = new Set();
 
@@ -459,7 +479,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         });
     }
 
-    // 1. GHÉP BÀI THEO DANH SÁCH LỚP
+    // 1. GHÉP BÀI THEO DANH SÁCH LỚP CỦA CHUYÊN MỤC ĐANG XEM
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -522,7 +542,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         });
     });
 
-    // 2. GHÉP TẤT CẢ CÁC BÀI NỘP CÒN LẠI VÀO NHÓM THÍ SINH TỰ DO (KHÔNG BAO GIỜ BỎ SÓT)
+    // 2. GHÉP CÁC BÀI TỰ DO THỰC SỰ THUỘC CHUYÊN MỤC NÀY
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
