@@ -718,6 +718,7 @@ async function executeSubmitExam(isForceSubmit = false) {
     const currentCat = typeof getExamCategory === 'function' ? getExamCategory() : "them-11";
     const urlParams = new URLSearchParams(window.location.search);
     const currentQuizId = urlParams.get('id') || (examData && examData.id) || "exam";
+    const examCode = typeof getExamCode === 'function' ? getExamCode() : currentQuizId;
 
     const isClassAcc = typeof findStudentFromDatabase === 'function' ? !!findStudentFromDatabase(sId, currentCat) : false;
     const isFreeStudent = !isClassAcc;
@@ -796,7 +797,7 @@ async function executeSubmitExam(isForceSubmit = false) {
         categoryId: currentCat,
         isFree: isFreeStudent,
         quizId: currentQuizId,
-        maDe: getMaDe(),
+        maDe: typeof getMaDe === 'function' ? getMaDe() : "101",
         examTitle: EXAM_NAME,
         timestamp: new Date().toLocaleString("vi-VN"),
         createdAt: Date.now()
@@ -807,11 +808,18 @@ async function executeSubmitExam(isForceSubmit = false) {
     safeLocal.setItem("pending_exam_submission", JSON.stringify(payload));
     pendingSubmissionPayload = payload;
 
-    // GHI ĐỒNG THỜI VÀO CẢ 2 NODE CHUẨN ĐỂ ADMIN VÀ HỆ THỐNG ĐỒNG BỘ 100%
-    const targetNodes = [
+    // GHI ĐỒNG THỜI VÀO TẤT CẢ CÁC NODE LIÊN QUAN ĐỂ ADMIN ĐỒNG BỘ 100% VÀ KHÔNG BỊ MẤT BÀI
+    const targetNodesSet = new Set([
         `${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${cleanSbd}.json`,
         `${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${cleanSbd}.json`
-    ];
+    ]);
+
+    if (examCode && examCode !== currentQuizId) {
+        targetNodesSet.add(`${FIREBASE_DB_URL}/exams/${examCode}/submissions/${cleanSbd}.json`);
+        targetNodesSet.add(`${FIREBASE_DB_URL}/quizzes/${examCode}/submissions/${cleanSbd}.json`);
+    }
+
+    const targetNodes = Array.from(targetNodesSet);
 
     let firebaseVerified = false;
     let attemptsCount = 0;
@@ -846,6 +854,11 @@ async function executeSubmitExam(isForceSubmit = false) {
             if (atLeastOneSuccess) {
                 const verifyRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${cleanSbd}/createdAt.json`);
                 if (verifyRes && verifyRes.ok) {
+                    firebaseVerified = true;
+                    break;
+                }
+                const verifyRes2 = await fetch(`${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${cleanSbd}/createdAt.json`);
+                if (verifyRes2 && verifyRes2.ok) {
                     firebaseVerified = true;
                     break;
                 }
