@@ -1,10 +1,11 @@
 // =========================================================
 // FILE: portal-results-regrade.js
-// CHẤM LẠI BÀI THI THEO BIỂU ĐIỂM, TỰ ĐỘNG LÀM MỚI & NẠP FILE JSON DỰ PHÒNG
+// CHẤM LẠI TOÀN BỘ BÀI THI (KỂ CẢ HỌC SINH ĐANG LÀM DỞ BẢN NHÁP)
 // =========================================================
 
 function closeResultModal(triggerHistoryBack = true) {
     stopAutoRefreshResult();
+    if (typeof stopRealtimeSubmissionsListener === 'function') stopRealtimeSubmissionsListener();
     const modal = document.getElementById("result-fullscreen-modal");
     if (modal) modal.style.display = "none";
     closeRegradeModal();
@@ -19,7 +20,7 @@ function startAutoRefreshResult() {
         if (modal && modal.style.display === "flex" && currentExamResultData.item) {
             await fetchAndRenderExamResults(currentExamResultData.item, true);
         }
-    }, 15000); 
+    }, 12000); 
 }
 
 function stopAutoRefreshResult() {
@@ -50,7 +51,8 @@ function openRegradeModal(event) {
 
     if (fileInput) fileInput.value = "";
     if (preview) { preview.style.display = "none"; preview.innerText = ""; }
-    _regradeFileParsedAnswers = null; dropdown.style.display = "block";
+    _regradeFileParsedAnswers = null; 
+    dropdown.style.display = "block";
 }
 
 function closeRegradeModal(event) {
@@ -77,7 +79,7 @@ async function previewRegradeFile(input) {
         _regradeFileParsedAnswers = parsed;
         if (preview) {
             preview.style.display = "block"; preview.style.color = "#0369a1"; preview.style.borderColor = "#bae6fd"; preview.style.background = "#f0f9ff";
-            preview.innerHTML = `✅ Đã đọc thành công <b>${file.name}</b> (tìm thấy <b>${count}</b> câu đáp án). Sẵn sàng chấm lại!`;
+            preview.innerHTML = `✅ Đã đọc thành công <b>${file.name}</b> (tìm thấy <b>${count}</b> câu đáp án). Bấm nút bên dưới để chấm lại!`;
         }
     } catch(err) {
         _regradeFileParsedAnswers = null;
@@ -88,37 +90,34 @@ async function previewRegradeFile(input) {
     }
 }
 
+// BỘ MÁY CHẤM LẠI ĐA NĂNG: TÍNH LẠI CẢ BÀI ĐÃ NỘP LẪN HỌC SINH ĐANG LÀM BÀI DỞ
 async function processRegradeWithAnswers() {
     const btn = document.getElementById("btn-confirm-regrade");
-    const fileInput = document.getElementById("regrade-answer-file");
-
-    if (!_regradeFileParsedAnswers) {
-        if (fileInput && fileInput.files.length > 0) { await previewRegradeFile(fileInput); }
-        if (!_regradeFileParsedAnswers) { alert("⚠️ Vui lòng chọn file đáp án đã sửa hợp lệ trước khi bắt đầu!"); return; }
-    }
-
     const currentItem = currentExamResultData.item;
     if (!currentItem) { alert("⚠️ Không xác định được đề thi đang xem!"); return; }
 
     let quizId = extractQuizIdFromItem(currentItem);
-    if (!quizId) { alert("⚠️ Đề thi này không liên kết với cơ sở dữ liệu câu hỏi quiz trực tuyến!"); return; }
+    if (!quizId) { alert("⚠️ Đề thi này không liên kết với ID quiz trên Firebase!"); return; }
 
-    btn.disabled = true; btn.innerText = "⏳ Đang nạp đề gốc & biểu điểm...";
+    btn.disabled = true; btn.innerText = "⏳ Đang nạp đề gốc & dữ liệu...";
 
     try {
         const qRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`);
         let quizObj = await qRes.json();
         if (!quizObj || !quizObj.questions) { throw new Error("Không tìm thấy cấu trúc câu hỏi của đề thi trên máy chủ!"); }
 
-        quizObj = mergeQuestionsAndAnswers(quizObj, _regradeFileParsedAnswers);
-        await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { method: 'PATCH', body: JSON.stringify({ questions: quizObj.questions }) });
+        // Nếu Thầy có tải file đáp án mới lên, cập nhật vào đề gốc
+        if (_regradeFileParsedAnswers) {
+            quizObj = mergeQuestionsAndAnswers(quizObj, _regradeFileParsedAnswers);
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`, { method: 'PATCH', body: JSON.stringify({ questions: quizObj.questions }) });
+        }
 
         const newAnswerKey = {}; const letters = ["A", "B", "C", "D"];
         quizObj.questions.forEach(q => {
             if (q.type === "multiple_choice") {
                 if (q.correct !== undefined) { newAnswerKey[`q${q.id}`] = (typeof q.correct === 'number') ? letters[q.correct] : String(q.correct).trim().toUpperCase(); }
             } else if (q.type === "true_false") {
-                if (q.statements) { q.statements.forEach(st => { newAnswerKey[`q${q.id}_${st.id}`] = st.correct ? "Đúng" : "Sai"; }); }
+                if (q.statements) { q.statements.forEach(st => { newAnswerKey[`q${q.id}_${st.id}`] = (st.correct === true || String(st.correct).toLowerCase() === 'đúng' || String(st.correct).toLowerCase() === 'true') ? "Đúng" : "Sai"; }); }
             } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") {
                 if (q.correctAnswer !== undefined) { newAnswerKey[`q${q.id}`] = String(q.correctAnswer).trim(); }
             }
@@ -126,11 +125,30 @@ async function processRegradeWithAnswers() {
 
         const scoringConfig = quizObj.scoringConfig || (currentItem && currentItem.scoringConfig) || { mode: 'option1' };
 
-        btn.innerText = "⏳ Đang tải bài làm...";
-        const examTitle = quizObj.title || currentItem.title || "";
-        const candidateCodes = getExamCandidateCodes(examTitle, quizObj.maDe || "", quizId);
+        btn.innerText = "⏳ Đang tải toàn bộ bài nộp & bản nháp...";
+
+        // 1. Quét bài nộp chính thức ở cả /quizzes/${quizId}/submissions VÀ /exams/${code}/submissions
+        const candidateCodes = getExamCandidateCodes(quizObj.title || currentItem.title || "", quizObj.maDe || "", quizId);
         let allSubmissionsToUpdate = [];
 
+        // Quét node chuẩn nhất
+        try {
+            const qSubRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions.json`);
+            if (qSubRes.ok) {
+                const qSubJson = await qSubRes.json();
+                if (qSubJson && typeof qSubJson === 'object') {
+                    for (let sKey in qSubJson) {
+                        if (qSubJson[sKey]) {
+                            qSubJson[sKey]._isQuizNode = true;
+                            qSubJson[sKey]._subId = sKey;
+                            allSubmissionsToUpdate.push(qSubJson[sKey]);
+                        }
+                    }
+                }
+            }
+        } catch(e) {}
+
+        // Quét thêm các node exams phụ
         for (const code of candidateCodes) {
             try {
                 const sRes = await fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`);
@@ -139,23 +157,48 @@ async function processRegradeWithAnswers() {
                     if (sJson && typeof sJson === 'object') {
                         for (let subId in sJson) {
                             let subObj = sJson[subId];
-                            if (subObj && typeof subObj === 'object') { subObj._nodeCode = code; subObj._subId = subId; allSubmissionsToUpdate.push(subObj); }
+                            if (subObj && typeof subObj === 'object') {
+                                const exists = allSubmissionsToUpdate.some(item => (item.sbd && item.sbd === subObj.sbd) || item._subId === subId);
+                                if (!exists) {
+                                    subObj._nodeCode = code;
+                                    subObj._subId = subId;
+                                    allSubmissionsToUpdate.push(subObj);
+                                }
+                            }
                         }
                     }
                 }
             } catch(e) {}
         }
 
-        if (allSubmissionsToUpdate.length === 0) {
-            alert("ℹ️ Đã cập nhật đáp án mới vào đề thi thành công! Chưa có bài làm nào của học sinh cần tính lại điểm.");
+        // 2. Quét cả các bản nháp của HỌC SINH ĐANG LÀM BÀI DỞ DANG (/live_drafts)
+        let liveDraftsToRegrade = [];
+        try {
+            const draftsRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts.json`);
+            if (draftsRes.ok) {
+                const draftsJson = await draftsRes.json();
+                if (draftsJson && typeof draftsJson === 'object') {
+                    for (let dKey in draftsJson) {
+                        if (draftsJson[dKey] && draftsJson[dKey].userAnswers) {
+                            draftsJson[dKey]._draftKey = dKey;
+                            liveDraftsToRegrade.push(draftsJson[dKey]);
+                        }
+                    }
+                }
+            }
+        } catch(e) {}
+
+        if (allSubmissionsToUpdate.length === 0 && liveDraftsToRegrade.length === 0) {
+            alert("ℹ️ Đã cập nhật đáp án vào đề thi thành công! Chưa có bài làm hoặc bản nháp nào của học sinh cần chấm lại.");
             closeRegradeModal(); btn.disabled = false; btn.innerText = "🚀 Chấm lại ngay";
             await refreshCurrentExamResults(); return;
         }
 
-        btn.innerText = `⏳ Đang chấm lại ${allSubmissionsToUpdate.length} bài...`;
+        btn.innerText = `⏳ Đang chấm lại ${allSubmissionsToUpdate.length} bài nộp & ${liveDraftsToRegrade.length} em đang làm...`;
         let updatedCount = 0;
 
-        const regradeTasks = allSubmissionsToUpdate.map(async (sub) => {
+        // CHẤM LẠI CÁC BÀI ĐÃ NỘP CHÍNH THỨC
+        const regradeSubmissionTasks = allSubmissionsToUpdate.map(async (sub) => {
             const userAnswersMap = {};
             if (sub.dataString) {
                 const parts = sub.dataString.split(/\s*\|\s*/);
@@ -169,45 +212,7 @@ async function processRegradeWithAnswers() {
             }
             if (sub.userAnswers && typeof sub.userAnswers === 'object') { Object.assign(userAnswersMap, sub.userAnswers); }
 
-            let scoreRes = null;
-            if (typeof calculateExamScoreWithConfig === 'function') {
-                scoreRes = calculateExamScoreWithConfig(quizObj.questions, userAnswersMap, newAnswerKey, scoringConfig);
-            } else {
-                let correctCount = 0; let wrongCount = 0; let totalRawScore = 0; let maxTotalScore = 0; let dataDetails = [];
-                quizObj.questions.forEach(q => {
-                    maxTotalScore += 1.0;
-                    if (q.type === "multiple_choice") {
-                        const userVal = userAnswersMap[`q${q.id}`] || "Chưa chọn"; const correctVal = newAnswerKey[`q${q.id}`];
-                        if (correctVal && userVal.toUpperCase() === correctVal.toUpperCase()) {
-                            correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${userVal} [ĐÚNG]`);
-                        } else {
-                            wrongCount++; dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal || "---"}]`);
-                        }
-                    } else if (q.type === "true_false") {
-                        let cSt = 0;
-                        (q.statements || []).forEach(st => {
-                            const subKey = `q${q.id}_${st.id}`; const uVal = userAnswersMap[subKey] || "Chưa chọn"; const cVal = newAnswerKey[subKey];
-                            if (cVal && uVal === cVal) { cSt++; dataDetails.push(`${q.id}${st.id}-${uVal} [ĐÚNG]`); } 
-                            else { dataDetails.push(`${q.id}${st.id}-${uVal} [SAI]`); }
-                        });
-                        let qScore = 0;
-                        if (cSt === 1) qScore = 0.1; else if (cSt === 2) qScore = 0.25; else if (cSt === 3) qScore = 0.5; else if (cSt === 4) qScore = 1.0;
-                        totalRawScore += qScore;
-                        if (cSt === (q.statements ? q.statements.length : 4)) correctCount++; else wrongCount++;
-                    } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") {
-                        const uVal = String(userAnswersMap[`q${q.id}`] || "").trim().replace(',', '.'); const cVal = String(newAnswerKey[`q${q.id}`] || "").trim().replace(',', '.');
-                        const isRight = (uVal !== "" && cVal !== "" && (uVal === cVal || Number(uVal) === Number(cVal)));
-                        if (isRight) {
-                            correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${uVal} [ĐÚNG]`);
-                        } else {
-                            wrongCount++; dataDetails.push(`${q.id}-${uVal || "Trống"} [SAI: ${cVal || "---"}]`);
-                        }
-                    }
-                });
-                const score10Scale = Math.round(((totalRawScore / (maxTotalScore || 1)) * 10) * 10) / 10;
-                scoreRes = { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore: score10Scale, maxScale: 10.0, dataDetails };
-            }
-
+            const scoreRes = calculateExamScoreWithConfig(quizObj.questions, userAnswersMap, newAnswerKey, scoringConfig);
             const { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore, maxScale, dataDetails } = scoreRes;
             const originalTab = parseInt(sub.tabSwitchCount, 10) || extractTabCountFromDataString(sub.dataString) || 0;
             dataDetails.push(`Tab Switch: ${originalTab}`);
@@ -217,29 +222,64 @@ async function processRegradeWithAnswers() {
                 rawScore: Math.round(totalRawScore * 100) / 100,
                 maxScale: maxScale,
                 correctCount: correctCount,
+                wrongCount: wrongCount,
                 dataString: dataDetails.join(" | "),
-                calcMetrics: { ...(sub.calcMetrics || {}), correctCount: correctCount, wrongCount: wrongCount, score10Scale: finalScore, maxScale: maxScale },
+                calcMetrics: { ...(sub.calcMetrics || {}), correctCount, wrongCount, score10Scale: finalScore, maxScale },
                 regradedAt: Date.now()
             };
 
-            try { await fetch(`${FIREBASE_DB_URL}/exams/${sub._nodeCode}/submissions/${sub._subId}.json`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patchPayload) }); updatedCount++; } catch(e) {}
+            const writePromises = [];
+            writePromises.push(fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions/${sub._subId}.json`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patchPayload)
+            }));
+
+            if (sub._nodeCode) {
+                writePromises.push(fetch(`${FIREBASE_DB_URL}/exams/${sub._nodeCode}/submissions/${sub._subId}.json`, {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patchPayload)
+                }));
+            }
+
+            try {
+                await Promise.all(writePromises);
+                updatedCount++;
+            } catch(e) {}
         });
 
-        await Promise.all(regradeTasks);
-        alert(`🎉 CHẤM LẠI THÀNH CÔNG!\n\n- Đã cập nhật đáp án mới vào đề thi gốc.\n- Đã tính lại điểm và cập nhật đồng bộ ${updatedCount} bài làm của học sinh theo đúng Biểu điểm của đề.`);
-        closeRegradeModal(); await refreshCurrentExamResults();
+        // CHẤM LẠI CHO CẢ HỌC SINH ĐANG LÀM BÀI DỞ DANG (CẬP NHẬT TRỰC TIẾP VÀO LIVE_DRAFT)
+        const regradeDraftTasks = liveDraftsToRegrade.map(async (draft) => {
+            const draftAnswers = draft.userAnswers || {};
+            const draftScore = calculateExamScoreWithConfig(quizObj.questions, draftAnswers, newAnswerKey, scoringConfig);
+
+            const patchDraft = {
+                temporaryScore10: draftScore.finalScore,
+                temporaryCorrect: draftScore.correctCount,
+                regradedAt: Date.now()
+            };
+
+            try {
+                await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts/${draft._draftKey}.json`, {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patchDraft)
+                });
+                updatedCount++;
+            } catch(e) {}
+        });
+
+        await Promise.all([...regradeSubmissionTasks, ...regradeDraftTasks]);
+        
+        alert(`🎉 CHẤM LẠI THÀNH CÔNG!\n\n- Đã cập nhật đáp án và biểu điểm chuẩn xác.\n- Đã tính lại và đồng bộ thành công cho ${updatedCount} lượt bài làm (bao gồm cả các em đã nộp bài và các em đang làm bài dở).`);
+        closeRegradeModal(); 
+        await refreshCurrentExamResults();
     } catch(err) {
         alert("❌ Lỗi trong quá trình chấm lại: " + err.message);
-    } finally { btn.disabled = false; btn.innerText = "🚀 Chấm lại ngay"; }
+    } finally { 
+        btn.disabled = false; btn.innerText = "🚀 Chấm lại ngay"; 
+    }
 }
 
 function triggerUploadBackupJson(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const fileInput = document.getElementById("input-upload-backup-json");
-    if (fileInput) {
-        fileInput.value = "";
-        fileInput.click();
-    }
+    if (fileInput) { fileInput.value = ""; fileInput.click(); }
 }
 
 function readFileTextInternalAsync(file) {
@@ -281,27 +321,9 @@ async function handleBackupJsonFileInput(inputEl) {
         const studentId = payload.studentId || payload.sbd || "---";
         const studentClass = payload.studentClass || payload.className || "Tự do";
 
-        if (!payload.dataString && payload.score10 === undefined && !payload.calcMetrics) {
-            throw new Error("File JSON này không chứa dữ liệu câu trả lời hoặc điểm số của bài làm!");
-        }
-
         const currentItem = currentExamResultData.item;
-        const currentTitle = (currentItem && currentItem.title) ? currentItem.title : "";
-        const fileExamTitle = payload.examName || payload.examTitle || "";
-
-        if (currentTitle && fileExamTitle) {
-            const normCur = normalizeName(currentTitle);
-            const normFile = normalizeName(fileExamTitle);
-            if (normCur && normFile && normCur !== normFile && !normCur.includes(normFile) && !normFile.includes(normCur)) {
-                const confirmDiff = confirm(`⚠️ CẢNH BÁO ĐỀ THI KHÁC NHAU:\n\n- Đề đang xem: "${currentTitle}"\n- Đề trong file: "${fileExamTitle}"\n\nBạn có CHẮC CHẮN muốn nạp bài làm của "${studentName}" (${studentId}) vào bảng kết quả của đề đang xem không?`);
-                if (!confirmDiff) return;
-            }
-        }
-
-        let targetCode = cleanExamCodeKey(payload.maDe);
-        if (!targetCode && currentItem) targetCode = cleanExamCodeKey(currentItem.maDe || currentItem.title);
-        if (!targetCode && payload.quizId) targetCode = cleanExamCodeKey(payload.quizId);
-        if (!targetCode) targetCode = "101";
+        const currentQuizId = (currentItem && extractQuizIdFromItem(currentItem)) || payload.quizId || "exam";
+        const cleanSbd = (studentId || "user").replace(/[^a-zA-Z0-9]/g, '_');
 
         payload.createdAt = payload.createdAt || Date.now();
         payload.timestamp = payload.timestamp || formatDateTimeFull(payload.createdAt);
@@ -312,17 +334,23 @@ async function handleBackupJsonFileInput(inputEl) {
         payload.className = studentClass;
         payload.categoryId = payload.categoryId || payload.cat || currentExamResultData.categoryId || "them-11";
         payload.cat = payload.categoryId;
+        payload.quizId = currentQuizId;
 
-        const uploadUrl = `${FIREBASE_DB_URL}/exams/${targetCode}/submissions.json`;
-        const fbRes = await fetch(uploadUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        // Lưu đồng bộ vào cả 2 node chính trên Firebase
+        await Promise.all([
+            fetch(`${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${cleanSbd}.json`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }),
+            fetch(`${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${cleanSbd}.json`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+        ]);
 
-        if (!fbRes.ok) throw new Error(`Máy chủ Firebase phản hồi mã lỗi HTTP ${fbRes.status}`);
-
-        alert(`🎉 NẠP BÀI THÀNH CÔNG!\n\n- Thí sinh: ${studentName}\n- SBD: ${studentId} | Lớp: ${studentClass}\n- Điểm: ${payload.score10 ?? '---'}đ\n\nBài thi đã được ghi nhận vào hệ thống và sẽ xuất hiện ngay trong bảng kết quả!`);
+        alert(`🎉 NẠP BÀI THÀNH CÔNG!\n\n- Thí sinh: ${studentName}\n- SBD: ${studentId} | Lớp: ${studentClass}\n- Điểm: ${payload.score10 ?? '---'}đ\n\nBài thi đã được ghi nhận ngay vào bảng kết quả!`);
         await refreshCurrentExamResults();
 
     } catch (err) {
