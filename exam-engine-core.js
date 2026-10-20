@@ -239,20 +239,13 @@ function shuffleArray(arr) {
     return array;
 }
 
+// XÁO TRỘN ĐỀ THI: ĐẢO THỨ TỰ CÂU HỎI TRONG TỪNG PHẦN, GIỮ NGUYÊN ĐÁP ÁN ĐỐI CHIẾU A, B, C, D ĐỒNG BỘ 100%
 function shuffleExamData(data) {
     if (!data || !data.questions) return;
     let p1 = shuffleArray(data.questions.filter(q => q.type === "multiple_choice"));
     let p2 = shuffleArray(data.questions.filter(q => q.type === "true_false"));
     let p3 = shuffleArray(data.questions.filter(q => q.type === "short_answer"));
     let p4 = shuffleArray(data.questions.filter(q => q.type === "essay" || q.type === "essay_answer"));
-
-    p1.forEach(q => {
-        if (q.options && q.options.length > 0 && q.correct !== undefined) {
-            let correctText = q.options[q.correct];
-            q.options = shuffleArray(q.options);
-            q.correct = q.options.indexOf(correctText);
-        }
-    });
     data.questions = [...p1, ...p2, ...p3, ...p4];
 }
 
@@ -792,8 +785,11 @@ async function executeSubmitExam(isForceSubmit = false) {
             if (q.type === "multiple_choice") {
                 const userVal = window.SECURE_VAULT.userAnswers[`q${q.id}`] || "Chưa chọn";
                 const correctVal = window.SECURE_VAULT.answers[`q${q.id}`];
-                if (userVal === correctVal) { correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${userVal} [ĐÚNG]`); }
-                else { wrongCount++; dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal}]`); }
+                if (correctVal && String(userVal).trim().toUpperCase() === String(correctVal).trim().toUpperCase()) { 
+                    correctCount++; totalRawScore += 1.0; dataDetails.push(`${q.id}-${userVal} [ĐÚNG]`); 
+                } else { 
+                    wrongCount++; dataDetails.push(`${q.id}-${userVal} [SAI: ${correctVal || "---"}]`); 
+                }
             } else if (q.type === "true_false") {
                 let cSt = 0;
                 (q.statements || []).forEach(st => {
@@ -1123,13 +1119,13 @@ function renderOriginalReviewScreen() {
     const letters = ["A", "B", "C", "D"]; 
     (examData.questions || []).forEach(q => {
         if (q.type === "multiple_choice") {
-            generatedAnswerKey[`q${q.id}`] = typeof q.correct === 'number' ? letters[q.correct] : q.correct;
+            generatedAnswerKey[`q${q.id}`] = typeof q.correct === 'number' ? letters[q.correct] : String(q.correct).trim().toUpperCase();
         } else if (q.type === "true_false") {
             (q.statements || []).forEach(st => {
-                generatedAnswerKey[`q${q.id}_${st.id}`] = st.correct ? "Đúng" : "Sai";
+                generatedAnswerKey[`q${q.id}_${st.id}`] = (st.correct === true || String(st.correct).toLowerCase() === 'đúng' || String(st.correct).toLowerCase() === 'true') ? "Đúng" : "Sai";
             });
         } else {
-            generatedAnswerKey[`q${q.id}`] = q.correctAnswer;
+            generatedAnswerKey[`q${q.id}`] = String(q.correctAnswer).trim();
         }
     });
 
