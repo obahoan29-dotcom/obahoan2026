@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: exam-engine-core.js
-// ĐỘNG CƠ BÀI THI BẢO MẬT, CƠ CHẾ NỘP BÀI ĐA KÊNH AN TOÀN TUYỆT ĐỐI
+// ĐỘNG CƠ BÀI THI BẢO MẬT, CLOUD AUTOSAVE REALTIME & BẢO LƯU 100%
 // =========================================================
 
 window.SECURE_VAULT = window.SECURE_VAULT || {
@@ -33,9 +33,54 @@ let isSubmittingInProgress = false;
         .quiz-content-locked button {
             cursor: not-allowed !important;
         }
+        .btn-download-backup-finished {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff; border: none; padding: 10px 18px; border-radius: 11px;
+            font-size: 0.95rem; font-weight: 800; cursor: pointer; display: inline-flex;
+            align-items: center; gap: 6px; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3);
+            margin-top: 10px; transition: 0.15s;
+        }
+        .btn-download-backup-finished:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-download-backup-finished:active { transform: translateY(2px) scale(0.96); }
     `;
     document.head.appendChild(style);
 })();
+
+// TỰ ĐỘNG LƯU ĐÁM MÂY TỨC THỜI MỖI KHI HỌC SINH TÍCH/ĐỔI ĐÁP ÁN (GIỐNG GOOGLE DOCS)
+function autoSaveAnswerToCloud(qKey, answerVal) {
+    if (isSubmitted || isExamLocked) return;
+    const sId = document.getElementById("student-id")?.value.trim();
+    if (!sId) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizId = urlParams.get('id') || (examData && examData.id);
+    if (!quizId) return;
+
+    const cleanSbd = String(sId).replace(/[^a-zA-Z0-9]/g, '_');
+    const sName = document.getElementById("student-name")?.value.trim() || "";
+    const sClass = document.getElementById("student-class")?.value.trim() || "";
+    const currentCat = typeof getExamCategory === 'function' ? getExamCategory() : "them-11";
+
+    const draftPayload = {
+        sbd: sId,
+        studentName: sName,
+        className: sClass,
+        cat: currentCat,
+        categoryId: currentCat,
+        maDe: typeof getMaDe === 'function' ? getMaDe() : "101",
+        examTitle: typeof EXAM_NAME !== 'undefined' ? EXAM_NAME : "Đề thi",
+        userAnswers: window.SECURE_VAULT.userAnswers || {},
+        lastUpdated: Date.now(),
+        lastUpdatedStr: new Date().toLocaleString("vi-VN")
+    };
+
+    // Gửi ngầm không làm đơ giao diện
+    fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts/${cleanSbd}.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draftPayload)
+    }).catch(() => null);
+}
 
 window.addEventListener('online', function() {
     if (isExamLocked && !isSubmitted && pendingSubmissionPayload) {
@@ -212,13 +257,13 @@ function shuffleExamData(data) {
 }
 
 function trackPadletClick(qId) { 
-    if (isSubmitted || isExamLocked) return;
+    if (isSubmitted || isExamLocked) return; 
     window.SECURE_VAULT.padletClicked[qId] = true; 
     saveExamStateToStorage(); 
 }
 
 function toggleSubPadlet(qId) { 
-    if (isSubmitted || isExamLocked) return;
+    if (isSubmitted || isExamLocked) return; 
     const el = document.getElementById(`sub-padlet-dropdown-${qId}`); 
     if (el) el.style.display = (el.style.display === "none" || el.style.display === "") ? "flex" : "none"; 
 }
@@ -452,12 +497,16 @@ function selectOption(qId, letter) {
     window.SECURE_VAULT.userAnswers[`q${qId}`] = letter; 
     updateProgress(); 
     saveExamStateToStorage(); 
+    autoSaveAnswerToCloud(`q${qId}`, letter); // AUTOSAVE REALTIME
 }
 
 function onStatementChange(subKey) { 
     if (isSubmitted || isExamLocked) return; 
     const selected = document.querySelector(`input[name="${subKey}"]:checked`); 
-    if (selected) window.SECURE_VAULT.userAnswers[subKey] = selected.value; 
+    if (selected) {
+        window.SECURE_VAULT.userAnswers[subKey] = selected.value; 
+        autoSaveAnswerToCloud(subKey, selected.value); // AUTOSAVE REALTIME
+    }
     updateProgress(); 
     saveExamStateToStorage(); 
 }
@@ -465,8 +514,12 @@ function onStatementChange(subKey) {
 function onShortInputChange(qId) { 
     if (isSubmitted || isExamLocked) return; 
     const val = document.getElementById(`q${qId}-input`).value.trim(); 
-    if (val) window.SECURE_VAULT.userAnswers[`q${qId}`] = val; 
-    else delete window.SECURE_VAULT.userAnswers[`q${qId}`]; 
+    if (val) {
+        window.SECURE_VAULT.userAnswers[`q${qId}`] = val; 
+        autoSaveAnswerToCloud(`q${qId}`, val); // AUTOSAVE REALTIME
+    } else {
+        delete window.SECURE_VAULT.userAnswers[`q${qId}`]; 
+    }
     updateProgress(); 
     saveExamStateToStorage(); 
 }
@@ -639,10 +692,10 @@ function restoreExamStateFromStorage() {
             parsed = {
                 isStarted: true,
                 isExamLocked: true,
-                studentId: pend.studentId,
+                studentId: pend.studentId || pend.sbd,
                 studentName: pend.studentName,
-                studentClass: pend.studentClass,
-                userAnswers: {}
+                studentClass: pend.studentClass || pend.className,
+                userAnswers: pend.userAnswers || {}
             };
         }
         
@@ -677,7 +730,7 @@ function restoreExamStateFromStorage() {
 }
 
 // =========================================================
-// THUẬT TOÁN NỘP BÀI ĐA KÊNH & XÁC THỰC 2 CHIỀU CHỐNG MẤT BÀI
+// THUẬT TOÁN NỘP BÀI CHUẨN HÓA 1 NODE DUY NHẤT & GỌN GÀNG 100%
 // =========================================================
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted || isSubmittingInProgress) return; 
@@ -767,47 +820,46 @@ async function executeSubmitExam(isForceSubmit = false) {
     const { correctCount, wrongCount, totalRawScore, maxTotalScore, finalScore, maxScale, dataDetails } = scoreResult;
     dataDetails.push(`Tab Switch: ${tabSwitchCount}`);
 
-    const safeIdClean = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
-    const submissionFixedKey = `sub_${safeIdClean}_${Date.now()}`;
+    // DÙNG CHÍNH SBD LÀM KEY TRÊN FIREBASE (KHÔNG DÙNG RANDOM TIMESTAMP ĐỂ CHỐNG TRÙNG VÀ DỄ TÌM KIẾM)
+    const cleanSbd = (sId || "user").replace(/[^a-zA-Z0-9]/g, '_');
 
+    // GÓI PAYLOAD GỌN GÀNG, SẠCH SẼ, CHUẨN XÁC
     const payload = { 
-        submissionId: submissionFixedKey,
-        quizId: currentQuizId,
-        maDe: getMaDe(), 
-        completionTime: completionTimeStr, 
-        examName: EXAM_NAME, 
-        examTitle: EXAM_NAME, 
-        categoryId: currentCat,
-        cat: currentCat,
-        studentId: sId, 
-        sbd: sId, 
-        studentName: sName, 
-        studentClass: sClass, 
+        sbd: sId,
+        studentId: sId,
+        studentName: sName,
         className: sClass,
-        isFree: isFreeStudent,
-        rawScore: Math.round(totalRawScore * 100) / 100, 
-        score10: finalScore, 
+        studentClass: sClass,
+        score10: finalScore,
+        rawScore: Math.round(totalRawScore * 100) / 100,
         maxScale: maxScale,
-        scoringMode: (examData.scoringConfig && examData.scoringConfig.mode) ? examData.scoringConfig.mode : "option1",
-        tabSwitchCount: `${tabSwitchCount} lần`, 
-        dataString: dataDetails.join(" | "), 
+        correctCount: correctCount,
+        wrongCount: wrongCount,
+        completionTime: completionTimeStr,
+        spentMins: spentMins,
+        tabSwitchCount: `${tabSwitchCount} lần`,
+        dataString: dataDetails.join(" | "),
         userAnswers: window.SECURE_VAULT.userAnswers || {},
-        calcMetrics: { correctCount, wrongCount, spentMins, completionTimeStr, score10Scale: finalScore, maxScale }, 
-        timestamp: new Date().toLocaleString("vi-VN"), 
-        createdAt: Date.now() 
+        cat: currentCat,
+        categoryId: currentCat,
+        isFree: isFreeStudent,
+        quizId: currentQuizId,
+        maDe: getMaDe(),
+        examTitle: EXAM_NAME,
+        timestamp: new Date().toLocaleString("vi-VN"),
+        createdAt: Date.now()
     }; 
 
-    safeLocal.setItem("pending_exam_submission", JSON.stringify(payload)); 
-    pendingSubmissionPayload = payload; 
+    // LƯU DỰ PHÒNG VĨNH VIỄN VÀO MÁY HỌC SINH (KHÔNG BAO GIỜ XÓA SẠCH MẤT DẤU VẾT)
+    safeLocal.setItem(`exam_completed_backup_${currentQuizId}`, JSON.stringify(payload));
+    safeLocal.setItem("pending_exam_submission", JSON.stringify(payload));
+    pendingSubmissionPayload = payload;
 
-    const examCode = typeof getExamCode === 'function' ? getExamCode() : "101";
-
-    // DANH SÁCH CÁC NODE BẮT BUỘC GHI ĐỒNG BỘ ĐỂ ADMIN KHÔNG THỂ BỊ SÓT
-    const targetNodes = Array.from(new Set([
-        `${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${submissionFixedKey}.json`,
-        `${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${submissionFixedKey}.json`,
-        `${FIREBASE_DB_URL}/exams/${examCode}/submissions/${submissionFixedKey}.json`
-    ]));
+    // THỐNG NHẤT 1 ĐỊA CHỈ DUY NHẤT THEO quizId + ĐỒNG BỘ 1 NODE DỰ PHÒNG CHUẨN
+    const targetNodes = [
+        `${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${cleanSbd}.json`,
+        `${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${cleanSbd}.json`
+    ];
 
     let firebaseVerified = false;
     let attemptsCount = 0;
@@ -815,10 +867,9 @@ async function executeSubmitExam(isForceSubmit = false) {
 
     while (attemptsCount < maxSendAttempts && !firebaseVerified) {
         attemptsCount++;
-        updateProgressStatus(`⏳ Đang nộp lên máy chủ Firebase (Lần ${attemptsCount}/${maxSendAttempts})...`, "Vui lòng giữ màn hình, không tải lại trang.");
+        updateProgressStatus(`⏳ Đang lưu bài vào hệ thống (Lần ${attemptsCount}/${maxSendAttempts})...`, "Vui lòng giữ màn hình, không tải lại trang.");
 
         try {
-            // Gửi đồng thời đa điểm bằng phương thức PUT
             const putPromises = targetNodes.map(url => {
                 const controller = new AbortController();
                 const timer = setTimeout(() => controller.abort(), 6000);
@@ -840,30 +891,15 @@ async function executeSubmitExam(isForceSubmit = false) {
             const atLeastOneSuccess = results.some(ok => ok === true);
 
             if (atLeastOneSuccess) {
-                // XÁC MINH NGAY LẬP TỨC: Đọc lại từ máy chủ Firebase để chắc chắn 100% dữ liệu đã ghi nhận
-                updateProgressStatus("🔍 Máy chủ đang kiểm tra xác thực bài làm...");
-                try {
-                    const verifyUrl = `${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${submissionFixedKey}.json`;
-                    const verifyRes = await fetch(verifyUrl, { cache: "no-store" });
-                    if (verifyRes && verifyRes.ok) {
-                        const verifiedData = await verifyRes.json();
-                        if (verifiedData && (verifiedData.score10 !== undefined || verifiedData.studentName)) {
-                            firebaseVerified = true;
-                            break;
-                        }
-                    }
-                } catch(vErr) {
-                    // Nếu GET kiểm tra nhanh thất bại nhưng PUT trả về 200, ta vẫn chấp nhận
-                    firebaseVerified = true;
-                    break;
-                }
+                firebaseVerified = true;
+                break;
             }
         } catch(netErr) {
             console.warn(`Lần nộp ${attemptsCount} gặp lỗi mạng:`, netErr);
         }
 
         if (!firebaseVerified && attemptsCount < maxSendAttempts) {
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise(r => setTimeout(r, 1200));
         }
     }
 
@@ -876,7 +912,7 @@ async function executeSubmitExam(isForceSubmit = false) {
                 <div style="font-weight:900; color:#ef4444; font-size:1.15rem;">CHƯA THỂ NỘP LÊN MÁY CHỦ!</div>
                 <div style="font-size:0.92rem; color:#334155; margin-top:8px; font-weight:700; line-height:1.45;">
                     Mạng 4G/Wifi của bạn bị chập chờn nên máy chủ chưa gửi phản hồi xác nhận.<br>
-                    <span style="color:#0284c7;">Bài làm của bạn vẫn được lưu nguyên vẹn an toàn trên máy.</span>
+                    <span style="color:#0284c7;">Bài làm của bạn đã được bảo lưu an toàn 100% trong bộ nhớ máy.</span>
                 </div>
             `;
         }
@@ -892,34 +928,33 @@ async function executeSubmitExam(isForceSubmit = false) {
         return; 
     }
 
-    // ĐÃ XÁC NHẬN THÀNH CÔNG 100%: Gửi tiếp sang Google Sheet dự phòng chạy nền
+    // GỬI SANG GOOGLE SHEET DỰ PHÒNG CHẠY NỀN
     if (typeof postToGoogleSheet === 'function' && typeof URL2_EXAM_RESULT !== 'undefined' && URL2_EXAM_RESULT) {
         postToGoogleSheet(URL2_EXAM_RESULT, payload, 15000).catch(() => null);
     }
     
-    // Xóa phiên làm việc trong active_sessions (CHỈ XÓA KHI ĐÃ GHI THÀNH CÔNG BÀI LÀM)
+    // Dọn dẹp session sau khi đã nộp thành công
     if (typeof clearPresence === 'function') clearPresence(sId);
     if (timerInterval) clearInterval(timerInterval); 
     if (typeof timeWatcherInterval !== 'undefined' && timeWatcherInterval) clearInterval(timeWatcherInterval);
     if (imageSyncEventSource) { imageSyncEventSource.close(); imageSyncEventSource = null; }
 
+    // XÓA LIVE DRAFT VÌ ĐÃ CÓ SUBMISSION CHÍNH THỨC
+    fetch(`${FIREBASE_DB_URL}/quizzes/${currentQuizId}/live_drafts/${cleanSbd}.json`, { method: "DELETE" }).catch(() => null);
+
     safeLocal.removeItem("pending_exam_submission");
     safeLocal.removeItem(getStorageKey()); 
-    safeLocal.removeItem(`shuffled_exam_${examCode}`); 
-    safeLocal.removeItem("saved_student_sbd");
-    safeLocal.removeItem("saved_student_name");
-    safeLocal.removeItem("saved_student_class");
-    safeLocal.removeItem("current_exam_student");
+    safeLocal.removeItem(`shuffled_exam_${getExamCode()}`);
     safeLocal.setItem("last_submission_cleared", "true");
     
     isSubmitted = true; 
     isSubmittingInProgress = false;
     if (confirmModal) confirmModal.style.display = "none"; 
     
-    renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, finalScore, maxScale); 
+    renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, finalScore, maxScale, currentQuizId); 
 }
 
-function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, finalScore, maxScale = 10.0) { 
+function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, finalScore, maxScale = 10.0, quizId = "") { 
     document.getElementById("top-navbar").style.display = "none"; 
     document.getElementById("quiz-content").style.display = "none"; 
     const resView = document.getElementById("result-view-container"); 
@@ -941,7 +976,24 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     document.getElementById("res-user-id").innerText = document.getElementById("student-id").value.trim() || "---"; 
     document.getElementById("res-spent-time").innerText = spentTimeStr; 
 
-    const resultMode = examData.resultMode || "show_all";
+    // BỔ SUNG NÚT TẢI LẠI FILE BÀI LÀM DỰ PHÒNG NGAY TẠI MÀN HÌNH TỔNG KẾT (BẢO LƯU 100%)
+    let backupBtn = document.getElementById("btn-download-backup-summary");
+    if (!backupBtn) {
+        backupBtn = document.createElement("button");
+        backupBtn.id = "btn-download-backup-summary";
+        backupBtn.type = "button";
+        backupBtn.className = "btn-download-backup-finished";
+        backupBtn.innerHTML = `💾 Tải file dự phòng bài làm (.json)`;
+        backupBtn.onclick = function() {
+            downloadCompletedSubmissionFile(quizId);
+        };
+        const userDetailsBox = document.querySelector(".user-details-grid");
+        if (userDetailsBox && userDetailsBox.parentNode) {
+            userDetailsBox.parentNode.insertBefore(backupBtn, userDetailsBox.nextSibling);
+        }
+    }
+
+    const resultMode = (examData && examData.resultMode) ? examData.resultMode : "show_all";
     const scoreOverviewEl = document.getElementById("res-score-overview");
     const statsCardsEl = document.querySelector(".stats-cards-grid");
     const reviewBannerEl = document.querySelector(".review-banner");
@@ -1028,6 +1080,33 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
 }
 
+function downloadCompletedSubmissionFile(quizId) {
+    let payload = null;
+    const key = `exam_completed_backup_${quizId}`;
+    try {
+        const raw = safeLocal.getItem(key);
+        if (raw) payload = JSON.parse(raw);
+    } catch(e) {}
+
+    if (!payload && pendingSubmissionPayload) payload = pendingSubmissionPayload;
+
+    if (!payload) {
+        alert("⚠️ Không tìm thấy bản lưu dự phòng trên máy này!");
+        return;
+    }
+
+    if (typeof getSubmissionBlobAndFileName === 'function' && typeof executeBrowserFileDownload === 'function') {
+        const fileInfo = getSubmissionBlobAndFileName(payload);
+        if (fileInfo) executeBrowserFileDownload(fileInfo.blob, fileInfo.fileName);
+    } else {
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `BaiLam_${payload.studentId || payload.sbd}_${payload.studentName}.json`;
+        a.click();
+    }
+}
+
 function renderOriginalReviewScreen() {
     const resView = document.getElementById("result-view-container"); 
     resView.style.display = "block"; 
@@ -1101,3 +1180,5 @@ window.formatHHMMSS = formatHHMMSS;
 window.__saveExamState = saveExamStateToStorage;
 window.__updateProgress = updateProgress;
 window.lockExamInteractions = lockExamInteractions;
+window.autoSaveAnswerToCloud = autoSaveAnswerToCloud;
+window.downloadCompletedSubmissionFile = downloadCompletedSubmissionFile;
