@@ -102,6 +102,8 @@
     <script src="portal-analytics.js"></script>
     <script src="portal-auth.js"></script>
     <script src="portal-admin.js"></script>
+    <!-- MODULE MỚI: DỌN DẸP DATABASE FIREBASE AN TOÀN -->
+    <script src="portal-db-cleanup.js"></script>
     
     <!-- MODULE BẢNG KẾT QUẢ THI ĐÃ TÁCH NHỎ -->
     <script src="portal-results-core.js"></script>
@@ -171,7 +173,10 @@
             <div class="admin-popover-panel" id="admin-popover-panel">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
                     <div class="admin-popover-title" style="margin-bottom: 0;">🚀 Đăng đề thi & tài liệu</div>
-                    <button type="button" class="admin-logout-btn" onclick="logoutAdmin(event)" title="Khóa quyền quản trị ngay lập tức">🔒 Khóa lại</button>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button type="button" class="admin-cleanup-btn" onclick="openDbCleanupModal(event)" title="Dọn dẹp cơ sở dữ liệu Firebase an toàn">🧹 Dọn Database</button>
+                        <button type="button" class="admin-logout-btn" onclick="logoutAdmin(event)" title="Khóa quyền quản trị ngay lập tức">🔒 Khóa lại</button>
+                    </div>
                 </div>
                 
                 <div class="admin-tabs">
@@ -531,7 +536,7 @@
 
             <button class="btn-refresh-result" onclick="refreshCurrentExamResults()" title="Tải lại dữ liệu mới nhất">🔄 Cập nhật</button>
             
-            <!-- NÚT THU BÀI TỰ ĐỘNG TỪ LIVE DRAFTS CLOUD (MỚI BỔ SUNG) -->
+            <!-- NÚT THU BÀI TỰ ĐỘNG TỪ LIVE DRAFTS CLOUD -->
             <button type="button" class="btn-auto-collect-drafts" id="btn-auto-collect-drafts" onclick="triggerAutoCollectDrafts(event)" 
                 title="Tự động thu bài và chấm điểm từ bản lưu nháp Realtime cho các em học sinh quên nộp hoặc gặp sự cố mạng">
                 ⚡ Thu bài tự động
