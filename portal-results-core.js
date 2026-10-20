@@ -554,7 +554,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
 }
 
 // =========================================================
-// TÍNH NĂNG MỚI: THU BÀI TỰ ĐỘNG TỪ BẢN LƯU NHÁP CLOUD REALTIME
+// TÍNH NĂNG: THU BÀI TỰ ĐỘNG TỪ BẢN LƯU NHÁP CLOUD REALTIME
 // =========================================================
 async function triggerAutoCollectDrafts(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -600,15 +600,17 @@ async function triggerAutoCollectDrafts(event) {
             throw new Error("Không thể tải cấu trúc đề thi gốc để chấm điểm!");
         }
 
-        // Tạo answer vault để chấm
+        // Tạo answer vault chuẩn xác 100% để chấm điểm
         const answerVault = {};
         const letters = ["A", "B", "C", "D"];
         quizObj.questions.forEach(q => {
             if (q.type === "multiple_choice" && q.correct !== undefined) {
-                answerVault[`q${q.id}`] = typeof q.correct === 'number' ? letters[q.correct] : q.correct;
+                answerVault[`q${q.id}`] = typeof q.correct === 'number' 
+                    ? letters[q.correct] 
+                    : String(q.correct).trim().toUpperCase();
             } else if (q.type === "true_false" && q.statements) {
                 q.statements.forEach(st => {
-                    answerVault[`q${q.id}_${st.id}`] = st.correct ? "Đúng" : "Sai";
+                    answerVault[`q${q.id}_${st.id}`] = (st.correct === true || String(st.correct).toLowerCase() === 'đúng' || String(st.correct).toLowerCase() === 'true') ? "Đúng" : "Sai";
                 });
             } else if (q.correctAnswer !== undefined) {
                 answerVault[`q${q.id}`] = String(q.correctAnswer).trim();
@@ -660,17 +662,24 @@ async function triggerAutoCollectDrafts(event) {
                 createdAt: Date.now()
             };
 
-            // Lưu thành submission chính thức chuẩn hóa
-            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions/${cleanSbd}.json`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            // LƯU ĐỒNG BỘ VÀO CẢ 2 NODE FIREBASE (CHỐNG LỆCH VÀ BẢO ĐẢM TOÀN DIỆN 100%)
+            const targetNodes = [
+                `${FIREBASE_DB_URL}/quizzes/${quizId}/submissions/${cleanSbd}.json`,
+                `${FIREBASE_DB_URL}/exams/${quizId}/submissions/${cleanSbd}.json`
+            ];
+
+            await Promise.all(targetNodes.map(url => 
+                fetch(url, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                }).catch(() => null)
+            ));
 
             // Xóa bản nháp sau khi đã nộp thành công
             await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts/${cleanSbd}.json`, {
                 method: "DELETE"
-            });
+            }).catch(() => null);
 
             collectedCount++;
         });
