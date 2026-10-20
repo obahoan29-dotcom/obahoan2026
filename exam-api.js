@@ -68,14 +68,12 @@ function findStudentFromDatabase(query, preferredCat = null) {
     if (!query || !window.STUDENT_ACCOUNTS) return null;
     const q = String(query).trim().toLowerCase();
     
-    // Tìm trong chuyên mục ưu tiên
     if (preferredCat && window.STUDENT_ACCOUNTS[preferredCat]) {
         const list = window.STUDENT_ACCOUNTS[preferredCat];
         const matched = list.find(acc => (acc.sbd && String(acc.sbd).trim().toLowerCase() === q) || (acc.username && String(acc.username).trim().toLowerCase() === q) || (acc.name && String(acc.name).trim().toLowerCase() === q));
         if (matched) return matched;
     }
     
-    // Quét toàn bộ các lớp còn lại nếu chưa tìm thấy
     for (let c in window.STUDENT_ACCOUNTS) {
         const list = window.STUDENT_ACCOUNTS[c];
         if (Array.isArray(list)) {
@@ -189,8 +187,7 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
         if (startBtn) { startBtn.disabled = false; startBtn.innerText = "Vào Làm Bài"; }
         document.getElementById("student-card").style.display = "block";
         const waitingCard = document.getElementById("waiting-room-card"); if (waitingCard) waitingCard.style.display = "none";
-        try { const u = new URL(window.location.href); if (u.searchParams.has('autostart')) { u.searchParams.delete('autostart'); window.history.replaceState({}, '', u.toString()); } } catch(e) {}
-        alert("⚠️ CHƯA THỂ MỞ ĐỀ THI!\n\nMáy chủ thi (Firebase) chưa phản hồi xác nhận do mạng Internet của bạn bị chập chờn hoặc gián đoạn.\n\nVui lòng kiểm tra lại kết nối mạng 4G/Wifi và bấm nút 'Vào Làm Bài' lại để hệ thống bảo đảm quyền lợi của bạn!");
+        alert("⚠️ CHƯA THỂ MỞ ĐỀ THI!\n\nMáy chủ thi chưa phản hồi xác nhận do kết nối Internet bị chập chờn. Vui lòng kiểm tra lại mạng 4G/Wifi và bấm nút 'Vào Làm Bài' lại!");
         return;
     }
 
@@ -207,6 +204,7 @@ async function executeStartExamAPI(sId, sName, sClass, isFreeStudent = false) {
 
     startCountdownTimer(); 
     startPresenceSystem(sId);
+    updateTopBackupStatus(false);
 
     if (startBtn) { startBtn.disabled = false; startBtn.innerText = "Vào Làm Bài"; }
 }
@@ -342,11 +340,45 @@ function setupBackPrevention() {
     window.addEventListener('beforeunload', function (e) { 
         if (!isSubmitted && examStartTime) { if (typeof window.__saveExamState === 'function') window.__saveExamState(); e.preventDefault(); e.returnValue = 'Bài làm của bạn chưa được nộp. Dữ liệu đã được lưu tạm an toàn.'; } 
     }); 
-    window.addEventListener('online', function() { document.getElementById("net-status-banner").style.display = "none"; checkPendingSubmissionOnLoad(); }); 
-    window.addEventListener('offline', function() { document.getElementById("net-status-banner").style.display = "block"; }); 
+    window.addEventListener('online', function() { 
+        document.getElementById("net-status-banner").style.display = "none"; 
+        checkPendingSubmissionOnLoad(); 
+    }); 
+    window.addEventListener('offline', function() { 
+        document.getElementById("net-status-banner").style.display = "block"; 
+        updateTopBackupStatus(false);
+    }); 
 }
 
 function getStorageKey() { return `exam_autosave_active_session_${EXAM_NAME}_${getMaDe()}`; }
+
+// QUẢN LÝ TRẠNG THÁI THANH SAO LƯU TRÊN CÙNG
+function updateTopBackupStatus(isServerConfirmed = false) {
+    const statusText = document.getElementById("backup-status-text");
+    const statusIcon = document.getElementById("backup-status-icon");
+    const indicator = document.getElementById("backup-status-indicator");
+    const resendBtn = document.getElementById("btn-universal-resend");
+
+    if (isServerConfirmed) {
+        if (statusText) statusText.innerText = "✅ Đã lưu máy chủ an toàn 100%";
+        if (statusIcon) statusIcon.innerText = "🟢";
+        if (indicator) { indicator.className = "backup-status-indicator synced"; }
+        if (resendBtn) resendBtn.style.display = "none";
+    } else {
+        const hasPending = Boolean(safeLocal.getItem("pending_exam_submission"));
+        if (hasPending) {
+            if (statusText) statusText.innerText = "⚠️ Chưa gửi thành công lên máy chủ (Đã bảo lưu trên máy)";
+            if (statusIcon) statusIcon.innerText = "🔴";
+            if (indicator) { indicator.className = "backup-status-indicator pending"; }
+            if (resendBtn) resendBtn.style.display = "inline-flex";
+        } else {
+            if (statusText) statusText.innerText = "🛡️ Bài làm đang được tự động lưu tạm trên máy";
+            if (statusIcon) statusIcon.innerText = "💾";
+            if (indicator) { indicator.className = "backup-status-indicator"; }
+            if (resendBtn) resendBtn.style.display = "none";
+        }
+    }
+}
 
 function checkPendingSubmissionOnLoad() { 
     try { 
@@ -355,12 +387,13 @@ function checkPendingSubmissionOnLoad() {
             const parsed = JSON.parse(raw); 
             if (parsed && (parsed.studentName || parsed.studentId)) { 
                 pendingSubmissionPayload = parsed; 
-                document.getElementById("pending-resend-bar").style.display = "block"; 
+                updateTopBackupStatus(false);
+                return;
             } 
         } 
     } catch(e) {} 
+    updateTopBackupStatus(isSubmitted);
 }
-function dismissPendingBar() { document.getElementById("pending-resend-bar").style.display = "none"; }
 
 document.addEventListener("visibilitychange", async function() { 
     if (wakeLockSentinel === null && !document.hidden) { await requestWakeLock(); }
@@ -387,3 +420,5 @@ function sendTabSwitchLog(switchCount, durationStr, durationSec = 0) {
     postToGoogleSheet(URL1_TAB_CHEATING, payload, 20000).catch(e=>{}); 
     fetch(`${FIREBASE_DB_URL}/exams/${getExamCode()}/cheating_logs.json`, { method: 'POST', body: JSON.stringify(payload) }).catch(e=>{}); 
 }
+
+window.updateTopBackupStatus = updateTopBackupStatus;
