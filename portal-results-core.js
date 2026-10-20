@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: portal-results-core.js
-// QUẢN LÝ DỮ LIỆU KẾT QUẢ THI, PHÂN TÁCH ĐÚNG LỚP & ĐÚNG ĐỀ 100%
+// QUẢN LÝ DỮ LIỆU KẾT QUẢ THI, SMART MATCH & TÍNH NĂNG THU BÀI TỰ ĐỘNG
 // =========================================================
 
 let currentExamResultData = {
@@ -46,37 +46,41 @@ function findCategoryForStudent(sbd, name) {
     return null;
 }
 
-// Kiểm tra bài làm hoặc phiên đăng nhập có thuộc đúng Lớp (Chuyên mục) đang xem hay không
+// BỘ LỌC THÔNG MINH MỚI: NẾU HỌC SINH CÓ TÊN TRONG DANH SÁCH LỚP ĐANG XEM THÌ LUÔN LUÔN NHẬN BÀI (KHÔNG BAO GIỜ BỊ ẨN)
 function isSubmissionMatchingCategory(sub, targetCatId) {
     if (!targetCatId) return true;
-    const normTargetCat = normalizeCategoryKey(targetCatId);
+    const classAccounts = getAccountsForCategory(targetCatId);
+    const subSbdClean = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
+    const subNameNorm = normalizeName(sub.studentName);
 
-    // 1. Đối chiếu trực tiếp categoryId hoặc cat được lưu trong bài nộp
+    // 1. Nếu SBD hoặc Họ tên trùng với học sinh trong danh sách lớp đang xem -> LUÔN CHẤP NHẬN
+    const inThisClass = classAccounts.some(acc => {
+        const aSbd = String(acc.sbd || "").trim().toLowerCase();
+        const aName = normalizeName(acc.name);
+        const aUser = normalizeName(acc.username);
+        const aStt = String(acc.stt || "");
+        const aSttPadded = aStt.padStart(2, '0');
+        return (aSbd && aSbd === subSbdClean) || 
+               (subSbdClean && (subSbdClean === aStt || subSbdClean === aSttPadded)) ||
+               (subNameNorm && (aName === subNameNorm || aUser === subNameNorm));
+    });
+    if (inThisClass) return true;
+
+    // 2. Đối chiếu trực tiếp categoryId
     const rawSubCat = sub.categoryId || sub.cat || "";
     if (rawSubCat) {
-        const normSubCat = normalizeCategoryKey(rawSubCat);
-        return normSubCat === normTargetCat;
+        return normalizeCategoryKey(rawSubCat) === normalizeCategoryKey(targetCatId);
     }
 
-    // 2. Nếu bài nộp cũ không có categoryId, tra cứu danh sách học sinh theo SBD/Họ tên
+    // 3. Tra cứu lớp chính thức
     const studentCat = findCategoryForStudent(sub.sbd || sub.studentId, sub.studentName);
     if (studentCat) {
-        return normalizeCategoryKey(studentCat) === normTargetCat;
-    }
-
-    // 3. Nếu là thí sinh tự do, loại trừ nếu tên lớp khai báo trùng với lớp chính khóa khác
-    const sClassNorm = normalizeName(sub.studentClass || sub.className || "");
-    if (sClassNorm) {
-        if (normTargetCat !== "lop11c" && (sClassNorm === "11c" || sClassNorm === "lop11c")) return false;
-        if (normTargetCat !== "lop11e" && (sClassNorm === "11e" || sClassNorm === "lop11e")) return false;
-        if (normTargetCat !== "lop11a" && (sClassNorm === "11a" || sClassNorm === "lop11a")) return false;
-        if (normTargetCat !== "lop10p" && (sClassNorm === "10p" || sClassNorm === "lop10p")) return false;
+        return normalizeCategoryKey(studentCat) === normalizeCategoryKey(targetCatId);
     }
 
     return true;
 }
 
-// Thu thập mọi mã quizId định danh của đề thi đang xem
 function getExamPossibleQuizIds(examItem, examMeta) {
     const ids = new Set();
     if (examMeta && examMeta.quizId) ids.add(String(examMeta.quizId).trim());
@@ -94,7 +98,6 @@ function getExamPossibleQuizIds(examItem, examMeta) {
     return Array.from(ids).filter(Boolean);
 }
 
-// Kiểm tra bài nộp có thuộc đúng Đề thi đang xem hay không (chống lẫn sang đề khác)
 function isSubmissionMatchingCurrentExam(sub, examInfo) {
     if (!sub || typeof sub !== 'object') return false;
 
@@ -103,54 +106,28 @@ function isSubmissionMatchingCurrentExam(sub, examInfo) {
         ? examInfo.targetQuizIds 
         : [String(examInfo.quizId || "").trim()].filter(Boolean);
 
-    // 1. Nếu cả 2 đều có quizId: phải trùng khớp chính xác
     if (subQuizId && targetQuizIds.length > 0) {
         if (targetQuizIds.includes(subQuizId)) return true;
-        // Nếu bài nộp có quizId khác biệt bắt đầu bằng "quiz_" -> Khẳng định là đề khác!
         if (subQuizId.startsWith("quiz_")) return false;
     }
 
-    // 2. Nếu nodeCode lưu trữ trùng với quizId của đề
     if (sub._nodeCode && targetQuizIds.includes(sub._nodeCode)) return true;
 
-    // 3. So sánh Mã đề (maDe) nếu có mã đề riêng biệt (khác mã mặc định 101)
     const subMaDe = cleanExamCodeKey(sub.maDe || "");
     const curMaDe = examInfo.maDe || "";
     if (subMaDe && curMaDe && subMaDe !== "101" && curMaDe !== "101") {
-        if (subMaDe !== curMaDe) return false;
+        if (subMaDe === curMaDe) return true;
     }
 
-    // 4. So sánh Tiêu đề đề thi
     const subTitle = sub.examName || sub.examTitle || sub.title || "";
     const curTitle = examInfo.title || examInfo.itemTitle || "";
-
     const subNormTitle = normalizeName(subTitle);
     const curNormTitle = normalizeName(curTitle);
-    const curNormItemTitle = normalizeName(examInfo.itemTitle || "");
-
-    if (subNormTitle && (curNormTitle || curNormItemTitle)) {
-        if (subNormTitle === curNormTitle || subNormTitle === curNormItemTitle) return true;
-
-        const subNormCode = extractNormalizedExamCode(subTitle || sub.maDe || "");
-        const curNormCode = examInfo.normCode || extractNormalizedExamCode(curTitle || examInfo.maDe || "");
-        if (subNormCode && curNormCode) {
-            if (subNormCode === curNormCode) return true;
-            return false;
-        }
-
-        if (subNormTitle.length >= 8 && curNormTitle.length >= 8) {
-            const subNums = subTitle.match(/\d+/g) || [];
-            const curNums = curTitle.match(/\d+/g) || [];
-            const numsMatch = subNums.length > 0 && subNums.length === curNums.length && subNums.every((v, i) => v === curNums[i]);
-            if (numsMatch && (subNormTitle.includes(curNormTitle) || curNormTitle.includes(subNormTitle))) return true;
-        }
+    if (subNormTitle && curNormTitle && (subNormTitle === curNormTitle || subNormTitle.includes(curNormTitle) || curNormTitle.includes(subNormTitle))) {
+        return true;
     }
 
-    if (subMaDe && curMaDe && subMaDe !== "101" && curMaDe !== "101") {
-        return subMaDe === curMaDe;
-    }
-
-    return (!subQuizId && targetQuizIds.length === 0);
+    return targetQuizIds.length === 0;
 }
 
 function sortDataString(str) {
@@ -242,6 +219,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     let activeSessionsData = {};
 
     try {
+        // 1. Quét node chuẩn nhất: /quizzes/${quizId}/submissions.json
         if (quizId) {
             try {
                 const qSubRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions.json`);
@@ -259,6 +237,7 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             } catch(e) {}
         }
 
+        // 2. Quét các node tương thích cũ
         const fetchTasks = candidateCodesList.map(async (code) => {
             const [sRes, cRes, aRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
@@ -322,11 +301,10 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     if (searchInput && searchInput.value.trim() !== "") filterResultTable();
 }
 
-// BỘ XỬ LÝ GHÉP NỐI BÀI THI: ĐÚNG LỚP, ĐÚNG ĐỀ, KHÔNG LẪN LỘN
+// BỘ XỬ LÝ GHÉP NỐI THÔNG MINH (SMART MATCH): KHÔNG BAO GIỜ BỎ SÓT HỌC SINH
 function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSessionsMap, examItem, examMeta = {}) {
     const classAccounts = getAccountsForCategory(categoryId);
     const targetCatId = String(categoryId || "").trim();
-
     const targetQuizIds = getExamPossibleQuizIds(examItem, examMeta);
 
     const currentExamInfo = {
@@ -347,7 +325,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     for (let k in cheatingMap) {
         let log = cheatingMap[k];
         if (!log || typeof log !== 'object') continue;
-        // Bắt buộc cùng đề và cùng lớp
         if (!isSubmissionMatchingCurrentExam(log, currentExamInfo)) continue;
         if (!isSubmissionMatchingCategory(log, targetCatId)) continue;
 
@@ -376,7 +353,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     for (let k in submissionsMap) {
         let sub = submissionsMap[k];
         if (sub && typeof sub === 'object') {
-            // LỌC BẮT BUỘC: Đúng Đề thi và Đúng Lớp thi
             if (!isSubmissionMatchingCurrentExam(sub, currentExamInfo)) continue;
             if (!isSubmissionMatchingCategory(sub, targetCatId)) continue;
 
@@ -392,7 +368,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     for (let rawKey in activeSessionsMap) {
         let sess = activeSessionsMap[rawKey];
         if (!sess || typeof sess !== 'object') continue;
-        // LỌC BẮT BUỘC: Đúng Đề thi và Đúng Lớp thi
         if (!isSubmissionMatchingCurrentExam(sess, currentExamInfo)) continue;
         if (!isSubmissionMatchingCategory(sess, targetCatId)) continue;
 
@@ -422,12 +397,14 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // 1. GHÉP BÀI THEO DANH SÁCH LỚP CHÍNH THỨC
+    // 1. GHÉP BÀI THEO DANH SÁCH LỚP (SMART MATCH: KHỚP SBD, KHỚP STT HOẶC KHỚP HỌ TÊN)
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
         const accNameNorm = normalizeName(acc.name);
         const accUserNorm = normalizeName(acc.username);
+        const accSttStr = String(acc.stt || (idx + 1)).trim();
+        const accSttPadded = accSttStr.padStart(2, '0');
 
         if (accSbdLower) usedSbdSet.add(accSbdLower);
 
@@ -437,12 +414,17 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             let subNameNorm = normalizeName(sub.studentName);
 
             let isMatch = false;
+            // 1. Khớp chính xác SBD gốc (ví dụ: 1018 === 1018)
             if (accSbdLower && subSbd && subSbd === accSbdLower) { 
                 isMatch = true; 
-            } else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
-                if (!subSbd || subSbd === "---" || subSbd === "free" || subSbd === accSbdLower) { 
-                    isMatch = true; 
-                }
+            }
+            // 2. Khớp nếu học sinh gõ nhầm STT vào ô SBD (ví dụ: gõ "18" hoặc "04")
+            else if (subSbd && (subSbd === accSttStr || subSbd === accSttPadded)) {
+                isMatch = true;
+            }
+            // 3. Khớp nếu trùng Họ Tên với học sinh trong lớp
+            else if (subNameNorm && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
+                isMatch = true;
             }
 
             if (isMatch) { 
@@ -480,18 +462,12 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     });
 
-    // 2. GHÉP BÀI CỦA THÍ SINH TỰ DO (CHỈ LẤY THÍ SINH THỰC SỰ THI TỰ DO TẠI LỚP NÀY)
+    // 2. GHÉP THÍ SINH TỰ DO (CHỈ LẤY THÍ SINH CHƯA ĐƯỢC GHÉP VÀO LỚP)
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
     for (let sub of submissionsList) {
         if (usedSubmissionKeys.has(sub._keyId)) continue;
-
-        // BẢO VỆ CHỐNG LẪN: Nếu học sinh này là học sinh chính thức của lớp khác, tuyệt đối không đưa vào tự do của lớp này!
-        const registeredCat = findCategoryForStudent(sub.sbd || sub.studentId, sub.studentName);
-        if (registeredCat && normalizeCategoryKey(registeredCat) !== normalizeCategoryKey(targetCatId)) {
-            continue;
-        }
 
         let subSbd = String(sub.sbd || sub.studentId || "free").trim().toLowerCase();
         let subName = normalizeName(sub.studentName) || "free_student";
@@ -535,7 +511,7 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
         });
     }
 
-    // 3. THÍ SINH TỰ DO ĐANG LÀM BÀI TRỰC TIẾP TRONG LỚP NÀY
+    // 3. THÍ SINH ĐANG LÀM BÀI TRỰC TIẾP
     for (let aKey in activeUsersMap) {
         let session = activeUsersMap[aKey];
         if (!session || typeof session !== 'object') continue;
@@ -554,12 +530,6 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
             return (aSbd && aSbd === sSbd) || (aName && aName === normSName);
         });
         if (inClass) continue;
-
-        // BẢO VỆ CHỐNG LẪN: Loại trừ phiên làm việc nếu thuộc lớp khác
-        const regCat = findCategoryForStudent(session.sbd, session.name);
-        if (regCat && normalizeCategoryKey(regCat) !== normalizeCategoryKey(targetCatId)) {
-            continue;
-        }
 
         usedSbdSet.add(sSbd || normSName);
 
@@ -582,3 +552,145 @@ function renderExamResultTable(categoryId, submissionsMap, cheatingMap, activeSe
     currentExamResultData.rawRows = finalRows;
     if (typeof updateStatsAndRenderTable === 'function') updateStatsAndRenderTable(finalRows);
 }
+
+// =========================================================
+// TÍNH NĂNG MỚI: THU BÀI TỰ ĐỘNG TỪ BẢN LƯU NHÁP CLOUD REALTIME
+// =========================================================
+async function triggerAutoCollectDrafts(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const currentItem = currentExamResultData.item;
+    if (!currentItem) {
+        alert("⚠️ Vui lòng chọn đề thi trước khi thu bài!");
+        return;
+    }
+
+    const quizId = extractQuizIdFromItem(currentItem);
+    if (!quizId) {
+        alert("⚠️ Không tìm thấy ID của đề thi này trên Firebase!");
+        return;
+    }
+
+    if (!confirm(`⚡ BẠN CÓ CHẮC MUỐN THU BÀI TỰ ĐỘNG?\n\nHệ thống sẽ quét toàn bộ câu trả lời nháp lưu tự động trên đám mây của học sinh, tự động tính điểm và nộp bài chính thức cho những em chưa kịp nộp.`)) {
+        return;
+    }
+
+    const btn = document.getElementById("btn-auto-collect-drafts");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⏳ Đang thu bài...";
+    }
+
+    try {
+        const [draftsRes, quizRes, subsRes] = await Promise.all([
+            fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts.json`).catch(() => null),
+            fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}.json`).catch(() => null),
+            fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions.json`).catch(() => null)
+        ]);
+
+        const drafts = draftsRes && draftsRes.ok ? await draftsRes.json() : null;
+        const quizObj = quizRes && quizRes.ok ? await quizRes.json() : null;
+        const existingSubs = subsRes && subsRes.ok ? await subsRes.json() : {};
+
+        if (!drafts || typeof drafts !== 'object' || Object.keys(drafts).length === 0) {
+            alert("ℹ️ Hiện không có bản lưu nháp nào của học sinh cần thu!");
+            return;
+        }
+
+        if (!quizObj || !quizObj.questions) {
+            throw new Error("Không thể tải cấu trúc đề thi gốc để chấm điểm!");
+        }
+
+        // Tạo answer vault để chấm
+        const answerVault = {};
+        const letters = ["A", "B", "C", "D"];
+        quizObj.questions.forEach(q => {
+            if (q.type === "multiple_choice" && q.correct !== undefined) {
+                answerVault[`q${q.id}`] = typeof q.correct === 'number' ? letters[q.correct] : q.correct;
+            } else if (q.type === "true_false" && q.statements) {
+                q.statements.forEach(st => {
+                    answerVault[`q${q.id}_${st.id}`] = st.correct ? "Đúng" : "Sai";
+                });
+            } else if (q.correctAnswer !== undefined) {
+                answerVault[`q${q.id}`] = String(q.correctAnswer).trim();
+            }
+        });
+
+        const scoringConfig = quizObj.scoringConfig || { mode: "option1" };
+        let collectedCount = 0;
+
+        const tasks = Object.keys(drafts).map(async (cleanSbd) => {
+            const draft = drafts[cleanSbd];
+            if (!draft || !draft.userAnswers || Object.keys(draft.userAnswers).length === 0) return;
+
+            // Nếu đã có bài nộp chính thức rồi thì bỏ qua
+            if (existingSubs && existingSubs[cleanSbd]) return;
+
+            // Tính điểm tự động từ câu trả lời nháp
+            const scoreResult = calculateExamScoreWithConfig(
+                quizObj.questions,
+                draft.userAnswers,
+                answerVault,
+                scoringConfig
+            );
+
+            const sbd = draft.sbd || cleanSbd;
+            const payload = {
+                sbd: sbd,
+                studentId: sbd,
+                studentName: draft.studentName || draft.name || "Học sinh",
+                className: draft.className || "Lớp học",
+                studentClass: draft.className || "Lớp học",
+                score10: scoreResult.finalScore,
+                rawScore: scoreResult.totalRawScore,
+                maxScale: scoreResult.maxScale,
+                correctCount: scoreResult.correctCount,
+                wrongCount: scoreResult.wrongCount,
+                completionTime: "Thu tự động",
+                spentMins: 90,
+                tabSwitchCount: "0 lần",
+                dataString: scoreResult.dataDetails.join(" | ") + " | [THU TỰ ĐỘNG TỪ BẢN NHÁP CLOUD]",
+                userAnswers: draft.userAnswers,
+                cat: draft.cat || draft.categoryId || currentExamResultData.categoryId || "them-11",
+                categoryId: draft.cat || draft.categoryId || currentExamResultData.categoryId || "them-11",
+                isFree: false,
+                quizId: quizId,
+                maDe: quizObj.maDe || "101",
+                examTitle: quizObj.title || "Đề thi",
+                timestamp: new Date().toLocaleString("vi-VN"),
+                createdAt: Date.now()
+            };
+
+            // Lưu thành submission chính thức chuẩn hóa
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions/${cleanSbd}.json`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            // Xóa bản nháp sau khi đã nộp thành công
+            await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/live_drafts/${cleanSbd}.json`, {
+                method: "DELETE"
+            });
+
+            collectedCount++;
+        });
+
+        await Promise.all(tasks);
+
+        if (collectedCount > 0) {
+            alert(`🎉 THU BÀI THÀNH CÔNG!\n\nĐã thu bài và tính điểm tự động cho ${collectedCount} học sinh từ bản nháp đám mây! Bảng kết quả sẽ được cập nhật ngay.`);
+            await refreshCurrentExamResults();
+        } else {
+            alert("ℹ️ Tất cả học sinh có bản nháp đều đã nộp bài chính thức trước đó rồi!");
+        }
+    } catch(err) {
+        alert("❌ Lỗi khi thu bài tự động: " + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "⚡ Thu bài tự động";
+        }
+    }
+}
+
+window.triggerAutoCollectDrafts = triggerAutoCollectDrafts;
