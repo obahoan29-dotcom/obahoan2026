@@ -27,13 +27,12 @@ function isStrictSameCategory(catA, catB) {
     return normalizeCategoryKey(catA) === normalizeCategoryKey(catB);
 }
 
-// XÁC ĐỊNH CHÍNH XÁC XEM CÓ PHẢI HỌC SINH CỦA MỘT LỚP KHÁC KHÔNG (KHÔNG SO SÁNH VỚI STT 1 CHỮ SỐ)
+// XÁC ĐỊNH CHÍNH XÁC XEM CÓ PHẢI HỌC SINH CỦA MỘT LỚP KHÁC KHÔNG
 function identifyOfficialStudentCategory(sbd, name) {
     if (!window.STUDENT_ACCOUNTS) return null;
     const cleanSbd = String(sbd || "").trim().toLowerCase();
     const normName = normalizeName(name);
 
-    // SBD chính thức của các lớp luôn dài từ 4 ký tự trở lên (ví dụ: 1108, 11C31, 10p01)
     const isStandardSbd = cleanSbd && cleanSbd.length >= 4 && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap";
 
     for (let catId in window.STUDENT_ACCOUNTS) {
@@ -53,14 +52,14 @@ function identifyOfficialStudentCategory(sbd, name) {
     return null;
 }
 
-// BỘ LỌC CATEGORY: HỌC SINH LỚP NÀO VỀ ĐÚNG LỚP ĐÓ, THÍ SINH TỰ DO (NHƯ TÊN 3) ĐƯỢC HIỂN THỊ ĐẦY ĐỦ
+// BỘ LỌC CATEGORY CHUẨN XÁC: THI Ở LỚP NÀO THÌ CHỈ HIỆN Ở LỚP ĐÓ
 function isSubmissionMatchingCategory(sub, targetCatId) {
     if (!targetCatId) return true;
     const normTarget = normalizeCategoryKey(targetCatId);
     const subSbdClean = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
     const subNameNorm = normalizeName(sub.studentName || sub.name);
 
-    // 1. Nếu học sinh nằm trong danh sách của chính lớp targetCatId này -> Luôn hiển thị
+    // 1. Nếu học sinh nằm trong danh sách tài khoản chính thức của chính lớp targetCatId này -> Luôn hiển thị
     const classAccounts = getAccountsForCategory(targetCatId);
     const inThisClass = classAccounts.some(acc => {
         const aSbd = String(acc.sbd || "").trim().toLowerCase();
@@ -71,27 +70,44 @@ function isSubmissionMatchingCategory(sub, targetCatId) {
     });
     if (inThisClass) return true;
 
-    // 2. Nếu học sinh thuộc về MỘT LỚP KHÁC trong hệ thống (SBD 11C..., 11E...) -> Bắt buộc chỉ hiển thị ở lớp đó
+    // 2. Nếu học sinh thuộc danh sách chính thức của MỘT LỚP KHÁC trong hệ thống -> Bắt buộc chỉ hiện ở lớp đó
     const officialCat = identifyOfficialStudentCategory(sub.sbd || sub.studentId, sub.studentName || sub.name);
     if (officialCat) {
         return normalizeCategoryKey(officialCat) === normTarget;
     }
 
-    // 3. Nếu là thí sinh tự do (như tên 3, SBD 3, lớp 3):
-    // Cho phép hiển thị ở lớp đang mở nếu khớp categoryId hoặc nếu bài nộp nằm ở đề này
-    const rawSubCat = sub.categoryId || sub.cat || "";
-    if (rawSubCat && normalizeCategoryKey(rawSubCat) === normTarget) {
-        return true;
+    // 3. Đối với thí sinh tự do (như em Nguyễn Văn A):
+    // a) Kiểm tra chuyên mục/lớp mà thí sinh đã chọn khi bắt đầu vào làm bài thi
+    const rawSubCat = normalizeCategoryKey(sub.categoryId || sub.cat || "");
+    if (rawSubCat && rawSubCat !== normTarget) {
+        return false;
     }
 
-    // Nếu thí sinh tự do ghi rõ tên lớp khác (ví dụ "11C", "11E") thì loại khỏi các lớp khác
+    // b) Kiểm tra tên lớp mà thí sinh tự do điền vào (studentClass / className)
     const rawClass = normalizeCategoryKey(sub.studentClass || sub.className || "");
     if (rawClass) {
-        if (rawClass.includes("11c") && normTarget !== "lop11c") return false;
-        if (rawClass.includes("11e") && normTarget !== "lop11e") return false;
-        if (rawClass.includes("11a") && normTarget !== "lop11a") return false;
-        if (rawClass.includes("10p") && normTarget !== "lop10p") return false;
+        const isClass11A = rawClass.includes("11a");
+        const isClass11C = rawClass.includes("11c");
+        const isClass11E = rawClass.includes("11e");
+        const isClass10P = rawClass.includes("10p");
+
+        if (isClass11C && normTarget !== "lop11c") return false;
+        if (isClass11A && normTarget !== "lop11a") return false;
+        if (isClass11E && normTarget !== "lop11e") return false;
+        if (isClass10P && normTarget !== "lop10p") return false;
+
+        if (normTarget === "lop11a" && !isClass11A) return false;
+        if (normTarget === "lop11c" && !isClass11C) return false;
+        if (normTarget === "lop11e" && !isClass11E) return false;
+        if (normTarget === "lop10p" && !isClass10P) return false;
+    } else {
+        if (normTarget.startsWith("lop")) return false;
     }
+
+    // c) Khớp đúng chuyên mục
+    if (rawSubCat && rawSubCat === normTarget) return true;
+
+    if (normTarget.startsWith("lop")) return false;
 
     return true;
 }
@@ -108,11 +124,10 @@ function getExamPossibleQuizIds(examItem, examMeta) {
     return Array.from(ids).filter(Boolean);
 }
 
-// BỘ LỌC ĐỐI SOÁT ĐỀ THI: AN TOÀN TUYỆT ĐỐI VỚI CÁC MÃ ĐỀ NHƯ TONG28_GHK1...
+// BỘ LỌC ĐỐI SOÁT ĐỀ THI
 function isSubmissionMatchingCurrentExam(sub, examInfo) {
     if (!sub || typeof sub !== 'object') return false;
 
-    // Nếu bài nộp được đọc trực tiếp từ node của đề thi này -> 100% khớp
     if (sub._isDirectExamNode || sub._isQuizNode) return true;
 
     const subQuizId = String(sub.quizId || sub.id || "").trim();
@@ -275,7 +290,6 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
     let activeSessionsData = {};
 
     try {
-        // 1. Quét từ node chuẩn /quizzes/{quizId}/submissions
         if (quizId) {
             try {
                 const qSubRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/submissions.json`);
@@ -296,7 +310,6 @@ async function fetchAndRenderExamResults(item, isSilent = false) {
             } catch(e) {}
         }
 
-        // 2. Quét qua các node ứng viên khác
         const fetchTasks = candidateCodesList.map(async (code) => {
             const [sRes, cRes, aRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/exams/${code}/submissions.json`).catch(() => null),
@@ -409,7 +422,6 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         }
     }
 
-    // TẬP HỢP VÀ LỌC ĐÚNG BÀI NỘP THUỘC LỚP ĐANG XEM
     let submissionsList = [];
     const seenSubFingerprints = new Set();
 
@@ -466,7 +478,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         });
     }
 
-    // 1. GHÉP BÀI THEO DANH SÁCH LỚP CỦA CHUYÊN MỤC ĐANG XEM (CHỈ KHỚP SBD CHÍNH THỨC HOẶC TÊN CHÍNH XÁC)
+    // 1. GHÉP BÀI THEO DANH SÁCH LỚP CHÍNH THỨC
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -479,7 +491,6 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
             let subNameNorm = normalizeName(sub.studentName);
 
             let isMatch = false;
-            // Chỉ khớp SBD khi là SBD chuẩn của học sinh lớp (dài >= 4 ký tự)
             if (accSbdLower && subSbd && subSbd.length >= 4 && subSbd === accSbdLower) { 
                 isMatch = true; 
             } else if (subNameNorm && subNameNorm.length >= 5 && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
@@ -526,7 +537,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         });
     });
 
-    // 2. GHÉP CÁC BÀI TỰ DO (BAO GỒM CẢ CÁC BẠN NHẬP TÊN "3", SBD "3")
+    // 2. GHÉP CÁC BÀI TỰ DO ĐÃ THỎA MÃN CHUẨN XÁC CHUYÊN MỤC
     let freeCounter = classAccounts.length + 1;
     const freeGroups = {};
 
@@ -576,7 +587,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         });
     }
 
-    // 3. THÍ SINH ĐANG LÀM TRỰC TIẾP
+    // 3. THÍ SINH ĐANG LÀM BÀI TRỰC TIẾP
     for (let aKey in activeUsersMap) {
         let session = activeUsersMap[aKey];
         if (!session || typeof session !== 'object') continue;
