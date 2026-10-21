@@ -3,6 +3,17 @@
 // RENDER GIAO DIỆN CÂU HỎI, THANH PALETTE VÀ CÔNG THỨC TOÁN MATHJAX
 // =========================================================
 
+function isPart4Question(q) {
+    if (!q) return false;
+    if (q.part === 4 || q.isPart4 === true) return true;
+    if (q.type === "essay" || q.type === "essay_answer" || q.type === "part4") return true;
+    const txt = String(q.question || "").toUpperCase();
+    if (txt.includes("PHẦN IV") || txt.includes("PHAN IV") || txt.includes("PHẦN 4") || txt.includes("PHAN 4")) {
+        return true;
+    }
+    return false;
+}
+
 function formatQuestionText(text) {
     if (!text) return "";
     return text.replace(/(^|[^:])\/\/\s*([^\r\n<]+)/g, function(match, prefix, content) {
@@ -13,10 +24,13 @@ function formatQuestionText(text) {
 function renderQuizLayout(questions, imageMap) { 
     const container = document.getElementById('dynamic-questions-container'); 
     container.innerHTML = ''; 
-    const p1List = questions.filter(q => q.type === "multiple_choice"); 
-    const p2List = questions.filter(q => q.type === "true_false"); 
-    const p3List = questions.filter(q => q.type === "short_answer"); 
-    const p4List = questions.filter(q => q.type === "essay" || q.type === "essay_answer"); 
+    
+    // Tách riêng biệt 4 phần theo đúng chuẩn cấu trúc
+    const p1List = questions.filter(q => q.type === "multiple_choice" && !isPart4Question(q)); 
+    const p2List = questions.filter(q => q.type === "true_false" && !isPart4Question(q)); 
+    const p3List = questions.filter(q => (q.type === "short_answer") && !isPart4Question(q)); 
+    const p4List = questions.filter(q => isPart4Question(q)); 
+    
     totalQuestionsCount = questions.length; 
     let displayIndex = 1; 
     let html = ""; 
@@ -97,7 +111,6 @@ function renderQuizLayout(questions, imageMap) {
             window.SECURE_VAULT.questionData[q.id] = q; 
             const letters = ["A", "B", "C", "D"]; 
             
-            // XỬ LÝ AN TOÀN CHO CẢ DẠNG SỐ (0, 1, 2, 3) VÀ DẠNG CHỮ ("A", "B", "C", "D")
             if (q.correct !== undefined) {
                 window.SECURE_VAULT.answers[`q${q.id}`] = (typeof q.correct === 'number') 
                     ? letters[q.correct] 
@@ -175,18 +188,22 @@ function renderQuizLayout(questions, imageMap) {
                 <div class="q-header"><div class="q-num-badge">${displayIndex}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div> 
                 ${uploaderHTML}
                 ${imgHTML} 
-                ${buildPart4RowHtml(q.id)}
+                <div class="part4-row-container">
+                    <div class="part4-left-col" style="flex:1;">
+                        <input type="text" class="short-input-box" id="q${q.id}-input" placeholder="Nhập đáp số của bạn..." oninput="onShortInputChange(${q.id})">
+                    </div>
+                </div>
             </div>`; 
             displayIndex++; 
         }); 
     } 
 
-    // PHẦN 4: TỰ LUẬN
+    // PHẦN 4: TỰ LUẬN ĐIỀN ĐÁP ÁN NGẮN (KẾT QUẢ NGẮN & NỘP BÀI TỰ LUẬN)
     if (p4List.length > 0) { 
-        html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #ea580c, #c2410c);"> 
+        html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #ea580c, #c2410c); margin-top: 20px;"> 
             <div class="section-icon">📝</div> 
             <div class="section-text"> 
-                <h3>PHẦN 4. TỰ LUẬN ĐIỀN ĐÁP ÁN VÀ NỘP BÀI LÀM</h3> 
+                <h3>PHẦN IV. CÂU TỰ LUẬN ĐIỀN ĐÁP ÁN NGẮN</h3> 
                 <p>Điền đáp số VÀ chụp ảnh bài làm tự luận nộp qua đường dẫn Padlet của lớp</p> 
             </div> 
         </div>`; 
@@ -207,7 +224,7 @@ function renderQuizLayout(questions, imageMap) {
             html += `
             <div class="question-card" id="q-card-${q.id}" data-qid="${q.id}" data-imgkey="${q.imageKey || ''}" data-qidx="${p1List.length + p2List.length + p3List.length + qIdx}"> 
                 <div class="q-header"> 
-                    <div class="q-num-badge">${displayIndex}</div> 
+                    <div class="q-num-badge" style="background: linear-gradient(135deg, #ea580c, #c2410c);">${displayIndex}</div> 
                     <div class="q-content-text">${formatQuestionText(q.question)}</div> 
                 </div> 
                 ${uploaderHTML}
@@ -217,6 +234,7 @@ function renderQuizLayout(questions, imageMap) {
             displayIndex++; 
         }); 
     } 
+
     container.innerHTML = html; 
     renderQuestionPalette(questions); 
     setupScrollObserver(); 
@@ -297,3 +315,5 @@ function setupScrollObserver() {
     }, options); 
     document.querySelectorAll('.question-card').forEach(card => window._qCardObserver.observe(card)); 
 }
+
+window.isPart4Question = isPart4Question;
