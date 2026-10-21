@@ -248,9 +248,9 @@ async function openExamResultModal(item, categoryIdOrEvent, maybeEvent) {
     const cacheKey = `${catId}_${item.firebaseId || item.id || item.title}`;
     if (_examResultsCache[cacheKey]) {
         const cached = _examResultsCache[cacheKey];
-        renderExamResultTable(catId, cached.submissionsMap, cached.cheatingLogsData, cached.activeSessionsData, item, cached.examMeta);
+        renderExamResultTable(catId, cached.submissionsListRaw || cached.submissionsMap || [], cached.cheatingLogsData, cached.activeSessionsData, item, cached.examMeta);
     } else {
-        renderExamResultTable(catId, {}, {}, {}, item, { examTitle: item.title });
+        renderExamResultTable(catId, [], {}, {}, item, { examTitle: item.title });
     }
 
     applyTableSettings();
