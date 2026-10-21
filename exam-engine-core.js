@@ -37,7 +37,7 @@ let isSubmittingInProgress = false;
     document.head.appendChild(style);
 })();
 
-// TỰ ĐỘNG LƯU ĐÁM MÂY TỨC THỜI MỖI KHI HỌC SINH TÍCH/ĐỔI ĐÁP ÁN (GIỐNG GOOGLE DOCS)
+// TỰ ĐỘNG LƯU ĐÁM MÂY TỨC THỜI MỖI KHI HỌC SINH TÍCH/ĐỔI ĐÁP ÁN
 function autoSaveAnswerToCloud(qKey, answerVal) {
     if (isSubmitted || isExamLocked) return;
     const sId = document.getElementById("student-id")?.value.trim();
@@ -198,12 +198,14 @@ function shuffleArray(arr) {
     return array;
 }
 
+// XÁO ĐỀ THEO 4 PHẦN TÁCH BIỆT: PHẦN 1 -> PHẦN 2 -> PHẦN 3 -> PHẦN 4
 function shuffleExamData(data) {
     if (!data || !data.questions) return;
-    let p1 = shuffleArray(data.questions.filter(q => q.type === "multiple_choice"));
-    let p2 = shuffleArray(data.questions.filter(q => q.type === "true_false"));
-    let p3 = shuffleArray(data.questions.filter(q => q.type === "short_answer"));
-    let p4 = shuffleArray(data.questions.filter(q => q.type === "essay" || q.type === "essay_answer"));
+    const isP4 = typeof isPart4Question === 'function' ? isPart4Question : (q => (q.part === 4 || q.isPart4 || q.type === "essay" || q.type === "essay_answer"));
+    let p1 = shuffleArray(data.questions.filter(q => q.type === "multiple_choice" && !isP4(q)));
+    let p2 = shuffleArray(data.questions.filter(q => q.type === "true_false" && !isP4(q)));
+    let p3 = shuffleArray(data.questions.filter(q => (q.type === "short_answer") && !isP4(q)));
+    let p4 = shuffleArray(data.questions.filter(q => isP4(q)));
     data.questions = [...p1, ...p2, ...p3, ...p4];
 }
 
@@ -485,12 +487,12 @@ function updateProgress() {
             if (window.SECURE_VAULT.userAnswers[`q${q.id}`]) { answeredCount++; status = "answered"; } 
         } else if (q.type === "true_false") { 
             let doneCount = 0; 
-            q.statements.forEach(st => { 
+            (q.statements || []).forEach(st => { 
                 if (window.SECURE_VAULT.userAnswers[`q${q.id}_${st.id}`]) doneCount++; 
             }); 
-            if (doneCount === q.statements.length) { answeredCount++; status = "answered"; } 
+            if (doneCount === (q.statements ? q.statements.length : 4)) { answeredCount++; status = "answered"; } 
             else if (doneCount > 0) { status = "partial"; } 
-        } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
+        } else { 
             if (window.SECURE_VAULT.userAnswers[`q${q.id}`]) { answeredCount++; status = "answered"; } 
         } 
         if (navBtn) { 
@@ -579,8 +581,14 @@ function startCountdownTimer() {
     }, 1000); 
 }
 
+// BẬT HIỂN THỊ NÚT TẢI FILE DỰ PHÒNG KHI ẤN NỘP BÀI
 function showSubmitConfirmModal() { 
     if (isSubmitted) return; 
+
+    // Hiển thị nút tải file dự phòng trên thanh trên cùng ngay khi học sinh nhấn Nộp bài
+    const topDownloadBtn = document.getElementById("btn-always-download-backup");
+    if (topDownloadBtn) topDownloadBtn.style.display = "inline-flex";
+
     if (isExamLocked) {
         executeSubmitExam(false);
         return;
@@ -599,10 +607,17 @@ function showSubmitConfirmModal() {
     } 
     document.getElementById("modal-normal-submit-view").style.display = "block";
     document.getElementById("modal-submitting-progress-view").style.display = "none";
+    
+    // Nút tải file dự phòng xuất hiện trực tiếp trong bảng xác nhận nộp
     document.getElementById("modal-actions-container").innerHTML = `
         <div class="modal-btn-row">
             <button type="button" class="btn-modal-cancel" onclick="closeSubmitConfirmModal()">Tiếp tục làm</button>
             <button type="button" class="btn-modal-confirm" onclick="executeSubmitExam()">✓ Nộp bài</button>
+        </div>
+        <div style="margin-top: 10px; width: 100%;">
+            <button type="button" onclick="downloadCompletedOrDraftSubmission()" style="width: 100%; padding: 10px; background: #f0f9ff; color: #0284c7; border: 1.5px solid #7dd3fc; border-radius: 11px; font-weight: 800; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12);">
+                💾 Tải file dự phòng bài làm (.json)
+            </button>
         </div>
     `;
     document.getElementById("submit-confirm-modal").style.display = "flex"; 
@@ -680,11 +695,13 @@ function restoreExamStateFromStorage() {
     return false; 
 }
 
-// =========================================================
-// THUẬT TOÁN NỘP BÀI: XÁC THỰC 2 CHIỀU ĐỒNG BỘ MÁY CHỦ TRƯỚC KHI HIỂN THỊ
-// =========================================================
+// XÁC THỰC 2 CHIỀU ĐỒNG BỘ MÁY CHỦ KHI NỘP BÀI
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted || isSubmittingInProgress) return; 
+
+    // Đảm bảo nút tải file trên đầu trang hiện ngay lập tức
+    const topDownloadBtn = document.getElementById("btn-always-download-backup");
+    if (topDownloadBtn) topDownloadBtn.style.display = "inline-flex";
 
     isSubmittingInProgress = true;
     lockExamInteractions();
@@ -760,7 +777,7 @@ async function executeSubmitExam(isForceSubmit = false) {
                 if (cSt === 1) qScore = 0.1; else if (cSt === 2) qScore = 0.25; else if (cSt === 3) qScore = 0.5; else if (cSt === 4) qScore = 1.0;
                 totalRawScore += qScore;
                 if (cSt === 4) correctCount++; else wrongCount++;
-            } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") {
+            } else {
                 const uVal = (window.SECURE_VAULT.userAnswers[`q${q.id}`] || "").replace(',', '.');
                 const cVal = String(window.SECURE_VAULT.answers[`q${q.id}`] || "").replace(',', '.');
                 const isRight = (uVal.trim() === cVal.trim()) || (cVal !== "" && Number(uVal) === Number(cVal) && uVal !== "");
@@ -803,12 +820,10 @@ async function executeSubmitExam(isForceSubmit = false) {
         createdAt: Date.now()
     }; 
 
-    // Luôn lưu bản sao dự phòng ngay tại thiết bị của học sinh
     safeLocal.setItem(`exam_completed_backup_${currentQuizId}`, JSON.stringify(payload));
     safeLocal.setItem("pending_exam_submission", JSON.stringify(payload));
     pendingSubmissionPayload = payload;
 
-    // GHI ĐỒNG THỜI VÀO CÁC NODE LIÊN QUAN
     const targetNodesSet = new Set([
         `${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${cleanSbd}.json`,
         `${FIREBASE_DB_URL}/exams/${currentQuizId}/submissions/${cleanSbd}.json`
@@ -850,7 +865,6 @@ async function executeSubmitExam(isForceSubmit = false) {
             const results = await Promise.all(putPromises);
             const atLeastOneSuccess = results.some(ok => ok === true);
 
-            // BƯỚC XÁC THỰC 2 CHIỀU: Đọc ngược lại kiểm tra máy chủ đã lưu
             if (atLeastOneSuccess) {
                 const verifyRes = await fetch(`${FIREBASE_DB_URL}/quizzes/${currentQuizId}/submissions/${cleanSbd}/createdAt.json`);
                 if (verifyRes && verifyRes.ok) {
@@ -872,7 +886,6 @@ async function executeSubmitExam(isForceSubmit = false) {
         }
     }
 
-    // NẾU CHƯA THỂ LƯU THÀNH CÔNG LÊN MÁY CHỦ: BẬT NÚT GỬI LẠI TRÊN CÙNG
     if (!firebaseVerified) {
         isSubmittingInProgress = false;
         updateTopBackupStatus(false);
@@ -898,7 +911,6 @@ async function executeSubmitExam(isForceSubmit = false) {
         return; 
     }
 
-    // ĐÃ GHI THÀNH CÔNG VÀO MÁY CHỦ
     if (typeof postToGoogleSheet === 'function' && typeof URL2_EXAM_RESULT !== 'undefined' && URL2_EXAM_RESULT) {
         postToGoogleSheet(URL2_EXAM_RESULT, payload, 15000).catch(() => null);
     }
@@ -907,10 +919,8 @@ async function executeSubmitExam(isForceSubmit = false) {
     if (timerInterval) clearInterval(timerInterval); 
     if (imageSyncEventSource) { imageSyncEventSource.close(); imageSyncEventSource = null; }
 
-    // XÓA LIVE DRAFT VÌ ĐÃ CÓ BÀI NỘP CHÍNH THỨC
     fetch(`${FIREBASE_DB_URL}/quizzes/${currentQuizId}/live_drafts/${cleanSbd}.json`, { method: "DELETE" }).catch(() => null);
 
-    // XÓA PENDING ĐỂ NÚT "GỬI LẠI BÀI" BIẾN MẤT HOÀN TOÀN
     safeLocal.removeItem("pending_exam_submission");
     safeLocal.removeItem(getStorageKey()); 
     safeLocal.removeItem(`shuffled_exam_${getExamCode()}`);
@@ -922,13 +932,17 @@ async function executeSubmitExam(isForceSubmit = false) {
 
     if (confirmModal) confirmModal.style.display = "none"; 
     
-    // ĐÃ NHẬN PHẢN HỒI LƯU TRỮ THÀNH CÔNG -> MỚI MỞ MÀN HÌNH KẾT QUẢ CHO HỌC SINH
     renderResultSummaryScreen(correctCount, wrongCount, spentMins, completionTimeStr, finalScore, maxScale, currentQuizId); 
 }
 
 function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, finalScore, maxScale = 10.0, quizId = "") { 
     document.getElementById("top-navbar").style.display = "none"; 
     document.getElementById("quiz-content").style.display = "none"; 
+
+    // Đảm bảo nút tải file trên cùng luôn hiện sau khi hoàn tất nộp bài
+    const topDownloadBtn = document.getElementById("btn-always-download-backup");
+    if (topDownloadBtn) topDownloadBtn.style.display = "inline-flex";
+
     const resView = document.getElementById("result-view-container"); 
     resView.style.display = "block"; 
     
@@ -947,6 +961,23 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     document.getElementById("res-user-class").innerText = document.getElementById("student-class").value.trim() || "---"; 
     document.getElementById("res-user-id").innerText = document.getElementById("student-id").value.trim() || "---"; 
     document.getElementById("res-spent-time").innerText = spentTimeStr; 
+
+    // Thêm nút tải file dự phòng trực tiếp trên màn hình kết quả điểm
+    let existingDownloadBtn = document.getElementById("res-btn-download-backup");
+    if (!existingDownloadBtn) {
+        const btnBox = document.createElement("div");
+        btnBox.id = "res-download-container-box";
+        btnBox.style.margin = "12px 0";
+        btnBox.innerHTML = `
+            <button type="button" id="res-btn-download-backup" onclick="downloadCompletedOrDraftSubmission()" style="width: 100%; padding: 11px 16px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3); display: flex; align-items: center; justify-content: center; gap: 6px;">
+                💾 Tải file dự phòng bài làm (.json)
+            </button>
+        `;
+        const userDetails = document.querySelector(".user-details-grid");
+        if (userDetails && userDetails.parentNode) {
+            userDetails.parentNode.insertBefore(btnBox, userDetails.nextSibling);
+        }
+    }
 
     const resultMode = (examData && examData.resultMode) ? examData.resultMode : "show_all";
     const scoreOverviewEl = document.getElementById("res-score-overview");
@@ -1019,7 +1050,7 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
                     rows += `<tr><td><b>${st.id})</b> ${st.statement}</td><td align="center">${uVal==="Đúng"?(ok?"🟢 Đúng":"🔴 Đúng (Sai)"):""}</td><td align="center">${uVal==="Sai"?(ok?"🟢 Sai":"🔴 Sai (Sai)"):""}</td><td align="center"><b>${cVal}</b></td></tr>`; 
                 }); 
                 revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="tf-table-box"><table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Bạn chọn</th><th>Đ.Á Đúng</th></tr></thead><tbody>${rows}</tbody></table></div>${explainText}</div>`; 
-            } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
+            } else { 
                 const uVal = window.SECURE_VAULT.userAnswers[`q${q.id}`] || "(Để trống)"; 
                 const cVal = window.SECURE_VAULT.answers[`q${q.id}`]; 
                 revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án đúng / tham khảo: ${cVal}</div><div>Tr.lời của bạn: <b>${uVal}</b></div></div>${explainText}</div>`; 
@@ -1080,7 +1111,7 @@ function renderOriginalReviewScreen() {
                 rows += `<tr><td><b>${st.id})</b> ${st.statement}</td><td align="center" style="color:#15803d; font-weight:800;">${cVal}</td></tr>`; 
             }); 
             revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div class="tf-table-box"><table class="tf-table"><thead><tr><th>Mệnh đề</th><th>Đáp án gốc</th></tr></thead><tbody>${rows}</tbody></table></div>${explainText}</div>`; 
-        } else if (q.type === "short_answer" || q.type === "essay" || q.type === "essay_answer") { 
+        } else { 
             const cVal = generatedAnswerKey[`q${q.id}`]; 
             revHTML += `<div class="question-card"><div class="q-header"><div class="q-num-badge">${idx}</div><div class="q-content-text">${formatQuestionText(q.question)}</div></div>${imgTag} <div style="margin-top:14px; font-size:1.05rem; font-weight:600;"><div style="color:#15803d; font-weight:800; margin-top:6px;">Đáp án chuẩn: ${cVal}</div></div>${explainText}</div>`; 
         } 
