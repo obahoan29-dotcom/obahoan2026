@@ -166,17 +166,17 @@
         <h2 style="color: #0369a1; font-weight: 800; font-size: 1.2rem;">Đang tải dữ liệu đề thi...</h2>
     </div>
 
-    <!-- THANH ĐIỀU KHIỂN DỰ PHÒNG & NỘP LẠI LUÔN HIỆN TRÊN CÙNG -->
+    <!-- THANH ĐIỀU KHIỂN DỰ PHÒNG & NỘP LẠI (NÚT TẢI FILE BAN ĐẦU ẨN KHI ĐANG LÀM BÀI) -->
     <div class="universal-backup-topbar" id="universal-backup-topbar">
         <div class="backup-status-indicator" id="backup-status-indicator">
             <span id="backup-status-icon">🛡️</span>
-            <span id="backup-status-text">Bài làm được tự động lưu tạm trên máy</span>
+            <span id="backup-status-text">Bài làm đang được tự động lưu tạm trên máy</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
             <button type="button" class="btn-universal-resend" id="btn-universal-resend" onclick="executeSubmitExam(false)">
                 🚀 Gửi lại bài
             </button>
-            <button type="button" class="btn-always-download-backup" id="btn-always-download-backup" onclick="downloadCompletedOrDraftSubmission()">
+            <button type="button" class="btn-always-download-backup" id="btn-always-download-backup" style="display: none;" onclick="downloadCompletedOrDraftSubmission()">
                 💾 Tải file dự phòng bài làm (.json)
             </button>
         </div>
