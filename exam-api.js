@@ -352,7 +352,7 @@ function setupBackPrevention() {
 
 function getStorageKey() { return `exam_autosave_active_session_${EXAM_NAME}_${getMaDe()}`; }
 
-// QUẢN LÝ TRẠNG THÁI THANH SAO LƯU TRÊN CÙNG
+// QUẢN LÝ THANH DỰ PHÒNG: HOÀN TOÀN NGẦM HÓA, KHÔNG HIỂN THỊ DÒNG CHỮ
 function updateTopBackupStatus(isServerConfirmed = false) {
     const statusText = document.getElementById("backup-status-text");
     const statusIcon = document.getElementById("backup-status-icon");
@@ -372,8 +372,9 @@ function updateTopBackupStatus(isServerConfirmed = false) {
             if (indicator) { indicator.className = "backup-status-indicator pending"; }
             if (resendBtn) resendBtn.style.display = "inline-flex";
         } else {
-            if (statusText) statusText.innerText = "🛡️ Bài làm đang được tự động lưu tạm trên máy";
-            if (statusIcon) statusIcon.innerText = "💾";
+            // Không hiển thị bất kỳ dòng chữ nào khi đang làm bài ngầm
+            if (statusText) statusText.innerText = "";
+            if (statusIcon) statusIcon.innerText = "";
             if (indicator) { indicator.className = "backup-status-indicator"; }
             if (resendBtn) resendBtn.style.display = "none";
         }
@@ -395,15 +396,32 @@ function checkPendingSubmissionOnLoad() {
     updateTopBackupStatus(isSubmitted);
 }
 
+// BẮT SỰ KIỆN RỜI TAB & TỰ ĐỘNG THU BÀI NẾU HẾT GIỜ KHI HỌC SINH MỞ LẠI MÀN HÌNH
 document.addEventListener("visibilitychange", async function() { 
     if (wakeLockSentinel === null && !document.hidden) { await requestWakeLock(); }
     if (!examStartTime || isSubmitted) return; 
+
+    // Kiểm tra hết giờ ngay khi quay lại tab
+    if (!document.hidden) {
+        const elapsedSec = Math.floor((Date.now() - examStartTime) / 1000);
+        if (elapsedSec >= totalTimeSeconds) {
+            if (typeof window.executeSubmitExam === 'function') {
+                window.executeSubmitExam(true);
+                return;
+            }
+        }
+    }
+
     if (document.hidden) { 
         if (!isTabHidden) { isTabHidden = true; leaveTime = Date.now(); tabSwitchCount++; } 
     } else { 
         if (isTabHidden && leaveTime > 0) { 
-            isTabHidden = false; let durationSec = Math.max(1, Math.round((Date.now() - leaveTime) / 1000)); leaveTime = 0; 
-            let mins = Math.floor(durationSec / 60); let secs = durationSec % 60; let durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`; 
+            isTabHidden = false; 
+            let durationSec = Math.max(1, Math.round((Date.now() - leaveTime) / 1000)); 
+            leaveTime = 0; 
+            let mins = Math.floor(durationSec / 60); 
+            let secs = durationSec % 60; 
+            let durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`; 
             sendTabSwitchLog(tabSwitchCount, durationStr, durationSec); 
             setTimeout(() => alert(`⚠️ CẢNH BÁO GIAN LẬN:\nBạn vừa rời bài thi ${durationStr} (Lần ${tabSwitchCount}).`), 100); 
         } 
