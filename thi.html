@@ -55,6 +55,7 @@
     <!-- CSS Phòng thi riêng biệt đã tách nhỏ -->
     <link rel="stylesheet" href="thi-layout.css">
     <link rel="stylesheet" href="thi-exam.css">
+    <link rel="stylesheet" href="style-modals.css">
 
     <style>
         /* THANH ĐIỀU KHIỂN SAO LƯU VÀ GỬI LẠI TRÊN CÙNG */
@@ -66,7 +67,7 @@
             border-bottom: 2px solid #e2e8f0;
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
             padding: 6px 14px;
-            display: none; /* Mặc định ẩn hoàn toàn khi học sinh đang làm bài */
+            display: none;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
@@ -91,7 +92,7 @@
             font-size: 12px;
             font-weight: 800;
             cursor: pointer;
-            display: none; /* Chỉ hiện khi học sinh nhấn Nộp bài */
+            display: none;
             align-items: center;
             gap: 5px;
             box-shadow: 0 2px 6px rgba(2, 132, 199, 0.28);
@@ -130,6 +131,24 @@
         }
         .drive-up-status.success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
         .drive-up-status.error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+        .btn-room-drive-upload {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            color: #ffffff;
+            border: 1px solid #818cf8;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-room-drive-upload:hover { filter: brightness(1.1); transform: scale(1.02); }
     </style>
 
     <!-- CSDL Danh sách tài khoản học sinh dùng chung -->
@@ -175,7 +194,7 @@
         <h2 style="color: #0369a1; font-weight: 800; font-size: 1.2rem;">Đang tải dữ liệu đề thi...</h2>
     </div>
 
-    <!-- THANH ĐIỀU KHIỂN DỰ PHÒNG & NỘP LẠI (ĐÃ BỎ DÒNG CHỮ VĂN BẢN, BAN ĐẦU ẨN NGẦM HOÀN TOÀN) -->
+    <!-- THANH ĐIỀU KHIỂN DỰ PHÒNG & NỘP LẠI -->
     <div class="universal-backup-topbar" id="universal-backup-topbar">
         <div class="backup-status-indicator" id="backup-status-indicator">
             <span id="backup-status-icon"></span>
@@ -210,6 +229,9 @@
                         </div>
                     </div>
                     <div class="nav-right-tools">
+                        <button type="button" class="btn-room-drive-upload" onclick="triggerExamRoomDriveUpload('topbar')" title="Nộp ảnh bài làm tự luận trực tiếp lên Google Drive của đề thi này">
+                            📷 Nộp Drive
+                        </button>
                         <div class="clock-pill" id="nav-timer-box"><span class="clock-icon">⏰</span> <span class="clock-val" id="nav-timer-val">00:45:00</span></div>
                         <button type="button" class="btn-top-submit" onclick="showSubmitConfirmModal()">📝 Nộp</button>
                     </div>
