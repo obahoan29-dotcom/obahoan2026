@@ -103,8 +103,6 @@ window.STUDENT_ACCOUNTS["them-11"] = [
     { stt: 41, pass: "41", sbd: "1141", username: "Phạm Sơn Trường", name: "Phạm Sơn Trường", className: "11cC" },
     { stt: 42, pass: "42", sbd: "1142", username: "Gia Huy", name: "Gia Huy", className: "11cC" },
     { stt: 43, pass: "43", sbd: "1143", username: "NT Quỳnh", name: "NT Quỳnh", className: "11G" }
-
-
 ];
 
 window.STUDENT_ACCOUNTS["them-12"] = [
@@ -171,7 +169,7 @@ window.STUDENT_ACCOUNTS["lop-10p"] = [
     { stt: 24, pass: "24", sbd: "10p24", username: "LÃ THỊ TRÀ MY", name: "LÃ THỊ TRÀ MY", className: "10P" },
     { stt: 25, pass: "25", sbd: "10p25", username: "TRỊNH LÊ HOÀNG NAM", name: "TRỊNH LÊ HOÀNG NAM", className: "10P" },
     { stt: 26, pass: "26", sbd: "10p26", username: "TRẦN VŨ BẢO NGỌC", name: "TRẦN VŨ BẢO NGỌC", className: "10P" },
-    { stt: 27, pass: "27", sbd: "10p27", username: "PHAN THỊ HỒNG NHUNG", name: "PHAN THỊ HỒNG NHUNG", className: "10P" },
+    { stt: 27, pass: "27", sbd: "10p28", username: "PHAN THỊ HỒNG NHUNG", name: "PHAN THỊ HỒNG NHUNG", className: "10P" },
     { stt: 28, pass: "28", sbd: "10p28", username: "VŨ HÀ KIM OANH", name: "VŨ HÀ KIM OANH", className: "10P" },
     { stt: 29, pass: "29", sbd: "10p29", username: "NGUYỄN LÊ TUYẾT QUYÊN", name: "NGUYỄN LÊ TUYẾT QUYÊN", className: "10P" },
     { stt: 30, pass: "30", sbd: "10p30", username: "NGUYỄN VĂN QUÝ", name: "NGUYỄN VĂN QUÝ", className: "10P" },
@@ -328,6 +326,17 @@ window.STUDENT_ACCOUNTS["lop-11e"] = [
     { stt: 40, pass: "40", sbd: "11E40", username: "PHƯƠNG", name: "PHƯƠNG", className: "11E" }
 ];
 
+window.STUDENT_ACCOUNTS["hsg-toan-11"] = [
+    { stt: 1, pass: "1", sbd: "HSG1", username: "Phạm Nam", name: "Phạm Nam", className: "11A" },
+    { stt: 2, pass: "2", sbd: "HSG2", username: "Bảo Ngọc", name: "Bảo Ngọc", className: "11A" },
+    { stt: 3, pass: "3", sbd: "HSG3", username: "Phan Kiên", name: "Phan Kiên", className: "11A" },
+    { stt: 4, pass: "4", sbd: "HSG4", username: "Bảo Huy", name: "Bảo Huy", className: "11A" },
+    { stt: 5, pass: "5", sbd: "HSG5", username: "Đinh Lan", name: "Đinh Lan", className: "11A" },
+    { stt: 6, pass: "6", sbd: "HSG6", username: "Bùi Đạt", name: "Bùi Đạt", className: "11A" }
+];
+
+window.STUDENT_ACCOUNTS["HSG Toán 11"] = window.STUDENT_ACCOUNTS["hsg-toan-11"];
+
 function getAccountsForCategory(categoryId) {
     if (!window.STUDENT_ACCOUNTS) return [];
     const cat = String(categoryId || "").toLowerCase().trim();
@@ -336,6 +345,7 @@ function getAccountsForCategory(categoryId) {
     if (cat === "lop-11c" || cat.includes("11c")) return window.STUDENT_ACCOUNTS["lop-11c"] || [];
     if (cat === "lop-11a" || cat.includes("11a")) return window.STUDENT_ACCOUNTS["lop-11a"] || [];
     if (cat === "lop-10p" || cat.includes("10p")) return window.STUDENT_ACCOUNTS["lop-10p"] || [];
+    if (cat === "hsg-toan-11" || cat.includes("hsg-toan-11") || cat.includes("hsg toan 11") || cat.includes("hsg")) return window.STUDENT_ACCOUNTS["hsg-toan-11"] || window.STUDENT_ACCOUNTS["HSG Toán 11"] || [];
     if (cat === "them-11" || cat.includes("them-11") || cat.includes("them 11")) return window.STUDENT_ACCOUNTS["them-11"] || [];
     if (cat === "them-10" || cat.includes("them-10") || cat.includes("them 10")) return window.STUDENT_ACCOUNTS["them-10"] || [];
     if (cat === "them-12" || cat.includes("them-12") || cat.includes("them 12")) return window.STUDENT_ACCOUNTS["them-12"] || [];
