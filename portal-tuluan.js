@@ -2,11 +2,11 @@
 // FILE: portal-tuluan.js
 // QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
 // BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN) | QUẢN LÝ 5 ĐỀ MỚI NHẤT
-// NÚT XÓA ĐỀ BÊN PHẢI Ô CHỌN ĐỀ DÀNH CHO ADMIN
+// NÚT XÓA ĐỀ NẰM NGAY BÊN PHẢI CUỐI Ô CHỌN ĐỀ DÀNH CHO ADMIN
 // ĐỔI MẬT KHẨU 4 SỐ (XÒE 2 DÒNG) & ADMIN RESET MẬT KHẨU VỀ MẶC ĐỊNH
 // =========================================================
 
-// TỰ ĐỘNG NHÚNG TOÀN BỘ CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ & KHUNG ĐỔI MẬT KHẨU
+// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ & KHUNG ĐỔI MẬT KHẨU
 (function injectTuLuanButtonStyles() {
     const styleId = "tuluan-custom-delete-btn-styles";
     if (document.getElementById(styleId)) return;
@@ -48,14 +48,14 @@
             transform: scale(0.9) !important;
         }
 
-        /* NÚT XÓA ĐỀ THI DÀNH CHO ADMIN BÊN PHẢI Ô CHỌN ĐỀ */
+        /* NÚT XÓA ĐỀ THI DÀNH CHO ADMIN NẰM NGAY BÊN PHẢI Ô CHỌN ĐỀ */
         .btn-del-exam-selector {
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
             color: #dc2626 !important;
             border: 1.5px solid #f87171 !important;
             border-radius: 9px !important;
             padding: 6px 12px !important;
-            height: 35px !important;
+            height: 34px !important;
             font-size: 12px !important;
             font-weight: 800 !important;
             cursor: pointer !important;
@@ -302,7 +302,7 @@ function getUnifiedExamFolderKey(title, maDe, quizId) {
         .replace(/_+/g, '_');
 }
 
-// Chuẩn hóa tên thư mục học sinh: TỰ ĐỘNG TÌM ĐÚNG STT CHUẨN ĐẢM BẢO CHỈ LƯU 1 FOLDER DUY NHẤT
+// Chuẩn hóa tên thư mục học sinh
 function getStudentFolderKey(stt, sbd, name, categoryId = "") {
     let finalStt = stt;
     const cleanSbd = String(sbd || "").trim();
@@ -354,7 +354,7 @@ function getStudentFolderKey(stt, sbd, name, categoryId = "") {
     return `${padStt}_${safeSbd}_${safeName}`;
 }
 
-// LẤY MẬT KHẨU HIỆN TẠI CỦA HỌC SINH (ƯU TIÊN MẬT KHẨU MỚI ĐỔI TRÊN FIREBASE, MẶC ĐỊNH LÀ SBD)
+// LẤY MẬT KHẨU HIỆN TẠI CỦA HỌC SINH
 function getEffectiveStudentPassword(cleanSbd, defaultSbd, defaultPass) {
     const customPass = currentTuLuanModalData.customPasswords && currentTuLuanModalData.customPasswords[cleanSbd];
     if (customPass && String(customPass).trim() !== "") {
@@ -363,7 +363,7 @@ function getEffectiveStudentPassword(cleanSbd, defaultSbd, defaultPass) {
     return String(defaultSbd || defaultPass || "").trim();
 }
 
-// Nén ảnh & sửa lỗi nhận diện sai hình ảnh trên điện thoại / camera
+// Nén ảnh & sửa lỗi nhận diện sai hình ảnh trên thiết bị di động
 function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) {
     return new Promise((resolve, reject) => {
         if (!file) {
@@ -428,7 +428,7 @@ function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) 
     });
 }
 
-// Gửi file lên Google Drive với thời gian chờ 75s và cơ chế tự động thử lại
+// Gửi file lên Google Drive với cơ chế tự động thử lại
 async function sendToGoogleDriveWithRetry(gasUrl, payload, maxRetries = 2, timeoutMs = 75000) {
     let lastError = null;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -501,10 +501,10 @@ function ensureTuLuanModalDOM() {
                     </select>
                 </div>
 
-                <div class="tuluan-select-group" style="flex:1; min-width:260px;">
+                <div class="tuluan-select-group" style="flex:1; min-width:270px;">
                     <label>📝 Chọn đề thi (5 đề mới nhất):</label>
                     <div style="display:flex; align-items:center; gap:6px; width:100%;">
-                        <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1;"></select>
+                        <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1; min-width: 140px;"></select>
                         <!-- NÚT XÓA ĐỀ NỔI BẬT NẰM NGAY BÊN PHẢI CUỐI ĐỀ THI -->
                         <button type="button" class="btn-del-exam-selector" id="btn-del-current-exam" onclick="deleteCurrentTuLuanExam(event)" title="Xóa đề này khỏi danh sách đề tự luận">
                             🗑️ Xóa đề
@@ -791,11 +791,13 @@ async function deleteCurrentTuLuanExam(event) {
 
     const examId = selector.value;
     const selectedOpt = selector.options[selector.selectedIndex];
-    const examTitle = selectedOpt ? (selectedOpt.dataset.title || selectedOpt.innerText.replace(/^\d+\.\s*/, '')) : examId;
+    let examTitle = selectedOpt ? (selectedOpt.dataset.title || selectedOpt.innerText) : examId;
+    examTitle = examTitle.replace(/^\d+\.\s*/, '').trim();
+
     const classId = currentTuLuanModalData.classId || "lop-11a";
     const className = getCleanDriveClassName(classId);
 
-    if (!confirm(`⚠️ XÁC NHẬN XÓA ĐỀ TỰ LUẬN:\n\nThầy có chắc chắn muốn XÓA đề:\n"${examTitle}"\nkhỏi danh sách nộp tự luận của lớp ${className} không?\n\n(Thao tác này sẽ gỡ đề khỏi danh sách và làm mới ngay).`)) {
+    if (!confirm(`⚠️ XÁC NHẬN XÓA ĐỀ TỰ LUẬN:\n\nThầy có chắc chắn muốn XÓA đề:\n"${examTitle}"\nkhỏi danh sách nộp bài của lớp ${className} không?\n\n(Hệ thống sẽ gỡ bỏ đề này khỏi danh sách lớp hiện tại và làm mới tức thì).`)) {
         return;
     }
 
@@ -806,33 +808,36 @@ async function deleteCurrentTuLuanExam(event) {
     }
 
     try {
-        // Xóa triệt để cả theo examId lẫn theo tên đề trong các node Firebase của lớp
         const deleteTasks = [
             fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}/${examId}.json`, { method: "DELETE" }),
-            fetch(`${FIREBASE_DB_URL}/custom_links/${classId}/${examId}.json`, { method: "DELETE" })
+            fetch(`${FIREBASE_DB_URL}/custom_links/${classId}/${examId}.json`, { method: "DELETE" }),
+            fetch(`${FIREBASE_DB_URL}/quizzes/${examId}/tu_luan.json`, { method: "DELETE" }).catch(() => null),
+            fetch(`${FIREBASE_DB_URL}/exams/${examId}/tu_luan.json`, { method: "DELETE" }).catch(() => null)
         ];
 
-        // Tìm thêm các key có cùng tiêu đề trong custom_links và custom_tuluan_exams để xóa sạch
+        // Quét thêm toàn bộ key có title trùng khớp trên Firebase để xóa sạch
         try {
             const [cLinksRes, cTuLuanRes] = await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/custom_links/${classId}.json`),
                 fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}.json`)
             ]);
+
             if (cLinksRes && cLinksRes.ok) {
                 const cLinks = await cLinksRes.json();
                 if (cLinks && typeof cLinks === 'object') {
                     for (let k in cLinks) {
-                        if (cLinks[k] && (cLinks[k].title === examTitle || k === examId)) {
+                        if (cLinks[k] && (cLinks[k].title === examTitle || k === examId || (cLinks[k].title && cLinks[k].title.trim() === examTitle))) {
                             deleteTasks.push(fetch(`${FIREBASE_DB_URL}/custom_links/${classId}/${k}.json`, { method: "DELETE" }));
                         }
                     }
                 }
             }
+
             if (cTuLuanRes && cTuLuanRes.ok) {
                 const cExams = await cTuLuanRes.json();
                 if (cExams && typeof cExams === 'object') {
                     for (let k in cExams) {
-                        if (cExams[k] && (cExams[k].title === examTitle || k === examId)) {
+                        if (cExams[k] && (cExams[k].title === examTitle || k === examId || (cExams[k].title && cExams[k].title.trim() === examTitle))) {
                             deleteTasks.push(fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}/${k}.json`, { method: "DELETE" }));
                         }
                     }
@@ -842,7 +847,7 @@ async function deleteCurrentTuLuanExam(event) {
 
         await Promise.all(deleteTasks);
 
-        // Cập nhật bộ nhớ cục bộ
+        // Cập nhật bộ nhớ RAM cục bộ
         const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
         const catObj = allCats.find(c => c.id === classId);
         if (catObj && Array.isArray(catObj.links)) {
@@ -1244,7 +1249,7 @@ function onThumbnailClicked(imgSrc, driveUrl, title, canView, event) {
     openTuLuanLightbox(imgSrc, driveUrl, title, event);
 }
 
-// HÀM XÓA 1 BỨC ẢNH CỤ THỂ
+// HÀM XÓA ẢNH BÀI LÀM
 async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, defaultPass, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -1563,7 +1568,7 @@ function closeTuLuanLightbox(event) {
     if (lb) lb.style.display = "none";
 }
 
-// NỘP BÀI TỰ LUẬN TRONG BÀI THI (thi.html): ĐỒNG BỘ 100% CÙNG 1 THƯ MỤC DUY NHẤT
+// NỘP BÀI TỰ LUẬN TRONG BÀI THI (thi.html)
 async function triggerExamRoomDriveUpload(qId) {
     const sId = document.getElementById("student-id")?.value.trim() || safeLocal.getItem("saved_student_sbd") || "";
     const sName = document.getElementById("student-name")?.value.trim() || safeLocal.getItem("saved_student_name") || "";
