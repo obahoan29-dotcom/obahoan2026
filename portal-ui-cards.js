@@ -54,9 +54,9 @@ function buildCardHtmlString(item, categoryId) {
     const isReminder = (categoryId === "nhac-nho");
     const isDoc = isReminder || item.isDoc;
     const itemId = item.id || item.firebaseId || `item_${Date.now()}`;
-    const quizId = extractQuizIdFromItem(item) || itemId;
+    const quizId = (typeof extractQuizIdFromItem === 'function') ? (extractQuizIdFromItem(item) || itemId) : itemId;
     const badge = item.badgeText || (item.isHot ? "HOT" : "NONE");
-    const avatar = toDirectGoogleDriveImageUrl(item.avatar) || PRESET_20_AVATARS[0];
+    const avatar = (typeof toDirectGoogleDriveImageUrl === 'function') ? (toDirectGoogleDriveImageUrl(item.avatar) || PRESET_20_AVATARS[0]) : (item.avatar || PRESET_20_AVATARS[0]);
     const encodedData = encodeURIComponent(JSON.stringify(item));
     const isAllowFree = (item.allowFree !== false);
     const showOnlineCount = (item.showOnlineCount !== false);
@@ -143,27 +143,21 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
-    // NÚT NỘP BÀI TỰ LUẬN DRIVE CHO MỖI ĐỀ THI
-    let tuLuanBtnHtml = "";
-    if (!isDoc || categoryId === "tu-luan-padlet") {
-        tuLuanBtnHtml = `
-            <button type="button" class="btn-tuluan-modal-trigger" onclick="openTuLuanModal('${categoryId}', '${itemId}', event)" title="Mở bảng nộp bài tự luận 45 học sinh lên Google Drive">
-                📝 Nộp tự luận Drive
-            </button>
-        `;
-    }
+    // YÊU CẦU 1: Ở BẤT CỨ ĐỀ NÀO (TRẮC NGHIỆM, TỰ LUẬN, BÀI TẬP) ĐỀU LUÔN CÓ NÚT NỘP TỰ LUẬN DRIVE
+    let tuLuanBtnHtml = `
+        <button type="button" class="btn-tuluan-modal-trigger" onclick="openTuLuanModal('${categoryId}', '${itemId}', event)" title="Mở bảng nộp bài tự luận 45 học sinh lên Google Drive">
+            📝 Nộp tự luận Drive
+        </button>
+    `;
 
-    let bottomActionButtonsHtml = "";
-    if (viewTestBtnHtml || reviewBtnHtml || exportExamBtnHtml || tuLuanBtnHtml) {
-        bottomActionButtonsHtml = `
-            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
-                ${tuLuanBtnHtml}
-                ${viewTestBtnHtml}
-                ${reviewBtnHtml}
-                ${exportExamBtnHtml}
-            </div>
-        `;
-    }
+    let bottomActionButtonsHtml = `
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+            ${tuLuanBtnHtml}
+            ${viewTestBtnHtml}
+            ${reviewBtnHtml}
+            ${exportExamBtnHtml}
+        </div>
+    `;
 
     let avatarPopoverHtml = "";
     if (isAdminLoggedIn) {
