@@ -1,9 +1,63 @@
 // =========================================================
-// FILE 1: portal-tuluan.js
+// FILE: portal-tuluan.js
 // QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
-// BẢO VỆ CHỐNG CHÉP BÀI, NÚT XÓA ẢNH (✕) TRÊN THUMBNAIL
-// TỰ ĐỘNG LẤY ĐÚNG 5 ĐỀ MỚI NHẤT TỪ FIREBASE CHO MỖI LỚP
+// BẢO VỆ CHỐNG CHÉP BÀI, NÚT XÓA ẢNH (✕) TỰ ĐỘNG NHÚNG CSS
+// TỰ ĐỘNG NẠP ĐÚNG 5 ĐỀ MỚI NHẤT CHO TỪNG LỚP
 // =========================================================
+
+// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH (✕) VÀO TRANG MÀ KHÔNG CẦN SỬA FILE style-modals.css
+(function injectTuLuanButtonStyles() {
+    const styleId = "tuluan-custom-delete-btn-styles";
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+        .tuluan-img-thumbnail-item {
+            position: relative !important;
+            display: inline-block !important;
+        }
+        .btn-del-single-thumb {
+            position: absolute !important;
+            top: 2px !important;
+            right: 2px !important;
+            width: 17px !important;
+            height: 17px !important;
+            background: #ef4444 !important;
+            color: #ffffff !important;
+            border: 1px solid #ffffff !important;
+            border-radius: 50% !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45) !important;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease !important;
+            z-index: 20 !important;
+            padding: 0 !important;
+            user-select: none !important;
+        }
+        .tuluan-img-thumbnail-item:hover .btn-del-single-thumb {
+            opacity: 1 !important;
+        }
+        @media (hover: none) {
+            .btn-del-single-thumb {
+                opacity: 0.9 !important;
+            }
+        }
+        .btn-del-single-thumb:hover {
+            background: #b91c1c !important;
+            transform: scale(1.2) !important;
+        }
+        .btn-del-single-thumb:active {
+            transform: scale(0.9) !important;
+        }
+    `;
+    document.head.appendChild(style);
+})();
 
 let currentTuLuanModalData = {
     classId: "lop-11a",
@@ -234,7 +288,7 @@ function closeTuLuanModal(event) {
     }
 }
 
-// YÊU CẦU 1: XỬ LÝ TRIỆT ĐỂ VIỆC BỊ KHÓA CHẾT ĐỀ, QUÉT ĐÚNG 5 ĐỀ MỚI NHẤT CỦA LỚP
+// XỬ LÝ TRIỆT ĐỂ VIỆC BỊ KHÓA CHẾT ĐỀ, QUÉT ĐÚNG 5 ĐỀ MỚI NHẤT CỦA LỚP
 async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
     const selector = document.getElementById("tuluan-exam-selector");
     if (!selector) return;
@@ -242,7 +296,7 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
 
     let rawExams = [];
 
-    // 1. Quét từ Firebase node /custom_links/{targetCat} (chính xác 100% các đề đã đăng vào lớp)
+    // 1. Quét từ Firebase node /custom_links/{targetCat}
     try {
         const resCat = await fetch(`${FIREBASE_DB_URL}/custom_links/${targetCat}.json`);
         if (resCat && resCat.ok) {
@@ -298,7 +352,7 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
         }
     } catch(e) {}
 
-    // Sắp xếp giảm dần theo thời gian (đề mới nhất luôn lên trên)
+    // Sắp xếp giảm dần theo thời gian (đề mới nhất lên trên)
     rawExams.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
     // Lọc trùng theo tên đề thi
@@ -315,7 +369,6 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
     // LẤY ĐÚNG 5 ĐỀ MỚI NHẤT
     let top5Exams = uniqueExams.slice(0, 5);
 
-    // Nếu lớp hoàn toàn chưa đăng đề nào, mới lấy đề mẫu
     if (top5Exams.length === 0) {
         top5Exams.push({ id: "DE_108_TOAN_11_THEM-_HK1", title: "DE_108_TOAN_11_THEM-_HK1", timestamp: Date.now() });
     }
@@ -352,7 +405,6 @@ async function switchTuLuanExam(examId, examTitle) {
     const headTitle = document.getElementById("tuluan-modal-heading");
     const pathCode = document.getElementById("tuluan-drive-folder-path");
     if (headTitle) headTitle.innerText = `📤 NỘP BÀI TỰ LUẬN - ${examTitle}`;
-    // Hiển thị trực quan cấu trúc đường dẫn phân cấp 4 tầng
     if (pathCode) pathCode.innerText = `BAI_TAP_TU_LUAN / ${driveClassName} / ${folderKey} / [STT_SBD_HỌ_TÊN]`;
 
     await loadTuLuanSubmissionsFromFirebase();
@@ -542,7 +594,6 @@ function renderTuLuanStudentsTable() {
             const isOwner = (currentStudentSbd && currentStudentSbd === String(st.sbd).trim().toLowerCase());
             const canViewDetailed = (isAdmin || isApproved || isOwner);
 
-            // YÊU CẦU 3: HIỂN THỊ NÚT "✕" ĐỎ NHỎ Ở GÓC TRÊN BÊN PHẢI CỦA MỖI ẢNH THUMBNAIL
             thumbnailsHtml = `
                 <div class="tuluan-thumb-row">
                     ${record.images.map((im, idx) => `
@@ -590,7 +641,7 @@ function onThumbnailClicked(imgSrc, driveUrl, title, canView, event) {
     openTuLuanLightbox(imgSrc, driveUrl, title, event);
 }
 
-// YÊU CẦU 3: HÀM XÓA 1 BỨC ẢNH CỤ THỂ KHI ẤN VÀO NÚT "✕"
+// HÀM XÓA 1 BỨC ẢNH CỤ THỂ KHI ẤN VÀO NÚT "✕"
 async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -611,14 +662,12 @@ async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, event) 
 
     try {
         if (record.images.length === 0) {
-            // Nếu đã xóa hết ảnh, xóa luôn bản ghi nộp bài
             delete currentTuLuanModalData.submissionsMap[cleanSbd];
             await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, { method: "DELETE" }),
                 fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${cleanSbd}.json`, { method: "DELETE" })
             ]);
         } else {
-            // Cập nhật lại mảng ảnh mới sau khi bỏ bớt 1 ảnh
             currentTuLuanModalData.submissionsMap[cleanSbd] = record;
             await Promise.all([
                 fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
@@ -634,7 +683,6 @@ async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, event) 
             ]);
         }
 
-        // Gửi lệnh ngầm xóa file trên Google Drive (nếu có fileId)
         if (removedImg && removedImg.fileId) {
             const gasUrl = (typeof GOOGLE_DRIVE_TULUAN_GAS_URL !== "undefined" && GOOGLE_DRIVE_TULUAN_GAS_URL) 
                 ? GOOGLE_DRIVE_TULUAN_GAS_URL 
@@ -755,7 +803,7 @@ function triggerStudentUpload(stt, sbd, studentName, correctPass) {
     }
 }
 
-// YÊU CẦU 2: TỔ CHỨC CÂY THƯ MỤC DRIVE PHÂN CẤP ĐẦY ĐỦ 4 TẦNG:
+// TỔ CHỨC CÂY THƯ MỤC DRIVE PHÂN CẤP ĐẦY ĐỦ 4 TẦNG:
 // BAI_TAP_TU_LUAN / LOP / DE / STT_SBD_HOTEN / ANH_CHUP
 async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
     if (!fileInput.files || fileInput.files.length === 0) return;
@@ -794,7 +842,7 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
                 rootFolder: "BAI_TAP_TU_LUAN",
                 className: driveClassName,
                 examTitle: unifiedFolder,
-                studentFolder: studentFolderName, // Thư mục riêng của từng học sinh
+                studentFolder: studentFolderName,
                 stt: stt,
                 sbd: sbd,
                 studentName: studentName,
