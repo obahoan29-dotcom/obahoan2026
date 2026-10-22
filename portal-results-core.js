@@ -32,8 +32,8 @@ function identifyOfficialStudentCategory(sbd, name) {
     if (!window.STUDENT_ACCOUNTS) return null;
     const cleanSbd = String(sbd || "").trim().toLowerCase();
 
-    // SBD chính thức luôn dài từ 4 ký tự trở lên (ví dụ: 11C21, 1122, 11A08, 10p01)
-    if (cleanSbd && cleanSbd.length >= 4 && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap") {
+    // SBD chính thức luôn dài từ 3 ký tự trở lên (ví dụ: HSG1, 11C21, 1122, 11A08, 10p01)
+    if (cleanSbd && cleanSbd.length >= 3 && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap") {
         for (let catId in window.STUDENT_ACCOUNTS) {
             const list = window.STUDENT_ACCOUNTS[catId];
             if (!Array.isArray(list)) continue;
@@ -70,28 +70,31 @@ function isSubmissionMatchingCategory(sub, targetCatId) {
     const rawClass = normalizeCategoryKey(sub.studentClass || sub.className || "");
 
     const isClass11C = rawClass.includes("11c") || subSbdClean.startsWith("11c");
-    const isClass11A = rawClass.includes("11a") || subSbdClean.startsWith("11a");
+    const isClass11A = (rawClass.includes("11a") || subSbdClean.startsWith("11a")) && !subSbdClean.startsWith("hsg");
     const isClass11E = rawClass.includes("11e") || subSbdClean.startsWith("11e");
     const isClass10P = rawClass.includes("10p") || subSbdClean.startsWith("10p");
+    const isClassHSG = rawClass.includes("hsg") || subSbdClean.startsWith("hsg") || rawSubCat.includes("hsg");
 
-    // Nếu học sinh ghi lớp 11C nhưng đang mở bảng Thêm 11 hoặc 11A -> Loại bỏ ngay
+    // Nếu học sinh thuộc lớp đặc thù khác lớp đang xem -> Loại bỏ ngay
+    if (isClassHSG && normTarget !== "hsgtoan11" && !normTarget.includes("hsg")) return false;
     if (isClass11C && normTarget !== "lop11c") return false;
     if (isClass11A && normTarget !== "lop11a") return false;
     if (isClass11E && normTarget !== "lop11e") return false;
     if (isClass10P && normTarget !== "lop10p") return false;
 
-    // Nếu đang xem lớp chính khóa mà học sinh không thuộc lớp này -> Loại bỏ
+    // Nếu đang xem lớp chính khóa hoặc HSG mà học sinh không thuộc lớp này -> Loại bỏ
     if (normTarget === "lop11c" && !isClass11C) return false;
     if (normTarget === "lop11a" && !isClass11A) return false;
     if (normTarget === "lop11e" && !isClass11E) return false;
     if (normTarget === "lop10p" && !isClass10P) return false;
+    if ((normTarget === "hsgtoan11" || normTarget.includes("hsg")) && !isClassHSG) return false;
 
     // Nếu có ghi chuyên mục thi và chuyên mục khác lớp đang xem -> Loại bỏ
     if (rawSubCat && rawSubCat !== normTarget) return false;
 
     if (rawSubCat && rawSubCat === normTarget) return true;
 
-    if (normTarget.startsWith("lop")) return false;
+    if (normTarget.startsWith("lop") || normTarget.includes("hsg")) return false;
 
     return true;
 }
@@ -474,7 +477,6 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
             let subNameNorm = normalizeName(sub.studentName);
 
             let isMatch = false;
-            // BẮT BUỘC KHỚP THEO SBD: Có SBD thì phải trùng SBD mới được tính, KHÔNG match nhầm sang SBD khác chỉ vì trùng tên
             if (accSbdLower && subSbd && subSbd !== "---" && subSbd !== "free" && subSbd !== "chuanhap") { 
                 isMatch = (subSbd === accSbdLower); 
             } else if (!subSbd || subSbd === "---" || subSbd === "free" || subSbd === "chuanhap") {
