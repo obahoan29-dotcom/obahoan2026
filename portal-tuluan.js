@@ -1,47 +1,61 @@
 // =========================================================
 // FILE: portal-tuluan.js
 // QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
-// HIỂN THỊ 90% MÀN HÌNH LAPTOP | CÁC CỘT SÁT NHAU & CO GỌN TRÊN ĐIỆN THOẠI
-// HỖ TRỢ THU NHỎ TRÊN MOBILE | XÓA ĐỀ THI DÀNH CHO ADMIN
-// ĐỔI MẬT KHẨU 4 SỐ (XÒE 2 DÒNG) & ADMIN RESET MẬT KHẨU
+// BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN) | QUẢN LÝ 5 ĐỀ MỚI NHẤT
+// NÚT XÓA ĐỀ NẰM NGAY BÊN PHẢI CUỐI Ô CHỌN ĐỀ DÀNH CHO ADMIN
+// ĐỔI MẬT KHẨU 4 SỐ (XÒE 2 DÒNG) & ADMIN RESET MẬT KHẨU VỀ MẶC ĐỊNH
 // =========================================================
 
-// TỰ ĐỘNG NHÚNG CSS HIỂN THỊ 90% LAPTOP, CỘT SÁT NHAU TRÊN ĐIỆN THOẠI & NÚT XÓA ĐỀ
-(function injectTuLuanCustomStyles() {
+// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ & KHUNG ĐỔI MẬT KHẨU
+(function injectTuLuanButtonStyles() {
     const styleId = "tuluan-custom-delete-btn-styles";
     if (document.getElementById(styleId)) return;
     const style = document.createElement("style");
     style.id = styleId;
     style.innerHTML = `
-        /* 1. KÍCH THƯỚC KHUNG 90% MÀN HÌNH TRÊN LAPTOP / MÁY TÍNH */
-        @media (min-width: 768px) {
-            .tuluan-modal-card {
-                width: 90vw !important;
-                max-width: 92vw !important;
-                height: 90vh !important;
-                max-height: 92vh !important;
-                border-radius: 20px !important;
-            }
-            .tuluan-table-wrap {
-                max-height: calc(90vh - 180px) !important;
-            }
-            .tuluan-select-bar {
-                flex-wrap: nowrap !important;
-                gap: 12px !important;
-            }
-            #tuluan-exam-selector {
-                max-width: 620px !important;
-            }
+        .tuluan-img-thumbnail-item {
+            position: relative !important;
+            display: inline-block !important;
+        }
+        .btn-del-single-thumb {
+            position: absolute !important;
+            top: 2px !important;
+            right: 2px !important;
+            width: 18px !important;
+            height: 18px !important;
+            background: #ef4444 !important;
+            color: #ffffff !important;
+            border: 1px solid #ffffff !important;
+            border-radius: 50% !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45) !important;
+            z-index: 20 !important;
+            padding: 0 !important;
+            user-select: none !important;
+            transition: transform 0.15s ease, background 0.15s ease !important;
+        }
+        .btn-del-single-thumb:hover {
+            background: #b91c1c !important;
+            transform: scale(1.2) !important;
+        }
+        .btn-del-single-thumb:active {
+            transform: scale(0.9) !important;
         }
 
-        /* 2. NÚT XÓA ĐỀ NẰM NGAY BÊN PHẢI Ô CHỌN ĐỀ */
+        /* NÚT XÓA ĐỀ THI DÀNH CHO ADMIN NẰM NGAY BÊN PHẢI Ô CHỌN ĐỀ */
         .btn-del-exam-selector {
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
             color: #dc2626 !important;
             border: 1.5px solid #f87171 !important;
             border-radius: 9px !important;
             padding: 6px 12px !important;
-            height: 35px !important;
+            height: 34px !important;
             font-size: 12px !important;
             font-weight: 800 !important;
             cursor: pointer !important;
@@ -66,207 +80,174 @@
             transform: translateY(2px) scale(0.95) !important;
         }
 
-        /* 3. NÚT XÓA ẢNH ĐƠN LẺ */
-        .tuluan-img-thumbnail-item {
-            position: relative !important;
-            display: inline-block !important;
-        }
-        .btn-del-single-thumb {
-            position: absolute !important;
-            top: 1px !important;
-            right: 1px !important;
-            width: 17px !important;
-            height: 17px !important;
-            background: #ef4444 !important;
-            color: #ffffff !important;
-            border: 1px solid #ffffff !important;
-            border-radius: 50% !important;
-            font-size: 10px !important;
-            font-weight: 900 !important;
-            line-height: 1 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            cursor: pointer !important;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45) !important;
-            z-index: 20 !important;
-            padding: 0 !important;
-            user-select: none !important;
-        }
-        .btn-del-single-thumb:hover { background: #b91c1c !important; transform: scale(1.15) !important; }
-
-        /* 4. CÁC NÚT THAO TÁC HÀNG */
+        /* NHÓM NÚT TRONG CỘT THAO TÁC */
         .tuluan-action-btn-group {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            gap: 4px !important;
+            gap: 5px !important;
             flex-wrap: nowrap !important;
         }
+
+        /* NÚT ĐỔI MẬT KHẨU */
         .btn-tuluan-change-pass {
             background: #f0fdf4 !important;
             color: #166534 !important;
             border: 1px solid #86efac !important;
             border-radius: 8px !important;
-            padding: 5px 8px !important;
+            padding: 6px 9px !important;
             font-size: 11px !important;
             font-weight: 800 !important;
             cursor: pointer !important;
+            transition: all 0.15s ease !important;
             white-space: nowrap !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 2px !important;
+            gap: 3px !important;
+            box-shadow: 0 1px 3px rgba(22, 101, 52, 0.1) !important;
         }
+        .btn-tuluan-change-pass:hover {
+            background: #16a34a !important;
+            color: #ffffff !important;
+            border-color: #16a34a !important;
+            transform: translateY(-1px) !important;
+        }
+        .btn-tuluan-change-pass:active {
+            transform: scale(0.95) !important;
+        }
+
+        /* NÚT RESET MẬT KHẨU (ADMIN) */
         .btn-tuluan-reset-pass {
             background: #fff7ed !important;
             color: #c2410c !important;
             border: 1px solid #fdba74 !important;
             border-radius: 8px !important;
-            padding: 5px 7px !important;
+            padding: 6px 8px !important;
             font-size: 11px !important;
             font-weight: 800 !important;
             cursor: pointer !important;
+            transition: all 0.15s ease !important;
             white-space: nowrap !important;
             display: inline-flex !important;
             align-items: center !important;
+            gap: 2px !important;
+            box-shadow: 0 1px 3px rgba(194, 65, 12, 0.1) !important;
+        }
+        .btn-tuluan-reset-pass:hover {
+            background: #ea580c !important;
+            color: #ffffff !important;
+            border-color: #ea580c !important;
+            transform: translateY(-1px) !important;
+        }
+        .btn-tuluan-reset-pass:active {
+            transform: scale(0.95) !important;
         }
 
-        /* 5. NÚT THU NHỎ BẢNG TRÊN MOBILE */
-        .btn-toggle-compact {
-            background: #f1f5f9;
-            color: #0369a1;
-            border: 1.5px solid #7dd3fc;
-            border-radius: 8px;
-            padding: 5px 10px;
-            font-size: 11.5px;
-            font-weight: 800;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.15s ease;
-            white-space: nowrap;
+        /* KHUNG ĐỔI MẬT KHẨU XÒE RA 2 DÒNG */
+        .student-pass-popover {
+            display: none;
+            position: absolute !important;
+            right: 8px !important;
+            top: calc(100% + 5px) !important;
+            width: 275px !important;
+            background: #ffffff !important;
+            border: 1.5px solid #0284c7 !important;
+            border-radius: 14px !important;
+            padding: 12px 14px !important;
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.28) !important;
+            z-index: 999999 !important;
+            text-align: left !important;
+            animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
-        .btn-toggle-compact:hover, .btn-toggle-compact.active {
-            background: #0284c7;
-            color: #ffffff;
-            border-color: #0284c7;
+        .student-pass-popover.show {
+            display: block !important;
         }
-
-        /* 6. TỐI ƯU CÁC CỘT SÁT NHAU NHẤT CÓ THỂ TRÊN ĐIỆN THOẠI (DƯỚI 768px) */
-        @media (max-width: 767px) {
-            .tuluan-modal-card {
-                width: 98vw !important;
-                max-width: 99vw !important;
-                height: 94vh !important;
-                max-height: 95vh !important;
-                border-radius: 14px !important;
-                padding: 0 !important;
-            }
-            .tuluan-modal-header {
-                padding: 8px 10px !important;
-            }
-            .tuluan-select-bar {
-                padding: 6px 8px !important;
-                gap: 5px !important;
-            }
-            .tuluan-toolbar-bar {
-                padding: 6px 8px !important;
-                gap: 5px !important;
-            }
-            .tuluan-table-wrap {
-                max-height: calc(94vh - 180px) !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-            }
-            .tuluan-table {
-                font-size: 11.5px !important;
-                width: auto !important;
-                min-width: 100% !important;
-                border-collapse: collapse !important;
-            }
-            .tuluan-table thead th {
-                padding: 6px 3px !important;
-                font-size: 10px !important;
-                letter-spacing: 0px !important;
-            }
-            .tuluan-table tbody td {
-                padding: 5px 3px !important;
-                font-size: 11px !important;
-            }
-            
-            /* Chiều rộng các cột ép sát nhau tối đa */
-            .col-stt { width: 26px !important; min-width: 26px !important; padding: 4px 1px !important; text-align: center !important; }
-            .col-name { min-width: 105px !important; max-width: 125px !important; white-space: normal !important; line-height: 1.25 !important; font-size: 11px !important; }
-            .col-sbd { width: 50px !important; min-width: 48px !important; font-size: 10.5px !important; text-align: center !important; }
-            .col-status { width: 78px !important; min-width: 75px !important; padding: 4px 2px !important; }
-            .col-approve { width: 64px !important; min-width: 60px !important; padding: 4px 1px !important; text-align: center !important; }
-            .col-thumbs { min-width: 90px !important; padding: 4px 2px !important; }
-            .col-action { min-width: 110px !important; padding: 4px 2px !important; text-align: center !important; }
-
-            .tuluan-img-thumbnail-item {
-                width: 32px !important;
-                height: 32px !important;
-                border-radius: 6px !important;
-            }
-            .btn-tuluan-upload-row {
-                padding: 5px 7px !important;
-                font-size: 10.5px !important;
-                border-radius: 6px !important;
-            }
-            .btn-tuluan-change-pass {
-                padding: 5px 6px !important;
-                font-size: 10px !important;
-                border-radius: 6px !important;
-            }
-            .btn-tuluan-reset-pass {
-                padding: 5px 5px !important;
-                font-size: 10px !important;
-                border-radius: 6px !important;
-            }
-            .tuluan-status-badge {
-                font-size: 9px !important;
-                padding: 2px 4px !important;
-            }
-            .tuluan-approved-badge {
-                font-size: 9px !important;
-                padding: 2px 4px !important;
-            }
+        .pass-popover-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            font-size: 12.5px !important;
+            font-weight: 900 !important;
+            color: #0f172a !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            padding-bottom: 6px !important;
+            margin-bottom: 8px !important;
         }
-
-        /* 7. CHẾ ĐỘ SIÊU THU NHỎ KHI BẤM "THU NHỎ" */
-        .tuluan-table.tuluan-compact-mode {
-            font-size: 10px !important;
+        .btn-close-pass-pop {
+            background: none !important;
+            border: none !important;
+            font-size: 14px !important;
+            font-weight: 900 !important;
+            color: #94a3b8 !important;
+            cursor: pointer !important;
+            padding: 0 4px !important;
         }
-        .tuluan-table.tuluan-compact-mode thead th {
-            padding: 4px 2px !important;
-            font-size: 9.5px !important;
+        .btn-close-pass-pop:hover {
+            color: #ef4444 !important;
         }
-        .tuluan-table.tuluan-compact-mode tbody td {
-            padding: 3px 2px !important;
-            font-size: 10px !important;
+        .pass-popover-hint {
+            font-size: 11px !important;
+            color: #475569 !important;
+            background: #f0f9ff !important;
+            border: 1px solid #bae6fd !important;
+            padding: 6px 8px !important;
+            border-radius: 8px !important;
+            margin-bottom: 9px !important;
+            line-height: 1.4 !important;
         }
-        .tuluan-table.tuluan-compact-mode .col-name {
-            min-width: 95px !important;
-            max-width: 110px !important;
-            font-size: 10px !important;
+        .pass-input-row {
+            margin-bottom: 8px !important;
         }
-        .tuluan-table.tuluan-compact-mode .col-sbd {
-            width: 44px !important;
-            font-size: 9.5px !important;
+        .pass-input-row label {
+            display: block !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            color: #334155 !important;
+            margin-bottom: 3px !important;
         }
-        .tuluan-table.tuluan-compact-mode .btn-tuluan-upload-row {
-            padding: 3px 5px !important;
-            font-size: 9.5px !important;
+        .pass-input-row input {
+            width: 100% !important;
+            padding: 6px 9px !important;
+            border: 1.2px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            outline: none !important;
+            box-sizing: border-box !important;
+            color: #0f172a !important;
+            letter-spacing: 1px !important;
         }
-        .tuluan-table.tuluan-compact-mode .btn-tuluan-change-pass,
-        .tuluan-table.tuluan-compact-mode .btn-tuluan-reset-pass {
-            padding: 3px 4px !important;
-            font-size: 9px !important;
+        .pass-input-row input:focus {
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
         }
-        .tuluan-table.tuluan-compact-mode .tuluan-img-thumbnail-item {
-            width: 26px !important;
-            height: 26px !important;
+        .pass-popover-actions {
+            display: flex !important;
+            gap: 6px !important;
+            margin-top: 10px !important;
+        }
+        .btn-pass-cancel {
+            flex: 1 !important;
+            padding: 6px !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            font-size: 11.5px !important;
+            font-weight: 800 !important;
+            color: #475569 !important;
+            cursor: pointer !important;
+        }
+        .btn-pass-save {
+            flex: 1.5 !important;
+            padding: 6px !important;
+            background: linear-gradient(135deg, #16a34a, #15803d) !important;
+            border: none !important;
+            border-radius: 7px !important;
+            font-size: 11.5px !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+            cursor: pointer !important;
+            box-shadow: 0 2px 5px rgba(22, 163, 74, 0.25) !important;
         }
     `;
     document.head.appendChild(style);
@@ -283,23 +264,8 @@ let currentTuLuanModalData = {
 };
 
 let tuLuanEventSource = null;
-let isTuLuanCompactMode = false;
 
-// Bật/tắt chế độ siêu thu nhỏ trên điện thoại
-function toggleTuLuanCompactMode() {
-    isTuLuanCompactMode = !isTuLuanCompactMode;
-    const table = document.querySelector(".tuluan-table");
-    const btn = document.getElementById("btn-toggle-compact-table");
-    if (table) {
-        table.classList.toggle("tuluan-compact-mode", isTuLuanCompactMode);
-    }
-    if (btn) {
-        btn.innerText = isTuLuanCompactMode ? "🔍 Vừa chuẩn" : "📐 Thu nhỏ";
-        btn.classList.toggle("active", isTuLuanCompactMode);
-    }
-}
-
-// Kiểm tra quyền Admin thông minh
+// Kiểm tra quyền Admin thông minh: luôn kiểm tra cả session và storage để không bị mất nút
 function checkCurrentIsAdmin() {
     if (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) return true;
     if (typeof checkAdminSessionValidity === 'function' && checkAdminSessionValidity()) return true;
@@ -397,7 +363,7 @@ function getEffectiveStudentPassword(cleanSbd, defaultSbd, defaultPass) {
     return String(defaultSbd || defaultPass || "").trim();
 }
 
-// Nén ảnh & kiểm tra ảnh an toàn
+// Nén ảnh & sửa lỗi nhận diện sai hình ảnh trên thiết bị di động
 function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) {
     return new Promise((resolve, reject) => {
         if (!file) {
@@ -462,7 +428,7 @@ function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) 
     });
 }
 
-// Gửi file lên Google Drive
+// Gửi file lên Google Drive với cơ chế tự động thử lại
 async function sendToGoogleDriveWithRetry(gasUrl, payload, maxRetries = 2, timeoutMs = 75000) {
     let lastError = null;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -498,7 +464,6 @@ async function sendToGoogleDriveWithRetry(gasUrl, payload, maxRetries = 2, timeo
     throw lastError;
 }
 
-// KHỞI TẠO MODAL DOM VỚI CÁC CỘT VÀ Ô CHỌN ĐỀ CHUẨN ĐẸP
 function ensureTuLuanModalDOM() {
     if (document.getElementById("modal-tuluan-submission")) return;
     const modalDiv = document.createElement("div");
@@ -536,18 +501,18 @@ function ensureTuLuanModalDOM() {
                     </select>
                 </div>
 
-                <div class="tuluan-select-group" style="flex:1; min-width:260px;">
+                <div class="tuluan-select-group" style="flex:1; min-width:270px;">
                     <label>📝 Chọn đề thi (5 đề mới nhất):</label>
-                    <div style="display:flex; align-items:center; gap:6px; width:100%; min-width:0;">
-                        <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1; min-width:140px;"></select>
+                    <div style="display:flex; align-items:center; gap:6px; width:100%;">
+                        <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1; min-width: 140px;"></select>
                         <!-- NÚT XÓA ĐỀ NỔI BẬT NẰM NGAY BÊN PHẢI CUỐI ĐỀ THI -->
-                        <button type="button" class="btn-del-exam-selector" id="btn-del-current-exam" onclick="deleteCurrentTuLuanExam(event)" title="Xóa đề này khỏi danh sách nộp tự luận">
+                        <button type="button" class="btn-del-exam-selector" id="btn-del-current-exam" onclick="deleteCurrentTuLuanExam(event)" title="Xóa đề này khỏi danh sách đề tự luận">
                             🗑️ Xóa đề
                         </button>
                     </div>
                 </div>
 
-                <div id="tuluan-admin-add-exam-box" style="display:none; align-items:center; gap:6px;">
+                <div id="tuluan-admin-add-exam-box" style="display:none; align-items:flex-end; gap:6px;">
                     <button type="button" class="btn-tuluan-add-exam" onclick="promptAddNewTuLuanExam()">
                         ➕ Thêm đề mới
                     </button>
@@ -557,14 +522,9 @@ function ensureTuLuanModalDOM() {
                 </div>
             </div>
 
-            <!-- TOOLBAR LỌC & TÌM KIẾM CÓ THÊM NÚT THU NHỎ TRÊN MOBILE -->
+            <!-- TOOLBAR LỌC & TÌM KIẾM -->
             <div class="tuluan-toolbar-bar">
-                <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:180px;">
-                    <input type="text" id="tuluan-search-student" class="tuluan-search-box" placeholder="🔍 Tìm tên hoặc SBD..." oninput="filterTuLuanStudentTable()">
-                    <button type="button" class="btn-toggle-compact" id="btn-toggle-compact-table" onclick="toggleTuLuanCompactMode()" title="Thu nhỏ kích cỡ chữ và khoảng cách bảng trên điện thoại">
-                        📐 Thu nhỏ
-                    </button>
-                </div>
+                <input type="text" id="tuluan-search-student" class="tuluan-search-box" placeholder="🔍 Tìm tên hoặc SBD..." oninput="filterTuLuanStudentTable()">
                 <div class="tuluan-filter-tabs">
                     <button type="button" class="tuluan-tab-pill active" id="tab-filter-all" onclick="filterTuLuanStatus('all')">Tất cả (<span id="count-all-st">0</span>)</button>
                     <button type="button" class="tuluan-tab-pill" id="tab-filter-submitted" onclick="filterTuLuanStatus('submitted')">✅ Đã nộp (<span id="count-sub-st">0</span>)</button>
@@ -577,13 +537,13 @@ function ensureTuLuanModalDOM() {
                 <table class="tuluan-table">
                     <thead>
                         <tr>
-                            <th class="col-stt">STT</th>
-                            <th class="col-name">Họ và tên</th>
-                            <th class="col-sbd">SBD</th>
-                            <th class="col-status">Trạng thái / Ngày nộp</th>
-                            <th class="col-approve">Phê duyệt</th>
-                            <th class="col-thumbs">Ảnh bài làm đã nộp</th>
-                            <th class="col-action">Thao tác</th>
+                            <th style="width: 42px; text-align: center;">STT</th>
+                            <th style="width: 165px;">Họ và tên</th>
+                            <th style="width: 80px; text-align: center;">SBD</th>
+                            <th style="width: 155px;">Trạng thái / Ngày nộp</th>
+                            <th style="width: 125px; text-align: center;">Phê duyệt</th>
+                            <th style="min-width: 180px;">Ảnh bài làm đã nộp</th>
+                            <th style="min-width: 175px; text-align: center;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="tuluan-students-tbody"></tbody>
@@ -617,7 +577,7 @@ function ensureTuLuanModalDOM() {
     document.body.appendChild(modalDiv);
 }
 
-// Cập nhật hiển thị nút xóa đề và thêm đề của Admin
+// Cập nhật hiển thị các nút chức năng của Admin
 function updateTuLuanAdminUI() {
     const isAdmin = checkCurrentIsAdmin();
     const adminBox = document.getElementById("tuluan-admin-add-exam-box");
@@ -692,7 +652,7 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
         }
     } catch(e) {}
 
-    // 2. Quét dự phòng từ danh mục cục bộ
+    // 2. Quét dự phòng từ danh mục cục bộ trong bộ nhớ RAM
     const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
     const catObj = allCats.find(c => c.id === targetCat);
     if (catObj && Array.isArray(catObj.links)) {
@@ -1033,11 +993,6 @@ function renderTuLuanStudentsTable() {
     if (elSub) elSub.innerText = submittedCount;
     if (elPen) elPen.innerText = (totalSt - submittedCount);
 
-    const table = document.querySelector(".tuluan-table");
-    if (table && isTuLuanCompactMode) {
-        table.classList.add("tuluan-compact-mode");
-    }
-
     students.forEach(st => {
         const cleanSbd = String(st.sbd || "").trim().replace(/[^a-zA-Z0-9]/g, '_');
         const record = subMap[cleanSbd];
@@ -1056,7 +1011,7 @@ function renderTuLuanStudentsTable() {
         const tr = document.createElement("tr");
 
         let statusHtml = `<span class="tuluan-status-badge pending">⏳ Chưa nộp</span>`;
-        let thumbnailsHtml = `<span style="font-size:11px; color:#94a3b8; font-style:italic;">Chưa có ảnh</span>`;
+        let thumbnailsHtml = `<span style="font-size:11.5px; color:#94a3b8; font-style:italic;">Chưa có ảnh</span>`;
 
         let approveHtml = "";
         if (!hasSubmitted) {
@@ -1089,7 +1044,7 @@ function renderTuLuanStudentsTable() {
             const lastTime = record.lastSubmit || "Vừa xong";
             statusHtml = `
                 <div class="tuluan-status-badge done">✅ Đã nộp ${imgCount} ảnh</div>
-                <div style="font-size: 10.5px; color: #64748b; font-weight: 700; margin-top: 2px;">🕒 ${lastTime}</div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 700; margin-top: 2px;">🕒 ${lastTime}</div>
             `;
 
             const canViewDetailed = (isAdmin || isApproved || isOwner);
@@ -1118,13 +1073,13 @@ function renderTuLuanStudentsTable() {
         }
 
         tr.innerHTML = `
-            <td class="col-stt" style="font-weight: 800; color: #475569;">${st.stt}</td>
-            <td class="col-name" style="font-weight: 800; color: #0f172a;">${st.name}</td>
-            <td class="col-sbd" style="font-weight: 800; color: #0284c7; font-family: monospace;">${st.sbd}</td>
-            <td class="col-status">${statusHtml}</td>
-            <td class="col-approve">${approveHtml}</td>
-            <td class="col-thumbs">${thumbnailsHtml}</td>
-            <td class="col-action" style="position: relative;">
+            <td style="text-align: center; font-weight: 800; color: #475569;">${st.stt}</td>
+            <td style="font-weight: 800; color: #0f172a;">${st.name}</td>
+            <td style="text-align: center; font-weight: 800; color: #0284c7; font-family: monospace;">${st.sbd}</td>
+            <td>${statusHtml}</td>
+            <td style="text-align: center;">${approveHtml}</td>
+            <td>${thumbnailsHtml}</td>
+            <td style="text-align: center; position: relative;">
                 <div class="tuluan-action-btn-group">
                     <input type="file" id="tuluan-input-${cleanSbd}" accept="image/*" multiple style="display:none;" onchange="handleStudentEssayUploadPC('${st.stt}', '${st.sbd}', '${st.name}', this)">
                     <button type="button" class="btn-tuluan-upload-row" onclick="triggerStudentUpload('${st.stt}', '${st.sbd}', '${st.name}', '${st.pass}')" id="btn-up-${cleanSbd}" title="Tải ảnh bài làm">
@@ -1781,4 +1736,3 @@ window.closeStudentPassPopover = closeStudentPassPopover;
 window.saveStudentPasswordChange = saveStudentPasswordChange;
 window.resetStudentPasswordToDefault = resetStudentPasswordToDefault;
 window.getEffectiveStudentPassword = getEffectiveStudentPassword;
-window.toggleTuLuanCompactMode = toggleTuLuanCompactMode;
