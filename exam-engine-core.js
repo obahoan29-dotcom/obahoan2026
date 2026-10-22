@@ -37,7 +37,7 @@ let isSubmittingInProgress = false;
     document.head.appendChild(style);
 })();
 
-// TỰ ĐỘNG LƯU ĐÁM MÂY TỨC THỜI MỖI KHI HỌC SINH TÍCH/ĐỔI ĐÁP ÁN
+// TỰ ĐỘNG LƯU ĐÁM MÂY TỨC THỜI MỖI KHI HỌC SINH TÍCH/ĐỔI ĐÁP ÁN (NGẦM HOÀN TOÀN)
 function autoSaveAnswerToCloud(qKey, answerVal) {
     if (isSubmitted || isExamLocked) return;
     const sId = document.getElementById("student-id")?.value.trim();
@@ -89,8 +89,10 @@ function lockExamInteractions() {
         timerInterval = null;
     }
 
+    const maxAllowedSec = totalTimeSeconds || (TIME_LIMIT_MINUTES * 60) || 5400;
     if (!lockedDurationSec && examStartTime) {
-        lockedDurationSec = Math.max(1, Math.round((Date.now() - examStartTime) / 1000));
+        let actualSec = Math.round((Date.now() - examStartTime) / 1000);
+        lockedDurationSec = Math.min(Math.max(1, actualSec), maxAllowedSec);
     }
 
     const quizContent = document.getElementById("quiz-content");
@@ -114,7 +116,7 @@ function lockExamInteractions() {
     if (timerBox) {
         timerBox.classList.remove("timer-warning");
         const timerVal = document.getElementById("nav-timer-val");
-        if (timerVal) timerVal.innerText = "ĐÃ KHÓA NỘP";
+        if (timerVal) timerVal.innerText = "HẾT GIỜ THI";
     }
 }
 
@@ -198,7 +200,6 @@ function shuffleArray(arr) {
     return array;
 }
 
-// XÁO ĐỀ THEO 4 PHẦN TÁCH BIỆT: PHẦN 1 -> PHẦN 2 -> PHẦN 3 -> PHẦN 4
 function shuffleExamData(data) {
     if (!data || !data.questions) return;
     const isP4 = typeof isPart4Question === 'function' ? isPart4Question : (q => (q.part === 4 || q.isPart4 || q.type === "essay" || q.type === "essay_answer"));
@@ -293,23 +294,19 @@ async function checkSessionStatus(isAutostart = false) {
         reapplySavedAnswers(); 
         updateProgress(); 
 
-        if (isExamLocked) {
-            lockExamInteractions();
-            executeSubmitExam(false);
-            return;
-        }
-
         const elapsedTimeSec = Math.floor((Date.now() - examStartTime) / 1000); 
         const timeRemaining = totalTimeSeconds - elapsedTimeSec; 
-        if (timeRemaining > 0) { 
-            remainingSeconds = timeRemaining; 
-            startCountdownTimer(); 
-            startPresenceSystem(sId);
-            return; 
-        } else {
+
+        if (isExamLocked || timeRemaining <= 0) {
+            lockExamInteractions();
             executeSubmitExam(true);
             return;
         }
+
+        remainingSeconds = timeRemaining; 
+        startCountdownTimer(); 
+        startPresenceSystem(sId);
+        return; 
     }
 
     if (isAutostart) {
@@ -536,6 +533,7 @@ function formatHHMMSS(totalSecs) {
     return `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`; 
 }
 
+// BỘ ĐẾM THỜI GIAN: HẾT GIỜ TỰ ĐỘNG THU BÀI NGAY LẬP TỨC (KHÔNG DÙNG ALERT CHẶN LUỒNG)
 function startCountdownTimer() { 
     if (isExamLocked) return;
     const timerVal = document.getElementById("nav-timer-val"); 
@@ -556,28 +554,21 @@ function startCountdownTimer() {
             if (!isNaN(t)) currentEndTimeMs = t;
         } 
 
-        if (now >= currentEndTimeMs) { 
+        const elapsedTimeSec = Math.floor((now - examStartTime) / 1000); 
+        remainingSeconds = totalTimeSeconds - elapsedTimeSec; 
+
+        if (now >= currentEndTimeMs || remainingSeconds <= 0) { 
             clearInterval(timerInterval); 
             timerInterval = null;
-            timerVal.innerText = "00:00:00"; 
-            alert("⛔ Đã hết thời gian cho phép của đợt thi! Hệ thống tự động thu bài."); 
+            if (timerVal) timerVal.innerText = "00:00:00"; 
+            lockExamInteractions();
             executeSubmitExam(true); 
             return; 
         } 
 
-        const elapsedTimeSec = Math.floor((now - examStartTime) / 1000); 
-        remainingSeconds = totalTimeSeconds - elapsedTimeSec; 
-        if (remainingSeconds <= 0) { 
-            clearInterval(timerInterval); 
-            timerInterval = null;
-            timerVal.innerText = "00:00:00"; 
-            alert("⏰ Đã hết thời gian làm bài! Hệ thống tự động thu bài."); 
-            executeSubmitExam(true); 
-            return; 
-        } 
-        timerVal.innerText = formatHHMMSS(remainingSeconds); 
-        if (remainingSeconds <= 120) timerBox.classList.add("timer-warning"); 
-        else timerBox.classList.remove("timer-warning");
+        if (timerVal) timerVal.innerText = formatHHMMSS(remainingSeconds); 
+        if (remainingSeconds <= 120 && timerBox) timerBox.classList.add("timer-warning"); 
+        else if (timerBox) timerBox.classList.remove("timer-warning");
     }, 1000); 
 }
 
@@ -585,7 +576,9 @@ function startCountdownTimer() {
 function showSubmitConfirmModal() { 
     if (isSubmitted) return; 
 
-    // Hiển thị nút tải file dự phòng trên thanh trên cùng ngay khi học sinh nhấn Nộp bài
+    // Hiện thanh topbar và nút tải file dự phòng ngay khi học sinh nhấn Nộp bài
+    const topbar = document.getElementById("universal-backup-topbar");
+    if (topbar) topbar.style.display = "flex";
     const topDownloadBtn = document.getElementById("btn-always-download-backup");
     if (topDownloadBtn) topDownloadBtn.style.display = "inline-flex";
 
@@ -695,11 +688,13 @@ function restoreExamStateFromStorage() {
     return false; 
 }
 
-// XÁC THỰC 2 CHIỀU ĐỒNG BỘ MÁY CHỦ KHI NỘP BÀI
+// XÁC THỰC 2 CHIỀU ĐỒNG BỘ MÁY CHỦ KHI NỘP BÀI (KHÓA CHẶT THỜI GIAN LÀM BÀI TỐI ĐA)
 async function executeSubmitExam(isForceSubmit = false) { 
     if (isSubmitted || isSubmittingInProgress) return; 
 
-    // Đảm bảo nút tải file trên đầu trang hiện ngay lập tức
+    // Đảm bảo hiển thị thanh topbar và nút tải file ngay khi tiến hành nộp bài
+    const topbar = document.getElementById("universal-backup-topbar");
+    if (topbar) topbar.style.display = "flex";
     const topDownloadBtn = document.getElementById("btn-always-download-backup");
     if (topDownloadBtn) topDownloadBtn.style.display = "inline-flex";
 
@@ -740,7 +735,10 @@ async function executeSubmitExam(isForceSubmit = false) {
     const isClassAcc = typeof findStudentFromDatabase === 'function' ? !!findStudentFromDatabase(sId, currentCat) : false;
     const isFreeStudent = !isClassAcc;
 
-    const durationSec = lockedDurationSec || (examStartTime ? Math.round((Date.now() - examStartTime) / 1000) : 0); 
+    // KHỐNG CHẾ CHẶN TRẦN: THỜI GIAN LÀM BÀI KHÔNG BAO GIỜ VƯỢT QUÁ THỜI LƯỢNG ĐỀ THI
+    const maxAllowedSec = totalTimeSeconds || (TIME_LIMIT_MINUTES * 60) || 5400;
+    let actualElapsedSec = lockedDurationSec || (examStartTime ? Math.round((Date.now() - examStartTime) / 1000) : 0);
+    const durationSec = Math.min(Math.max(1, actualElapsedSec), maxAllowedSec);
     const spentMins = Math.floor(durationSec / 60); 
     const spentSecs = durationSec % 60; 
     const completionTimeStr = `${spentMins} phút ${spentSecs} giây`; 
@@ -940,6 +938,8 @@ function renderResultSummaryScreen(correct, wrong, spentMins, spentTimeStr, fina
     document.getElementById("quiz-content").style.display = "none"; 
 
     // Đảm bảo nút tải file trên cùng luôn hiện sau khi hoàn tất nộp bài
+    const topbar = document.getElementById("universal-backup-topbar");
+    if (topbar) topbar.style.display = "flex";
     const topDownloadBtn = document.getElementById("btn-always-download-backup");
     if (topDownloadBtn) topDownloadBtn.style.display = "inline-flex";
 
