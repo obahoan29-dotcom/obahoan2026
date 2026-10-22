@@ -2,7 +2,7 @@
 // FILE: portal-tuluan.js
 // QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
 // BẢO VỆ CHỐNG CHÉP BÀI, NÚT XÓA ẢNH (✕) TỰ ĐỘNG NHÚNG CSS
-// TỰ ĐỘNG NẠP ĐÚNG 5 ĐỀ MỚI NHẤT CHO TỪNG LỚP
+// TỰ ĐỘNG NẠP ĐÚNG 5 ĐỀ MỚI NHẤT (LẤY TẤT CẢ CÁC LOẠI ĐỀ KHÔNG PHÂN BIỆT)
 // =========================================================
 
 // TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH (✕) VÀO TRANG MÀ KHÔNG CẦN SỬA FILE style-modals.css
@@ -91,58 +91,160 @@ function getUnifiedExamFolderKey(title, maDe, quizId) {
         .replace(/_+/g, '_');
 }
 
-// Chuẩn hóa tên thư mục học sinh: STT - SBD - HO_VA_TEN
-function getStudentFolderKey(stt, sbd, name) {
-    const padStt = String(stt || "00").padStart(2, '0');
-    const cleanSbd = String(sbd || "NOSBD").trim().replace(/[^a-zA-Z0-9]/g, '_');
-    const cleanName = String(name || "HOC_SINH").trim()
+// Chuẩn hóa tên thư mục học sinh: TỰ ĐỘNG TÌM ĐÚNG STT CHUẨN TRÁNH TRÙNG LẶP THƯ MỤC
+function getStudentFolderKey(stt, sbd, name, categoryId = "") {
+    let finalStt = stt;
+    const cleanSbd = String(sbd || "").trim();
+    const cleanName = String(name || "").trim();
+
+    // Tự động đối chiếu CSDL học sinh để lấy đúng STT chính thức
+    if (window.STUDENT_ACCOUNTS) {
+        let found = null;
+        if (categoryId) {
+            const list = (typeof getAccountsForCategory === 'function') 
+                ? getAccountsForCategory(categoryId) 
+                : window.STUDENT_ACCOUNTS[categoryId];
+            if (Array.isArray(list)) {
+                found = list.find(a => 
+                    (cleanSbd && String(a.sbd || "").trim().toLowerCase() === cleanSbd.toLowerCase()) ||
+                    (cleanName && typeof normalizeName === 'function' && normalizeName(a.name) === normalizeName(cleanName))
+                );
+            }
+        }
+        if (!found) {
+            for (let cat in window.STUDENT_ACCOUNTS) {
+                const list = window.STUDENT_ACCOUNTS[cat];
+                if (Array.isArray(list)) {
+                    found = list.find(a => 
+                        (cleanSbd && String(a.sbd || "").trim().toLowerCase() === cleanSbd.toLowerCase()) ||
+                        (cleanName && typeof normalizeName === 'function' && normalizeName(a.name) === normalizeName(cleanName))
+                    );
+                    if (found) break;
+                }
+            }
+        }
+        if (found && found.stt !== undefined && found.stt !== null) {
+            finalStt = found.stt;
+        }
+    }
+
+    if (!finalStt || finalStt === "0" || finalStt === "00" || isNaN(parseInt(finalStt, 10))) {
+        finalStt = (finalStt && !isNaN(parseInt(finalStt, 10))) ? finalStt : "00";
+    }
+
+    const padStt = String(finalStt).padStart(2, '0');
+    const safeSbd = cleanSbd.replace(/[^a-zA-Z0-9]/g, '_') || "NOSBD";
+    const safeName = cleanName
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/[đĐ]/g, "d")
         .replace(/[^a-zA-Z0-9]/g, '_')
         .replace(/_+/g, '_')
-        .toUpperCase();
-    return `${padStt}_${cleanSbd}_${cleanName}`;
+        .toUpperCase() || "HOC_SINH";
+
+    return `${padStt}_${safeSbd}_${safeName}`;
 }
 
-// Nén ảnh Client-side bằng HTML5 Canvas siêu tốc
+// Nén ảnh & sửa lỗi nhận diện sai hình ảnh trên điện thoại / tablet
 function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) {
     return new Promise((resolve, reject) => {
-        if (!file || !file.type.match(/image.*/)) {
+        if (!file) {
+            return reject(new Error("Không tìm thấy tệp được chọn!"));
+        }
+
+        const mime = String(file.type || "").toLowerCase();
+        const name = String(file.name || "").toLowerCase();
+        const isImageMime = mime.startsWith("image/");
+        const isImageExt = /\.(jpe?g|png|webp|bmp|gif|heic|heif|jfif|svg)$/i.test(name);
+
+        // Chấp nhận nếu có MIME image, hoặc đuôi file ảnh, hoặc mime rỗng/octet-stream thường thấy trên mobile
+        if (!isImageMime && !isImageExt && mime !== "" && mime !== "application/octet-stream") {
             return reject(new Error("Tệp chọn không phải là hình ảnh!"));
         }
+
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
             img.onload = function() {
-                let width = img.width;
-                let height = img.height;
-                if (width > maxDimension || height > maxDimension) {
-                    if (width > height) {
-                        height = Math.round((height * maxDimension) / width);
-                        width = maxDimension;
-                    } else {
-                        width = Math.round((width * maxDimension) / height);
-                        height = maxDimension;
+                try {
+                    let width = img.width || 1200;
+                    let height = img.height || 900;
+                    if (width > maxDimension || height > maxDimension) {
+                        if (width > height) {
+                            height = Math.round((height * maxDimension) / width);
+                            width = maxDimension;
+                        } else {
+                            width = Math.round((width * maxDimension) / height);
+                            height = maxDimension;
+                        }
                     }
-                }
-                const canvas = document.createElement("canvas");
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext("2d");
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(0, 0, width, height);
-                ctx.drawImage(img, 0, 0, width, height);
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
 
-                const dataUrl = canvas.toDataURL("image/jpeg", quality);
-                const base64 = dataUrl.split(",")[1];
-                resolve({ base64, dataUrl, mimeType: "image/jpeg" });
+                    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+                    const base64 = dataUrl.split(",")[1];
+                    resolve({ base64, dataUrl, mimeType: "image/jpeg" });
+                } catch(canvasErr) {
+                    let rawResult = String(e.target.result || "");
+                    let base64 = rawResult.includes("base64,") ? rawResult.split("base64,")[1] : rawResult;
+                    resolve({ base64, dataUrl: rawResult, mimeType: file.type || "image/jpeg" });
+                }
             };
-            img.onerror = () => reject(new Error("Lỗi đọc cấu trúc ảnh!"));
+            img.onerror = function() {
+                // Fallback nếu trình duyệt mobile không tạo được đối tượng Image
+                let rawResult = String(e.target.result || "");
+                if (rawResult.includes("base64,")) {
+                    let base64 = rawResult.split("base64,")[1];
+                    resolve({ base64, dataUrl: rawResult, mimeType: file.type || "image/jpeg" });
+                } else {
+                    reject(new Error("Không thể giải mã tệp ảnh này. Vui lòng chọn ảnh chụp JPG/PNG!"));
+                }
+            };
             img.src = e.target.result;
         };
         reader.onerror = () => reject(new Error("Lỗi đọc tệp từ thiết bị!"));
         reader.readAsDataURL(file);
     });
+}
+
+// Gửi file lên Google Drive với thời gian chờ 75s và cơ chế tự động thử lại
+async function sendToGoogleDriveWithRetry(gasUrl, payload, maxRetries = 2, timeoutMs = 75000) {
+    let lastError = null;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => {
+            try { controller.abort(); } catch(e) {}
+        }, timeoutMs);
+
+        try {
+            const res = await fetch(gasUrl, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload),
+                signal: controller.signal
+            });
+            clearTimeout(timer);
+            const result = await res.json();
+            if (result && result.status === "success") {
+                return result;
+            }
+            throw new Error(result.message || "Máy chủ Drive không phản hồi đường dẫn tệp.");
+        } catch(err) {
+            clearTimeout(timer);
+            lastError = err;
+            if (err.name === 'AbortError' || String(err.message).includes('abort')) {
+                lastError = new Error(`Thời gian tải lên Drive quá ${timeoutMs / 1000}s. Đường truyền đang chậm.`);
+            }
+            if (attempt < maxRetries) {
+                await new Promise(r => setTimeout(r, 1500));
+            }
+        }
+    }
+    throw lastError;
 }
 
 function ensureTuLuanModalDOM() {
@@ -288,15 +390,15 @@ function closeTuLuanModal(event) {
     }
 }
 
-// XỬ LÝ TRIỆT ĐỂ VIỆC BỊ KHÓA CHẾT ĐỀ, QUÉT ĐÚNG 5 ĐỀ MỚI NHẤT CỦA LỚP
+// NẠP ĐÚNG 5 ĐỀ MỚI NHẤT: LẤY HẾT TẤT CẢ CÁC LOẠI ĐỀ (TRẮC NGHIỆM, TỰ LUẬN, BÀI TẬP, TÀI LIỆU...)
 async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
     const selector = document.getElementById("tuluan-exam-selector");
     if (!selector) return;
-    selector.innerHTML = "<option value=''>⏳ Đang tải danh sách 5 đề mới nhất...</option>";
+    selector.innerHTML = "<option value=''>⏳ Đang tải 5 đề mới nhất...</option>";
 
     let rawExams = [];
 
-    // 1. Quét từ Firebase node /custom_links/{targetCat}
+    // 1. Quét từ Firebase node /custom_links/{targetCat} (LẤY HẾT, KHÔNG BỎ QUA isDoc)
     try {
         const resCat = await fetch(`${FIREBASE_DB_URL}/custom_links/${targetCat}.json`);
         if (resCat && resCat.ok) {
@@ -304,7 +406,7 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
             if (catData && typeof catData === 'object') {
                 for (let k in catData) {
                     const item = catData[k];
-                    if (item && item.title && String(item.title).trim() !== "" && !item.isDoc) {
+                    if (item && item.title && String(item.title).trim() !== "") {
                         let t = item.timestamp || (typeof parseDateString === 'function' ? parseDateString(item.date) : 0) || 0;
                         rawExams.push({
                             id: (typeof extractQuizIdFromItem === 'function') ? (extractQuizIdFromItem(item) || k) : k,
@@ -317,12 +419,12 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
         }
     } catch(e) {}
 
-    // 2. Quét dự phòng từ danh mục đề thi cục bộ trên RAM
+    // 2. Quét dự phòng từ danh mục cục bộ trong bộ nhớ RAM (LẤY HẾT, KHÔNG LỌC isDoc)
     const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
     const catObj = allCats.find(c => c.id === targetCat);
     if (catObj && Array.isArray(catObj.links)) {
         catObj.links.forEach(l => {
-            if (l && l.title && !l.isDoc) {
+            if (l && l.title && String(l.title).trim() !== "") {
                 let t = l.timestamp || (typeof parseDateString === 'function' ? parseDateString(l.date) : 0) || 0;
                 rawExams.push({
                     id: (typeof extractQuizIdFromItem === 'function') ? (extractQuizIdFromItem(l) || l.id) : l.id,
@@ -333,7 +435,7 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
         });
     }
 
-    // 3. Quét các đề tự luận bổ sung được giáo viên tạo
+    // 3. Quét các đề tự luận được giáo viên tạo riêng
     try {
         const resCustom = await fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${targetCat}.json`);
         if (resCustom && resCustom.ok) {
@@ -352,7 +454,25 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
         }
     } catch(e) {}
 
-    // Sắp xếp giảm dần theo thời gian (đề mới nhất lên trên)
+    // 4. Nếu lớp hiện tại chưa đủ 5 đề, quét bổ sung các mục mới từ các lớp khác để luôn có đủ 5 đề
+    if (rawExams.length < 5) {
+        allCats.forEach(c => {
+            if (c.links && Array.isArray(c.links)) {
+                c.links.forEach(l => {
+                    if (l && l.title && String(l.title).trim() !== "") {
+                        let t = l.timestamp || (typeof parseDateString === 'function' ? parseDateString(l.date) : 0) || 0;
+                        rawExams.push({
+                            id: (typeof extractQuizIdFromItem === 'function') ? (extractQuizIdFromItem(l) || l.id) : l.id,
+                            title: l.title,
+                            timestamp: t
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Sắp xếp giảm dần theo thời gian (mới nhất lên trên cùng)
     rawExams.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
     // Lọc trùng theo tên đề thi
@@ -641,7 +761,7 @@ function onThumbnailClicked(imgSrc, driveUrl, title, canView, event) {
     openTuLuanLightbox(imgSrc, driveUrl, title, event);
 }
 
-// HÀM XÓA 1 BỨC ẢNH CỤ THỂ KHI ẤN VÀO NÚT "✕"
+// XÓA 1 BỨC ẢNH CỤ THỂ KHI ẤN VÀO NÚT "✕"
 async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -803,7 +923,7 @@ function triggerStudentUpload(stt, sbd, studentName, correctPass) {
     }
 }
 
-// TỔ CHỨC CÂY THƯ MỤC DRIVE PHÂN CẤP ĐẦY ĐỦ 4 TẦNG:
+// TỔ CHỨC CÂY THƯ MỤC DRIVE PHÂN CẤP 4 TẦNG:
 // BAI_TAP_TU_LUAN / LOP / DE / STT_SBD_HOTEN / ANH_CHUP
 async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
     if (!fileInput.files || fileInput.files.length === 0) return;
@@ -822,7 +942,7 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
     const quizId = currentTuLuanModalData.quizId || "quiz";
     const examTitle = currentTuLuanModalData.examTitle || "BAI_TAP_TU_LUAN";
     const unifiedFolder = getUnifiedExamFolderKey(examTitle, "", quizId);
-    const studentFolderName = getStudentFolderKey(stt, sbd, studentName);
+    const studentFolderName = getStudentFolderKey(stt, sbd, studentName, classId);
 
     const currentSub = currentTuLuanModalData.submissionsMap[cleanSbd] || {};
     const existingImages = Array.isArray(currentSub.images) ? [...currentSub.images] : [];
@@ -855,13 +975,7 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
                 ? GOOGLE_DRIVE_TULUAN_GAS_URL
                 : GOOGLE_DRIVE_UPLOAD_GAS_URL;
 
-            const res = await fetch(gasUrl, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
+            const result = await sendToGoogleDriveWithRetry(gasUrl, payload, 2, 75000);
             if (result && result.status === "success" && result.fileId) {
                 const directImgUrl = result.directUrl || (typeof toDirectGoogleDriveImageUrl === 'function' ? toDirectGoogleDriveImageUrl(result.fileUrl) : result.fileUrl);
                 existingImages.push({
@@ -872,8 +986,6 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
                     uploadedAt: new Date().toLocaleTimeString("vi-VN") + " " + new Date().toLocaleDateString("vi-VN")
                 });
                 successCount++;
-            } else {
-                throw new Error(result.message || "Lỗi lưu file vào Google Drive.");
             }
         } catch(err) {
             console.error(`Lỗi upload ảnh trang ${i + 1}:`, err);
@@ -943,11 +1055,12 @@ function closeTuLuanLightbox(event) {
     if (lb) lb.style.display = "none";
 }
 
-// Nộp bài tự luận TRONG BÀI THI (thi.html): ĐỒNG BỘ ĐÚNG CẤU TRÚC 4 TẦNG TRÊN DRIVE
+// NỘP BÀI TỰ LUẬN TRONG BÀI THI (thi.html): ĐỒNG BỘ 100% CÙNG 1 THƯ MỤC DUY NHẤT
 async function triggerExamRoomDriveUpload(qId) {
-    const sId = document.getElementById("student-id")?.value.trim() || safeLocal.getItem("saved_student_sbd");
-    const sName = document.getElementById("student-name")?.value.trim() || safeLocal.getItem("saved_student_name");
-    const sClass = document.getElementById("student-class")?.value.trim() || safeLocal.getItem("saved_student_class");
+    const sId = document.getElementById("student-id")?.value.trim() || safeLocal.getItem("saved_student_sbd") || "";
+    const sName = document.getElementById("student-name")?.value.trim() || safeLocal.getItem("saved_student_name") || "";
+    const sClass = document.getElementById("student-class")?.value.trim() || safeLocal.getItem("saved_student_class") || "";
+    const currentCat = typeof getExamCategory === 'function' ? getExamCategory() : "";
 
     if (!sId || !sName) {
         alert("⚠️ Không xác định được thông tin học sinh đang làm bài!");
@@ -976,11 +1089,15 @@ async function triggerExamRoomDriveUpload(qId) {
 
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id') || (typeof examData !== 'undefined' && examData && examData.id) || "quiz";
-            const examTitle = typeof EXAM_NAME !== 'undefined' ? EXAM_NAME : "Bài thi";
+            const examTitle = (typeof examData !== 'undefined' && examData && examData.title) 
+                ? examData.title 
+                : (typeof EXAM_NAME !== 'undefined' && EXAM_NAME !== 'Bài thi' ? EXAM_NAME : "BAI_TAP_TU_LUAN");
             
-            const driveClassName = getCleanDriveClassName(sClass);
+            const driveClassName = getCleanDriveClassName(sClass || currentCat);
             const unifiedFolder = getUnifiedExamFolderKey(examTitle, (typeof getMaDe === 'function' ? getMaDe() : ""), quizId);
-            const studentFolderName = getStudentFolderKey("00", sId, sName);
+            
+            // TỰ ĐỘNG TÌM ĐÚNG STT THẬT (KHÔNG CÒN HARDCODE "00" NỮA)
+            const studentFolderName = getStudentFolderKey("00", sId, sName, currentCat || sClass);
             const cleanSbd = sId.replace(/[^a-zA-Z0-9]/g, '_');
 
             let existingImages = [];
@@ -1003,7 +1120,7 @@ async function triggerExamRoomDriveUpload(qId) {
                         className: driveClassName,
                         examTitle: unifiedFolder,
                         studentFolder: studentFolderName,
-                        stt: "00",
+                        stt: studentFolderName.split('_')[0] || "00",
                         sbd: sId,
                         studentName: sName,
                         filename: `Cau_${qId}_Trang_${pageIdx}_${Date.now()}.jpg`,
@@ -1015,12 +1132,7 @@ async function triggerExamRoomDriveUpload(qId) {
                         ? GOOGLE_DRIVE_TULUAN_GAS_URL
                         : GOOGLE_DRIVE_UPLOAD_GAS_URL;
 
-                    const r = await fetch(gasUrl, {
-                        method: "POST",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify(payload)
-                    });
-                    const resJson = await r.json();
+                    const resJson = await sendToGoogleDriveWithRetry(gasUrl, payload, 2, 75000);
                     if (resJson && resJson.status === "success") {
                         existingImages.push({
                             fileId: resJson.fileId,
@@ -1038,6 +1150,7 @@ async function triggerExamRoomDriveUpload(qId) {
 
             if (successCount > 0) {
                 const submitRecord = {
+                    stt: studentFolderName.split('_')[0] || "00",
                     sbd: sId,
                     studentName: sName,
                     className: driveClassName,
@@ -1066,7 +1179,7 @@ async function triggerExamRoomDriveUpload(qId) {
                     statusEl.className = "drive-up-status success";
                     statusEl.innerText = `✅ Đã lưu ${existingImages.length} ảnh lên Drive!`;
                 }
-                alert(`✅ ĐÃ LƯU BÀI TỰ LUẬN THÀNH CÔNG!\n\nĐường dẫn Drive: BAI_TAP_TU_LUAN / ${driveClassName} / ${unifiedFolder} / ${studentFolderName}`);
+                alert(`✅ ĐÃ LƯU BÀI TỰ LUẬN THÀNH CÔNG!\n\nĐường dẫn Drive duy nhất:\nBAI_TAP_TU_LUAN / ${driveClassName} / ${unifiedFolder} / ${studentFolderName}`);
             } else {
                 if (statusEl) {
                     statusEl.className = "drive-up-status error";
