@@ -4,7 +4,8 @@
 // BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN) | QUẢN LÝ 5 ĐỀ MỚI NHẤT
 // TỰ ĐỘNG TẠO THƯ MỤC CHUẨN XÁC THEO LỚP ĐANG CHỌN (11C, 11A, 10P...)
 // NÚT XÓA ĐỀ CHỈ HIỆN KHI LÀ ADMIN | ĐỔI MẬT KHẨU 4 SỐ NỔI LÊN TRÊN
-// THÊM: CỘT CHẤM CHÉO NHAU, CỘT NHẬN XÉT (XÒE RA) & XUẤT EXCEL CÓ ẢNH
+// THÊM: CỘT CHẤM CHÉO NHAU (TỰ ĐỘNG GHI NHẬN & HIỆN TÊN NGƯỜI CHẤM KHI HOVER)
+// THÊM: CỘT NHẬN XÉT (XÒE RA) & XUẤT EXCEL CÓ ẢNH VÀ NGƯỜI CHẤM
 // =========================================================
 
 // TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ, CHẤM CHÉO, NHẬN XÉT & EXCEL
@@ -123,12 +124,18 @@
             color: #0284c7 !important;
             background: #ffffff !important;
             box-sizing: border-box !important;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+            cursor: pointer !important;
+        }
+        .tuluan-score-input:hover {
+            border-color: #0284c7 !important;
+            background: #f0f9ff !important;
         }
         .tuluan-score-input:focus {
             border-color: #0284c7 !important;
             box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
             background: #f0f9ff !important;
+            cursor: text !important;
         }
 
         /* NÚT BẬT NHẬN XÉT */
@@ -506,6 +513,58 @@ function getEffectiveStudentPassword(cleanSbd, defaultSbd, defaultPass) {
     return String(defaultSbd || defaultPass || "").trim();
 }
 
+// HÀM NHẬN DIỆN DANH TÍNH NGƯỜI ĐANG NHẬP ĐIỂM CHẤM CHÉO
+function getCurrentGraderInfo() {
+    // 1. Nếu là Giáo viên (Admin)
+    if (checkCurrentIsAdmin()) {
+        return { name: "Giáo viên (Admin)", sbd: "ADMIN" };
+    }
+
+    // 2. Nếu học sinh đã đăng nhập thi hoặc đã lưu thông tin trên máy
+    try {
+        const raw = safeLocal.getItem("current_exam_student");
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && (parsed.name || parsed.sbd)) {
+                return { name: parsed.name || parsed.sbd, sbd: parsed.sbd || "" };
+            }
+        }
+    } catch(e) {}
+
+    const sName = safeLocal.getItem("saved_student_name");
+    const sSbd = safeLocal.getItem("saved_student_sbd");
+    if (sName || sSbd) {
+        return { name: sName || sSbd, sbd: sSbd || "" };
+    }
+
+    // 3. Nếu phiên làm việc này đã nhập danh tính trước đó
+    const sessionGrader = safeSession.getItem("current_peer_grader");
+    if (sessionGrader) {
+        try { return JSON.parse(sessionGrader); } catch(e) {}
+    }
+
+    // 4. Nếu chưa có thông tin, hỏi danh tính người chấm (chỉ hỏi 1 lần trong phiên)
+    const inputIdentify = prompt("👤 NHẬP DANH TÍNH NGƯỜI CHẤM:\n\nVui lòng nhập Họ tên hoặc SBD của em để hệ thống ghi nhận người chấm chéo bài này (Ví dụ: 11A01 hoặc LƯỜNG HẢI AN):");
+    if (inputIdentify && inputIdentify.trim()) {
+        const cleanInput = inputIdentify.trim();
+        const classStudents = (typeof getAccountsForCategory === 'function') 
+            ? getAccountsForCategory(currentTuLuanModalData.classId) 
+            : [];
+        const matched = classStudents.find(st => 
+            String(st.sbd).toLowerCase() === cleanInput.toLowerCase() ||
+            (typeof normalizeName === 'function' && normalizeName(st.name) === normalizeName(cleanInput))
+        );
+        const graderObj = matched 
+            ? { name: matched.name, sbd: matched.sbd }
+            : { name: cleanInput, sbd: "" };
+        
+        safeSession.setItem("current_peer_grader", JSON.stringify(graderObj));
+        return graderObj;
+    }
+
+    return { name: "Học sinh trong lớp", sbd: "" };
+}
+
 // Nén ảnh tải lên
 function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) {
     return new Promise((resolve, reject) => {
@@ -660,7 +719,7 @@ function ensureTuLuanModalDOM() {
                     <button type="button" class="btn-tuluan-approve-all" onclick="toggleApproveAllSubmissions(true)" title="Duyệt tất cả bài làm của đề này để học sinh cùng xem">
                         ✅ Duyệt tất cả
                     </button>
-                    <!-- NÚT XUẤT EXCEL TỰ LUẬN KÈM ẢNH BÀI LÀM THEO HÀNG -->
+                    <!-- NÚT XUẤT EXCEL TỰ LUẬN KÈM ẢNH BÀI LÀM THEO HÀNG VÀ NGƯỜI CHẤM -->
                     <button type="button" class="btn-tuluan-export-excel" onclick="exportTuLuanToExcel(event)" title="Xuất toàn bộ bảng điểm, nhận xét và ảnh bài làm đã nộp ra file Excel (.xls) chuẩn đẹp">
                         📊 Xuất excel điểm tự luận
                     </button>
@@ -688,9 +747,9 @@ function ensureTuLuanModalDOM() {
                             <th style="width: 140px;">Trạng thái / Ngày nộp</th>
                             <th style="width: 105px; text-align: center;">Phê duyệt</th>
                             <th style="min-width: 165px;">Ảnh bài làm đã nộp</th>
-                            <!-- YÊU CẦU 1: CỘT CHẤM CHÉO NHAU -->
-                            <th style="width: 105px; text-align: center;" title="Nhập điểm chấm chéo bài tự luận (Ví dụ: 8.7)">Chấm chéo nhau</th>
-                            <!-- YÊU CẦU 2: CỘT NHẬN XÉT -->
+                            <!-- CỘT CHẤM CHÉO NHAU (GHI NHẬN DANH TÍNH & HIỆN TOOLTIP KHI RÊ CHUỘT) -->
+                            <th style="width: 105px; text-align: center;" title="Nhập điểm chấm chéo bài tự luận (Rê chuột vào ô để xem ai là người chấm)">Chấm chéo nhau</th>
+                            <!-- CỘT NHẬN XÉT -->
                             <th style="width: 110px; text-align: center;" title="Bấm vào để xòe ra bảng nhận xét chi tiết bài làm của học sinh">Nhận xét</th>
                             <th style="min-width: 175px; text-align: center;">Thao tác</th>
                         </tr>
@@ -701,7 +760,7 @@ function ensureTuLuanModalDOM() {
 
             <div class="tuluan-modal-footer">
                 <span style="font-size:11.5px; color:#475569; font-style:italic;">
-                    🔒 Học sinh chỉ xem được ảnh bài làm phóng to của bạn bè sau khi được Giáo viên phê duyệt.
+                    🔒 Học sinh chỉ xem được ảnh bài làm phóng to của bạn bè sau khi được Giáo viên phê duyệt. Rê chuột vào ô điểm chấm chéo để xem người đã nhập.
                 </span>
                 <button type="button" class="btn-admin btn-cancel" style="padding: 6px 18px;" onclick="closeTuLuanModal(event)">Đóng</button>
             </div>
@@ -1013,7 +1072,7 @@ async function deleteCurrentTuLuanExam(event) {
     }
 }
 
-// THÊM ĐỀ TỰ LUẬN MỚI: ĐĂNG CHUẨN XÁC 100% VÀO ĐÚNG LỚP ĐANG CHỌN TRÊN GOOGLE DRIVE
+// THÊM ĐỀ TỰ LUẬN MỚI
 async function promptAddNewTuLuanExam() {
     const inputTitle = prompt("➕ NHẬP TÊN ĐỀ THI TỰ LUẬN MỚI (VD: Đề 109 Giữa Kỳ 1, Đề 108 Toán 11...):");
     if (!inputTitle || !inputTitle.trim()) return;
@@ -1241,16 +1300,24 @@ function renderTuLuanStudentsTable() {
             `;
         }
 
-        // YÊU CẦU 1: Ô NHẬP ĐIỂM CHẤM CHÉO NHAU (LƯU TỰ ĐỘNG LÊN FIREBASE)
+        // CỘT CHẤM CHÉO NHAU (GHI NHẬN DANH TÍNH & HIỆN TOOLTIP KHI HOVER)
         const currentCrossScore = (record && record.crossScore !== undefined && record.crossScore !== null) ? record.crossScore : '';
+        const crossScoreBy = (record && record.crossScoreBy) ? record.crossScoreBy : '';
+        const crossScoreTime = (record && record.crossScoreTime) ? record.crossScoreTime : '';
+
+        let scoreTooltip = "Nhập điểm chấm chéo (nhập xong tự động lưu người chấm)";
+        if (currentCrossScore !== "") {
+            scoreTooltip = `🎯 Điểm: ${currentCrossScore}đ\n👤 Người chấm: ${crossScoreBy || "Chưa rõ"}${crossScoreTime ? `\n🕒 Lúc: ${crossScoreTime}` : ""}`;
+        }
+
         const crossScoreHtml = `
             <input type="text" class="tuluan-score-input" id="cross-score-${cleanSbd}"
                    value="${currentCrossScore}" placeholder="VD: 8.7"
                    onchange="saveStudentCrossScore('${cleanSbd}', '${st.stt}', '${st.sbd}', '${st.name}', this.value)"
-                   title="Nhập điểm chấm chéo (nhập xong tự động lưu)">
+                   title="${scoreTooltip}">
         `;
 
-        // YÊU CẦU 2: CỘT NHẬN XÉT (XÒE BẢNG NHẬP LIỆU RA PHÍA TRÊN)
+        // CỘT NHẬN XÉT (XÒE BẢNG NHẬP LIỆU RA PHÍA TRÊN)
         const currentFeedback = (record && record.feedback) ? record.feedback : '';
         const hasFeedback = Boolean(currentFeedback && currentFeedback.trim() !== "");
         const feedbackHtml = `
@@ -1337,13 +1404,26 @@ function renderTuLuanStudentsTable() {
     updateTuLuanAdminUI();
 }
 
-// LƯU ĐIỂM CHẤM CHÉO NHAU LÊN FIREBASE
+// LƯU ĐIỂM CHẤM CHÉO NHAU KÈM NGƯỜI NHẬP & THỜI GIAN LÊN FIREBASE
 async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) {
     const qId = currentTuLuanModalData.quizId;
     if (!qId) return;
 
     const trimmedScore = String(scoreVal || "").trim();
     const driveClassName = getCleanDriveClassName(currentTuLuanModalData.classId);
+
+    // Ghi nhận thông tin người chấm và thời gian nếu có nhập điểm
+    let graderDisplay = "";
+    let scoreTimeStr = "";
+    if (trimmedScore !== "") {
+        const graderInfo = getCurrentGraderInfo();
+        graderDisplay = graderInfo.sbd && graderInfo.sbd !== "ADMIN" 
+            ? `${graderInfo.name} (${graderInfo.sbd})` 
+            : graderInfo.name;
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        scoreTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())} ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+    }
 
     if (!currentTuLuanModalData.submissionsMap[cleanSbd]) {
         currentTuLuanModalData.submissionsMap[cleanSbd] = {
@@ -1353,14 +1433,24 @@ async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) 
             className: driveClassName,
             count: 0,
             images: [],
-            crossScore: trimmedScore
+            crossScore: trimmedScore,
+            crossScoreBy: graderDisplay,
+            crossScoreTime: scoreTimeStr
         };
     } else {
         currentTuLuanModalData.submissionsMap[cleanSbd].crossScore = trimmedScore;
+        currentTuLuanModalData.submissionsMap[cleanSbd].crossScoreBy = graderDisplay;
+        currentTuLuanModalData.submissionsMap[cleanSbd].crossScoreTime = scoreTimeStr;
     }
 
     try {
-        const patchPayload = { crossScore: trimmedScore, scoreUpdatedAt: Date.now() };
+        const patchPayload = { 
+            crossScore: trimmedScore, 
+            crossScoreBy: graderDisplay,
+            crossScoreTime: scoreTimeStr,
+            scoreUpdatedAt: Date.now() 
+        };
+
         await Promise.all([
             fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
                 method: "PATCH",
@@ -1373,9 +1463,16 @@ async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) 
                 body: JSON.stringify(patchPayload)
             })
         ]);
+
         const scoreInput = document.getElementById(`cross-score-${cleanSbd}`);
         if (scoreInput) {
             scoreInput.style.borderColor = "#10b981";
+            // Cập nhật tooltip ngay lập tức
+            if (trimmedScore !== "") {
+                scoreInput.title = `🎯 Điểm: ${trimmedScore}đ\n👤 Người chấm: ${graderDisplay}\n🕒 Lúc: ${scoreTimeStr}`;
+            } else {
+                scoreInput.title = "Nhập điểm chấm chéo (nhập xong tự động lưu người chấm)";
+            }
             setTimeout(() => { scoreInput.style.borderColor = "#cbd5e1"; }, 1500);
         }
     } catch(err) {
@@ -1479,7 +1576,7 @@ async function saveStudentFeedback(cleanSbd, stt, sbd, studentName, event) {
     }
 }
 
-// YÊU CẦU 3: XUẤT EXCEL ĐIỂM TỰ LUẬN KÈM ẢNH BÀI LÀM TRONG CÁC Ô THEO HÀNG
+// XUẤT EXCEL ĐIỂM TỰ LUẬN KÈM ẢNH BÀI LÀM VÀ DANH TÍNH NGƯỜI CHẤM
 function exportTuLuanToExcel(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -1502,6 +1599,8 @@ function exportTuLuanToExcel(event) {
         const statusText = hasSub ? `Đã nộp (${record.images.length} ảnh) lúc ${record.lastSubmit || ''}` : "Chưa nộp";
         const isApprovedText = (record && record.isApproved === true) ? "Đã duyệt" : "Chưa duyệt";
         const scoreVal = (record && record.crossScore !== undefined) ? record.crossScore : "";
+        const scoreBy = (record && record.crossScoreBy) ? record.crossScoreBy : "";
+        const scoreTime = (record && record.crossScoreTime) ? record.crossScoreTime : "";
         const feedbackVal = (record && record.feedback) ? record.feedback : "";
 
         // Nhúng ảnh trực tiếp vào ô Excel kèm liên kết mở Drive
@@ -1526,7 +1625,10 @@ function exportTuLuanToExcel(event) {
                 <td style="text-align: center; font-family: monospace; font-weight: bold;">${st.sbd}</td>
                 <td>${statusText}</td>
                 <td style="text-align: center;">${isApprovedText}</td>
-                <td style="text-align: center; font-weight: bold; color: #0284c7; font-size: 13pt;">${scoreVal}</td>
+                <td style="text-align: center; font-weight: bold; color: #0284c7; font-size: 13pt;">
+                    ${scoreVal}
+                    ${scoreBy ? `<br><span style="font-size:9pt; font-weight:normal; color:#64748b;">(Chấm bởi: ${scoreBy}${scoreTime ? ` - ${scoreTime}` : ''})</span>` : ''}
+                </td>
                 <td style="white-space: pre-wrap; word-break: break-word;">${feedbackVal}</td>
                 <td style="min-width: 250px;">${imagesHtml}</td>
             </tr>
@@ -1560,7 +1662,7 @@ function exportTuLuanToExcel(event) {
                     <th style="width: 80px;">SBD</th>
                     <th style="width: 160px;">Trạng thái / Ngày nộp</th>
                     <th style="width: 100px;">Phê duyệt</th>
-                    <th style="width: 110px;">Điểm chấm chéo</th>
+                    <th style="width: 140px;">Điểm chấm chéo (Người chấm)</th>
                     <th style="width: 220px;">Nhận xét bài làm</th>
                     <th style="width: 380px;">Ảnh bài làm đã nộp (Hiển thị trực tiếp)</th>
                 </tr>
@@ -2017,6 +2119,8 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
             count: existingImages.length,
             images: existingImages,
             crossScore: currentSub.crossScore !== undefined ? currentSub.crossScore : "",
+            crossScoreBy: currentSub.crossScoreBy || "",
+            crossScoreTime: currentSub.crossScoreTime || "",
             feedback: currentSub.feedback || "",
             feedbackTime: currentSub.feedbackTime || "",
             isApproved: currentSub.isApproved || false
@@ -2242,6 +2346,7 @@ window.closeStudentPassPopover = closeStudentPassPopover;
 window.saveStudentPasswordChange = saveStudentPasswordChange;
 window.resetStudentPasswordToDefault = resetStudentPasswordToDefault;
 window.getEffectiveStudentPassword = getEffectiveStudentPassword;
+window.getCurrentGraderInfo = getCurrentGraderInfo;
 window.saveStudentCrossScore = saveStudentCrossScore;
 window.toggleStudentFeedbackPopover = toggleStudentFeedbackPopover;
 window.closeStudentFeedbackPopover = closeStudentFeedbackPopover;
