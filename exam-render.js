@@ -83,10 +83,17 @@ function renderQuizLayout(questions, imageMap) {
                 <input type="text" class="short-input-box" id="q${qId}-input" placeholder="Nhập đáp số của bạn..." oninput="onShortInputChange(${qId})"> 
             </div> 
             <div class="part4-right-col"> 
-                <button type="button" class="btn-photo-trigger" onclick="toggleSubPadlet(${qId})"> 
-                    📷 Chụp ảnh tự luận ▾ 
-                </button> 
+                <div style="display:flex; gap:6px; flex-wrap:wrap; width:100%;">
+                    <button type="button" class="btn-photo-trigger" style="background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); flex:1;" onclick="triggerExamRoomDriveUpload(${qId})" title="Chụp hoặc chọn ảnh bài làm tự luận để lưu thẳng vào Google Drive 5TB"> 
+                        📷 Chụp ảnh nộp Drive
+                    </button> 
+                    <button type="button" class="btn-photo-trigger" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; width:auto; padding:9px 10px;" onclick="toggleSubPadlet(${qId})" title="Hoặc nộp qua Padlet dự phòng"> 
+                        ▾
+                    </button>
+                </div>
+                <span id="drive-upload-status-${qId}" class="drive-up-status" style="display:none; font-size:11.5px; font-weight:800; margin-top:4px;"></span>
                 <div id="sub-padlet-dropdown-${qId}" class="sub-padlet-dropdown"> 
+                    <div style="font-size:11px; font-weight:800; color:#64748b; padding-bottom:4px; border-bottom:1px solid #f1f5f9;">PADLET DỰ PHÒNG:</div>
                     <a href="https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4" target="_blank" rel="noopener noreferrer" class="btn-padlet-opt" onclick="trackPadletClick(${qId})"> 
                         📌 11A nộp padlet 
                     </a> 
@@ -204,7 +211,7 @@ function renderQuizLayout(questions, imageMap) {
             <div class="section-icon">📝</div> 
             <div class="section-text"> 
                 <h3>PHẦN IV. CÂU TỰ LUẬN ĐIỀN ĐÁP ÁN NGẮN</h3> 
-                <p>Điền đáp số VÀ chụp ảnh bài làm tự luận nộp qua đường dẫn Padlet của lớp</p> 
+                <p>Điền đáp số VÀ chụp ảnh bài làm tự luận nộp trực tiếp vào Google Drive 5TB của Thầy</p> 
             </div> 
         </div>`; 
         p4List.forEach((q, qIdx) => { 
