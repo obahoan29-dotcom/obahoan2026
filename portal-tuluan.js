@@ -1,11 +1,11 @@
 // =========================================================
 // FILE: portal-tuluan.js
 // QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
-// BẢO VỆ CHỐNG CHÉP BÀI, BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN)
-// ADMIN XÓA ĐỀ THÊM NHẦM BẰNG NÚT [✕] NGAY Ô CHỌN ĐỀ
+// BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN) | QUẢN LÝ 5 ĐỀ MỚI NHẤT
+// ĐỔI MẬT KHẨU 4 SỐ (XÒE 2 DÒNG) & ADMIN RESET MẬT KHẨU VỀ MẶC ĐỊNH
 // =========================================================
 
-// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH (✕) & NÚT XÓA ĐỀ THI
+// TỰ ĐỘNG NHÚNG TOÀN BỘ CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ & KHUNG ĐỔI MẬT KHẨU
 (function injectTuLuanButtonStyles() {
     const styleId = "tuluan-custom-delete-btn-styles";
     if (document.getElementById(styleId)) return;
@@ -47,7 +47,7 @@
             transform: scale(0.9) !important;
         }
 
-        /* NÚT XÓA ĐỀ THI DÀNH RIÊNG CHO QUẢN TRỊ VIÊN */
+        /* NÚT ✕ ĐỎ XÓA ĐỀ THI DÀNH CHO ADMIN */
         .btn-del-exam-selector {
             background: #fee2e2 !important;
             color: #dc2626 !important;
@@ -75,6 +75,176 @@
         .btn-del-exam-selector:active {
             transform: scale(0.92) !important;
         }
+
+        /* NHÓM NÚT TRONG CỘT THAO TÁC */
+        .tuluan-action-btn-group {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            flex-wrap: nowrap !important;
+        }
+
+        /* NÚT ĐỔI MẬT KHẨU */
+        .btn-tuluan-change-pass {
+            background: #f0fdf4 !important;
+            color: #166534 !important;
+            border: 1px solid #86efac !important;
+            border-radius: 8px !important;
+            padding: 6px 9px !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            box-shadow: 0 1px 3px rgba(22, 101, 52, 0.1) !important;
+        }
+        .btn-tuluan-change-pass:hover {
+            background: #16a34a !important;
+            color: #ffffff !important;
+            border-color: #16a34a !important;
+            transform: translateY(-1px) !important;
+        }
+        .btn-tuluan-change-pass:active {
+            transform: scale(0.95) !important;
+        }
+
+        /* NÚT RESET MẬT KHẨU (ADMIN) */
+        .btn-tuluan-reset-pass {
+            background: #fff7ed !important;
+            color: #c2410c !important;
+            border: 1px solid #fdba74 !important;
+            border-radius: 8px !important;
+            padding: 6px 8px !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 2px !important;
+            box-shadow: 0 1px 3px rgba(194, 65, 12, 0.1) !important;
+        }
+        .btn-tuluan-reset-pass:hover {
+            background: #ea580c !important;
+            color: #ffffff !important;
+            border-color: #ea580c !important;
+            transform: translateY(-1px) !important;
+        }
+        .btn-tuluan-reset-pass:active {
+            transform: scale(0.95) !important;
+        }
+
+        /* KHUNG ĐỔI MẬT KHẨU XÒE RA 2 DÒNG */
+        .student-pass-popover {
+            display: none;
+            position: absolute !important;
+            right: 8px !important;
+            top: calc(100% + 5px) !important;
+            width: 275px !important;
+            background: #ffffff !important;
+            border: 1.5px solid #0284c7 !important;
+            border-radius: 14px !important;
+            padding: 12px 14px !important;
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.28) !important;
+            z-index: 999999 !important;
+            text-align: left !important;
+            animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .student-pass-popover.show {
+            display: block !important;
+        }
+        .pass-popover-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            font-size: 12.5px !important;
+            font-weight: 900 !important;
+            color: #0f172a !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            padding-bottom: 6px !important;
+            margin-bottom: 8px !important;
+        }
+        .btn-close-pass-pop {
+            background: none !important;
+            border: none !important;
+            font-size: 14px !important;
+            font-weight: 900 !important;
+            color: #94a3b8 !important;
+            cursor: pointer !important;
+            padding: 0 4px !important;
+        }
+        .btn-close-pass-pop:hover {
+            color: #ef4444 !important;
+        }
+        .pass-popover-hint {
+            font-size: 11px !important;
+            color: #475569 !important;
+            background: #f0f9ff !important;
+            border: 1px solid #bae6fd !important;
+            padding: 6px 8px !important;
+            border-radius: 8px !important;
+            margin-bottom: 9px !important;
+            line-height: 1.4 !important;
+        }
+        .pass-input-row {
+            margin-bottom: 8px !important;
+        }
+        .pass-input-row label {
+            display: block !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            color: #334155 !important;
+            margin-bottom: 3px !important;
+        }
+        .pass-input-row input {
+            width: 100% !important;
+            padding: 6px 9px !important;
+            border: 1.2px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            outline: none !important;
+            box-sizing: border-box !important;
+            color: #0f172a !important;
+            letter-spacing: 1px !important;
+        }
+        .pass-input-row input:focus {
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+        }
+        .pass-popover-actions {
+            display: flex !important;
+            gap: 6px !important;
+            margin-top: 10px !important;
+        }
+        .btn-pass-cancel {
+            flex: 1 !important;
+            padding: 6px !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            font-size: 11.5px !important;
+            font-weight: 800 !important;
+            color: #475569 !important;
+            cursor: pointer !important;
+        }
+        .btn-pass-save {
+            flex: 1.5 !important;
+            padding: 6px !important;
+            background: linear-gradient(135deg, #16a34a, #15803d) !important;
+            border: none !important;
+            border-radius: 7px !important;
+            font-size: 11.5px !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+            cursor: pointer !important;
+            box-shadow: 0 2px 5px rgba(22, 163, 74, 0.25) !important;
+        }
     `;
     document.head.appendChild(style);
 })();
@@ -85,6 +255,7 @@ let currentTuLuanModalData = {
     examTitle: "",
     submissionsMap: {},
     availableExams: [],
+    customPasswords: {},
     statusFilter: "all"
 };
 
@@ -161,6 +332,16 @@ function getStudentFolderKey(stt, sbd, name, categoryId = "") {
         .toUpperCase() || "HOC_SINH";
 
     return `${padStt}_${safeSbd}_${safeName}`;
+}
+
+// LẤY MẬT KHẨU HIỆN TẠI CỦA HỌC SINH (ƯU TIÊN MẬT KHẨU MỚI ĐỔI TRÊN FIREBASE, MẶC ĐỊNH LÀ SBD)
+function getEffectiveStudentPassword(cleanSbd, defaultSbd, defaultPass) {
+    const customPass = currentTuLuanModalData.customPasswords && currentTuLuanModalData.customPasswords[cleanSbd];
+    if (customPass && String(customPass).trim() !== "") {
+        return String(customPass).trim();
+    }
+    // Mặc định ban đầu vẫn là Số báo danh của em đó (hoặc pass định sẵn)
+    return String(defaultSbd || defaultPass || "").trim();
 }
 
 // Nén ảnh & sửa lỗi nhận diện sai hình ảnh trên điện thoại / camera
@@ -343,7 +524,7 @@ function ensureTuLuanModalDOM() {
                             <th style="width: 155px;">Trạng thái / Ngày nộp</th>
                             <th style="width: 125px; text-align: center;">Phê duyệt</th>
                             <th style="min-width: 180px;">Ảnh bài làm đã nộp</th>
-                            <th style="width: 105px; text-align: center;">Thao tác</th>
+                            <th style="min-width: 175px; text-align: center;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="tuluan-students-tbody"></tbody>
@@ -600,13 +781,10 @@ async function deleteCurrentTuLuanExam(event) {
 
     try {
         await Promise.all([
-            // Xóa khỏi danh sách đề tự luận tạo riêng của lớp này
             fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}/${examId}.json`, { method: "DELETE" }).catch(() => null),
-            // Xóa khỏi custom_links của lớp này nếu là liên kết thêm nhầm
             fetch(`${FIREBASE_DB_URL}/custom_links/${classId}/${examId}.json`, { method: "DELETE" }).catch(() => null)
         ]);
 
-        // Cập nhật lại mảng trong bộ nhớ RAM
         const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
         const catObj = allCats.find(c => c.id === classId);
         if (catObj && Array.isArray(catObj.links)) {
@@ -661,14 +839,15 @@ async function promptAddNewTuLuanExam() {
     }
 }
 
-// Đọc danh sách bài nộp từ Firebase
+// Đọc danh sách bài nộp và mật khẩu tùy chỉnh từ Firebase
 async function loadTuLuanSubmissionsFromFirebase() {
     const qId = currentTuLuanModalData.quizId;
     if (!qId) return;
     try {
-        const [qRes, exRes] = await Promise.all([
+        const [qRes, exRes, passRes] = await Promise.all([
             fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan.json`).catch(() => null),
-            fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan.json`).catch(() => null)
+            fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan.json`).catch(() => null),
+            fetch(`${FIREBASE_DB_URL}/student_custom_passwords.json`).catch(() => null)
         ]);
 
         let combined = {};
@@ -687,6 +866,11 @@ async function loadTuLuanSubmissionsFromFirebase() {
             }
         }
         currentTuLuanModalData.submissionsMap = combined;
+
+        if (passRes && passRes.ok) {
+            const pData = await passRes.json();
+            currentTuLuanModalData.customPasswords = (pData && typeof pData === 'object') ? pData : {};
+        }
     } catch(e) {
         currentTuLuanModalData.submissionsMap = {};
     }
@@ -711,7 +895,7 @@ function startTuLuanRealtimeListener(quizId) {
     } catch(e) {}
 }
 
-// Render bảng học sinh: BẢO MẬT CHỈ CHÍNH CHỦ VÀ ADMIN MỚI CÓ NÚT XÓA (✕)
+// Render bảng học sinh: BẢO MẬT CHỈ CHÍNH CHỦ VÀ ADMIN MỚI CÓ NÚT XÓA (✕) & BỔ SUNG NÚT ĐỔI MẬT KHẨU
 function renderTuLuanStudentsTable() {
     const tbody = document.getElementById("tuluan-students-tbody");
     if (!tbody) return;
@@ -781,6 +965,14 @@ function renderTuLuanStudentsTable() {
                 : `<span class="tuluan-approved-badge no">⏳ Chưa duyệt</span>`;
         }
 
+        // Kiểm tra xem người đang xem có phải là CHÍNH HỌC SINH NÀY hay không
+        const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
+        const isSessionAuthed = (safeSession.getItem(sessionAuthKey) === "true");
+        const isOwner = Boolean(
+            (loggedStudentSbd && loggedStudentSbd === String(st.sbd).trim().toLowerCase()) ||
+            isSessionAuthed
+        );
+
         if (hasSubmitted) {
             const imgCount = record.images.length;
             const lastTime = record.lastSubmit || "Vừa xong";
@@ -789,18 +981,7 @@ function renderTuLuanStudentsTable() {
                 <div style="font-size: 11px; color: #64748b; font-weight: 700; margin-top: 2px;">🕒 ${lastTime}</div>
             `;
 
-            // Kiểm tra xem người đang xem có phải là CHÍNH HỌC SINH NÀY hay không
-            const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
-            const isSessionAuthed = (safeSession.getItem(sessionAuthKey) === "true");
-            const isOwner = Boolean(
-                (loggedStudentSbd && loggedStudentSbd === String(st.sbd).trim().toLowerCase()) ||
-                isSessionAuthed
-            );
-
-            // Chỉ cho xem ảnh to nếu là Admin, hoặc đã được duyệt, hoặc chính là bài của mình
             const canViewDetailed = (isAdmin || isApproved || isOwner);
-
-            // BẢO VỆ CHỐNG XÓA: CHỈ CHÍNH CHỦ VÀ ADMIN MỚI ĐƯỢC XÓA ẢNH
             const canDeleteThisStudentImage = (isAdmin || isOwner);
 
             thumbnailsHtml = `
@@ -832,15 +1013,168 @@ function renderTuLuanStudentsTable() {
             <td>${statusHtml}</td>
             <td style="text-align: center;">${approveHtml}</td>
             <td>${thumbnailsHtml}</td>
-            <td style="text-align: center;">
-                <input type="file" id="tuluan-input-${cleanSbd}" accept="image/*" multiple style="display:none;" onchange="handleStudentEssayUploadPC('${st.stt}', '${st.sbd}', '${st.name}', this)">
-                <button type="button" class="btn-tuluan-upload-row" onclick="triggerStudentUpload('${st.stt}', '${st.sbd}', '${st.name}', '${st.pass}')" id="btn-up-${cleanSbd}">
-                    📷 Tải ảnh
-                </button>
+            <td style="text-align: center; position: relative;">
+                <div class="tuluan-action-btn-group">
+                    <input type="file" id="tuluan-input-${cleanSbd}" accept="image/*" multiple style="display:none;" onchange="handleStudentEssayUploadPC('${st.stt}', '${st.sbd}', '${st.name}', this)">
+                    <button type="button" class="btn-tuluan-upload-row" onclick="triggerStudentUpload('${st.stt}', '${st.sbd}', '${st.name}', '${st.pass}')" id="btn-up-${cleanSbd}" title="Tải ảnh bài làm">
+                        📷 Tải ảnh
+                    </button>
+                    <!-- NÚT ĐỔI MẬT KHẨU CÙNG HÀNG BÊN PHẢI -->
+                    <button type="button" class="btn-tuluan-change-pass" onclick="toggleStudentPassPopover('${cleanSbd}', event)" title="Đổi mật khẩu nộp bài (4 số)">
+                        🔑 Đổi MK
+                    </button>
+                    <!-- NÚT RESET DÀNH CHO ADMIN KHI HỌC SINH QUÊN -->
+                    ${isAdmin ? `
+                        <button type="button" class="btn-tuluan-reset-pass" onclick="resetStudentPasswordToDefault('${cleanSbd}', '${st.sbd}', '${st.name}', event)" title="[Admin] Reset mật khẩu về mặc định (${st.sbd})">
+                            ↺ Reset
+                        </button>
+                    ` : ''}
+                </div>
+
+                <!-- KHUNG XÒE 2 DÒNG ĐỔI MẬT KHẨU -->
+                <div class="student-pass-popover" id="pass-popover-${cleanSbd}" onclick="event.stopPropagation()">
+                    <div class="pass-popover-header">
+                        <span>🔑 Đổi Mật Khẩu: <b>${st.name}</b></span>
+                        <button type="button" class="btn-close-pass-pop" onclick="closeStudentPassPopover('${cleanSbd}', event)">✕</button>
+                    </div>
+                    <div class="pass-popover-hint">
+                        💡 Mật khẩu gồm đúng <b>4 chữ số</b>.<br>
+                        Mặc định ban đầu là Số báo danh (<b>${st.sbd}</b>).
+                    </div>
+                    <div class="pass-input-row">
+                        <label>Dòng 1: Mật khẩu cũ (hoặc SBD):</label>
+                        <input type="password" id="old-pass-${cleanSbd}" placeholder="Nhập mật khẩu cũ..." autocomplete="off">
+                    </div>
+                    <div class="pass-input-row">
+                        <label>Dòng 2: Mật khẩu mới (4 số):</label>
+                        <input type="password" id="new-pass-${cleanSbd}" placeholder="4 số, VD: 1234..." maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password">
+                    </div>
+                    <div class="pass-popover-actions">
+                        <button type="button" class="btn-pass-cancel" onclick="closeStudentPassPopover('${cleanSbd}', event)">Hủy</button>
+                        <button type="button" class="btn-pass-save" onclick="saveStudentPasswordChange('${cleanSbd}', '${st.sbd}', '${st.name}', '${st.pass}', event)">💾 Lưu MK</button>
+                    </div>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+// BẬT / TẮT KHUNG ĐỔI MẬT KHẨU CỦA MỖI HỌC SINH
+function toggleStudentPassPopover(cleanSbd, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const pop = document.getElementById(`pass-popover-${cleanSbd}`);
+    if (!pop) return;
+    const isShown = pop.classList.contains("show");
+    document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
+    if (!isShown) {
+        pop.classList.add("show");
+        const oldIn = document.getElementById(`old-pass-${cleanSbd}`);
+        const newIn = document.getElementById(`new-pass-${cleanSbd}`);
+        if (oldIn) { oldIn.value = ""; oldIn.focus(); }
+        if (newIn) newIn.value = "";
+    }
+}
+
+function closeStudentPassPopover(cleanSbd, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const pop = document.getElementById(`pass-popover-${cleanSbd}`);
+    if (pop) pop.classList.remove("show");
+}
+
+// HỌC SINH TỰ LƯU ĐỔI MẬT KHẨU (BẮT BUỘC 4 CHỮ SỐ)
+async function saveStudentPasswordChange(cleanSbd, defaultSbd, studentName, defaultPass, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const oldPassInput = document.getElementById(`old-pass-${cleanSbd}`);
+    const newPassInput = document.getElementById(`new-pass-${cleanSbd}`);
+    if (!oldPassInput || !newPassInput) return;
+
+    const oldVal = oldPassInput.value.trim();
+    const newVal = newPassInput.value.trim();
+    const effectiveOldPass = getEffectiveStudentPassword(cleanSbd, defaultSbd, defaultPass);
+
+    if (!oldVal) {
+        alert("⚠️ Vui lòng nhập Mật khẩu cũ (hoặc SBD) của em!");
+        oldPassInput.focus();
+        return;
+    }
+
+    // Kiểm tra mật khẩu cũ
+    const isOldOk = (oldVal.toLowerCase() === effectiveOldPass.toLowerCase()) ||
+                    (oldVal.toLowerCase() === String(defaultSbd).trim().toLowerCase()) ||
+                    (defaultPass && oldVal.toLowerCase() === String(defaultPass).trim().toLowerCase());
+
+    if (!isOldOk) {
+        alert("❌ Mật khẩu cũ không chính xác! Nếu em quên mật khẩu, hãy nhờ Thầy giáo bấm Reset về mặc định nhé.");
+        oldPassInput.focus();
+        return;
+    }
+
+    // Kiểm tra mật khẩu mới: phải đúng 4 chữ số
+    if (!/^\d{4}$/.test(newVal)) {
+        alert("⚠️ Mật khẩu mới phải gồm đúng 4 chữ số (Ví dụ: 1234, 6789, 0000)!");
+        newPassInput.focus();
+        return;
+    }
+
+    if (newVal === effectiveOldPass) {
+        alert("⚠️ Mật khẩu mới không được trùng với mật khẩu hiện tại!");
+        newPassInput.focus();
+        return;
+    }
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/student_custom_passwords/${cleanSbd}.json`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newVal)
+        });
+
+        currentTuLuanModalData.customPasswords = currentTuLuanModalData.customPasswords || {};
+        currentTuLuanModalData.customPasswords[cleanSbd] = newVal;
+
+        // Tự động cấp quyền session để học sinh này có thể tải ảnh hoặc quản lý ngay
+        const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
+        safeSession.setItem(sessionAuthKey, "true");
+
+        closeStudentPassPopover(cleanSbd);
+        alert(`🎉 ĐỔI MẬT KHẨU THÀNH CÔNG!\n\nHọc sinh: ${studentName} (SBD: ${defaultSbd})\nMật khẩu mới của em là: ${newVal}\n\n👉 Em hãy ghi nhớ 4 số này để nộp bài nhé!`);
+        renderTuLuanStudentsTable();
+    } catch(err) {
+        alert("❌ Lỗi khi lưu mật khẩu: " + err.message);
+    }
+}
+
+// ADMIN RESET MẬT KHẨU CỦA HỌC SINH VỀ MẶC ĐỊNH
+async function resetStudentPasswordToDefault(cleanSbd, defaultSbd, studentName, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn);
+    if (!isAdmin) {
+        alert("⛔ Chỉ Giáo viên quản trị mới có quyền Reset mật khẩu!");
+        return;
+    }
+
+    if (!confirm(`⚠️ XÁC NHẬN RESET MẬT KHẨU (ADMIN):\n\nThầy có chắc chắn muốn đưa mật khẩu của học sinh:\n[${studentName}] (SBD: ${defaultSbd})\nvề mặc định ban đầu là Số báo danh (${defaultSbd}) không?`)) {
+        return;
+    }
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/student_custom_passwords/${cleanSbd}.json`, {
+            method: "DELETE"
+        });
+
+        if (currentTuLuanModalData.customPasswords) {
+            delete currentTuLuanModalData.customPasswords[cleanSbd];
+        }
+
+        const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
+        safeSession.removeItem(sessionAuthKey);
+
+        alert(`✅ ĐÃ RESET MẬT KHẨU THÀNH CÔNG!\n\nMật khẩu của em [${studentName}] đã được khôi phục về mặc định ban đầu là Số báo danh: ${defaultSbd}.`);
+        renderTuLuanStudentsTable();
+    } catch(err) {
+        alert("❌ Lỗi reset mật khẩu: " + err.message);
+    }
 }
 
 function onThumbnailClicked(imgSrc, driveUrl, title, canView, event) {
@@ -853,7 +1187,7 @@ function onThumbnailClicked(imgSrc, driveUrl, title, canView, event) {
 }
 
 // HÀM XÓA 1 BỨC ẢNH CỤ THỂ: CÓ BẢO MẬT CHẶN HỌC SINH XÓA BÀI CỦA NHAU
-async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, correctPass, event) {
+async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, defaultPass, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
     const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn);
@@ -867,10 +1201,11 @@ async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, correct
 
     // Nếu không phải Admin và cũng không phải chính chủ: Chặn tuyệt đối
     if (!isAdmin && !isOwner) {
+        const effectivePass = getEffectiveStudentPassword(cleanSbd, cleanSbd, defaultPass);
         const inputPass = prompt(`🔐 XÁC THỰC QUYỀN XÓA:\n\nBạn đang yêu cầu xóa ảnh bài làm của [${studentName}].\nVui lòng nhập đúng Mật khẩu hoặc SBD của bạn để xác nhận:`);
         if (!inputPass) return;
         const trimmed = inputPass.trim().toLowerCase();
-        const isPassOk = (trimmed === String(correctPass).trim().toLowerCase()) || (trimmed === cleanSbd.toLowerCase());
+        const isPassOk = (trimmed === effectivePass.toLowerCase()) || (trimmed === cleanSbd.toLowerCase());
         if (!isPassOk) {
             alert("⛔ BẠN KHÔNG CÓ QUYỀN XÓA!\nChỉ chính học sinh này hoặc Giáo viên quản trị mới có quyền xóa bài làm.");
             return;
@@ -1013,7 +1348,7 @@ function filterTuLuanStatus(filterType) {
     renderTuLuanStudentsTable();
 }
 
-function triggerStudentUpload(stt, sbd, studentName, correctPass) {
+function triggerStudentUpload(stt, sbd, studentName, defaultPass) {
     const cleanSbd = String(sbd).replace(/[^a-zA-Z0-9]/g, '_');
     const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
 
@@ -1022,17 +1357,20 @@ function triggerStudentUpload(stt, sbd, studentName, correctPass) {
         return;
     }
 
-    const inputPass = prompt(`🔐 XÁC NHẬN NỘP BÀI:\n\nEm đang nộp bài cho: [${stt}] ${studentName} (SBD: ${sbd}).\nVui lòng nhập Mật khẩu hoặc SBD của em để xác nhận:`);
+    const effectivePass = getEffectiveStudentPassword(cleanSbd, sbd, defaultPass);
+    const inputPass = prompt(`🔐 XÁC NHẬN NỘP BÀI:\n\nEm đang nộp bài cho: [${stt}] ${studentName} (SBD: ${sbd}).\nVui lòng nhập Mật khẩu (mặc định: SBD) để xác nhận:`);
     if (inputPass === null) return;
 
     const trimmedInput = inputPass.trim().toLowerCase();
-    const isPassOk = (trimmedInput === String(correctPass).trim().toLowerCase()) || (trimmedInput === String(sbd).trim().toLowerCase());
+    const isPassOk = (trimmedInput === effectivePass.toLowerCase()) || 
+                     (trimmedInput === String(sbd).trim().toLowerCase()) || 
+                     (defaultPass && trimmedInput === String(defaultPass).trim().toLowerCase());
 
     if (isPassOk) {
         safeSession.setItem(sessionAuthKey, "true");
         document.getElementById(`tuluan-input-${cleanSbd}`).click();
     } else {
-        alert("❌ Sai mật khẩu hoặc SBD! Vui lòng thử lại để tránh nộp nhầm bài của bạn khác.");
+        alert("❌ Sai mật khẩu! Nếu em quên mật khẩu, hãy nhờ Thầy giáo bấm Reset mật khẩu cho em nhé.");
     }
 }
 
@@ -1305,6 +1643,13 @@ async function triggerExamRoomDriveUpload(qId) {
     input.click();
 }
 
+// Đóng mọi popover khi bấm chuột ra ngoài
+document.addEventListener("click", function(e) {
+    if (!e.target.closest(".student-pass-popover") && !e.target.closest(".btn-tuluan-change-pass")) {
+        document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
+    }
+});
+
 window.openTuLuanModal = openTuLuanModal;
 window.closeTuLuanModal = closeTuLuanModal;
 window.triggerStudentUpload = triggerStudentUpload;
@@ -1325,3 +1670,8 @@ window.deleteSingleStudentImage = deleteSingleStudentImage;
 window.getUnifiedExamFolderKey = getUnifiedExamFolderKey;
 window.getCleanDriveClassName = getCleanDriveClassName;
 window.getStudentFolderKey = getStudentFolderKey;
+window.toggleStudentPassPopover = toggleStudentPassPopover;
+window.closeStudentPassPopover = closeStudentPassPopover;
+window.saveStudentPasswordChange = saveStudentPasswordChange;
+window.resetStudentPasswordToDefault = resetStudentPasswordToDefault;
+window.getEffectiveStudentPassword = getEffectiveStudentPassword;
