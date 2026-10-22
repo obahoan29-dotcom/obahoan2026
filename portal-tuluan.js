@@ -2,11 +2,12 @@
 // FILE: portal-tuluan.js
 // QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
 // BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN) | QUẢN LÝ 5 ĐỀ MỚI NHẤT
-// TỰ ĐỘNG NHẬN DIỆN VÀ TẠO THƯ MỤC CHUẨN XÁC THEO LỚP ĐANG CHỌN (11C, 11A, 10P...)
+// TỰ ĐỘNG TẠO THƯ MỤC CHUẨN XÁC THEO LỚP ĐANG CHỌN (11C, 11A, 10P...)
 // NÚT XÓA ĐỀ CHỈ HIỆN KHI LÀ ADMIN | ĐỔI MẬT KHẨU 4 SỐ NỔI LÊN TRÊN
+// THÊM: CỘT CHẤM CHÉO NHAU, CỘT NHẬN XÉT (XÒE RA) & XUẤT EXCEL CÓ ẢNH
 // =========================================================
 
-// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ & KHUNG ĐỔI MẬT KHẨU
+// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ, CHẤM CHÉO, NHẬN XÉT & EXCEL
 (function injectTuLuanButtonStyles() {
     const styleId = "tuluan-custom-delete-btn-styles";
     if (document.getElementById(styleId)) return;
@@ -80,6 +81,123 @@
             transform: translateY(2px) scale(0.95) !important;
         }
 
+        /* NÚT XUẤT EXCEL TỰ LUẬN */
+        .btn-tuluan-export-excel {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+            color: #ffffff !important;
+            border: 1.2px solid #34d399 !important;
+            border-radius: 7px !important;
+            padding: 4px 11px !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            height: 30px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25) !important;
+            white-space: nowrap !important;
+            user-select: none !important;
+        }
+        .btn-tuluan-export-excel:hover {
+            filter: brightness(1.12) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.35) !important;
+        }
+        .btn-tuluan-export-excel:active {
+            transform: translateY(2px) scale(0.96) !important;
+        }
+
+        /* Ô NHẬP ĐIỂM CHẤM CHÉO NHAU */
+        .tuluan-score-input {
+            width: 76px !important;
+            padding: 5px 6px !important;
+            border: 1.5px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            text-align: center !important;
+            outline: none !important;
+            color: #0284c7 !important;
+            background: #ffffff !important;
+            box-sizing: border-box !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+        }
+        .tuluan-score-input:focus {
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
+            background: #f0f9ff !important;
+        }
+
+        /* NÚT BẬT NHẬN XÉT */
+        .btn-tuluan-comment {
+            background: #f8fafc !important;
+            color: #475569 !important;
+            border: 1.2px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: 5px 9px !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+        }
+        .btn-tuluan-comment:hover {
+            background: #e0f2fe !important;
+            color: #0284c7 !important;
+            border-color: #7dd3fc !important;
+        }
+        .btn-tuluan-comment.active {
+            background: #fef3c7 !important;
+            color: #b45309 !important;
+            border-color: #fde68a !important;
+            font-weight: 900 !important;
+        }
+
+        /* KHUNG NHẬN XÉT XÒE RA PHÍA TRÊN */
+        .student-feedback-popover {
+            display: none;
+            position: absolute !important;
+            right: 0 !important;
+            bottom: calc(100% + 6px) !important;
+            top: auto !important;
+            width: 300px !important;
+            background: #ffffff !important;
+            border: 1.5px solid #d97706 !important;
+            border-radius: 14px !important;
+            padding: 12px 14px !important;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(217, 119, 6, 0.2) !important;
+            z-index: 100000 !important;
+            text-align: left !important;
+            animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .student-feedback-popover.show {
+            display: block !important;
+        }
+        .feedback-textarea {
+            width: 100% !important;
+            padding: 8px 10px !important;
+            border: 1.2px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            font-size: 12.5px !important;
+            font-family: inherit !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            outline: none !important;
+            resize: vertical !important;
+            box-sizing: border-box !important;
+            margin-bottom: 6px !important;
+        }
+        .feedback-textarea:focus {
+            border-color: #d97706 !important;
+            box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15) !important;
+        }
+
         /* NHÓM NÚT TRONG CỘT THAO TÁC */
         .tuluan-action-btn-group {
             display: inline-flex !important;
@@ -146,11 +264,13 @@
         /* ĐẨY Z-INDEX CỦA Ô & HÀNG CHỨA POPOVER LÊN CAO NHẤT */
         .tuluan-td-active-popover,
         .tuluan-table tbody td.tuluan-td-active-popover,
-        .tuluan-table tbody td:has(.student-pass-popover.show) {
+        .tuluan-table tbody td:has(.student-pass-popover.show),
+        .tuluan-table tbody td:has(.student-feedback-popover.show) {
             z-index: 99999 !important;
             position: relative !important;
         }
-        .tuluan-table tbody tr:has(.student-pass-popover.show) {
+        .tuluan-table tbody tr:has(.student-pass-popover.show),
+        .tuluan-table tbody tr:has(.student-feedback-popover.show) {
             z-index: 99999 !important;
             position: relative !important;
         }
@@ -506,7 +626,7 @@ function ensureTuLuanModalDOM() {
                 <button type="button" class="btn-close-cleanup-modal" onclick="closeTuLuanModal(event)">✕</button>
             </div>
 
-            <!-- THANH ĐIỀU HƯỚNG CHỌN LỚP, CHỌN ĐỀ & ADMIN -->
+            <!-- THANH ĐIỀU HƯỚNG CHỌN LỚP, CHỌN ĐỀ, NÚT XÓA ĐỀ & CÔNG CỤ ADMIN -->
             <div class="tuluan-select-bar">
                 <div class="tuluan-select-group">
                     <label>🏫 Lớp:</label>
@@ -522,7 +642,7 @@ function ensureTuLuanModalDOM() {
                     </select>
                 </div>
 
-                <div class="tuluan-select-group" style="flex:1; min-width:270px;">
+                <div class="tuluan-select-group" style="flex:1; min-width:260px;">
                     <label>📝 Chọn đề thi (5 đề mới nhất):</label>
                     <div style="display:flex; align-items:center; gap:6px; width:100%;">
                         <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1; min-width: 140px;"></select>
@@ -533,12 +653,16 @@ function ensureTuLuanModalDOM() {
                     </div>
                 </div>
 
-                <div id="tuluan-admin-add-exam-box" style="display:none; align-items:flex-end; gap:6px;">
+                <div id="tuluan-admin-add-exam-box" style="display:none; align-items:flex-end; gap:6px; flex-wrap:wrap;">
                     <button type="button" class="btn-tuluan-add-exam" onclick="promptAddNewTuLuanExam()">
                         ➕ Thêm đề mới
                     </button>
                     <button type="button" class="btn-tuluan-approve-all" onclick="toggleApproveAllSubmissions(true)" title="Duyệt tất cả bài làm của đề này để học sinh cùng xem">
                         ✅ Duyệt tất cả
+                    </button>
+                    <!-- NÚT XUẤT EXCEL TỰ LUẬN KÈM ẢNH BÀI LÀM THEO HÀNG -->
+                    <button type="button" class="btn-tuluan-export-excel" onclick="exportTuLuanToExcel(event)" title="Xuất toàn bộ bảng điểm, nhận xét và ảnh bài làm đã nộp ra file Excel (.xls) chuẩn đẹp">
+                        📊 Xuất excel điểm tự luận
                     </button>
                 </div>
             </div>
@@ -559,11 +683,15 @@ function ensureTuLuanModalDOM() {
                     <thead>
                         <tr>
                             <th style="width: 42px; text-align: center;">STT</th>
-                            <th style="width: 165px;">Họ và tên</th>
-                            <th style="width: 80px; text-align: center;">SBD</th>
-                            <th style="width: 155px;">Trạng thái / Ngày nộp</th>
-                            <th style="width: 125px; text-align: center;">Phê duyệt</th>
-                            <th style="min-width: 180px;">Ảnh bài làm đã nộp</th>
+                            <th style="width: 155px;">Họ và tên</th>
+                            <th style="width: 75px; text-align: center;">SBD</th>
+                            <th style="width: 140px;">Trạng thái / Ngày nộp</th>
+                            <th style="width: 105px; text-align: center;">Phê duyệt</th>
+                            <th style="min-width: 165px;">Ảnh bài làm đã nộp</th>
+                            <!-- YÊU CẦU 1: CỘT CHẤM CHÉO NHAU -->
+                            <th style="width: 105px; text-align: center;" title="Nhập điểm chấm chéo bài tự luận (Ví dụ: 8.7)">Chấm chéo nhau</th>
+                            <!-- YÊU CẦU 2: CỘT NHẬN XÉT -->
+                            <th style="width: 110px; text-align: center;" title="Bấm vào để xòe ra bảng nhận xét chi tiết bài làm của học sinh">Nhận xét</th>
                             <th style="min-width: 175px; text-align: center;">Thao tác</th>
                         </tr>
                     </thead>
@@ -891,7 +1019,6 @@ async function promptAddNewTuLuanExam() {
     if (!inputTitle || !inputTitle.trim()) return;
 
     const examTitle = inputTitle.trim();
-    // Luôn ưu tiên lấy giá trị trực tiếp từ ô chọn lớp đang active trên màn hình
     const classSelector = document.getElementById("tuluan-class-selector");
     const classId = (classSelector && classSelector.value) ? classSelector.value : (currentTuLuanModalData.classId || "lop-11a");
     currentTuLuanModalData.classId = classId;
@@ -925,7 +1052,6 @@ async function promptAddNewTuLuanExam() {
             ? GOOGLE_DRIVE_TULUAN_GAS_URL 
             : GOOGLE_DRIVE_UPLOAD_GAS_URL;
 
-        // Gửi đầy đủ các trường className, rootFolder, classList để Google Apps Script nhận đúng lớp đang đứng
         if (gasUrl && !gasUrl.includes("DÁN_URL")) {
             fetch(gasUrl, {
                 method: "POST",
@@ -1006,7 +1132,7 @@ function startTuLuanRealtimeListener(quizId) {
     } catch(e) {}
 }
 
-// Render bảng học sinh
+// Render bảng học sinh (Bao gồm Cột Chấm chéo nhau và Cột Nhận xét)
 function renderTuLuanStudentsTable() {
     const tbody = document.getElementById("tuluan-students-tbody");
     if (!tbody) return;
@@ -1115,6 +1241,44 @@ function renderTuLuanStudentsTable() {
             `;
         }
 
+        // YÊU CẦU 1: Ô NHẬP ĐIỂM CHẤM CHÉO NHAU (LƯU TỰ ĐỘNG LÊN FIREBASE)
+        const currentCrossScore = (record && record.crossScore !== undefined && record.crossScore !== null) ? record.crossScore : '';
+        const crossScoreHtml = `
+            <input type="text" class="tuluan-score-input" id="cross-score-${cleanSbd}"
+                   value="${currentCrossScore}" placeholder="VD: 8.7"
+                   onchange="saveStudentCrossScore('${cleanSbd}', '${st.stt}', '${st.sbd}', '${st.name}', this.value)"
+                   title="Nhập điểm chấm chéo (nhập xong tự động lưu)">
+        `;
+
+        // YÊU CẦU 2: CỘT NHẬN XÉT (XÒE BẢNG NHẬP LIỆU RA PHÍA TRÊN)
+        const currentFeedback = (record && record.feedback) ? record.feedback : '';
+        const hasFeedback = Boolean(currentFeedback && currentFeedback.trim() !== "");
+        const feedbackHtml = `
+            <div style="position: relative; display: inline-block;">
+                <button type="button" class="btn-tuluan-comment ${hasFeedback ? 'active' : ''}" 
+                        onclick="toggleStudentFeedbackPopover('${cleanSbd}', event)" 
+                        title="${hasFeedback ? ('Nhận xét: ' + currentFeedback) : 'Bấm để viết nhận xét bài làm'}">
+                    ${hasFeedback ? '💬 Đã có NX' : '💬 Nhận xét'}
+                </button>
+
+                <!-- KHUNG XÒE NHẬN XÉT NỔI LÊN TRÊN -->
+                <div class="student-feedback-popover" id="feedback-popover-${cleanSbd}" onclick="event.stopPropagation()">
+                    <div class="pass-popover-header">
+                        <span>💬 Nhận Xét: <b>${st.name}</b></span>
+                        <button type="button" class="btn-close-pass-pop" onclick="closeStudentFeedbackPopover('${cleanSbd}', event)">✕</button>
+                    </div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; line-height: 1.35;">
+                        Nhận xét bài làm, góp ý chi tiết hoặc lời khen cho học sinh:
+                    </div>
+                    <textarea id="feedback-textarea-${cleanSbd}" rows="3" class="feedback-textarea" placeholder="Nhập nhận xét chi tiết...">${currentFeedback}</textarea>
+                    <div class="pass-popover-actions">
+                        <button type="button" class="btn-pass-cancel" onclick="closeStudentFeedbackPopover('${cleanSbd}', event)">Hủy</button>
+                        <button type="button" class="btn-pass-save" style="background: linear-gradient(135deg, #d97706, #b45309);" onclick="saveStudentFeedback('${cleanSbd}', '${st.stt}', '${st.sbd}', '${st.name}', event)">💾 Lưu NX</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
         tr.innerHTML = `
             <td style="text-align: center; font-weight: 800; color: #475569;">${st.stt}</td>
             <td style="font-weight: 800; color: #0f172a;">${st.name}</td>
@@ -1122,6 +1286,8 @@ function renderTuLuanStudentsTable() {
             <td>${statusHtml}</td>
             <td style="text-align: center;">${approveHtml}</td>
             <td>${thumbnailsHtml}</td>
+            <td style="text-align: center;">${crossScoreHtml}</td>
+            <td style="text-align: center;">${feedbackHtml}</td>
             <td style="text-align: center; position: relative;">
                 <div class="tuluan-action-btn-group">
                     <input type="file" id="tuluan-input-${cleanSbd}" accept="image/*" multiple style="display:none;" onchange="handleStudentEssayUploadPC('${st.stt}', '${st.sbd}', '${st.name}', this)">
@@ -1171,6 +1337,258 @@ function renderTuLuanStudentsTable() {
     updateTuLuanAdminUI();
 }
 
+// LƯU ĐIỂM CHẤM CHÉO NHAU LÊN FIREBASE
+async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) {
+    const qId = currentTuLuanModalData.quizId;
+    if (!qId) return;
+
+    const trimmedScore = String(scoreVal || "").trim();
+    const driveClassName = getCleanDriveClassName(currentTuLuanModalData.classId);
+
+    if (!currentTuLuanModalData.submissionsMap[cleanSbd]) {
+        currentTuLuanModalData.submissionsMap[cleanSbd] = {
+            stt: stt,
+            sbd: sbd,
+            studentName: studentName,
+            className: driveClassName,
+            count: 0,
+            images: [],
+            crossScore: trimmedScore
+        };
+    } else {
+        currentTuLuanModalData.submissionsMap[cleanSbd].crossScore = trimmedScore;
+    }
+
+    try {
+        const patchPayload = { crossScore: trimmedScore, scoreUpdatedAt: Date.now() };
+        await Promise.all([
+            fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(patchPayload)
+            }),
+            fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${cleanSbd}.json`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(patchPayload)
+            })
+        ]);
+        const scoreInput = document.getElementById(`cross-score-${cleanSbd}`);
+        if (scoreInput) {
+            scoreInput.style.borderColor = "#10b981";
+            setTimeout(() => { scoreInput.style.borderColor = "#cbd5e1"; }, 1500);
+        }
+    } catch(err) {
+        console.error("Lỗi lưu điểm chấm chéo:", err);
+    }
+}
+
+// BẬT / TẮT KHUNG NHẬN XÉT CỦA HỌC SINH
+function toggleStudentFeedbackPopover(cleanSbd, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const pop = document.getElementById(`feedback-popover-${cleanSbd}`);
+    if (!pop) return;
+    const isShown = pop.classList.contains("show");
+
+    document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".student-feedback-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".tuluan-td-active-popover").forEach(td => td.classList.remove("tuluan-td-active-popover"));
+
+    if (!isShown) {
+        pop.classList.add("show");
+        const parentTd = pop.closest("td");
+        if (parentTd) parentTd.classList.add("tuluan-td-active-popover");
+
+        const tableWrap = document.querySelector(".tuluan-table-wrap");
+        if (tableWrap && parentTd) {
+            const tdRect = parentTd.getBoundingClientRect();
+            const wrapRect = tableWrap.getBoundingClientRect();
+            if (tdRect.top - wrapRect.top < 220) {
+                pop.style.setProperty("bottom", "auto", "important");
+                pop.style.setProperty("top", "calc(100% + 6px)", "important");
+            } else {
+                pop.style.setProperty("bottom", "calc(100% + 6px)", "important");
+                pop.style.setProperty("top", "auto", "important");
+            }
+        }
+        const textarea = document.getElementById(`feedback-textarea-${cleanSbd}`);
+        if (textarea) textarea.focus();
+    }
+}
+
+function closeStudentFeedbackPopover(cleanSbd, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const pop = document.getElementById(`feedback-popover-${cleanSbd}`);
+    if (pop) {
+        pop.classList.remove("show");
+        const parentTd = pop.closest("td");
+        if (parentTd) parentTd.classList.remove("tuluan-td-active-popover");
+    }
+}
+
+// LƯU NHẬN XÉT LÊN FIREBASE
+async function saveStudentFeedback(cleanSbd, stt, sbd, studentName, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const textarea = document.getElementById(`feedback-textarea-${cleanSbd}`);
+    if (!textarea) return;
+
+    const feedbackVal = textarea.value.trim();
+    const qId = currentTuLuanModalData.quizId;
+    if (!qId) return;
+
+    const driveClassName = getCleanDriveClassName(currentTuLuanModalData.classId);
+
+    if (!currentTuLuanModalData.submissionsMap[cleanSbd]) {
+        currentTuLuanModalData.submissionsMap[cleanSbd] = {
+            stt: stt,
+            sbd: sbd,
+            studentName: studentName,
+            className: driveClassName,
+            count: 0,
+            images: [],
+            feedback: feedbackVal,
+            feedbackTime: new Date().toLocaleString("vi-VN")
+        };
+    } else {
+        currentTuLuanModalData.submissionsMap[cleanSbd].feedback = feedbackVal;
+        currentTuLuanModalData.submissionsMap[cleanSbd].feedbackTime = new Date().toLocaleString("vi-VN");
+    }
+
+    try {
+        const patchPayload = {
+            feedback: feedbackVal,
+            feedbackTime: new Date().toLocaleString("vi-VN")
+        };
+        await Promise.all([
+            fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(patchPayload)
+            }),
+            fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${cleanSbd}.json`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(patchPayload)
+            })
+        ]);
+
+        closeStudentFeedbackPopover(cleanSbd);
+        renderTuLuanStudentsTable();
+    } catch(err) {
+        alert("❌ Lỗi khi lưu nhận xét: " + err.message);
+    }
+}
+
+// YÊU CẦU 3: XUẤT EXCEL ĐIỂM TỰ LUẬN KÈM ẢNH BÀI LÀM TRONG CÁC Ô THEO HÀNG
+function exportTuLuanToExcel(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+
+    const students = getAccountsForCategory(currentTuLuanModalData.classId);
+    if (!students || students.length === 0) {
+        alert("⚠️ Không có dữ liệu học sinh để xuất Excel!");
+        return;
+    }
+
+    const examTitle = currentTuLuanModalData.examTitle || "BAI_TAP_TU_LUAN";
+    const driveClassName = getCleanDriveClassName(currentTuLuanModalData.classId);
+    const subMap = currentTuLuanModalData.submissionsMap || {};
+
+    let rowsHtml = "";
+    students.forEach((st) => {
+        const cleanSbd = String(st.sbd || "").trim().replace(/[^a-zA-Z0-9]/g, '_');
+        const record = subMap[cleanSbd];
+
+        const hasSub = Boolean(record && record.images && record.images.length > 0);
+        const statusText = hasSub ? `Đã nộp (${record.images.length} ảnh) lúc ${record.lastSubmit || ''}` : "Chưa nộp";
+        const isApprovedText = (record && record.isApproved === true) ? "Đã duyệt" : "Chưa duyệt";
+        const scoreVal = (record && record.crossScore !== undefined) ? record.crossScore : "";
+        const feedbackVal = (record && record.feedback) ? record.feedback : "";
+
+        // Nhúng ảnh trực tiếp vào ô Excel kèm liên kết mở Drive
+        let imagesHtml = "Chưa có ảnh";
+        if (hasSub && Array.isArray(record.images)) {
+            imagesHtml = record.images.map((im, idx) => {
+                const imgUrl = im.directUrl || im.fileUrl || "";
+                const driveUrl = im.fileUrl || imgUrl;
+                return `
+                    <div style="display: inline-block; margin: 4px 6px; text-align: center; vertical-align: top;">
+                        <img src="${imgUrl}" width="95" height="95" style="border: 1px solid #94a3b8; border-radius: 4px; object-fit: cover; display: block; margin-bottom: 3px;" alt="Trang ${idx + 1}"><br>
+                        <a href="${driveUrl}" target="_blank" style="font-size: 10px; color: #0284c7; text-decoration: underline; font-weight: bold;">Trang ${idx + 1} [Drive]</a>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        rowsHtml += `
+            <tr>
+                <td style="text-align: center; font-weight: bold;">${st.stt}</td>
+                <td style="font-weight: bold;">${st.name}</td>
+                <td style="text-align: center; font-family: monospace; font-weight: bold;">${st.sbd}</td>
+                <td>${statusText}</td>
+                <td style="text-align: center;">${isApprovedText}</td>
+                <td style="text-align: center; font-weight: bold; color: #0284c7; font-size: 13pt;">${scoreVal}</td>
+                <td style="white-space: pre-wrap; word-break: break-word;">${feedbackVal}</td>
+                <td style="min-width: 250px;">${imagesHtml}</td>
+            </tr>
+        `;
+    });
+
+    const excelCompleteHtml = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+        <meta charset="utf-8">
+        <title>Diem_Tu_Luan_${driveClassName}</title>
+        <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Diem_Tu_Luan</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+        <style>
+            body { font-family: 'Times New Roman', Arial, sans-serif; font-size: 11pt; color: #0f172a; }
+            h2, h3 { margin: 4px 0; }
+            table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+            th { background-color: #0284c7; color: #ffffff; font-weight: bold; padding: 8px 10px; border: 1px solid #94a3b8; text-align: center; font-size: 11pt; }
+            td { border: 1px solid #cbd5e1; padding: 8px 10px; vertical-align: middle; }
+            tr:nth-child(even) td { background-color: #f8fafc; }
+        </style>
+    </head>
+    <body>
+        <h2>BẢNG ĐIỂM & NHẬN XÉT BÀI TẬP TỰ LUẬN</h2>
+        <h3>Đề thi: ${examTitle}</h3>
+        <p><b>Lớp:</b> ${driveClassName} &nbsp;|&nbsp; <b>Thời gian xuất file:</b> ${new Date().toLocaleTimeString('vi-VN')} ${new Date().toLocaleDateString('vi-VN')}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 45px;">STT</th>
+                    <th style="width: 170px;">Họ và tên</th>
+                    <th style="width: 80px;">SBD</th>
+                    <th style="width: 160px;">Trạng thái / Ngày nộp</th>
+                    <th style="width: 100px;">Phê duyệt</th>
+                    <th style="width: 110px;">Điểm chấm chéo</th>
+                    <th style="width: 220px;">Nhận xét bài làm</th>
+                    <th style="width: 380px;">Ảnh bài làm đã nộp (Hiển thị trực tiếp)</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml}
+            </tbody>
+        </table>
+    </body>
+    </html>
+    `;
+
+    const blob = new Blob(['\ufeff', excelCompleteHtml], {
+        type: 'application/vnd.ms-excel;charset=utf-8'
+    });
+
+    const safeExam = examTitle.replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF]/g, '_');
+    const fileName = `Diem_Tu_Luan_${driveClassName}_${safeExam}_${Date.now()}.xls`;
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+}
+
 // BẬT / TẮT KHUNG ĐỔI MẬT KHẨU CỦA MỖI HỌC SINH
 function toggleStudentPassPopover(cleanSbd, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -1179,6 +1597,7 @@ function toggleStudentPassPopover(cleanSbd, event) {
     const isShown = pop.classList.contains("show");
 
     document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".student-feedback-popover.show").forEach(p => p.classList.remove("show"));
     document.querySelectorAll(".tuluan-td-active-popover").forEach(td => td.classList.remove("tuluan-td-active-popover"));
 
     if (!isShown) {
@@ -1520,7 +1939,6 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
         upBtn.innerText = "⏳ Đang gửi...";
     }
 
-    // Đọc trực tiếp lớp từ ô selector
     const classSelector = document.getElementById("tuluan-class-selector");
     const classId = (classSelector && classSelector.value) ? classSelector.value : (currentTuLuanModalData.classId || "lop-11a");
     currentTuLuanModalData.classId = classId;
@@ -1598,6 +2016,9 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
             lastSubmitTime: Date.now(),
             count: existingImages.length,
             images: existingImages,
+            crossScore: currentSub.crossScore !== undefined ? currentSub.crossScore : "",
+            feedback: currentSub.feedback || "",
+            feedbackTime: currentSub.feedbackTime || "",
             isApproved: currentSub.isApproved || false
         };
 
@@ -1786,8 +2207,12 @@ async function triggerExamRoomDriveUpload(qId) {
 
 // Đóng mọi popover khi bấm chuột ra ngoài và gỡ bỏ class active z-index
 document.addEventListener("click", function(e) {
-    if (!e.target.closest(".student-pass-popover") && !e.target.closest(".btn-tuluan-change-pass")) {
+    if (!e.target.closest(".student-pass-popover") && 
+        !e.target.closest(".student-feedback-popover") && 
+        !e.target.closest(".btn-tuluan-change-pass") && 
+        !e.target.closest(".btn-tuluan-comment")) {
         document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
+        document.querySelectorAll(".student-feedback-popover.show").forEach(p => p.classList.remove("show"));
         document.querySelectorAll(".tuluan-td-active-popover").forEach(td => td.classList.remove("tuluan-td-active-popover"));
     }
 });
@@ -1817,3 +2242,8 @@ window.closeStudentPassPopover = closeStudentPassPopover;
 window.saveStudentPasswordChange = saveStudentPasswordChange;
 window.resetStudentPasswordToDefault = resetStudentPasswordToDefault;
 window.getEffectiveStudentPassword = getEffectiveStudentPassword;
+window.saveStudentCrossScore = saveStudentCrossScore;
+window.toggleStudentFeedbackPopover = toggleStudentFeedbackPopover;
+window.closeStudentFeedbackPopover = closeStudentFeedbackPopover;
+window.saveStudentFeedback = saveStudentFeedback;
+window.exportTuLuanToExcel = exportTuLuanToExcel;
