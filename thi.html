@@ -122,6 +122,14 @@
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
             50% { transform: scale(1.03); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2); }
         }
+
+        .drive-up-status {
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .drive-up-status.success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .drive-up-status.error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
     </style>
 
     <!-- CSDL Danh sách tài khoản học sinh dùng chung -->
@@ -154,7 +162,8 @@
     <script src="exam-api.js"></script>
     <script src="exam-export.js"></script>
     
-    <!-- MODULE ĐỘNG CƠ THI -->
+    <!-- MODULE ĐỘNG CƠ THI & NỘP TỰ LUẬN DRIVE -->
+    <script src="portal-tuluan.js"></script>
     <script src="exam-img-uploader.js"></script>
     <script src="exam-render.js"></script>
     <script src="exam-engine-core.js"></script>
