@@ -169,7 +169,7 @@ window.STUDENT_ACCOUNTS["lop-10p"] = [
     { stt: 24, pass: "24", sbd: "10p24", username: "LÃ THỊ TRÀ MY", name: "LÃ THỊ TRÀ MY", className: "10P" },
     { stt: 25, pass: "25", sbd: "10p25", username: "TRỊNH LÊ HOÀNG NAM", name: "TRỊNH LÊ HOÀNG NAM", className: "10P" },
     { stt: 26, pass: "26", sbd: "10p26", username: "TRẦN VŨ BẢO NGỌC", name: "TRẦN VŨ BẢO NGỌC", className: "10P" },
-    { stt: 27, pass: "27", sbd: "10p28", username: "PHAN THỊ HỒNG NHUNG", name: "PHAN THỊ HỒNG NHUNG", className: "10P" },
+    { stt: 27, pass: "27", sbd: "10p27", username: "PHAN THỊ HỒNG NHUNG", name: "PHAN THỊ HỒNG NHUNG", className: "10P" },
     { stt: 28, pass: "28", sbd: "10p28", username: "VŨ HÀ KIM OANH", name: "VŨ HÀ KIM OANH", className: "10P" },
     { stt: 29, pass: "29", sbd: "10p29", username: "NGUYỄN LÊ TUYẾT QUYÊN", name: "NGUYỄN LÊ TUYẾT QUYÊN", className: "10P" },
     { stt: 30, pass: "30", sbd: "10p30", username: "NGUYỄN VĂN QUÝ", name: "NGUYỄN VĂN QUÝ", className: "10P" },
