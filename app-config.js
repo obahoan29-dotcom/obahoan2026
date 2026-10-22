@@ -8,8 +8,10 @@ let ADMIN_PASSWORD_HASH = "4711bcbd6fbf382356a6370e814daaf87ed27a425979dca143f8c
 const FIREBASE_DB_URL = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
+// ĐƯỜNG DẪN GOOGLE APPS SCRIPT UPLOAD BÀI TỰ LUẬN HỌC SINH VÀO GOOGLE DRIVE 5TB
+const GOOGLE_DRIVE_TULUAN_GAS_URL = "https://script.google.com/macros/s/AKfycbxj0Y9ZWOuW9jKBLQIdCCHafFv1sfycC4Ub1CIpVV0CfwtXbSmAwjTU3npoBCxME2yWiw/exec";
+
 // KEY API IMGBB DÙNG ĐỂ TỰ ĐỘNG UPLOAD ẢNH CÂU HỎI SIÊU TỐC
-// Bạn hãy thay API key của bạn vào giữa hai dấu ngoặc kép bên dưới
 const IMGBB_API_KEY = "548b05b895acef8ad88e645fd274c574"; 
 
 // Link Zalo và Messenger để học sinh gửi bài làm dự phòng khi rớt mạng
@@ -69,7 +71,7 @@ let REMINDER_CATEGORY = {
     links: [
         { 
             id: "rem_1", firebaseId: "rem_1", categoryId: "nhac-nho",
-            title: "Lưu ý quan trọng: Các em nộp tự luận Padlet phải đúng mẫu, ví dụ 11A25 ĐẠT, ở phần Subject ghi rõ 11a25-220926-đạt", 
+            title: "Lưu ý quan trọng: Các em nộp bài tự luận trực tiếp bằng nút 'Nộp tự luận' trên đề thi để lưu thẳng vào Google Drive của Thầy.", 
             date: "05/08/2026 - 15:00", url: "#", badgeText: "HOT", isDoc: true, 
             avatar: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png" 
         }
@@ -89,12 +91,12 @@ let CHINH_KHOA_CATEGORIES = [
     { id: "lop-11e", title: "🏫 Lớp 11E", row: 2, links: [] },
     { id: "hsg-toan-11", title: "🏆 HSG Toán 11", isGold: true, row: 2, links: [] },
     { 
-        id: "tu-luan-padlet", title: "💜 Nộp tự luận Padlet", isPurple: true, row: 2, 
+        id: "tu-luan-padlet", title: "📁 Nộp tự luận Drive", isPurple: true, row: 2, 
         links: [ 
-            { id: "padlet_1", firebaseId: "padlet_1", categoryId: "tu-luan-padlet", title: "11A chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11a-nop-tu-luan-padlet-160926-s023me0a6si1mqhqpnb4", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-            { id: "padlet_2", firebaseId: "padlet_2", categoryId: "tu-luan-padlet", title: "11C chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan29/11c-nop-tu-luan-padlet-160926-s023me1v17byc9z8qj13", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-            { id: "padlet_3", firebaseId: "padlet_3", categoryId: "tu-luan-padlet", title: "10P chụp tự luận Padlet", date: "05/09/2026 - 08:00", url: "https://padlet.com/obahoan29/10p-nop-tu-luan-tu-05-09-2026-s023mdx0qopg0az79ix0", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
-            { id: "padlet_4", firebaseId: "padlet_4", categoryId: "tu-luan-padlet", title: "11E chụp tự luận Padlet", date: "16/09/2026 - 10:00", url: "https://padlet.com/obahoan42/nop-tu-luan-11e-padlet-s024j7r2sdb80rqmahq7", badgeText: "HOT", isDoc: false, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
+            { id: "tuluan_11a", firebaseId: "tuluan_11a", categoryId: "tu-luan-padlet", title: "11A nộp bài tự luận Google Drive", date: "16/09/2026 - 10:00", url: "#", badgeText: "HOT", isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+            { id: "tuluan_11c", firebaseId: "tuluan_11c", categoryId: "tu-luan-padlet", title: "11C nộp bài tự luận Google Drive", date: "16/09/2026 - 10:00", url: "#", badgeText: "HOT", isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+            { id: "tuluan_10p", firebaseId: "tuluan_10p", categoryId: "tu-luan-padlet", title: "10P nộp bài tự luận Google Drive", date: "05/09/2026 - 08:00", url: "#", badgeText: "HOT", isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" },
+            { id: "tuluan_11e", firebaseId: "tuluan_11e", categoryId: "tu-luan-padlet", title: "11E nộp bài tự luận Google Drive", date: "16/09/2026 - 10:00", url: "#", badgeText: "HOT", isDoc: true, avatar: "https://cdn-icons-png.flaticon.com/512/3074/3074058.png" }
         ] 
     }
 ];
