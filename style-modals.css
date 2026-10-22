@@ -1,7 +1,7 @@
 /* ========================================================= */
 /* FILE: style-modals.css                                    */
 /* QUẢN TRỊ, POPOVER AVATAR, TẤT CẢ CÁC MODAL, BẢNG ĐIỂM,   */
-/* MODAL 45 HỌC SINH TỰ LUẬN DRIVE, LIGHTBOX & MOBILE       */
+/* MODAL TỰ LUẬN DRIVE (90% LAPTOP, MOBILE STICKY) & LIGHTBOX*/
 /* ========================================================= */
 
 /* 1. KHU VỰC ĐIỀU KHIỂN QUẢN TRỊ VIÊN */
@@ -788,7 +788,7 @@
 .switch-mode-link { color: var(--primary-blue); font-weight: 800; text-decoration: none; cursor: pointer; }
 .switch-mode-link:hover { text-decoration: underline; }
 
-/* 8. MODAL NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB & LIGHTBOX */
+/* 8. MODAL NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB & LIGHTBOX (TỐI ƯU 90% LAPTOP, THU GỌN HEADER, MOBILE STICKY) */
 .btn-tuluan-modal-trigger {
     background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
     color: #ffffff !important;
@@ -816,14 +816,16 @@
     transform: translateY(2px) scale(0.96);
 }
 
+/* YÊU CẦU 1: HIỂN THỊ TO GẦN HẾT = 90% MÀN HÌNH LAPTOP WINDOWS */
 .tuluan-modal-card {
     background: #ffffff;
-    border-radius: 20px;
-    max-width: 890px;
-    width: min(890px, calc(100vw - 20px));
-    max-height: 90vh;
+    border-radius: 18px;
+    width: 90vw !important;
+    max-width: 90vw !important;
+    height: 90vh !important;
+    max-height: 92vh !important;
     overflow: hidden;
-    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
+    box-shadow: 0 25px 65px rgba(15, 23, 42, 0.45);
     border: 1.5px solid #cbd5e1;
     display: flex;
     flex-direction: column;
@@ -831,145 +833,151 @@
     box-sizing: border-box;
 }
 
+/* YÊU CẦU 3: THU GỌN ĐỘ CAO HEADER VÀ CÁC THANH CÔNG CỤ SÁT NHAU */
 .tuluan-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 18px;
+    padding: 6px 14px !important;
     border-bottom: 1.5px solid #e2e8f0;
     background: #ffffff;
     flex-shrink: 0;
+    min-height: 44px;
 }
 .tuluan-header-title-box {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 .tuluan-icon-badge {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 8px !important;
     background: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 3px 10px rgba(79, 70, 229, 0.3);
+    font-size: 16px !important;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
     flex-shrink: 0;
 }
+#tuluan-modal-heading {
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+}
+#tuluan-modal-subheading {
+    font-size: 11px !important;
+    margin-top: 1px !important;
+    line-height: 1.2 !important;
+}
 
-/* THANH CHỌN LỚP, CHỌN ĐỀ & ADMIN THÊM ĐỀ TRONG MODAL TỰ LUẬN */
+/* THANH CHỌN LỚP, CHỌN ĐỀ & ADMIN THÊM ĐỀ THU GỌN CHIỀU CAO */
 .tuluan-select-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 18px;
+    gap: 6px !important;
+    padding: 5px 12px !important;
     background: #f1f5f9;
-    border-bottom: 1.5px solid #e2e8f0;
+    border-bottom: 1px solid #cbd5e1;
     flex-wrap: wrap;
     flex-shrink: 0;
 }
 .tuluan-select-group {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 .tuluan-select-group label {
-    font-size: 12px;
+    font-size: 11.5px !important;
     font-weight: 800;
     color: #334155;
     white-space: nowrap;
 }
 .tuluan-select-group select {
-    padding: 6px 10px;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 9px;
-    font-size: 12.5px;
+    padding: 4px 8px !important;
+    border: 1.2px solid #cbd5e1;
+    border-radius: 7px !important;
+    font-size: 12px !important;
     font-weight: 700;
     background: #ffffff;
     color: #0f172a;
     outline: none;
     cursor: pointer;
+    height: 30px !important;
 }
 .tuluan-select-group select:focus {
     border-color: #4f46e5;
 }
 
-.btn-tuluan-add-exam {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 11.5px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
-    white-space: nowrap;
+.btn-del-exam-selector {
+    height: 30px !important;
+    padding: 4px 9px !important;
+    font-size: 11.5px !important;
+    border-radius: 7px !important;
 }
-.btn-tuluan-add-exam:hover { filter: brightness(1.1); transform: translateY(-1px); }
-.btn-tuluan-add-exam:active { transform: translateY(2px) scale(0.96); }
 
+.btn-tuluan-add-exam,
 .btn-tuluan-approve-all {
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 11.5px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
-    white-space: nowrap;
+    border-radius: 7px !important;
+    padding: 4px 9px !important;
+    font-size: 11px !important;
+    height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
-.btn-tuluan-approve-all:hover { filter: brightness(1.1); transform: translateY(-1px); }
-.btn-tuluan-approve-all:active { transform: translateY(2px) scale(0.96); }
 
+/* THANH TÌM KIẾM VÀ BỘ LỌC THU GỌN */
 .tuluan-toolbar-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 10px 18px;
+    gap: 8px !important;
+    padding: 5px 12px !important;
     background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1.5px solid #e2e8f0;
     flex-wrap: wrap;
     flex-shrink: 0;
 }
 .tuluan-search-box {
-    padding: 7px 12px;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 10px;
-    font-size: 12.5px;
+    padding: 4px 10px !important;
+    border: 1.2px solid #cbd5e1;
+    border-radius: 8px !important;
+    font-size: 12px !important;
     font-weight: 600;
     font-family: inherit;
     outline: none;
-    width: 200px;
+    width: 180px !important;
+    height: 30px !important;
     transition: all 0.2s;
     background: #fff;
+    box-sizing: border-box;
 }
 .tuluan-search-box:focus {
     border-color: #4f46e5;
-    width: 230px;
+    width: 210px !important;
 }
 
 .tuluan-filter-tabs {
     display: flex;
-    gap: 5px;
+    gap: 4px !important;
     flex-wrap: wrap;
 }
 .tuluan-tab-pill {
     background: #ffffff;
     border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 5px 10px;
-    font-size: 11.5px;
+    border-radius: 7px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
     font-weight: 800;
     color: #475569;
     cursor: pointer;
     transition: all 0.15s ease;
     font-family: inherit;
+    line-height: 1.2;
 }
 .tuluan-tab-pill:hover {
     border-color: #4f46e5;
@@ -982,12 +990,15 @@
     box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
 }
 
+/* KHUNG DANH SÁCH BẢNG HỌC SINH TỐI ĐA KHÔNG GIAN */
 .tuluan-table-wrap {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: auto;
+    flex: 1 !important;
+    height: 100% !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
     background: #ffffff;
-    max-height: calc(90vh - 190px);
+    -webkit-overflow-scrolling: touch;
 }
 .tuluan-table {
     width: 100%;
@@ -1005,7 +1016,7 @@
     color: #ffffff;
     font-weight: 800;
     font-size: 12px;
-    padding: 10px 12px;
+    padding: 8px 10px !important;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     border-bottom: 2px solid #4f46e5;
@@ -1021,7 +1032,7 @@
     background: #f0f9ff !important;
 }
 .tuluan-table tbody td {
-    padding: 9px 12px;
+    padding: 7px 10px !important;
     color: #1e293b;
     vertical-align: middle;
     border-bottom: 1px solid #e2e8f0;
@@ -1086,19 +1097,19 @@
 .tuluan-thumb-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     flex-wrap: wrap;
     max-width: 280px;
 }
 .tuluan-img-thumbnail-item {
     position: relative;
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    border-radius: 7px;
     overflow: hidden;
     border: 1.5px solid #cbd5e1;
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     transition: transform 0.15s ease, border-color 0.15s ease;
     flex-shrink: 0;
     background: #f1f5f9;
@@ -1175,7 +1186,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 18px;
+    padding: 6px 14px !important;
     border-top: 1.5px solid #e2e8f0;
     background: #ffffff;
     flex-shrink: 0;
@@ -1453,22 +1464,91 @@
         font-size: 9.5px !important;
     }
 
+    /* YÊU CẦU 2: TỐI ƯU GIAO DIỆN NỘP TỰ LUẬN TRÊN ĐIỆN THOẠI CHO HỌC SINH */
     .tuluan-modal-card {
         padding: 0 !important;
         border-radius: 14px !important;
+        width: 96vw !important;
+        max-width: 98vw !important;
+        height: 94vh !important;
+        max-height: 95vh !important;
+    }
+    .tuluan-modal-header {
+        padding: 6px 10px !important;
     }
     .tuluan-select-bar {
-        padding: 8px 12px !important;
-        gap: 6px !important;
+        padding: 6px 10px !important;
+        gap: 5px !important;
+    }
+    .tuluan-select-group {
+        flex: 1 1 auto;
+    }
+    .tuluan-select-group select {
+        width: 100%;
+        max-width: 100%;
     }
     .tuluan-toolbar-bar {
-        padding: 8px 12px !important;
+        padding: 6px 10px !important;
+        gap: 6px !important;
     }
     .tuluan-search-box {
         width: 100% !important;
+        height: 32px !important;
+        font-size: 12.5px !important;
     }
     .tuluan-filter-tabs {
         width: 100% !important;
+        display: flex;
+        gap: 4px;
+    }
+    .tuluan-tab-pill {
+        flex: 1;
+        text-align: center;
+        padding: 5px 2px !important;
+        font-size: 10.5px !important;
+    }
+
+    /* ĐẶC BIỆT TRÊN MOBILE: GHIM CỘT "THAO TÁC / TẢI ẢNH" CỐ ĐỊNH Ở MÉP PHẢI ĐỂ HỌC SINH THẤY NGAY */
+    .tuluan-table thead th:last-child {
+        position: sticky;
+        right: 0;
+        background: #0f172a !important;
+        z-index: 15;
+        box-shadow: -3px 0 8px rgba(15, 23, 42, 0.25);
+    }
+    .tuluan-table tbody td:last-child {
+        position: sticky;
+        right: 0;
+        background: #ffffff !important;
+        z-index: 9;
+        box-shadow: -3px 0 8px rgba(15, 23, 42, 0.12);
+    }
+    .tuluan-table tbody tr:nth-child(even) td:last-child {
+        background: #f8fafc !important;
+    }
+    .tuluan-table tbody tr:hover td:last-child {
+        background: #f0f9ff !important;
+    }
+
+    /* NÚT TẢI ẢNH TO, NỔI BẬT DỄ BẤM VỚI NGÓN TAY TRÊN ĐIỆN THOẠI */
+    .btn-tuluan-upload-row {
+        padding: 7px 12px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        min-height: 32px !important;
+    }
+    .btn-tuluan-change-pass,
+    .btn-tuluan-reset-pass {
+        padding: 6px 8px !important;
+        font-size: 10.5px !important;
+        min-height: 32px !important;
+    }
+
+    .student-pass-popover {
+        right: 4px !important;
+        left: auto !important;
+        width: min(290px, calc(100vw - 20px)) !important;
+        max-width: calc(100vw - 20px) !important;
     }
 }
 
