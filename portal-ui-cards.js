@@ -143,10 +143,21 @@ function buildCardHtmlString(item, categoryId) {
         `;
     }
 
+    // NÚT NỘP BÀI TỰ LUẬN DRIVE CHO MỖI ĐỀ THI
+    let tuLuanBtnHtml = "";
+    if (!isDoc || categoryId === "tu-luan-padlet") {
+        tuLuanBtnHtml = `
+            <button type="button" class="btn-tuluan-modal-trigger" onclick="openTuLuanModal('${categoryId}', '${itemId}', event)" title="Mở bảng nộp bài tự luận 45 học sinh lên Google Drive">
+                📝 Nộp tự luận Drive
+            </button>
+        `;
+    }
+
     let bottomActionButtonsHtml = "";
-    if (viewTestBtnHtml || reviewBtnHtml || exportExamBtnHtml) {
+    if (viewTestBtnHtml || reviewBtnHtml || exportExamBtnHtml || tuLuanBtnHtml) {
         bottomActionButtonsHtml = `
             <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                ${tuLuanBtnHtml}
                 ${viewTestBtnHtml}
                 ${reviewBtnHtml}
                 ${exportExamBtnHtml}
@@ -369,7 +380,8 @@ function handleCardClick(categoryId, itemId, isDoc, rawUrl, stringifiedData, eve
             event.target.closest('.left-sub-btns-row') ||
             event.target.closest('.btn-edit-inline-title') ||
             event.target.closest('.btn-test-exam-admin') ||
-            event.target.closest('.exam-export-dropdown-wrapper')) {
+            event.target.closest('.exam-export-dropdown-wrapper') ||
+            event.target.closest('.btn-tuluan-modal-trigger')) {
             return;
         }
     }
