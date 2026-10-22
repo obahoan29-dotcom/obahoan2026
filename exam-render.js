@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: exam-render.js
-// RENDER GIAO DIỆN CÂU HỎI, THANH PALETTE VÀ CÔNG THỨC TOÁN MATHJAX
+// RENDER GIAO DIỆN CÂU HỎI, NỘP TỰ LUẬN DRIVE TRONG PHÒNG THI & MATHJAX
 // =========================================================
 
 function isPart4Question(q) {
@@ -111,6 +111,22 @@ function renderQuizLayout(questions, imageMap) {
         </div>`;
     }
 
+    // YÊU CẦU 1 & 2: THANH NỘP TỰ LUẬN DRIVE CHUNG Ở ĐẦU MỌI ĐỀ THI
+    const globalDriveUploadBanner = `
+        <div style="margin-bottom: 15px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1.5px solid #86efac; border-radius: 14px; padding: 11px 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 8px rgba(22, 163, 74, 0.1);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">📁</span>
+                <div>
+                    <b style="color: #166534; font-size: 13.5px; display: block;">Nộp bài làm tự luận / Giấy nháp vào Google Drive 5TB</b>
+                    <span style="font-size: 11.5px; color: #475569; font-weight: 600;">Toàn bộ ảnh chụp sẽ được lưu thẳng vào thư mục của đề này trên Google Drive của Thầy</span>
+                </div>
+            </div>
+            <button type="button" class="btn-tuluan-modal-trigger" style="padding: 7px 15px; font-size: 12px; background: linear-gradient(135deg, #16a34a, #15803d); border-color: #22c55e;" onclick="triggerExamRoomDriveUpload('chung')">
+                📷 Chụp ảnh nộp Drive
+            </button>
+        </div>
+    `;
+
     // PHẦN 1: TRẮC NGHIỆM 4 PHƯƠNG ÁN
     if (p1List.length > 0) { 
         html += `<div class="exam-section-banner"><div class="section-icon">📑</div><div class="section-text"><h3>PHẦN 1. TRẮC NGHIỆM NHIỀU PHƯƠNG ÁN LỰA CHỌN</h3><p>Chọn duy nhất 01 phương án đúng trong các phương án A, B, C, D</p></div></div>`; 
@@ -205,7 +221,7 @@ function renderQuizLayout(questions, imageMap) {
         }); 
     } 
 
-    // PHẦN 4: TỰ LUẬN ĐIỀN ĐÁP ÁN NGẮN (KẾT QUẢ NGẮN & NỘP BÀI TỰ LUẬN)
+    // PHẦN 4: TỰ LUẬN ĐIỀN ĐÁP ÁN NGẮN & NỘP BÀI TỰ LUẬN
     if (p4List.length > 0) { 
         html += `<div class="exam-section-banner" style="background: linear-gradient(135deg, #ea580c, #c2410c); margin-top: 20px;"> 
             <div class="section-icon">📝</div> 
@@ -242,7 +258,7 @@ function renderQuizLayout(questions, imageMap) {
         }); 
     } 
 
-    container.innerHTML = html; 
+    container.innerHTML = globalDriveUploadBanner + html; 
     renderQuestionPalette(questions); 
     setupScrollObserver(); 
     if (typeof updateProgress === 'function') updateProgress(); 
