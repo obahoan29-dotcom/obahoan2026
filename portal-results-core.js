@@ -27,27 +27,20 @@ function isStrictSameCategory(catA, catB) {
     return normalizeCategoryKey(catA) === normalizeCategoryKey(catB);
 }
 
-// XÁC ĐỊNH CHÍNH XÁC XEM CÓ PHẢI HỌC SINH CỦA MỘT LỚP KHÁC KHÔNG
+// XÁC ĐỊNH CHÍNH XÁC LỚP GỐC CỦA HỌC SINH THEO SBD CHUẨN
 function identifyOfficialStudentCategory(sbd, name) {
     if (!window.STUDENT_ACCOUNTS) return null;
     const cleanSbd = String(sbd || "").trim().toLowerCase();
-    const normName = normalizeName(name);
 
-    const isStandardSbd = cleanSbd && cleanSbd.length >= 4 && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap";
-
-    for (let catId in window.STUDENT_ACCOUNTS) {
-        const list = window.STUDENT_ACCOUNTS[catId];
-        if (!Array.isArray(list)) continue;
-        const found = list.find(acc => {
-            const accSbd = String(acc.sbd || "").trim().toLowerCase();
-            const accName = normalizeName(acc.name);
-            const accUser = normalizeName(acc.username);
-
-            if (isStandardSbd && accSbd === cleanSbd) return true;
-            if (normName && normName.length >= 5 && (accName === normName || accUser === normName)) return true;
-            return false;
-        });
-        if (found) return catId;
+    // SBD chính thức luôn dài từ 4 ký tự trở lên (ví dụ: 11C21, 1122, 11A08, 10p01)
+    if (cleanSbd && cleanSbd.length >= 4 && cleanSbd !== "---" && cleanSbd !== "free" && cleanSbd !== "chuanhap") {
+        for (let catId in window.STUDENT_ACCOUNTS) {
+            const list = window.STUDENT_ACCOUNTS[catId];
+            if (!Array.isArray(list)) continue;
+            if (list.some(acc => String(acc.sbd || "").trim().toLowerCase() === cleanSbd)) {
+                return catId;
+            }
+        }
     }
     return null;
 }
@@ -57,54 +50,45 @@ function isSubmissionMatchingCategory(sub, targetCatId) {
     if (!targetCatId) return true;
     const normTarget = normalizeCategoryKey(targetCatId);
     const subSbdClean = String(sub.sbd || sub.studentId || "").trim().toLowerCase();
-    const subNameNorm = normalizeName(sub.studentName || sub.name);
 
-    // 1. Nếu học sinh nằm trong danh sách tài khoản chính thức của chính lớp targetCatId này -> Luôn hiển thị
-    const classAccounts = getAccountsForCategory(targetCatId);
-    const inThisClass = classAccounts.some(acc => {
-        const aSbd = String(acc.sbd || "").trim().toLowerCase();
-        const aName = normalizeName(acc.name);
-        const aUser = normalizeName(acc.username);
-        return (aSbd && aSbd === subSbdClean) || 
-               (subNameNorm && subNameNorm.length >= 5 && (aName === subNameNorm || aUser === subNameNorm));
-    });
-    if (inThisClass) return true;
-
-    // 2. Nếu học sinh thuộc danh sách chính thức của MỘT LỚP KHÁC trong hệ thống -> Bắt buộc chỉ hiện ở lớp đó
+    // 1. Kiểm tra SBD chính thức trước tiên: SBD thuộc lớp nào thì CHỈ ĐƯỢC HIỆN ở lớp đó
     const officialCat = identifyOfficialStudentCategory(sub.sbd || sub.studentId, sub.studentName || sub.name);
     if (officialCat) {
         return normalizeCategoryKey(officialCat) === normTarget;
     }
 
-    // 3. Đối với thí sinh tự do (như em Nguyễn Văn A):
-    // a) Kiểm tra chuyên mục/lớp mà thí sinh đã chọn khi bắt đầu vào làm bài thi
+    // 2. Nếu SBD trùng khớp trực tiếp với danh sách học sinh của lớp đang xem
+    const classAccounts = getAccountsForCategory(targetCatId);
+    const matchAccountBySbd = classAccounts.some(acc => {
+        const aSbd = String(acc.sbd || "").trim().toLowerCase();
+        return (aSbd && aSbd === subSbdClean);
+    });
+    if (matchAccountBySbd) return true;
+
+    // 3. Đối với thí sinh tự do:
     const rawSubCat = normalizeCategoryKey(sub.categoryId || sub.cat || "");
-    if (rawSubCat && rawSubCat !== normTarget) {
-        return false;
-    }
-
-    // b) Kiểm tra tên lớp mà thí sinh tự do điền vào (studentClass / className)
     const rawClass = normalizeCategoryKey(sub.studentClass || sub.className || "");
-    if (rawClass) {
-        const isClass11A = rawClass.includes("11a");
-        const isClass11C = rawClass.includes("11c");
-        const isClass11E = rawClass.includes("11e");
-        const isClass10P = rawClass.includes("10p");
 
-        if (isClass11C && normTarget !== "lop11c") return false;
-        if (isClass11A && normTarget !== "lop11a") return false;
-        if (isClass11E && normTarget !== "lop11e") return false;
-        if (isClass10P && normTarget !== "lop10p") return false;
+    const isClass11C = rawClass.includes("11c") || subSbdClean.startsWith("11c");
+    const isClass11A = rawClass.includes("11a") || subSbdClean.startsWith("11a");
+    const isClass11E = rawClass.includes("11e") || subSbdClean.startsWith("11e");
+    const isClass10P = rawClass.includes("10p") || subSbdClean.startsWith("10p");
 
-        if (normTarget === "lop11a" && !isClass11A) return false;
-        if (normTarget === "lop11c" && !isClass11C) return false;
-        if (normTarget === "lop11e" && !isClass11E) return false;
-        if (normTarget === "lop10p" && !isClass10P) return false;
-    } else {
-        if (normTarget.startsWith("lop")) return false;
-    }
+    // Nếu học sinh ghi lớp 11C nhưng đang mở bảng Thêm 11 hoặc 11A -> Loại bỏ ngay
+    if (isClass11C && normTarget !== "lop11c") return false;
+    if (isClass11A && normTarget !== "lop11a") return false;
+    if (isClass11E && normTarget !== "lop11e") return false;
+    if (isClass10P && normTarget !== "lop10p") return false;
 
-    // c) Khớp đúng chuyên mục
+    // Nếu đang xem lớp chính khóa mà học sinh không thuộc lớp này -> Loại bỏ
+    if (normTarget === "lop11c" && !isClass11C) return false;
+    if (normTarget === "lop11a" && !isClass11A) return false;
+    if (normTarget === "lop11e" && !isClass11E) return false;
+    if (normTarget === "lop10p" && !isClass10P) return false;
+
+    // Nếu có ghi chuyên mục thi và chuyên mục khác lớp đang xem -> Loại bỏ
+    if (rawSubCat && rawSubCat !== normTarget) return false;
+
     if (rawSubCat && rawSubCat === normTarget) return true;
 
     if (normTarget.startsWith("lop")) return false;
@@ -124,7 +108,6 @@ function getExamPossibleQuizIds(examItem, examMeta) {
     return Array.from(ids).filter(Boolean);
 }
 
-// BỘ LỌC ĐỐI SOÁT ĐỀ THI
 function isSubmissionMatchingCurrentExam(sub, examInfo) {
     if (!sub || typeof sub !== 'object') return false;
 
@@ -478,7 +461,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         });
     }
 
-    // 1. GHÉP BÀI THEO DANH SÁCH LỚP CHÍNH THỨC
+    // 1. GHÉP BÀI THEO DANH SÁCH LỚP CHÍNH THỨC (ƯU TIÊN TUYỆT ĐỐI THEO SBD)
     classAccounts.forEach((acc, idx) => {
         const accSbd = String(acc.sbd || "").trim();
         const accSbdLower = accSbd.toLowerCase();
@@ -491,10 +474,13 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
             let subNameNorm = normalizeName(sub.studentName);
 
             let isMatch = false;
-            if (accSbdLower && subSbd && subSbd.length >= 4 && subSbd === accSbdLower) { 
-                isMatch = true; 
-            } else if (subNameNorm && subNameNorm.length >= 5 && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
-                isMatch = true; 
+            // BẮT BUỘC KHỚP THEO SBD: Có SBD thì phải trùng SBD mới được tính, KHÔNG match nhầm sang SBD khác chỉ vì trùng tên
+            if (accSbdLower && subSbd && subSbd !== "---" && subSbd !== "free" && subSbd !== "chuanhap") { 
+                isMatch = (subSbd === accSbdLower); 
+            } else if (!subSbd || subSbd === "---" || subSbd === "free" || subSbd === "chuanhap") {
+                if (subNameNorm && subNameNorm.length >= 5 && (subNameNorm === accNameNorm || subNameNorm === accUserNorm)) {
+                    isMatch = true; 
+                }
             }
 
             if (isMatch) { 
@@ -507,7 +493,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
 
         let isDoing = false; let doingStartTime = null;
         let safeSbd = accSbdLower.replace(/[^a-zA-Z0-9]/g, '_');
-        let activeSess = activeUsersMap[accSbdLower] || activeUsersMap[safeSbd] || activeUsersMap[accNameNorm] || activeUsersMap[accUserNorm];
+        let activeSess = activeUsersMap[accSbdLower] || activeUsersMap[safeSbd];
         
         if (matchedSubs.length === 0 && activeSess) {
             isDoing = true; 
@@ -519,8 +505,8 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
             if (accNameNorm) usedSbdSet.add(accNameNorm);
         }
 
-        let cheatDurations = (accSbdLower && cheatHistoryBySbd[accSbdLower]) ? cheatHistoryBySbd[accSbdLower] : ((accNameNorm && cheatHistoryBySbd[accNameNorm]) ? cheatHistoryBySbd[accNameNorm] : []);
-        let cheatLogsTabCount = (accSbdLower && maxCheatCountBySbd[accSbdLower]) ? maxCheatCountBySbd[accSbdLower] : ((accNameNorm && maxCheatCountBySbd[accNameNorm]) ? maxCheatCountBySbd[accNameNorm] : cheatDurations.length);
+        let cheatDurations = (accSbdLower && cheatHistoryBySbd[accSbdLower]) ? cheatHistoryBySbd[accSbdLower] : [];
+        let cheatLogsTabCount = (accSbdLower && maxCheatCountBySbd[accSbdLower]) ? maxCheatCountBySbd[accSbdLower] : cheatDurations.length;
 
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
         let studentKey = accSbdLower || accNameNorm;
@@ -569,8 +555,8 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
         let subSbd = String(group.account.sbd).trim().toLowerCase();
         let subNameNorm = normalizeName(group.account.name);
 
-        let cheatDurations = (subSbd && cheatHistoryBySbd[subSbd]) ? cheatHistoryBySbd[subSbd] : ((subNameNorm && cheatHistoryBySbd[subNameNorm]) ? cheatHistoryBySbd[subNameNorm] : []);
-        let cheatLogsTabCount = (subSbd && maxCheatCountBySbd[subSbd]) ? maxCheatCountBySbd[subSbd] : ((subNameNorm && maxCheatCountBySbd[subNameNorm]) ? maxCheatCountBySbd[subNameNorm] : cheatDurations.length);
+        let cheatDurations = (subSbd && cheatHistoryBySbd[subSbd]) ? cheatHistoryBySbd[subSbd] : [];
+        let cheatLogsTabCount = (subSbd && maxCheatCountBySbd[subSbd]) ? maxCheatCountBySbd[subSbd] : cheatDurations.length;
 
         let cheatTimeString = cheatDurations.length > 0 ? cheatDurations.join(" | ") : "0s";
         let studentKey = subSbd || subNameNorm;
@@ -602,8 +588,7 @@ function renderExamResultTable(categoryId, submissionsListRaw, cheatingMap, acti
 
         let inClass = classAccounts.some(acc => {
             let aSbd = String(acc.sbd || "").trim().toLowerCase();
-            let aName = normalizeName(acc.name);
-            return (aSbd && aSbd === sSbd) || (aName && aName === normSName);
+            return (aSbd && aSbd === sSbd);
         });
         if (inClass) continue;
 
@@ -708,7 +693,7 @@ async function triggerAutoCollectDrafts(event) {
                 correctCount: scoreResult.correctCount,
                 wrongCount: scoreResult.wrongCount,
                 completionTime: "Thu tự động",
-                spentMins: 90,
+                spentMins: parseInt(quizObj.timeLimitMinutes, 10) || 90,
                 tabSwitchCount: "0 lần",
                 dataString: scoreResult.dataDetails.join(" | ") + " | [THU TỰ ĐỘNG TỪ BẢN NHÁP CLOUD]",
                 userAnswers: draft.userAnswers,
