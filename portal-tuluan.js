@@ -1,11 +1,11 @@
 // =========================================================
 // FILE: portal-tuluan.js
 // QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
-// BẢO VỆ CHỐNG CHÉP BÀI, NÚT XÓA ẢNH (✕) TỰ ĐỘNG NHÚNG CSS
-// TỰ ĐỘNG NẠP ĐÚNG 5 ĐỀ MỚI NHẤT (LẤY TẤT CẢ CÁC LOẠI ĐỀ KHÔNG PHÂN BIỆT)
+// BẢO VỆ CHỐNG CHÉP BÀI, BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN)
+// ADMIN XÓA ĐỀ THÊM NHẦM BẰNG NÚT [✕] NGAY Ô CHỌN ĐỀ
 // =========================================================
 
-// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH (✕) VÀO TRANG MÀ KHÔNG CẦN SỬA FILE style-modals.css
+// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH (✕) & NÚT XÓA ĐỀ THI
 (function injectTuLuanButtonStyles() {
     const styleId = "tuluan-custom-delete-btn-styles";
     if (document.getElementById(styleId)) return;
@@ -20,8 +20,8 @@
             position: absolute !important;
             top: 2px !important;
             right: 2px !important;
-            width: 17px !important;
-            height: 17px !important;
+            width: 18px !important;
+            height: 18px !important;
             background: #ef4444 !important;
             color: #ffffff !important;
             border: 1px solid #ffffff !important;
@@ -34,19 +34,10 @@
             justify-content: center !important;
             cursor: pointer !important;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45) !important;
-            opacity: 0;
-            transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease !important;
             z-index: 20 !important;
             padding: 0 !important;
             user-select: none !important;
-        }
-        .tuluan-img-thumbnail-item:hover .btn-del-single-thumb {
-            opacity: 1 !important;
-        }
-        @media (hover: none) {
-            .btn-del-single-thumb {
-                opacity: 0.9 !important;
-            }
+            transition: transform 0.15s ease, background 0.15s ease !important;
         }
         .btn-del-single-thumb:hover {
             background: #b91c1c !important;
@@ -54,6 +45,35 @@
         }
         .btn-del-single-thumb:active {
             transform: scale(0.9) !important;
+        }
+
+        /* NÚT XÓA ĐỀ THI DÀNH RIÊNG CHO QUẢN TRỊ VIÊN */
+        .btn-del-exam-selector {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+            border: 1.5px solid #fca5a5 !important;
+            border-radius: 9px !important;
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 14px !important;
+            font-weight: 900 !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.15s ease !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 1px 3px rgba(220, 38, 38, 0.15) !important;
+            user-select: none !important;
+        }
+        .btn-del-exam-selector:hover {
+            background: #dc2626 !important;
+            color: #ffffff !important;
+            border-color: #dc2626 !important;
+            transform: scale(1.08) !important;
+        }
+        .btn-del-exam-selector:active {
+            transform: scale(0.92) !important;
         }
     `;
     document.head.appendChild(style);
@@ -91,13 +111,12 @@ function getUnifiedExamFolderKey(title, maDe, quizId) {
         .replace(/_+/g, '_');
 }
 
-// Chuẩn hóa tên thư mục học sinh: TỰ ĐỘNG TÌM ĐÚNG STT CHUẨN TRÁNH TRÙNG LẶP THƯ MỤC
+// Chuẩn hóa tên thư mục học sinh: TỰ ĐỘNG TÌM ĐÚNG STT CHUẨN ĐẢM BẢO CHỈ LƯU 1 FOLDER DUY NHẤT
 function getStudentFolderKey(stt, sbd, name, categoryId = "") {
     let finalStt = stt;
     const cleanSbd = String(sbd || "").trim();
     const cleanName = String(name || "").trim();
 
-    // Tự động đối chiếu CSDL học sinh để lấy đúng STT chính thức
     if (window.STUDENT_ACCOUNTS) {
         let found = null;
         if (categoryId) {
@@ -144,7 +163,7 @@ function getStudentFolderKey(stt, sbd, name, categoryId = "") {
     return `${padStt}_${safeSbd}_${safeName}`;
 }
 
-// Nén ảnh & sửa lỗi nhận diện sai hình ảnh trên điện thoại / tablet
+// Nén ảnh & sửa lỗi nhận diện sai hình ảnh trên điện thoại / camera
 function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) {
     return new Promise((resolve, reject) => {
         if (!file) {
@@ -156,7 +175,6 @@ function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) 
         const isImageMime = mime.startsWith("image/");
         const isImageExt = /\.(jpe?g|png|webp|bmp|gif|heic|heif|jfif|svg)$/i.test(name);
 
-        // Chấp nhận nếu có MIME image, hoặc đuôi file ảnh, hoặc mime rỗng/octet-stream thường thấy trên mobile
         if (!isImageMime && !isImageExt && mime !== "" && mime !== "application/octet-stream") {
             return reject(new Error("Tệp chọn không phải là hình ảnh!"));
         }
@@ -195,7 +213,6 @@ function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) 
                 }
             };
             img.onerror = function() {
-                // Fallback nếu trình duyệt mobile không tạo được đối tượng Image
                 let rawResult = String(e.target.result || "");
                 if (rawResult.includes("base64,")) {
                     let base64 = rawResult.split("base64,")[1];
@@ -268,7 +285,7 @@ function ensureTuLuanModalDOM() {
                 <button type="button" class="btn-close-cleanup-modal" onclick="closeTuLuanModal(event)">✕</button>
             </div>
 
-            <!-- THANH ĐIỀU HƯỚNG CHỌN LỚP, CHỌN 5 ĐỀ MỚI NHẤT & ADMIN THÊM ĐỀ -->
+            <!-- THANH ĐIỀU HƯỚNG CHỌN LỚP, CHỌN 5 ĐỀ MỚI NHẤT, NÚT XÓA ĐỀ (✕) & ADMIN THÊM ĐỀ -->
             <div class="tuluan-select-bar">
                 <div class="tuluan-select-group">
                     <label>🏫 Lớp:</label>
@@ -286,7 +303,13 @@ function ensureTuLuanModalDOM() {
 
                 <div class="tuluan-select-group" style="flex:1; min-width:220px;">
                     <label>📝 Chọn đề thi (5 đề mới nhất):</label>
-                    <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)"></select>
+                    <div style="display:flex; align-items:center; gap:5px; width:100%;">
+                        <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1;"></select>
+                        <!-- NÚT ✕ ĐỎ ĐỂ QUẢN TRỊ VIÊN XÓA ĐỀ THÊM NHẦM -->
+                        <button type="button" class="btn-del-exam-selector" id="btn-del-current-exam" onclick="deleteCurrentTuLuanExam(event)" title="Xóa đề này khỏi danh sách đề tự luận" style="display:none;">
+                            ✕
+                        </button>
+                    </div>
                 </div>
 
                 <div id="tuluan-admin-add-exam-box" style="display:none; align-items:flex-end; gap:6px;">
@@ -371,9 +394,15 @@ async function openTuLuanModal(classId, itemId, event) {
     const classSelector = document.getElementById("tuluan-class-selector");
     if (classSelector) classSelector.value = targetCat;
 
+    const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn);
     const adminBox = document.getElementById("tuluan-admin-add-exam-box");
     if (adminBox) {
-        adminBox.style.display = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) ? "flex" : "none";
+        adminBox.style.display = isAdmin ? "flex" : "none";
+    }
+
+    const delExamBtn = document.getElementById("btn-del-current-exam");
+    if (delExamBtn) {
+        delExamBtn.style.display = isAdmin ? "inline-flex" : "none";
     }
 
     document.getElementById("modal-tuluan-submission").style.display = "flex";
@@ -398,7 +427,7 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
 
     let rawExams = [];
 
-    // 1. Quét từ Firebase node /custom_links/{targetCat} (LẤY HẾT, KHÔNG BỎ QUA isDoc)
+    // 1. Quét từ Firebase node /custom_links/{targetCat} (LẤY HẾT, KHÔNG LỌC isDoc)
     try {
         const resCat = await fetch(`${FIREBASE_DB_URL}/custom_links/${targetCat}.json`);
         if (resCat && resCat.ok) {
@@ -419,7 +448,7 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
         }
     } catch(e) {}
 
-    // 2. Quét dự phòng từ danh mục cục bộ trong bộ nhớ RAM (LẤY HẾT, KHÔNG LỌC isDoc)
+    // 2. Quét dự phòng từ danh mục cục bộ trong bộ nhớ RAM
     const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
     const catObj = allCats.find(c => c.id === targetCat);
     if (catObj && Array.isArray(catObj.links)) {
@@ -454,7 +483,7 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
         }
     } catch(e) {}
 
-    // 4. Nếu lớp hiện tại chưa đủ 5 đề, quét bổ sung các mục mới từ các lớp khác để luôn có đủ 5 đề
+    // 4. Nếu lớp hiện tại chưa đủ 5 đề, quét bổ sung từ các mục khác để luôn hiển thị đủ 5 đề
     if (rawExams.length < 5) {
         allCats.forEach(c => {
             if (c.links && Array.isArray(c.links)) {
@@ -511,6 +540,12 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
     }
     selector.value = selectedExam.id;
 
+    const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn);
+    const delExamBtn = document.getElementById("btn-del-current-exam");
+    if (delExamBtn) {
+        delExamBtn.style.display = isAdmin ? "inline-flex" : "none";
+    }
+
     await switchTuLuanExam(selectedExam.id, selectedExam.title);
 }
 
@@ -542,6 +577,47 @@ function onTuLuanExamChanged(newExamId) {
     const selectedOpt = selector.options[selector.selectedIndex];
     const examTitle = selectedOpt ? selectedOpt.dataset.title : newExamId;
     switchTuLuanExam(newExamId, examTitle);
+}
+
+// XÓA ĐỀ THI ĐƯỢC CHỌN KHỎI DANH SÁCH (DÀNH CHO QUẢN TRỊ VIÊN)
+async function deleteCurrentTuLuanExam(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const selector = document.getElementById("tuluan-exam-selector");
+    if (!selector || !selector.value) {
+        alert("⚠️ Vui lòng chọn một đề để xóa!");
+        return;
+    }
+
+    const examId = selector.value;
+    const selectedOpt = selector.options[selector.selectedIndex];
+    const examTitle = selectedOpt ? (selectedOpt.dataset.title || selectedOpt.innerText) : examId;
+    const classId = currentTuLuanModalData.classId || "lop-11a";
+    const className = getCleanDriveClassName(classId);
+
+    if (!confirm(`⚠️ XÁC NHẬN XÓA ĐỀ TỰ LUẬN:\n\nThầy có chắc chắn muốn XÓA đề:\n"${examTitle}"\nkhỏi danh sách lớp ${className} không?\n\n(Lưu ý: Thao tác này sẽ gỡ đề đã thêm nhầm khỏi danh sách lớp hiện tại).`)) {
+        return;
+    }
+
+    try {
+        await Promise.all([
+            // Xóa khỏi danh sách đề tự luận tạo riêng của lớp này
+            fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}/${examId}.json`, { method: "DELETE" }).catch(() => null),
+            // Xóa khỏi custom_links của lớp này nếu là liên kết thêm nhầm
+            fetch(`${FIREBASE_DB_URL}/custom_links/${classId}/${examId}.json`, { method: "DELETE" }).catch(() => null)
+        ]);
+
+        // Cập nhật lại mảng trong bộ nhớ RAM
+        const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
+        const catObj = allCats.find(c => c.id === classId);
+        if (catObj && Array.isArray(catObj.links)) {
+            catObj.links = catObj.links.filter(l => (l.id !== examId && l.firebaseId !== examId && l.title !== examTitle));
+        }
+
+        alert(`🗑️ Đã xóa đề "${examTitle}" thành công!`);
+        await refreshTuLuanExamList(classId);
+    } catch(err) {
+        alert("❌ Lỗi khi xóa đề: " + err.message);
+    }
 }
 
 // Thêm đề tự luận mới
@@ -635,7 +711,7 @@ function startTuLuanRealtimeListener(quizId) {
     } catch(e) {}
 }
 
-// Render bảng học sinh: CÓ NÚT XÓA ẢNH (✕) TẠI MỖI THUMBNAIL
+// Render bảng học sinh: BẢO MẬT CHỈ CHÍNH CHỦ VÀ ADMIN MỚI CÓ NÚT XÓA (✕)
 function renderTuLuanStudentsTable() {
     const tbody = document.getElementById("tuluan-students-tbody");
     if (!tbody) return;
@@ -645,6 +721,9 @@ function renderTuLuanStudentsTable() {
     const searchVal = (document.getElementById("tuluan-search-student")?.value || "").trim().toLowerCase();
     const subMap = currentTuLuanModalData.submissionsMap || {};
     const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn);
+
+    // Lấy SBD của học sinh đang đăng nhập trên máy này
+    const loggedStudentSbd = (safeLocal.getItem("saved_student_sbd") || "").trim().toLowerCase();
 
     let totalSt = students.length;
     let submittedCount = 0;
@@ -710,9 +789,19 @@ function renderTuLuanStudentsTable() {
                 <div style="font-size: 11px; color: #64748b; font-weight: 700; margin-top: 2px;">🕒 ${lastTime}</div>
             `;
 
-            const currentStudentSbd = (safeLocal.getItem("saved_student_sbd") || "").trim().toLowerCase();
-            const isOwner = (currentStudentSbd && currentStudentSbd === String(st.sbd).trim().toLowerCase());
+            // Kiểm tra xem người đang xem có phải là CHÍNH HỌC SINH NÀY hay không
+            const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
+            const isSessionAuthed = (safeSession.getItem(sessionAuthKey) === "true");
+            const isOwner = Boolean(
+                (loggedStudentSbd && loggedStudentSbd === String(st.sbd).trim().toLowerCase()) ||
+                isSessionAuthed
+            );
+
+            // Chỉ cho xem ảnh to nếu là Admin, hoặc đã được duyệt, hoặc chính là bài của mình
             const canViewDetailed = (isAdmin || isApproved || isOwner);
+
+            // BẢO VỆ CHỐNG XÓA: CHỈ CHÍNH CHỦ VÀ ADMIN MỚI ĐƯỢC XÓA ẢNH
+            const canDeleteThisStudentImage = (isAdmin || isOwner);
 
             thumbnailsHtml = `
                 <div class="tuluan-thumb-row">
@@ -724,10 +813,12 @@ function renderTuLuanStudentsTable() {
                             <span class="tuluan-thumb-page">Trang ${idx + 1}</span>
                             ${!canViewDetailed ? `<div class="lock-overlay-icon">🔒</div>` : ''}
                             
-                            <!-- NÚT XÓA ẢNH X NHỎ GÓC TRÊN PHẢI -->
-                            <button type="button" class="btn-del-single-thumb" 
-                                onclick="deleteSingleStudentImage('${cleanSbd}', ${idx}, '${st.name}', event)" 
-                                title="Xóa bức ảnh này">✕</button>
+                            <!-- NÚT XÓA ẢNH (✕): CHỈ HIỂN THỊ KHI LÀ ADMIN HOẶC CHÍNH HỌC SINH ĐÓ -->
+                            ${canDeleteThisStudentImage ? `
+                                <button type="button" class="btn-del-single-thumb" 
+                                    onclick="deleteSingleStudentImage('${cleanSbd}', ${idx}, '${st.name}', '${st.pass}', event)" 
+                                    title="Xóa bức ảnh này">✕</button>
+                            ` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -761,9 +852,31 @@ function onThumbnailClicked(imgSrc, driveUrl, title, canView, event) {
     openTuLuanLightbox(imgSrc, driveUrl, title, event);
 }
 
-// XÓA 1 BỨC ẢNH CỤ THỂ KHI ẤN VÀO NÚT "✕"
-async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, event) {
+// HÀM XÓA 1 BỨC ẢNH CỤ THỂ: CÓ BẢO MẬT CHẶN HỌC SINH XÓA BÀI CỦA NHAU
+async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, correctPass, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
+
+    const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn);
+    const loggedStudentSbd = (safeLocal.getItem("saved_student_sbd") || "").trim().toLowerCase();
+    const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
+    const isSessionAuthed = (safeSession.getItem(sessionAuthKey) === "true");
+    const isOwner = Boolean(
+        (loggedStudentSbd && loggedStudentSbd === cleanSbd.toLowerCase()) ||
+        isSessionAuthed
+    );
+
+    // Nếu không phải Admin và cũng không phải chính chủ: Chặn tuyệt đối
+    if (!isAdmin && !isOwner) {
+        const inputPass = prompt(`🔐 XÁC THỰC QUYỀN XÓA:\n\nBạn đang yêu cầu xóa ảnh bài làm của [${studentName}].\nVui lòng nhập đúng Mật khẩu hoặc SBD của bạn để xác nhận:`);
+        if (!inputPass) return;
+        const trimmed = inputPass.trim().toLowerCase();
+        const isPassOk = (trimmed === String(correctPass).trim().toLowerCase()) || (trimmed === cleanSbd.toLowerCase());
+        if (!isPassOk) {
+            alert("⛔ BẠN KHÔNG CÓ QUYỀN XÓA!\nChỉ chính học sinh này hoặc Giáo viên quản trị mới có quyền xóa bài làm.");
+            return;
+        }
+        safeSession.setItem(sessionAuthKey, "true");
+    }
 
     const record = currentTuLuanModalData.submissionsMap[cleanSbd];
     if (!record || !Array.isArray(record.images) || !record.images[imgIndex]) {
@@ -1204,6 +1317,7 @@ window.triggerExamRoomDriveUpload = triggerExamRoomDriveUpload;
 window.onTuLuanClassChanged = onTuLuanClassChanged;
 window.onTuLuanExamChanged = onTuLuanExamChanged;
 window.promptAddNewTuLuanExam = promptAddNewTuLuanExam;
+window.deleteCurrentTuLuanExam = deleteCurrentTuLuanExam;
 window.handleToggleApproveStudent = handleToggleApproveStudent;
 window.toggleApproveAllSubmissions = toggleApproveAllSubmissions;
 window.onThumbnailClicked = onThumbnailClicked;
