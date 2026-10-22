@@ -2,8 +2,8 @@
 // FILE: portal-tuluan.js
 // QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
 // BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN) | QUẢN LÝ 5 ĐỀ MỚI NHẤT
-// NÚT XÓA ĐỀ NẰM NGAY BÊN PHẢI CUỐI Ô CHỌN ĐỀ DÀNH CHO ADMIN
-// ĐỔI MẬT KHẨU 4 SỐ (XÒE 2 DÒNG) & ADMIN RESET MẬT KHẨU VỀ MẶC ĐỊNH
+// NÚT XÓA ĐỀ NẰM NGAY BÊN PHẢI CUỐI Ô CHỌN ĐỀ CHỈ HIỆN KHI LÀ ADMIN
+// ĐỔI MẬT KHẨU 4 SỐ (XÒE PHÍA TRÊN, NỔI LÊN TRƯỚC 100%) & ADMIN RESET
 // =========================================================
 
 // TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ & KHUNG ĐỔI MẬT KHẨU
@@ -48,7 +48,7 @@
             transform: scale(0.9) !important;
         }
 
-        /* NÚT XÓA ĐỀ THI DÀNH CHO ADMIN NẰM NGAY BÊN PHẢI Ô CHỌN ĐỀ */
+        /* NÚT XÓA ĐỀ THI: MẶC ĐỊNH ẨN, CHỈ HIỆN KHI ADMIN ĐĂNG NHẬP */
         .btn-del-exam-selector {
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
             color: #dc2626 !important;
@@ -59,7 +59,7 @@
             font-size: 12px !important;
             font-weight: 800 !important;
             cursor: pointer !important;
-            display: inline-flex !important;
+            display: none; /* Mặc định ẩn, không dùng !important để JS điều khiển */
             align-items: center !important;
             justify-content: center !important;
             gap: 4px !important;
@@ -143,19 +143,32 @@
             transform: scale(0.95) !important;
         }
 
-        /* KHUNG ĐỔI MẬT KHẨU XÒE RA 2 DÒNG */
+        /* ĐẨY Z-INDEX CỦA Ô & HÀNG CHỨA POPOVER LÊN CAO NHẤT (CHỐNG BỊ HÀNG DƯỚI ĐÈ LÊN) */
+        .tuluan-td-active-popover,
+        .tuluan-table tbody td.tuluan-td-active-popover,
+        .tuluan-table tbody td:has(.student-pass-popover.show) {
+            z-index: 99999 !important;
+            position: relative !important;
+        }
+        .tuluan-table tbody tr:has(.student-pass-popover.show) {
+            z-index: 99999 !important;
+            position: relative !important;
+        }
+
+        /* KHUNG ĐỔI MẬT KHẨU XÒE RA PHÍA TRÊN & LUÔN NỔI PHÍA TRƯỚC */
         .student-pass-popover {
             display: none;
             position: absolute !important;
-            right: 8px !important;
-            top: calc(100% + 5px) !important;
-            width: 275px !important;
+            right: 4px !important;
+            bottom: calc(100% + 6px) !important;
+            top: auto !important;
+            width: 280px !important;
             background: #ffffff !important;
             border: 1.5px solid #0284c7 !important;
             border-radius: 14px !important;
             padding: 12px 14px !important;
-            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.28) !important;
-            z-index: 999999 !important;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(2, 132, 199, 0.2) !important;
+            z-index: 100000 !important;
             text-align: left !important;
             animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
@@ -505,8 +518,8 @@ function ensureTuLuanModalDOM() {
                     <label>📝 Chọn đề thi (5 đề mới nhất):</label>
                     <div style="display:flex; align-items:center; gap:6px; width:100%;">
                         <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1; min-width: 140px;"></select>
-                        <!-- NÚT XÓA ĐỀ NỔI BẬT NẰM NGAY BÊN PHẢI CUỐI ĐỀ THI -->
-                        <button type="button" class="btn-del-exam-selector" id="btn-del-current-exam" onclick="deleteCurrentTuLuanExam(event)" title="Xóa đề này khỏi danh sách đề tự luận">
+                        <!-- NÚT XÓA ĐỀ NỔI BẬT NẰM NGAY BÊN PHẢI CUỐI ĐỀ THI - MẶC ĐỊNH ẨN VÀ CHỈ HIỆN KHI LÀ ADMIN -->
+                        <button type="button" class="btn-del-exam-selector" id="btn-del-current-exam" style="display:none;" onclick="deleteCurrentTuLuanExam(event)" title="Xóa đề này khỏi danh sách đề tự luận">
                             🗑️ Xóa đề
                         </button>
                     </div>
@@ -577,16 +590,16 @@ function ensureTuLuanModalDOM() {
     document.body.appendChild(modalDiv);
 }
 
-// Cập nhật hiển thị các nút chức năng của Admin
+// Cập nhật hiển thị các nút chức năng của Admin: CHỈ HIỆN KHI LÀ ADMIN
 function updateTuLuanAdminUI() {
     const isAdmin = checkCurrentIsAdmin();
     const adminBox = document.getElementById("tuluan-admin-add-exam-box");
     if (adminBox) {
-        adminBox.style.display = isAdmin ? "flex" : "none";
+        adminBox.style.setProperty("display", isAdmin ? "flex" : "none", "important");
     }
     const delExamBtn = document.getElementById("btn-del-current-exam");
     if (delExamBtn) {
-        delExamBtn.style.display = isAdmin ? "inline-flex" : "none";
+        delExamBtn.style.setProperty("display", isAdmin ? "inline-flex" : "none", "important");
     }
 }
 
@@ -780,9 +793,14 @@ function onTuLuanExamChanged(newExamId) {
     switchTuLuanExam(newExamId, examTitle);
 }
 
-// XÓA ĐỀ THI ĐƯỢC CHỌN KHỎI DANH SÁCH (DÀNH CHO ADMIN)
+// XÓA ĐỀ THI ĐƯỢC CHỌN KHỎI DANH SÁCH (CHỈ DÀNH CHO ADMIN)
 async function deleteCurrentTuLuanExam(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
+    if (!checkCurrentIsAdmin()) {
+        alert("⛔ Chỉ Giáo viên quản trị mới có quyền xóa đề thi!");
+        return;
+    }
+
     const selector = document.getElementById("tuluan-exam-selector");
     if (!selector || !selector.value) {
         alert("⚠️ Vui lòng chọn một đề để xóa!");
@@ -797,7 +815,7 @@ async function deleteCurrentTuLuanExam(event) {
     const classId = currentTuLuanModalData.classId || "lop-11a";
     const className = getCleanDriveClassName(classId);
 
-    if (!confirm(`⚠️ XÁC NHẬN XÓA ĐỀ TỰ LUẬN:\n\nThầy có chắc chắn muốn XÓA đề:\n"${examTitle}"\nkhỏi danh sách nộp bài của lớp ${className} không?\n\n(Hệ thống sẽ gỡ bỏ đề này khỏi danh sách lớp hiện tại và làm mới tức thì).`)) {
+    if (!confirm(`⚠️ XÁC NHẬN XÓA ĐỀ TỰ LUẬN (ADMIN):\n\nThầy có chắc chắn muốn XÓA đề:\n"${examTitle}"\nkhỏi danh sách nộp bài của lớp ${className} không?\n\n(Hệ thống sẽ gỡ bỏ đề này khỏi danh sách lớp hiện tại và làm mới tức thì).`)) {
         return;
     }
 
@@ -1097,7 +1115,7 @@ function renderTuLuanStudentsTable() {
                     ` : ''}
                 </div>
 
-                <!-- KHUNG XÒE 2 DÒNG ĐỔI MẬT KHẨU -->
+                <!-- KHUNG XÒE 2 DÒNG ĐỔI MẬT KHẨU: XÒE LÊN TRÊN & ĐẨY Z-INDEX CAO NHẤT -->
                 <div class="student-pass-popover" id="pass-popover-${cleanSbd}" onclick="event.stopPropagation()">
                     <div class="pass-popover-header">
                         <span>🔑 Đổi Mật Khẩu: <b>${st.name}</b></span>
@@ -1124,17 +1142,42 @@ function renderTuLuanStudentsTable() {
         `;
         tbody.appendChild(tr);
     });
+
+    updateTuLuanAdminUI();
 }
 
-// BẬT / TẮT KHUNG ĐỔI MẬT KHẨU CỦA MỖI HỌC SINH
+// BẬT / TẮT KHUNG ĐỔI MẬT KHẨU CỦA MỖI HỌC SINH (XÒE LÊN TRÊN & TRÁNH BỊ CHE KHUẤT)
 function toggleStudentPassPopover(cleanSbd, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const pop = document.getElementById(`pass-popover-${cleanSbd}`);
     if (!pop) return;
     const isShown = pop.classList.contains("show");
+
+    // Đóng tất cả popover đang mở và xóa class active z-index trên toàn bộ td
     document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".tuluan-td-active-popover").forEach(td => td.classList.remove("tuluan-td-active-popover"));
+
     if (!isShown) {
         pop.classList.add("show");
+        const parentTd = pop.closest("td");
+        if (parentTd) {
+            parentTd.classList.add("tuluan-td-active-popover");
+        }
+
+        // Tự động kiểm tra vị trí cuộn: Mặc định xòe lên trên; nếu ở sát mép trên cùng thì xòe xuống dưới
+        const tableWrap = document.querySelector(".tuluan-table-wrap");
+        if (tableWrap && parentTd) {
+            const tdRect = parentTd.getBoundingClientRect();
+            const wrapRect = tableWrap.getBoundingClientRect();
+            if (tdRect.top - wrapRect.top < 220) {
+                pop.style.setProperty("bottom", "auto", "important");
+                pop.style.setProperty("top", "calc(100% + 6px)", "important");
+            } else {
+                pop.style.setProperty("bottom", "calc(100% + 6px)", "important");
+                pop.style.setProperty("top", "auto", "important");
+            }
+        }
+
         const oldIn = document.getElementById(`old-pass-${cleanSbd}`);
         const newIn = document.getElementById(`new-pass-${cleanSbd}`);
         if (oldIn) { oldIn.value = ""; oldIn.focus(); }
@@ -1145,7 +1188,11 @@ function toggleStudentPassPopover(cleanSbd, event) {
 function closeStudentPassPopover(cleanSbd, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const pop = document.getElementById(`pass-popover-${cleanSbd}`);
-    if (pop) pop.classList.remove("show");
+    if (pop) {
+        pop.classList.remove("show");
+        const parentTd = pop.closest("td");
+        if (parentTd) parentTd.classList.remove("tuluan-td-active-popover");
+    }
 }
 
 // HỌC SINH TỰ LƯU ĐỔI MẬT KHẨU (BẮT BUỘC 4 CHỮ SỐ)
@@ -1249,7 +1296,7 @@ function onThumbnailClicked(imgSrc, driveUrl, title, canView, event) {
     openTuLuanLightbox(imgSrc, driveUrl, title, event);
 }
 
-// HÀM XÓA ẢNH BÀI LÀM
+// HÀM XÓA ẢNH BÀI LÀM (CHỈ CHÍNH CHỦ HOẶC ADMIN)
 async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, defaultPass, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
@@ -1704,10 +1751,11 @@ async function triggerExamRoomDriveUpload(qId) {
     input.click();
 }
 
-// Đóng mọi popover khi bấm chuột ra ngoài
+// Đóng mọi popover khi bấm chuột ra ngoài và gỡ bỏ class active z-index
 document.addEventListener("click", function(e) {
     if (!e.target.closest(".student-pass-popover") && !e.target.closest(".btn-tuluan-change-pass")) {
         document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
+        document.querySelectorAll(".tuluan-td-active-popover").forEach(td => td.classList.remove("tuluan-td-active-popover"));
     }
 });
 
