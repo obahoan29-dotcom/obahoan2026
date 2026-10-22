@@ -1,9 +1,10 @@
 /* ========================================================= */
 /* FILE: style-modals.css                                    */
-/* QUẢN TRỊ, POPOVER AVATAR, TẤT CẢ CÁC MODAL, BẢNG ĐIỂM & MOBILE */
+/* QUẢN TRỊ, POPOVER AVATAR, TẤT CẢ CÁC MODAL, BẢNG ĐIỂM,   */
+/* MODAL 45 HỌC SINH TỰ LUẬN DRIVE, LIGHTBOX & MOBILE       */
 /* ========================================================= */
 
-/* KHU VỰC ĐIỀU KHIỂN QUẢN TRỊ VIÊN */
+/* 1. KHU VỰC ĐIỀU KHIỂN QUẢN TRỊ VIÊN */
 .admin-controls-wrapper { position: absolute; bottom: 10px; right: 12px; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .auth-container { display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 5px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.4); opacity: 0; transform: translateX(15px); pointer-events: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 .auth-container.show { opacity: 1; transform: translateX(0); pointer-events: all; }
@@ -121,7 +122,7 @@
 .btn-submit { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); }
 .btn-admin:active { transform: translateY(2px) scale(0.96); }
 
-/* KHUNG ẢNH AVATAR THẺ & POPOVER CHỌN AVATAR */
+/* 2. KHUNG ẢNH AVATAR THẺ & POPOVER CHỌN AVATAR */
 .exam-thumb-box { 
     border-radius: 12px; 
     overflow: visible !important;
@@ -230,9 +231,7 @@
     background: #fffbeb; border: 1px solid #fed7aa; padding: 6px 8px; border-radius: 8px;
 }
 
-/* =========================================================
-   1. MODAL THỐNG KÊ LƯỢT TRUY CẬP
-   ========================================================= */
+/* 3. MODAL THỐNG KÊ LƯỢT TRUY CẬP */
 .visit-stats-modal-overlay {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -305,9 +304,7 @@
 .btn-refresh-visits { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; border-radius: 10px; padding: 5px 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.15s; }
 .btn-refresh-visits:hover { background: #0284c7; color: #fff; }
 
-/* =========================================================
-   2. MODAL BÀI BÁO PHONG CÁCH DÂN TRÍ
-   ========================================================= */
+/* 4. MODAL BÀI BÁO PHONG CÁCH DÂN TRÍ */
 .dantri-article-modal {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -438,9 +435,7 @@
     max-height: 200px; width: 100%; object-fit: contain;
 }
 
-/* =========================================================
-   3. MODAL CHUYỂN / COPY LỚP & ĐỔI THỜI GIAN THI
-   ========================================================= */
+/* 5. MODAL CHUYỂN / COPY LỚP & ĐỔI THỜI GIAN THI */
 .move-modal-overlay { 
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); 
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); 
@@ -458,9 +453,7 @@
 .move-btn-submit { background: var(--primary-blue);}
 .move-btn-row button:active { transform: translateY(2px) scale(0.96); }
 
-/* =========================================================
-   4. MODAL TOÀN MÀN HÌNH BẢNG KẾT QUẢ THI
-   ========================================================= */
+/* 6. MODAL TOÀN MÀN HÌNH BẢNG KẾT QUẢ THI */
 .result-fullscreen-modal {
     position: fixed; inset: 0; width: 100%; height: 100%;
     background: rgba(15, 23, 42, 0.88);
@@ -738,9 +731,7 @@
     height: 100% !important;
 }
 
-/* =========================================================
-   5. MODAL ĐĂNG NHẬP PHÒNG THI DÀNH CHO HỌC SINH
-   ========================================================= */
+/* 7. MODAL ĐĂNG NHẬP PHÒNG THI DÀNH CHO HỌC SINH */
 .student-login-box {
     background: rgba(255, 255, 255, 0.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-radius: 26px; padding: 26px 24px; max-width: 440px; width: 100%;
@@ -797,9 +788,352 @@
 .switch-mode-link { color: var(--primary-blue); font-weight: 800; text-decoration: none; cursor: pointer; }
 .switch-mode-link:hover { text-decoration: underline; }
 
-/* =========================================================
-   6. RESPONSIVE HOÀN THIỆN CHO MOBILE & IPHONE
-   ========================================================= */
+/* 8. MODAL NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB & LIGHTBOX */
+.btn-tuluan-modal-trigger {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    color: #ffffff !important;
+    border: 1px solid #818cf8;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 1px 4px rgba(79, 70, 229, 0.25);
+    text-decoration: none;
+    transition: all 0.15s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+.btn-tuluan-modal-trigger:hover {
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(79, 70, 229, 0.35);
+}
+.btn-tuluan-modal-trigger:active {
+    transform: translateY(2px) scale(0.96);
+}
+
+.tuluan-modal-card {
+    background: #ffffff;
+    border-radius: 20px;
+    max-width: 860px;
+    width: min(860px, calc(100vw - 24px));
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
+    border: 1.5px solid #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+.tuluan-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+.tuluan-header-title-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.tuluan-icon-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 3px 10px rgba(79, 70, 229, 0.3);
+    flex-shrink: 0;
+}
+
+.tuluan-toolbar-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+.tuluan-search-box {
+    padding: 7px 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: inherit;
+    outline: none;
+    width: 200px;
+    transition: all 0.2s;
+    background: #fff;
+}
+.tuluan-search-box:focus {
+    border-color: #4f46e5;
+    width: 230px;
+}
+
+.tuluan-filter-tabs {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+.tuluan-tab-pill {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+.tuluan-tab-pill:hover {
+    border-color: #4f46e5;
+    color: #4f46e5;
+}
+.tuluan-tab-pill.active {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    color: #ffffff;
+    border-color: #4f46e5;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+
+.tuluan-table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+    background: #ffffff;
+    max-height: calc(90vh - 170px);
+}
+.tuluan-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    text-align: left;
+    white-space: nowrap;
+}
+.tuluan-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0f172a;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 10px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-bottom: 2px solid #4f46e5;
+}
+.tuluan-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: background 0.15s ease;
+}
+.tuluan-table tbody tr:nth-child(even) td {
+    background: #f8fafc;
+}
+.tuluan-table tbody tr:hover td {
+    background: #f0f9ff !important;
+}
+.tuluan-table tbody td {
+    padding: 9px 12px;
+    color: #1e293b;
+    vertical-align: middle;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tuluan-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.tuluan-status-badge.done {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+}
+.tuluan-status-badge.pending {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
+.tuluan-thumb-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: 280px;
+}
+.tuluan-img-thumbnail-item {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1.5px solid #cbd5e1;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+    background: #f1f5f9;
+}
+.tuluan-img-thumbnail-item:hover {
+    transform: scale(1.15);
+    border-color: #0284c7;
+    z-index: 5;
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+}
+.tuluan-img-thumbnail-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.tuluan-thumb-page {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    font-size: 8.5px;
+    font-weight: 800;
+    text-align: center;
+    padding: 1px 0;
+}
+
+.btn-tuluan-upload-row {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.btn-tuluan-upload-row:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+.btn-tuluan-upload-row:active {
+    transform: translateY(2px) scale(0.96);
+}
+
+.tuluan-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    border-top: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+/* LIGHTBOX OVERLAY */
+.tuluan-lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10000000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeInModal 0.2s ease-out;
+}
+.tuluan-lightbox-content {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+}
+.tuluan-lightbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+}
+.btn-lightbox-open-drive {
+    background: #0284c7;
+    color: #ffffff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: 0.15s;
+}
+.btn-lightbox-open-drive:hover { filter: brightness(1.1); }
+.btn-close-lightbox {
+    background: #334155;
+    border: none;
+    border-radius: 50%;
+    color: #ffffff;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    font-weight: 900;
+    cursor: pointer;
+}
+.btn-close-lightbox:hover { background: #ef4444; }
+.tuluan-lightbox-img-box {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #090d16;
+}
+.tuluan-lightbox-img-box img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* 9. RESPONSIVE HOÀN THIỆN CHO MOBILE & IPHONE */
 @media (max-width: 640px) {
     body { font-size: 14px; }
     
@@ -996,6 +1330,20 @@
     .export-item-text span {
         font-size: 9.5px !important;
     }
+
+    .tuluan-modal-card {
+        padding: 0 !important;
+        border-radius: 14px !important;
+    }
+    .tuluan-toolbar-bar {
+        padding: 8px 12px !important;
+    }
+    .tuluan-search-box {
+        width: 100% !important;
+    }
+    .tuluan-filter-tabs {
+        width: 100% !important;
+    }
 }
 
 @media (max-width: 380px) {
@@ -1016,14 +1364,16 @@
     .article-edit-input-group textarea,
     .admin-input-group input,
     .admin-input-group select,
-    .move-modal-box select {
+    .move-modal-box select,
+    .tuluan-search-box {
         font-size: 16px !important;
     }
     .move-modal-overlay,
     .visit-stats-modal-overlay,
     .dantri-article-modal,
     .result-fullscreen-modal,
-    .modal-overlay {
+    .modal-overlay,
+    .tuluan-lightbox-overlay {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         background: rgba(15, 23, 42, 0.78) !important;
@@ -1032,7 +1382,8 @@
     .move-modal-box,
     .modal-box,
     .visit-stats-modal-box,
-    .dantri-article-card {
+    .dantri-article-card,
+    .tuluan-modal-card {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         background: #ffffff !important;
