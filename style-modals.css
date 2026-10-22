@@ -819,8 +819,8 @@
 .tuluan-modal-card {
     background: #ffffff;
     border-radius: 20px;
-    max-width: 860px;
-    width: min(860px, calc(100vw - 24px));
+    max-width: 890px;
+    width: min(890px, calc(100vw - 20px));
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
@@ -858,6 +858,73 @@
     box-shadow: 0 3px 10px rgba(79, 70, 229, 0.3);
     flex-shrink: 0;
 }
+
+/* THANH CHỌN LỚP, CHỌN ĐỀ & ADMIN THÊM ĐỀ TRONG MODAL TỰ LUẬN */
+.tuluan-select-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: #f1f5f9;
+    border-bottom: 1.5px solid #e2e8f0;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+.tuluan-select-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.tuluan-select-group label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #334155;
+    white-space: nowrap;
+}
+.tuluan-select-group select {
+    padding: 6px 10px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 9px;
+    font-size: 12.5px;
+    font-weight: 700;
+    background: #ffffff;
+    color: #0f172a;
+    outline: none;
+    cursor: pointer;
+}
+.tuluan-select-group select:focus {
+    border-color: #4f46e5;
+}
+
+.btn-tuluan-add-exam {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+    white-space: nowrap;
+}
+.btn-tuluan-add-exam:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-tuluan-add-exam:active { transform: translateY(2px) scale(0.96); }
+
+.btn-tuluan-approve-all {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    white-space: nowrap;
+}
+.btn-tuluan-approve-all:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-tuluan-approve-all:active { transform: translateY(2px) scale(0.96); }
 
 .tuluan-toolbar-bar {
     display: flex;
@@ -920,7 +987,7 @@
     overflow-y: auto;
     overflow-x: auto;
     background: #ffffff;
-    max-height: calc(90vh - 170px);
+    max-height: calc(90vh - 190px);
 }
 .tuluan-table {
     width: 100%;
@@ -981,6 +1048,41 @@
     border: 1px solid #fca5a5;
 }
 
+/* CỘT PHÊ DUYỆT */
+.approve-switch-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+.approve-text {
+    font-size: 11px;
+    font-weight: 800;
+}
+.approve-text.approved { color: #16a34a; }
+.approve-text.pending { color: #dc2626; }
+
+.tuluan-approved-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.tuluan-approved-badge.yes {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+}
+.tuluan-approved-badge.no {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+/* THUMBNAIL BẢO VỆ CHỐNG CHÉP BÀI */
 .tuluan-thumb-row {
     display: flex;
     align-items: center;
@@ -1023,6 +1125,26 @@
     font-weight: 800;
     text-align: center;
     padding: 1px 0;
+}
+
+.tuluan-img-thumbnail-item.locked-anti-cheat {
+    cursor: not-allowed !important;
+    position: relative;
+}
+.tuluan-img-thumbnail-item.locked-anti-cheat img {
+    filter: blur(2.5px) grayscale(50%);
+    opacity: 0.75;
+}
+.lock-overlay-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.45);
+    color: #facc15;
+    font-size: 15px;
+    z-index: 4;
 }
 
 .btn-tuluan-upload-row {
@@ -1334,6 +1456,10 @@
     .tuluan-modal-card {
         padding: 0 !important;
         border-radius: 14px !important;
+    }
+    .tuluan-select-bar {
+        padding: 8px 12px !important;
+        gap: 6px !important;
     }
     .tuluan-toolbar-bar {
         padding: 8px 12px !important;
