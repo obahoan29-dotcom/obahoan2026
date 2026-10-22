@@ -1,20 +1,31 @@
 // =========================================================
 // FILE: portal-tuluan.js
-// QUẢN LÝ NỘP BÀI TỰ LUẬN LÊN GOOGLE DRIVE 5TB THEO LỚP
-// NÉN ẢNH CANVAS SIÊU TỐC, XÁC THỰC MẬT KHẨU & REALTIME FIREBASE
+// QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
+// BẢO VỆ CHỐNG CHÉP BÀI, PHÊ DUYỆT GIÁO VIÊN & ADMIN TẠO ĐỀ TỨC THÌ
 // =========================================================
 
 let currentTuLuanModalData = {
-    classId: "",
+    classId: "lop-11a",
     quizId: "",
-    examTitle: "",
+    examTitle: "DE_108_TOAN_11_THEM-_HK1",
     submissionsMap: {},
+    availableExams: [],
     statusFilter: "all"
 };
 
 let tuLuanEventSource = null;
 
-// HÀM NÉN ẢNH CLIENT-SIDE BẰNG HTML5 CANVAS
+// Hàm chuẩn hóa tên thư mục đề thi trên Google Drive đồng nhất cho cả 3 nơi nộp
+function getUnifiedExamFolderKey(title, maDe, quizId) {
+    let key = (title || maDe || quizId || "BAI_TAP_TU_LUAN").trim();
+    return key
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[đĐ]/g, "d")
+        .replace(/[\\\/\:\*\?\"<>\|]/g, '_')
+        .replace(/\s+/g, '_');
+}
+
+// Hàm nén ảnh Client-side bằng HTML5 Canvas siêu tốc
 function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) {
     return new Promise((resolve, reject) => {
         if (!file || !file.type.match(/image.*/)) {
@@ -45,13 +56,7 @@ function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) 
 
                 const dataUrl = canvas.toDataURL("image/jpeg", quality);
                 const base64 = dataUrl.split(",")[1];
-                resolve({
-                    base64: base64,
-                    dataUrl: dataUrl,
-                    mimeType: "image/jpeg",
-                    width: width,
-                    height: height
-                });
+                resolve({ base64, dataUrl, mimeType: "image/jpeg" });
             };
             img.onerror = () => reject(new Error("Lỗi đọc cấu trúc ảnh!"));
             img.src = e.target.result;
@@ -68,17 +73,53 @@ function ensureTuLuanModalDOM() {
     modalDiv.className = "move-modal-overlay";
     modalDiv.innerHTML = `
         <div class="tuluan-modal-card" onclick="event.stopPropagation()">
+            <!-- HEADER -->
             <div class="tuluan-modal-header">
                 <div class="tuluan-header-title-box">
                     <span class="tuluan-icon-badge">📁</span>
                     <div>
-                        <h3 id="tuluan-modal-heading" style="margin:0; color:#0f172a; font-size:16.5px; font-weight:900;">📤 NỘP BÀI TỰ LUẬN GOOGLE DRIVE</h3>
-                        <div id="tuluan-modal-subheading" style="font-size:12px; color:#64748b; font-weight:700; margin-top:2px;">Danh sách lớp</div>
+                        <h3 id="tuluan-modal-heading" style="margin:0; color:#0f172a; font-size:16px; font-weight:900;">📤 NỘP BÀI TỰ LUẬN GOOGLE DRIVE</h3>
+                        <div id="tuluan-modal-subheading" style="font-size:12px; color:#64748b; font-weight:700; margin-top:2px;">
+                            Thư mục Drive: <code id="tuluan-drive-folder-path" style="color:#0284c7; background:#e0f2fe; padding:2px 6px; border-radius:6px;">BAI_TAP_TU_LUAN</code>
+                        </div>
                     </div>
                 </div>
                 <button type="button" class="btn-close-cleanup-modal" onclick="closeTuLuanModal(event)">✕</button>
             </div>
 
+            <!-- THANH ĐIỀU HƯỚNG CHỌN LỚP, CHỌN ĐỀ & ADMIN THÊM ĐỀ -->
+            <div class="tuluan-select-bar">
+                <div class="tuluan-select-group">
+                    <label>🏫 Lớp:</label>
+                    <select id="tuluan-class-selector" onchange="onTuLuanClassChanged(this.value)">
+                        <option value="lop-11a">Lớp 11A</option>
+                        <option value="lop-11c">Lớp 11C</option>
+                        <option value="lop-10p">Lớp 10P</option>
+                        <option value="lop-11e">Lớp 11E</option>
+                        <option value="them-11">Thêm 11</option>
+                        <option value="them-10">Thêm 10</option>
+                        <option value="them-12">Thêm 12</option>
+                        <option value="hsg-toan-11">HSG Toán 11</option>
+                    </select>
+                </div>
+
+                <div class="tuluan-select-group" style="flex:1; min-width:180px;">
+                    <label>📝 Chọn đề thi:</label>
+                    <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)"></select>
+                </div>
+
+                <!-- KHU VỰC ADMIN THÊM ĐỀ TỰ LUẬN MỚI -->
+                <div id="tuluan-admin-add-exam-box" style="display:none; align-items:flex-end; gap:6px;">
+                    <button type="button" class="btn-tuluan-add-exam" onclick="promptAddNewTuLuanExam()">
+                        ➕ Thêm đề mới
+                    </button>
+                    <button type="button" class="btn-tuluan-approve-all" onclick="toggleApproveAllSubmissions(true)" title="Duyệt tất cả bài làm của đề này để học sinh cùng xem">
+                        ✅ Duyệt tất cả
+                    </button>
+                </div>
+            </div>
+
+            <!-- TOOLBAR LỌC & TÌM KIẾM -->
             <div class="tuluan-toolbar-bar">
                 <input type="text" id="tuluan-search-student" class="tuluan-search-box" placeholder="🔍 Tìm tên hoặc SBD..." oninput="filterTuLuanStudentTable()">
                 <div class="tuluan-filter-tabs">
@@ -88,16 +129,18 @@ function ensureTuLuanModalDOM() {
                 </div>
             </div>
 
+            <!-- BẢNG DANH SÁCH HỌC SINH -->
             <div class="tuluan-table-wrap">
                 <table class="tuluan-table">
                     <thead>
                         <tr>
-                            <th style="width: 45px; text-align: center;">STT</th>
-                            <th style="width: 175px;">Họ và tên</th>
-                            <th style="width: 85px; text-align: center;">SBD</th>
-                            <th style="width: 180px;">Trạng thái / Ngày nộp</th>
-                            <th style="min-width: 170px;">Ảnh bài làm đã nộp</th>
-                            <th style="width: 115px; text-align: center;">Thao tác</th>
+                            <th style="width: 42px; text-align: center;">STT</th>
+                            <th style="width: 165px;">Họ và tên</th>
+                            <th style="width: 80px; text-align: center;">SBD</th>
+                            <th style="width: 155px;">Trạng thái / Ngày nộp</th>
+                            <th style="width: 125px; text-align: center;">Phê duyệt</th>
+                            <th style="min-width: 180px;">Ảnh bài làm đã nộp</th>
+                            <th style="width: 105px; text-align: center;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="tuluan-students-tbody"></tbody>
@@ -105,12 +148,14 @@ function ensureTuLuanModalDOM() {
             </div>
 
             <div class="tuluan-modal-footer">
-                <span style="font-size:11.5px; color:#475569; font-style:italic;">* Ảnh chụp bài làm tự động lưu trữ an toàn vào Google Drive của Thầy.</span>
+                <span style="font-size:11.5px; color:#475569; font-style:italic;">
+                    🔒 Học sinh chỉ xem được ảnh bài làm phóng to của bạn bè sau khi được Giáo viên phê duyệt.
+                </span>
                 <button type="button" class="btn-admin btn-cancel" style="padding: 6px 18px;" onclick="closeTuLuanModal(event)">Đóng</button>
             </div>
         </div>
 
-        <!-- LIGHTBOX XEM ẢNH TỰ LUẬN PHÓNG TO -->
+        <!-- LIGHTBOX PHÓNG TO ẢNH -->
         <div id="tuluan-lightbox" class="tuluan-lightbox-overlay" onclick="closeTuLuanLightbox(event)">
             <div class="tuluan-lightbox-content" onclick="event.stopPropagation()">
                 <div class="tuluan-lightbox-header">
@@ -129,47 +174,31 @@ function ensureTuLuanModalDOM() {
     document.body.appendChild(modalDiv);
 }
 
-// MỞ MODAL NỘP BÀI TỰ LUẬN CỦA LỚP
+// Mở Modal Nộp bài tự luận
 async function openTuLuanModal(classId, itemId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     ensureTuLuanModalDOM();
 
     let targetCat = classId;
     if (targetCat === "tu-luan-padlet" || !targetCat) {
-        if (itemId && itemId.includes("11a")) targetCat = "lop-11a";
-        else if (itemId && itemId.includes("11c")) targetCat = "lop-11c";
+        if (itemId && itemId.includes("11c")) targetCat = "lop-11c";
         else if (itemId && itemId.includes("10p")) targetCat = "lop-10p";
         else if (itemId && itemId.includes("11e")) targetCat = "lop-11e";
         else targetCat = "lop-11a";
     }
 
-    let itemTitle = "BÀI TẬP TỰ LUẬN";
-    let effectiveQuizId = itemId;
+    currentTuLuanModalData.classId = targetCat;
+    const classSelector = document.getElementById("tuluan-class-selector");
+    if (classSelector) classSelector.value = targetCat;
 
-    const allCats = [...DAY_THEM_CATEGORIES, ...CHINH_KHOA_CATEGORIES, KHO_TAI_LIEU_FOLDER];
-    for (const c of allCats) {
-        if (c.links) {
-            const found = c.links.find(l => (l.firebaseId === itemId || l.id === itemId));
-            if (found) {
-                itemTitle = found.title || itemTitle;
-                effectiveQuizId = (typeof extractQuizIdFromItem === 'function') ? (extractQuizIdFromItem(found) || itemId) : itemId;
-                break;
-            }
-        }
+    // Hiển thị công cụ quản trị nếu giáo viên đã đăng nhập
+    const adminBox = document.getElementById("tuluan-admin-add-exam-box");
+    if (adminBox) {
+        adminBox.style.display = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) ? "flex" : "none";
     }
 
-    currentTuLuanModalData.classId = targetCat;
-    currentTuLuanModalData.quizId = effectiveQuizId;
-    currentTuLuanModalData.examTitle = itemTitle;
-    currentTuLuanModalData.statusFilter = "all";
-
-    document.getElementById("tuluan-modal-heading").innerText = `📤 NỘP BÀI TỰ LUẬN - ${itemTitle}`;
-    document.getElementById("tuluan-modal-subheading").innerText = `Lớp: ${getCategoryDisplayName(targetCat)} • Google Drive 5TB`;
+    await refreshTuLuanExamList(targetCat, itemId);
     document.getElementById("modal-tuluan-submission").style.display = "flex";
-
-    await loadTuLuanSubmissionsFromFirebase();
-    renderTuLuanStudentsTable();
-    startTuLuanRealtimeListener(effectiveQuizId);
 }
 
 function closeTuLuanModal(event) {
@@ -179,6 +208,151 @@ function closeTuLuanModal(event) {
     if (tuLuanEventSource) {
         tuLuanEventSource.close();
         tuLuanEventSource = null;
+    }
+}
+
+// Nạp danh sách đề thi theo lớp vào Dropdown
+async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
+    const selector = document.getElementById("tuluan-exam-selector");
+    if (!selector) return;
+    selector.innerHTML = "";
+
+    let exams = [];
+
+    // 1. Quét từ danh mục đề thi của website
+    const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
+    const catObj = allCats.find(c => c.id === targetCat);
+    if (catObj && catObj.links) {
+        catObj.links.forEach(l => {
+            if (l && l.title) {
+                exams.push({
+                    id: (typeof extractQuizIdFromItem === 'function') ? (extractQuizIdFromItem(l) || l.id) : l.id,
+                    title: l.title
+                });
+            }
+        });
+    }
+
+    // 2. Quét các đề tự luận do giáo viên tạo thêm lưu trên Firebase
+    try {
+        const res = await fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${targetCat}.json`);
+        if (res.ok) {
+            const customExams = await res.json();
+            if (customExams && typeof customExams === 'object') {
+                for (let k in customExams) {
+                    if (customExams[k] && customExams[k].title) {
+                        exams.push({ id: k, title: customExams[k].title });
+                    }
+                }
+            }
+        }
+    } catch(e) {}
+
+    // Đề dự phòng nếu chưa có đề nào
+    if (exams.length === 0) {
+        exams.push({ id: "DE_108_TOAN_11_THEM-_HK1", title: "DE_108_TOAN_11_THEM-_HK1" });
+    }
+
+    // Loại bỏ đề thi trùng lặp tiêu đề
+    const uniqueExams = [];
+    const seenTitles = new Set();
+    exams.forEach(ex => {
+        const norm = ex.title.trim().toLowerCase();
+        if (!seenTitles.has(norm)) {
+            seenTitles.add(norm);
+            uniqueExams.push(ex);
+        }
+    });
+
+    currentTuLuanModalData.availableExams = uniqueExams;
+
+    uniqueExams.forEach(ex => {
+        const opt = document.createElement("option");
+        opt.value = ex.id;
+        opt.innerText = ex.title;
+        opt.dataset.title = ex.title;
+        selector.appendChild(opt);
+    });
+
+    let selectedExam = uniqueExams[0];
+    if (preferredExamId) {
+        const found = uniqueExams.find(e => e.id === preferredExamId || e.title === preferredExamId);
+        if (found) selectedExam = found;
+    }
+    selector.value = selectedExam.id;
+
+    await switchTuLuanExam(selectedExam.id, selectedExam.title);
+}
+
+// Chuyển đổi đề thi đang hiển thị trong Modal
+async function switchTuLuanExam(examId, examTitle) {
+    currentTuLuanModalData.quizId = examId;
+    currentTuLuanModalData.examTitle = examTitle;
+
+    const folderKey = getUnifiedExamFolderKey(examTitle, "", examId);
+    const className = getCategoryDisplayName(currentTuLuanModalData.classId);
+
+    const headTitle = document.getElementById("tuluan-modal-heading");
+    const pathCode = document.getElementById("tuluan-drive-folder-path");
+    if (headTitle) headTitle.innerText = `📤 NỘP BÀI TỰ LUẬN - ${examTitle}`;
+    if (pathCode) pathCode.innerText = `BAI_TAP_TU_LUAN / ${className} / ${folderKey}`;
+
+    await loadTuLuanSubmissionsFromFirebase();
+    renderTuLuanStudentsTable();
+    startTuLuanRealtimeListener(examId);
+}
+
+function onTuLuanClassChanged(newClassId) {
+    currentTuLuanModalData.classId = newClassId;
+    refreshTuLuanExamList(newClassId);
+}
+
+function onTuLuanExamChanged(newExamId) {
+    const selector = document.getElementById("tuluan-exam-selector");
+    const selectedOpt = selector.options[selector.selectedIndex];
+    const examTitle = selectedOpt ? selectedOpt.dataset.title : newExamId;
+    switchTuLuanExam(newExamId, examTitle);
+}
+
+// Giáo viên thêm đề tự luận mới và tự động kích hoạt tạo thư mục trên Drive
+async function promptAddNewTuLuanExam() {
+    const inputTitle = prompt("➕ NHẬP TÊN ĐỀ THI TỰ LUẬN MỚI (VD: Đề 108 Toán 11 Thêm - HK1, Đề 191...):");
+    if (!inputTitle || !inputTitle.trim()) return;
+
+    const examTitle = inputTitle.trim();
+    const classId = currentTuLuanModalData.classId || "lop-11a";
+    const examId = "exam_" + Date.now();
+    const folderKey = getUnifiedExamFolderKey(examTitle, "", examId);
+
+    try {
+        // 1. Lưu vào Firebase danh mục đề của lớp
+        await fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}/${examId}.json`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: examTitle, createdAt: Date.now() })
+        });
+
+        // 2. Gửi tín hiệu ngầm sang Google Apps Script để tạo sẵn thư mục Drive
+        const gasUrl = (typeof GOOGLE_DRIVE_TULUAN_GAS_URL !== "undefined" && GOOGLE_DRIVE_TULUAN_GAS_URL) 
+            ? GOOGLE_DRIVE_TULUAN_GAS_URL 
+            : GOOGLE_DRIVE_UPLOAD_GAS_URL;
+
+        if (gasUrl && !gasUrl.includes("DÁN_URL")) {
+            fetch(gasUrl, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({
+                    action: "createExamFolders",
+                    examTitle: folderKey,
+                    classList: [getCategoryDisplayName(classId)]
+                })
+            }).catch(() => null);
+        }
+
+        alert(`✅ Đã thêm đề "${examTitle}" thành công!\nThư mục tương ứng đã được khởi tạo trên Google Drive 5TB.`);
+        await refreshTuLuanExamList(classId, examId);
+    } catch(err) {
+        alert("❌ Lỗi khi thêm đề: " + err.message);
     }
 }
 
@@ -215,6 +389,7 @@ function startTuLuanRealtimeListener(quizId) {
     } catch(e) {}
 }
 
+// Render bảng học sinh: Cột Phê duyệt & Chống chép bài
 function renderTuLuanStudentsTable() {
     const tbody = document.getElementById("tuluan-students-tbody");
     if (!tbody) return;
@@ -223,6 +398,7 @@ function renderTuLuanStudentsTable() {
     const students = getAccountsForCategory(currentTuLuanModalData.classId);
     const searchVal = (document.getElementById("tuluan-search-student")?.value || "").trim().toLowerCase();
     const subMap = currentTuLuanModalData.submissionsMap || {};
+    const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn);
 
     let totalSt = students.length;
     let submittedCount = 0;
@@ -244,10 +420,11 @@ function renderTuLuanStudentsTable() {
     students.forEach(st => {
         const cleanSbd = String(st.sbd || "").trim().replace(/[^a-zA-Z0-9]/g, '_');
         const record = subMap[cleanSbd];
-        const isSubmitted = Boolean(record && record.images && record.images.length > 0);
+        const hasSubmitted = Boolean(record && record.images && record.images.length > 0);
+        const isApproved = Boolean(record && record.isApproved === true);
 
-        if (currentTuLuanModalData.statusFilter === "submitted" && !isSubmitted) return;
-        if (currentTuLuanModalData.statusFilter === "pending" && isSubmitted) return;
+        if (currentTuLuanModalData.statusFilter === "submitted" && !hasSubmitted) return;
+        if (currentTuLuanModalData.statusFilter === "pending" && hasSubmitted) return;
 
         if (searchVal) {
             const nameNorm = (typeof normalizeName === 'function') ? normalizeName(st.name) : st.name.toLowerCase();
@@ -260,24 +437,49 @@ function renderTuLuanStudentsTable() {
         let statusHtml = `<span class="tuluan-status-badge pending">⏳ Chưa nộp</span>`;
         let thumbnailsHtml = `<span style="font-size:11.5px; color:#94a3b8; font-style:italic;">Chưa có ảnh</span>`;
 
-        if (isSubmitted) {
+        // CỘT PHÊ DUYỆT (NẰM BÊN TRÁI CỘT ẢNH)
+        let approveHtml = "";
+        if (!hasSubmitted) {
+            approveHtml = `<span style="color:#cbd5e1; font-weight:700;">---</span>`;
+        } else if (isAdmin) {
+            approveHtml = `
+                <label class="approve-switch-wrapper" title="Bật/Tắt duyệt bài cho học sinh này" onclick="event.stopPropagation()">
+                    <span class="mini-switch">
+                        <input type="checkbox" ${isApproved ? "checked" : ""} onchange="handleToggleApproveStudent('${cleanSbd}', this.checked)">
+                        <span class="slider-toggle" style="${isApproved ? 'background-color:#10b981;' : ''}"></span>
+                    </span>
+                    <b class="approve-text ${isApproved ? 'approved' : 'pending'}">${isApproved ? 'Đã duyệt' : 'Chưa duyệt'}</b>
+                </label>
+            `;
+        } else {
+            approveHtml = isApproved 
+                ? `<span class="tuluan-approved-badge yes">✅ Đã duyệt</span>`
+                : `<span class="tuluan-approved-badge no">⏳ Chưa duyệt</span>`;
+        }
+
+        // CỘT ẢNH BÀI LÀM ĐÃ NỘP (CÓ CHỐNG CHÉP BÀI)
+        if (hasSubmitted) {
             const imgCount = record.images.length;
             const lastTime = record.lastSubmit || "Vừa xong";
             statusHtml = `
-                <div class="tuluan-status-badge done">
-                    ✅ Đã nộp ${imgCount} ảnh
-                </div>
-                <div style="font-size: 11px; color: #64748b; font-weight: 700; margin-top: 2px;">
-                    🕒 ${lastTime}
-                </div>
+                <div class="tuluan-status-badge done">✅ Đã nộp ${imgCount} ảnh</div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 700; margin-top: 2px;">🕒 ${lastTime}</div>
             `;
+
+            // Kiểm tra phân quyền: Admin, bài đã duyệt, hoặc chính chủ mới được xem ảnh rõ
+            const currentStudentSbd = (safeLocal.getItem("saved_student_sbd") || "").trim().toLowerCase();
+            const isOwner = (currentStudentSbd && currentStudentSbd === String(st.sbd).trim().toLowerCase());
+            const canViewDetailed = (isAdmin || isApproved || isOwner);
 
             thumbnailsHtml = `
                 <div class="tuluan-thumb-row">
                     ${record.images.map((im, idx) => `
-                        <div class="tuluan-img-thumbnail-item" onclick="openTuLuanLightbox('${im.directUrl || im.fileUrl}', '${im.fileUrl}', '${st.name} - Trang ${idx + 1}', event)" title="Bấm để xem ảnh phóng to">
+                        <div class="tuluan-img-thumbnail-item ${!canViewDetailed ? 'locked-anti-cheat' : ''}" 
+                             onclick="onThumbnailClicked('${im.directUrl || im.fileUrl}', '${im.fileUrl}', '${st.name} - Trang ${idx + 1}', ${canViewDetailed}, event)" 
+                             title="${canViewDetailed ? 'Bấm để xem ảnh phóng to' : '🔒 Bài làm đang chờ Thầy phê duyệt, em chưa thể xem chi tiết!'}">
                             <img src="${im.directUrl || im.fileUrl}" alt="Trang ${idx + 1}">
                             <span class="tuluan-thumb-page">Trang ${idx + 1}</span>
+                            ${!canViewDetailed ? `<div class="lock-overlay-icon">🔒</div>` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -289,6 +491,7 @@ function renderTuLuanStudentsTable() {
             <td style="font-weight: 800; color: #0f172a;">${st.name}</td>
             <td style="text-align: center; font-weight: 800; color: #0284c7; font-family: monospace;">${st.sbd}</td>
             <td>${statusHtml}</td>
+            <td style="text-align: center;">${approveHtml}</td>
             <td>${thumbnailsHtml}</td>
             <td style="text-align: center;">
                 <input type="file" id="tuluan-input-${cleanSbd}" accept="image/*" multiple style="display:none;" onchange="handleStudentEssayUploadPC('${st.stt}', '${st.sbd}', '${st.name}', this)">
@@ -301,10 +504,65 @@ function renderTuLuanStudentsTable() {
     });
 }
 
-function filterTuLuanStudentTable() {
-    renderTuLuanStudentsTable();
+function onThumbnailClicked(imgSrc, driveUrl, title, canView, event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    if (!canView) {
+        alert("🔒 BÀI LÀM ĐANG CHỜ THẦY PHÊ DUYỆT!\n\nĐể đảm bảo tính công bằng và chống sao chép bài làm, Thầy chưa mở tính năng xem chi tiết bài của bạn này. Sau khi Thầy phê duyệt, em sẽ được xem để học hỏi nhé!");
+        return;
+    }
+    openTuLuanLightbox(imgSrc, driveUrl, title, event);
 }
 
+// Bật / Tắt duyệt bài của từng học sinh
+async function handleToggleApproveStudent(cleanSbd, isChecked) {
+    const qId = currentTuLuanModalData.quizId;
+    if (!qId) return;
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ isApproved: isChecked })
+        });
+        if (currentTuLuanModalData.submissionsMap[cleanSbd]) {
+            currentTuLuanModalData.submissionsMap[cleanSbd].isApproved = isChecked;
+        }
+        renderTuLuanStudentsTable();
+    } catch(err) {
+        alert("❌ Lỗi cập nhật phê duyệt: " + err.message);
+    }
+}
+
+// Duyệt toàn bộ học sinh trong đề
+async function toggleApproveAllSubmissions(isApproved) {
+    const qId = currentTuLuanModalData.quizId;
+    const subMap = currentTuLuanModalData.submissionsMap || {};
+    const keys = Object.keys(subMap);
+    if (keys.length === 0) {
+        alert("ℹ️ Chưa có bài nộp nào để phê duyệt!");
+        return;
+    }
+
+    if (!confirm(`Bạn có chắc muốn ${isApproved ? 'PHÊ DUYỆT TẤT CẢ' : 'HỦY DUYỆT'} bài làm của đề này không?`)) return;
+
+    try {
+        const patchPromises = keys.map(k => {
+            return fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${k}.json`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isApproved: isApproved })
+            });
+        });
+        await Promise.all(patchPromises);
+        keys.forEach(k => { if (subMap[k]) subMap[k].isApproved = isApproved; });
+        renderTuLuanStudentsTable();
+        alert(`✅ Đã cập nhật trạng thái phê duyệt cho ${keys.length} học sinh!`);
+    } catch(e) {
+        alert("❌ Lỗi duyệt bài: " + e.message);
+    }
+}
+
+function filterTuLuanStudentTable() { renderTuLuanStudentsTable(); }
 function filterTuLuanStatus(filterType) {
     currentTuLuanModalData.statusFilter = filterType;
     document.querySelectorAll(".tuluan-tab-pill").forEach(p => p.classList.remove("active"));
@@ -313,18 +571,16 @@ function filterTuLuanStatus(filterType) {
     renderTuLuanStudentsTable();
 }
 
-// BẬT FILE CHO HỌC SINH (KÈM BẢO MẬT NHẬP MẬT KHẨU TRÁNH NỘP NHẦM)
 function triggerStudentUpload(stt, sbd, studentName, correctPass) {
     const cleanSbd = String(sbd).replace(/[^a-zA-Z0-9]/g, '_');
     const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
 
-    // Nếu là Admin hoặc học sinh đã xác thực trong phiên này thì cho chọn ảnh ngay
-    if (isAdminLoggedIn || safeSession.getItem(sessionAuthKey) === "true") {
+    if ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || safeSession.getItem(sessionAuthKey) === "true") {
         document.getElementById(`tuluan-input-${cleanSbd}`).click();
         return;
     }
 
-    const inputPass = prompt(`🔐 XÁC NHẬN BẢO MẬT NỘP BÀI:\n\nEm đang nộp bài cho: [${stt}] ${studentName} (SBD: ${sbd}).\nVui lòng nhập mật khẩu (hoặc SBD) của em để xác nhận:`);
+    const inputPass = prompt(`🔐 XÁC NHẬN NỘP BÀI:\n\nEm đang nộp bài cho: [${stt}] ${studentName} (SBD: ${sbd}).\nVui lòng nhập Mật khẩu hoặc SBD của em để xác nhận:`);
     if (inputPass === null) return;
 
     const trimmedInput = inputPass.trim().toLowerCase();
@@ -334,11 +590,11 @@ function triggerStudentUpload(stt, sbd, studentName, correctPass) {
         safeSession.setItem(sessionAuthKey, "true");
         document.getElementById(`tuluan-input-${cleanSbd}`).click();
     } else {
-        alert("❌ Mật khẩu hoặc SBD không chính xác! Vui lòng kiểm tra lại để tránh nộp nhầm vào bài của bạn khác.");
+        alert("❌ Sai mật khẩu hoặc SBD! Vui lòng thử lại để tránh nộp nhầm bài của bạn khác.");
     }
 }
 
-// XỬ LÝ UPLOAD ẢNH BÀI LÀM LÊN GOOGLE DRIVE 5TB
+// Upload ảnh bài làm trực tiếp vào cây thư mục Drive
 async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
     if (!fileInput.files || fileInput.files.length === 0) return;
 
@@ -354,7 +610,8 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
     const classId = currentTuLuanModalData.classId || "lop-11a";
     const className = getCategoryDisplayName(classId);
     const quizId = currentTuLuanModalData.quizId || "quiz";
-    const examTitle = currentTuLuanModalData.examTitle || "De_Thi";
+    const examTitle = currentTuLuanModalData.examTitle || "BAI_TAP_TU_LUAN";
+    const unifiedFolder = getUnifiedExamFolderKey(examTitle, "", quizId);
 
     const currentSub = currentTuLuanModalData.submissionsMap[cleanSbd] || {};
     const existingImages = Array.isArray(currentSub.images) ? [...currentSub.images] : [];
@@ -372,7 +629,7 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
 
             const payload = {
                 className: className,
-                examTitle: examTitle,
+                examTitle: unifiedFolder, // Đảm bảo đồng bộ 100% vào thư mục duy nhất của đề
                 stt: stt,
                 sbd: sbd,
                 studentName: studentName,
@@ -381,7 +638,10 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
                 base64: compressed.base64
             };
 
-            const gasUrl = GOOGLE_DRIVE_TULUAN_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL;
+            const gasUrl = (typeof GOOGLE_DRIVE_TULUAN_GAS_URL !== "undefined" && GOOGLE_DRIVE_TULUAN_GAS_URL)
+                ? GOOGLE_DRIVE_TULUAN_GAS_URL
+                : GOOGLE_DRIVE_UPLOAD_GAS_URL;
+
             const res = await fetch(gasUrl, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -400,10 +660,10 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
                 });
                 successCount++;
             } else {
-                throw new Error(result.message || "Máy chủ Drive không trả về liên kết ảnh.");
+                throw new Error(result.message || "Lỗi lưu file vào Google Drive.");
             }
         } catch(err) {
-            console.error(`Lỗi tải ảnh trang ${i + 1}:`, err);
+            console.error(`Lỗi upload ảnh trang ${i + 1}:`, err);
             alert(`⚠️ Lỗi tải ảnh trang ${i + 1}: ${err.message}`);
         }
     }
@@ -422,7 +682,8 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
             lastSubmit: submitDateStr,
             lastSubmitTime: Date.now(),
             count: existingImages.length,
-            images: existingImages
+            images: existingImages,
+            isApproved: currentSub.isApproved || false
         };
 
         await Promise.all([
@@ -440,7 +701,7 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
 
         currentTuLuanModalData.submissionsMap[cleanSbd] = firebaseRecord;
         renderTuLuanStudentsTable();
-        alert(`🎉 THÀNH CÔNG!\n\nĐã tải lên và lưu ${successCount} ảnh bài làm vào thư mục Google Drive của em [${studentName}]. Thầy giáo có thể xem được ngay!`);
+        alert(`🎉 THÀNH CÔNG!\n\nĐã lưu an toàn ${successCount} ảnh bài làm vào thư mục Drive "${unifiedFolder}" của em [${studentName}].`);
     }
 
     if (upBtn) {
@@ -450,7 +711,6 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
     fileInput.value = "";
 }
 
-// BẬT LIGHTBOX XEM ẢNH TỰ LUẬN
 function openTuLuanLightbox(imgSrc, driveUrl, title, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const lb = document.getElementById("tuluan-lightbox");
@@ -461,7 +721,6 @@ function openTuLuanLightbox(imgSrc, driveUrl, title, event) {
     if (fullImg) fullImg.src = imgSrc;
     if (titleEl) titleEl.innerText = title || "Ảnh bài làm tự luận";
     if (driveLink) driveLink.href = driveUrl || "#";
-
     if (lb) lb.style.display = "flex";
 }
 
@@ -471,7 +730,7 @@ function closeTuLuanLightbox(event) {
     if (lb) lb.style.display = "none";
 }
 
-// TÍCH HỢP TRONG PHÒNG THI (thi.html): HỌC SINH TỰ CHỤP NỘP THẲNG LÊN GOOGLE DRIVE
+// Nộp bài tự luận trực tiếp trong phòng thi (thi.html) đổ về cùng thư mục Drive
 async function triggerExamRoomDriveUpload(qId) {
     const sId = document.getElementById("student-id")?.value.trim() || safeLocal.getItem("saved_student_sbd");
     const sName = document.getElementById("student-name")?.value.trim() || safeLocal.getItem("saved_student_name");
@@ -499,12 +758,13 @@ async function triggerExamRoomDriveUpload(qId) {
             const statusEl = document.getElementById(`drive-upload-status-${qId}`);
             if (statusEl) {
                 statusEl.style.display = "inline-flex";
-                statusEl.innerText = "⏳ Đang nén & gửi lên Drive...";
+                statusEl.innerText = "⏳ Đang nén & lưu Drive...";
             }
 
             const urlParams = new URLSearchParams(window.location.search);
-            const quizId = urlParams.get('id') || (examData && examData.id) || "quiz";
+            const quizId = urlParams.get('id') || (typeof examData !== 'undefined' && examData && examData.id) || "quiz";
             const examTitle = typeof EXAM_NAME !== 'undefined' ? EXAM_NAME : "Bài thi";
+            const unifiedFolder = getUnifiedExamFolderKey(examTitle, (typeof getMaDe === 'function' ? getMaDe() : ""), quizId);
             const cleanSbd = sId.replace(/[^a-zA-Z0-9]/g, '_');
 
             let existingImages = [];
@@ -524,7 +784,7 @@ async function triggerExamRoomDriveUpload(qId) {
                     const comp = await compressImageForTuLuanAsync(f, 2048, 0.82);
                     const payload = {
                         className: sClass || "Lớp thi",
-                        examTitle: examTitle,
+                        examTitle: unifiedFolder,
                         stt: "00",
                         sbd: sId,
                         studentName: sName,
@@ -533,7 +793,10 @@ async function triggerExamRoomDriveUpload(qId) {
                         base64: comp.base64
                     };
 
-                    const gasUrl = GOOGLE_DRIVE_TULUAN_GAS_URL || GOOGLE_DRIVE_UPLOAD_GAS_URL;
+                    const gasUrl = (typeof GOOGLE_DRIVE_TULUAN_GAS_URL !== "undefined" && GOOGLE_DRIVE_TULUAN_GAS_URL)
+                        ? GOOGLE_DRIVE_TULUAN_GAS_URL
+                        : GOOGLE_DRIVE_UPLOAD_GAS_URL;
+
                     const r = await fetch(gasUrl, {
                         method: "POST",
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -563,7 +826,8 @@ async function triggerExamRoomDriveUpload(qId) {
                     examTitle: examTitle,
                     lastSubmit: new Date().toLocaleTimeString("vi-VN") + " " + new Date().toLocaleDateString("vi-VN"),
                     count: existingImages.length,
-                    images: existingImages
+                    images: existingImages,
+                    isApproved: false
                 };
                 fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/tu_luan/${cleanSbd}.json`, {
                     method: "PUT",
@@ -575,7 +839,7 @@ async function triggerExamRoomDriveUpload(qId) {
                     statusEl.className = "drive-up-status success";
                     statusEl.innerText = `✅ Đã lưu ${existingImages.length} ảnh lên Drive!`;
                 }
-                alert(`✅ ĐÃ LƯU BÀI TỰ LUẬN THÀNH CÔNG!\n\nĐã gửi ${successCount} ảnh bài làm vào thư mục Google Drive của em [${sName}]. Thầy giáo sẽ chấm phần này!`);
+                alert(`✅ ĐÃ LƯU BÀI TỰ LUẬN THÀNH CÔNG!\n\nĐã lưu vào thư mục Drive "${unifiedFolder}" của em [${sName}].`);
             } else {
                 if (statusEl) {
                     statusEl.className = "drive-up-status error";
@@ -597,3 +861,10 @@ window.filterTuLuanStatus = filterTuLuanStatus;
 window.openTuLuanLightbox = openTuLuanLightbox;
 window.closeTuLuanLightbox = closeTuLuanLightbox;
 window.triggerExamRoomDriveUpload = triggerExamRoomDriveUpload;
+window.onTuLuanClassChanged = onTuLuanClassChanged;
+window.onTuLuanExamChanged = onTuLuanExamChanged;
+window.promptAddNewTuLuanExam = promptAddNewTuLuanExam;
+window.handleToggleApproveStudent = handleToggleApproveStudent;
+window.toggleApproveAllSubmissions = toggleApproveAllSubmissions;
+window.onThumbnailClicked = onThumbnailClicked;
+window.getUnifiedExamFolderKey = getUnifiedExamFolderKey;
