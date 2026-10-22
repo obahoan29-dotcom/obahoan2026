@@ -66,7 +66,7 @@
             border-bottom: 2px solid #e2e8f0;
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
             padding: 6px 14px;
-            display: flex;
+            display: none; /* Mặc định ẩn hoàn toàn khi học sinh đang làm bài */
             align-items: center;
             justify-content: space-between;
             gap: 10px;
@@ -91,7 +91,7 @@
             font-size: 12px;
             font-weight: 800;
             cursor: pointer;
-            display: inline-flex;
+            display: none; /* Chỉ hiện khi học sinh nhấn Nộp bài */
             align-items: center;
             gap: 5px;
             box-shadow: 0 2px 6px rgba(2, 132, 199, 0.28);
@@ -166,17 +166,17 @@
         <h2 style="color: #0369a1; font-weight: 800; font-size: 1.2rem;">Đang tải dữ liệu đề thi...</h2>
     </div>
 
-    <!-- THANH ĐIỀU KHIỂN DỰ PHÒNG & NỘP LẠI (NÚT TẢI FILE BAN ĐẦU ẨN KHI ĐANG LÀM BÀI) -->
+    <!-- THANH ĐIỀU KHIỂN DỰ PHÒNG & NỘP LẠI (ĐÃ BỎ DÒNG CHỮ VĂN BẢN, BAN ĐẦU ẨN NGẦM HOÀN TOÀN) -->
     <div class="universal-backup-topbar" id="universal-backup-topbar">
         <div class="backup-status-indicator" id="backup-status-indicator">
-            <span id="backup-status-icon">🛡️</span>
-            <span id="backup-status-text">Bài làm đang được tự động lưu tạm trên máy</span>
+            <span id="backup-status-icon"></span>
+            <span id="backup-status-text"></span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
             <button type="button" class="btn-universal-resend" id="btn-universal-resend" onclick="executeSubmitExam(false)">
                 🚀 Gửi lại bài
             </button>
-            <button type="button" class="btn-always-download-backup" id="btn-always-download-backup" style="display: none;" onclick="downloadCompletedOrDraftSubmission()">
+            <button type="button" class="btn-always-download-backup" id="btn-always-download-backup" onclick="downloadCompletedOrDraftSubmission()">
                 💾 Tải file dự phòng bài làm (.json)
             </button>
         </div>
