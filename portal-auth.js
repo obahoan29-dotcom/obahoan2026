@@ -3,18 +3,6 @@
 // QUẢN TRỊ VIÊN XÁC THỰC & HỌC SINH ĐĂNG NHẬP THI
 // =========================================================
 
-const _ADMIN_KEY_SEED = [30, 53, 52, 59, 54, 62, 50, 53, 59, 52];
-
-(async function initAdminHash() {
-    try {
-        const decoded = _ADMIN_KEY_SEED.map(c => String.fromCharCode(c ^ 90)).join('');
-        const computedHash = await sha256Hash(decoded);
-        if (!ADMIN_PASSWORD_HASH || ADMIN_PASSWORD_HASH.length !== 64) {
-            ADMIN_PASSWORD_HASH = computedHash;
-        }
-    } catch(e) {}
-})();
-
 function checkAdminSessionValidity() {
     try {
         const logged = safeLocal.getItem("adminLoggedInSession");
@@ -56,13 +44,7 @@ async function checkAdminPassword() {
     }
 
     const inputHash = await sha256Hash(rawPass);
-    let isMatched = (typeof ADMIN_PASSWORD_HASH === "string" && ADMIN_PASSWORD_HASH.length === 64 && inputHash === ADMIN_PASSWORD_HASH);
-
-    if (!isMatched) {
-        const decodedSeed = _ADMIN_KEY_SEED.map(c => String.fromCharCode(c ^ 90)).join('');
-        const seedHash = await sha256Hash(decodedSeed);
-        if (inputHash === seedHash) isMatched = true;
-    }
+    let isMatched = (typeof ADMIN_PASSWORD_HASH === "string" && ADMIN_PASSWORD_HASH.length === 64 && inputHash.toLowerCase() === ADMIN_PASSWORD_HASH.toLowerCase());
 
     if (isMatched) {
         isAdminLoggedIn = true;
