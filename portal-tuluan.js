@@ -4,11 +4,11 @@
 // BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN) | QUẢN LÝ 5 ĐỀ MỚI NHẤT
 // TỰ ĐỘNG TẠO THƯ MỤC CHUẨN XÁC THEO LỚP ĐANG CHỌN (11C, 11A, 10P...)
 // NÚT XÓA ĐỀ CHỈ HIỆN KHI LÀ ADMIN | ĐỔI MẬT KHẨU 4 SỐ NỔI LÊN TRÊN
-// THÊM: CỘT CHẤM CHÉO NHAU (TỰ ĐỘNG GHI NHẬN & HIỆN TÊN NGƯỜI CHẤM KHI HOVER)
+// THÊM: CỘT CHẤM CHÉO NHAU (RÊ CHUỘT HIỆN NGAY NGƯỜI CHẤM & THỜI GIAN)
 // THÊM: CỘT NHẬN XÉT (XÒE RA) & XUẤT EXCEL CÓ ẢNH VÀ NGƯỜI CHẤM
 // =========================================================
 
-// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ, CHẤM CHÉO, NHẬN XÉT & EXCEL
+// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ, CHẤM CHÉO, TOOLTIP HOVER, NHẬN XÉT & EXCEL
 (function injectTuLuanButtonStyles() {
     const styleId = "tuluan-custom-delete-btn-styles";
     if (document.getElementById(styleId)) return;
@@ -111,6 +111,14 @@
             transform: translateY(2px) scale(0.96) !important;
         }
 
+        /* KHUNG CHỨA Ô ĐIỂM VÀ TOOLTIP HOVER */
+        .tuluan-score-cell-wrap {
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
         /* Ô NHẬP ĐIỂM CHẤM CHÉO NHAU */
         .tuluan-score-input {
             width: 76px !important;
@@ -136,6 +144,90 @@
             box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
             background: #f0f9ff !important;
             cursor: text !important;
+        }
+
+        /* TOOLTIP HIỆN NGAY KHI RÊ CHUỘT VÀO Ô ĐIỂM */
+        .tuluan-score-cell-wrap:hover .score-hover-tooltip,
+        .tuluan-score-cell-wrap:focus-within .score-hover-tooltip {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+
+        .score-hover-tooltip {
+            display: none;
+            opacity: 0;
+            visibility: hidden;
+            position: absolute !important;
+            bottom: calc(100% + 8px) !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            min-width: 210px !important;
+            max-width: 280px !important;
+            background: #0f172a !important;
+            color: #ffffff !important;
+            border: 1.5px solid #38bdf8 !important;
+            border-radius: 11px !important;
+            padding: 8px 11px !important;
+            font-size: 11.5px !important;
+            line-height: 1.4 !important;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.5) !important;
+            z-index: 100000 !important;
+            pointer-events: none;
+            transition: opacity 0.15s ease, transform 0.15s ease !important;
+            white-space: normal !important;
+            text-align: left !important;
+            user-select: none !important;
+            animation: popInBadge 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .score-hover-tooltip::after {
+            content: "" !important;
+            position: absolute !important;
+            top: 100% !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            border-width: 6px !important;
+            border-style: solid !important;
+            border-color: #0f172a transparent transparent transparent !important;
+        }
+
+        /* TỰ ĐỘNG ĐẢO HƯỚNG XUỐNG DƯỚI NẾU HÀNG NẰM SÁT ĐẦU BẢNG */
+        .score-hover-tooltip.tooltip-bottom {
+            bottom: auto !important;
+            top: calc(100% + 8px) !important;
+        }
+        .score-hover-tooltip.tooltip-bottom::after {
+            top: auto !important;
+            bottom: 100% !important;
+            border-color: transparent transparent #0f172a transparent !important;
+        }
+
+        .score-tt-header {
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            color: #38bdf8 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+            padding-bottom: 4px !important;
+            margin-bottom: 5px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        .score-tt-row {
+            margin-bottom: 3px !important;
+            font-size: 11px !important;
+            color: #e2e8f0 !important;
+        }
+        .score-tt-row b {
+            color: #f8fafc !important;
+        }
+        .score-tt-val {
+            color: #4ade80 !important;
+            font-weight: 900 !important;
+            font-size: 12px !important;
         }
 
         /* NÚT BẬT NHẬN XÉT */
@@ -268,16 +360,18 @@
             transform: scale(0.95) !important;
         }
 
-        /* ĐẨY Z-INDEX CỦA Ô & HÀNG CHỨA POPOVER LÊN CAO NHẤT */
+        /* ĐẨY Z-INDEX CỦA Ô & HÀNG CHỨA POPOVER/TOOLTIP LÊN CAO NHẤT */
         .tuluan-td-active-popover,
         .tuluan-table tbody td.tuluan-td-active-popover,
         .tuluan-table tbody td:has(.student-pass-popover.show),
-        .tuluan-table tbody td:has(.student-feedback-popover.show) {
+        .tuluan-table tbody td:has(.student-feedback-popover.show),
+        .tuluan-table tbody td:has(.tuluan-score-cell-wrap:hover) {
             z-index: 99999 !important;
             position: relative !important;
         }
         .tuluan-table tbody tr:has(.student-pass-popover.show),
-        .tuluan-table tbody tr:has(.student-feedback-popover.show) {
+        .tuluan-table tbody tr:has(.student-feedback-popover.show),
+        .tuluan-table tbody tr:has(.tuluan-score-cell-wrap:hover) {
             z-index: 99999 !important;
             position: relative !important;
         }
@@ -565,6 +659,42 @@ function getCurrentGraderInfo() {
     return { name: "Học sinh trong lớp", sbd: "" };
 }
 
+// TẠO NỘI DUNG HTML CHO TOOLTIP HOVER ĐIỂM CHẤM CHÉO
+function buildScoreTooltipInnerHtml(score, grader, timeStr) {
+    const hasScore = (score !== undefined && score !== null && String(score).trim() !== "");
+    if (!hasScore) {
+        return `
+            <div class="score-tt-header">📊 THÔNG TIN CHẤM CHÉO</div>
+            <div class="score-tt-row" style="color:#94a3b8; font-style:italic;">Chưa có điểm chấm chéo</div>
+            <div class="score-tt-row" style="font-size:10.5px; color:#38bdf8; margin-top:4px;">💡 Nhập điểm vào ô để hệ thống tự động ghi nhận tên và giờ chấm của em!</div>
+        `;
+    }
+    return `
+        <div class="score-tt-header">📊 THÔNG TIN CHẤM CHÉO</div>
+        <div class="score-tt-row">🎯 <b>Điểm số:</b> <span class="score-tt-val">${score}đ</span></div>
+        <div class="score-tt-row">👤 <b>Người chấm:</b> <span>${grader || "Giáo viên / Đã chấm"}</span></div>
+        <div class="score-tt-row">🕒 <b>Thời gian:</b> <span>${timeStr || "Đã lưu trước đó"}</span></div>
+    `;
+}
+
+// TỰ ĐỘNG ĐẢO HƯỚNG TOOLTIP KHI RÊ CHUỘT
+function handleScoreTooltipEnter(wrapEl) {
+    if (!wrapEl) return;
+    const tooltip = wrapEl.querySelector('.score-hover-tooltip');
+    if (!tooltip) return;
+    const tableWrap = document.querySelector('.tuluan-table-wrap');
+    if (tableWrap) {
+        const wrapRect = wrapEl.getBoundingClientRect();
+        const containerRect = tableWrap.getBoundingClientRect();
+        // Nếu hàng quá gần cạnh trên của bảng, lật tooltip xuống dưới để không bị che
+        if (wrapRect.top - containerRect.top < 95) {
+            tooltip.classList.add('tooltip-bottom');
+        } else {
+            tooltip.classList.remove('tooltip-bottom');
+        }
+    }
+}
+
 // Nén ảnh tải lên
 function compressImageForTuLuanAsync(file, maxDimension = 2048, quality = 0.82) {
     return new Promise((resolve, reject) => {
@@ -748,7 +878,7 @@ function ensureTuLuanModalDOM() {
                             <th style="width: 105px; text-align: center;">Phê duyệt</th>
                             <th style="min-width: 165px;">Ảnh bài làm đã nộp</th>
                             <!-- CỘT CHẤM CHÉO NHAU (GHI NHẬN DANH TÍNH & HIỆN TOOLTIP KHI RÊ CHUỘT) -->
-                            <th style="width: 105px; text-align: center;" title="Nhập điểm chấm chéo bài tự luận (Rê chuột vào ô để xem ai là người chấm)">Chấm chéo nhau</th>
+                            <th style="width: 110px; text-align: center;" title="Nhập điểm chấm chéo bài tự luận (Rê chuột vào ô để xem ai là người chấm)">Chấm chéo nhau</th>
                             <!-- CỘT NHẬN XÉT -->
                             <th style="width: 110px; text-align: center;" title="Bấm vào để xòe ra bảng nhận xét chi tiết bài làm của học sinh">Nhận xét</th>
                             <th style="min-width: 175px; text-align: center;">Thao tác</th>
@@ -760,7 +890,7 @@ function ensureTuLuanModalDOM() {
 
             <div class="tuluan-modal-footer">
                 <span style="font-size:11.5px; color:#475569; font-style:italic;">
-                    🔒 Học sinh chỉ xem được ảnh bài làm phóng to của bạn bè sau khi được Giáo viên phê duyệt. Rê chuột vào ô điểm chấm chéo để xem người đã nhập.
+                    🔒 Học sinh chỉ xem được ảnh bài làm phóng to của bạn bè sau khi được Giáo viên phê duyệt. Rê chuột vào ô điểm chấm chéo để xem chi tiết người chấm và thời gian.
                 </span>
                 <button type="button" class="btn-admin btn-cancel" style="padding: 6px 18px;" onclick="closeTuLuanModal(event)">Đóng</button>
             </div>
@@ -1191,7 +1321,7 @@ function startTuLuanRealtimeListener(quizId) {
     } catch(e) {}
 }
 
-// Render bảng học sinh (Bao gồm Cột Chấm chéo nhau và Cột Nhận xét)
+// Render bảng học sinh (Bao gồm Cột Chấm chéo nhau kèm Tooltip hover nổi và Cột Nhận xét)
 function renderTuLuanStudentsTable() {
     const tbody = document.getElementById("tuluan-students-tbody");
     if (!tbody) return;
@@ -1300,21 +1430,30 @@ function renderTuLuanStudentsTable() {
             `;
         }
 
-        // CỘT CHẤM CHÉO NHAU (GHI NHẬN DANH TÍNH & HIỆN TOOLTIP KHI HOVER)
+        // CỘT CHẤM CHÉO NHAU (GHI NHẬN DANH TÍNH, HOVER HIỆN NGAY TOOLTIP NỔI BẬT & NATIVE TITLE)
         const currentCrossScore = (record && record.crossScore !== undefined && record.crossScore !== null) ? record.crossScore : '';
         const crossScoreBy = (record && record.crossScoreBy) ? record.crossScoreBy : '';
         const crossScoreTime = (record && record.crossScoreTime) ? record.crossScoreTime : '';
 
-        let scoreTooltip = "Nhập điểm chấm chéo (nhập xong tự động lưu người chấm)";
+        let scoreTooltipTitle = "Nhập điểm chấm chéo (nhập xong tự động lưu người chấm)";
         if (currentCrossScore !== "") {
-            scoreTooltip = `🎯 Điểm: ${currentCrossScore}đ\n👤 Người chấm: ${crossScoreBy || "Chưa rõ"}${crossScoreTime ? `\n🕒 Lúc: ${crossScoreTime}` : ""}`;
+            scoreTooltipTitle = `🎯 Điểm: ${currentCrossScore}đ\n👤 Người chấm: ${crossScoreBy || "Giáo viên / Đã chấm"}\n🕒 Lúc: ${crossScoreTime || "Đã lưu"}`;
         }
 
+        const tooltipInnerContent = buildScoreTooltipInnerHtml(currentCrossScore, crossScoreBy, crossScoreTime);
+
         const crossScoreHtml = `
-            <input type="text" class="tuluan-score-input" id="cross-score-${cleanSbd}"
-                   value="${currentCrossScore}" placeholder="VD: 8.7"
-                   onchange="saveStudentCrossScore('${cleanSbd}', '${st.stt}', '${st.sbd}', '${st.name}', this.value)"
-                   title="${scoreTooltip}">
+            <div class="tuluan-score-cell-wrap" onmouseenter="handleScoreTooltipEnter(this)">
+                <input type="text" class="tuluan-score-input" id="cross-score-${cleanSbd}"
+                       value="${currentCrossScore}" placeholder="VD: 8.7"
+                       onchange="saveStudentCrossScore('${cleanSbd}', '${st.stt}', '${st.sbd}', '${st.name}', this.value)"
+                       title="${scoreTooltipTitle}">
+                
+                <!-- TOOLTIP HIỆN NGAY LẬP TỨC KHI RÊ CHUỘT VÀO Ô ĐIỂM -->
+                <div class="score-hover-tooltip" id="score-tooltip-${cleanSbd}">
+                    ${tooltipInnerContent}
+                </div>
+            </div>
         `;
 
         // CỘT NHẬN XÉT (XÒE BẢNG NHẬP LIỆU RA PHÍA TRÊN)
@@ -1443,6 +1582,22 @@ async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) 
         currentTuLuanModalData.submissionsMap[cleanSbd].crossScoreTime = scoreTimeStr;
     }
 
+    // CẬP NHẬT TOOLTIP NỔI VÀ THUỘC TÍNH TITLE TRÊN MÀN HÌNH NGAY LẬP TỨC
+    const tooltipEl = document.getElementById(`score-tooltip-${cleanSbd}`);
+    if (tooltipEl) {
+        tooltipEl.innerHTML = buildScoreTooltipInnerHtml(trimmedScore, graderDisplay, scoreTimeStr);
+    }
+    const scoreInput = document.getElementById(`cross-score-${cleanSbd}`);
+    if (scoreInput) {
+        if (trimmedScore !== "") {
+            scoreInput.title = `🎯 Điểm: ${trimmedScore}đ\n👤 Người chấm: ${graderDisplay}\n🕒 Lúc: ${scoreTimeStr}`;
+        } else {
+            scoreInput.title = "Nhập điểm chấm chéo (nhập xong tự động lưu người chấm)";
+        }
+        scoreInput.style.borderColor = "#10b981";
+        setTimeout(() => { scoreInput.style.borderColor = "#cbd5e1"; }, 1500);
+    }
+
     try {
         const patchPayload = { 
             crossScore: trimmedScore, 
@@ -1463,18 +1618,6 @@ async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) 
                 body: JSON.stringify(patchPayload)
             })
         ]);
-
-        const scoreInput = document.getElementById(`cross-score-${cleanSbd}`);
-        if (scoreInput) {
-            scoreInput.style.borderColor = "#10b981";
-            // Cập nhật tooltip ngay lập tức
-            if (trimmedScore !== "") {
-                scoreInput.title = `🎯 Điểm: ${trimmedScore}đ\n👤 Người chấm: ${graderDisplay}\n🕒 Lúc: ${scoreTimeStr}`;
-            } else {
-                scoreInput.title = "Nhập điểm chấm chéo (nhập xong tự động lưu người chấm)";
-            }
-            setTimeout(() => { scoreInput.style.borderColor = "#cbd5e1"; }, 1500);
-        }
     } catch(err) {
         console.error("Lỗi lưu điểm chấm chéo:", err);
     }
@@ -2352,3 +2495,5 @@ window.toggleStudentFeedbackPopover = toggleStudentFeedbackPopover;
 window.closeStudentFeedbackPopover = closeStudentFeedbackPopover;
 window.saveStudentFeedback = saveStudentFeedback;
 window.exportTuLuanToExcel = exportTuLuanToExcel;
+window.buildScoreTooltipInnerHtml = buildScoreTooltipInnerHtml;
+window.handleScoreTooltipEnter = handleScoreTooltipEnter;
