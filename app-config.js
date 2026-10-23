@@ -3,9 +3,9 @@
 // CẤU HÌNH HỆ THỐNG VÀ DỮ LIỆU TĨNH DÙNG CHUNG
 // =========================================================
 
-let ADMIN_PASSWORD_HASH = "4711bcbd6fbf382356a6370e814daaf87ed27a425979dca143f8c94722a8a328";
+let ADMIN_PASSWORD_HASH = "0a6c968cd9122c2e6011ae39c4a76ec233eea80946b4920aa6d2f036a7d3f764";
 
-const FIREBASE_DB_URL = "https://obahoan40hethongthitracnghiem-default-rtdb.asia-southeast1.firebasedatabase.app";
+const FIREBASE_DB_URL = "https://obahoan40-exam-online-default-rtdb.asia-southeast1.firebasedatabase.app";
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
 // ĐƯỜNG DẪN GOOGLE APPS SCRIPT UPLOAD BÀI TỰ LUẬN HỌC SINH VÀO GOOGLE DRIVE 5TB
