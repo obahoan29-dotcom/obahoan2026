@@ -1,306 +1,576 @@
 // =========================================================
-// FILE: portal-analytics.js
-// QUẢN LÝ VÀ THỐNG KÊ LƯỢT TRUY CẬP WEBSITE REALTIME
+// FILE: portal-analytics.js (BẢN SUPABASE REALTIME SIÊU TỐC - NHẢY SỐ TỨC THÌ 0s)
 // =========================================================
 
 let siteVisitStatsCache = {
-    todayCount: 0, yesterdayCount: 0, weekCount: 0, totalCount: 0,
-    hourlyCounts: Array(24).fill(0), dailyCounts: []
+    todayCount: 0,
+    yesterdayCount: 0,
+    weekCount: 0,
+    totalCount: 0,
+    hourlyCounts: Array(24).fill(0),
+    dailyList: []
 };
 
+let visitRealtimeChannel = null;
+let initTrackerAttempts = 0;
+
+// Tự động tiêm animation nhảy số nảy sáng nếu chưa có trong CSS
+(function injectVisitPulseStyles() {
+    const styleId = "site-visit-realtime-anim-style";
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+        @keyframes visitBumpAnim {
+            0% { transform: scale(1); filter: brightness(1); }
+            35% { transform: scale(1.38); filter: brightness(1.5) drop-shadow(0 0 10px #ffe600); }
+            70% { transform: scale(0.95); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .visit-bump-animate {
+            display: inline-block;
+            animation: visitBumpAnim 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        }
+        .site-visit-badge.badge-flash {
+            border-color: rgba(56, 189, 248, 1) !important;
+            background: rgba(15, 23, 42, 0.75) !important;
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.6) !important;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// 1. Chuẩn hóa ngày giờ theo đúng múi giờ Việt Nam (UTC+7)
+function getVNDate(d = new Date()) {
+    try {
+        const vnTimeStr = d.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+        return new Date(vnTimeStr);
+    } catch(e) {
+        const vnMs = d.getTime() + (d.getTimezoneOffset() * 60000) + (7 * 3600 * 1000);
+        return new Date(vnMs);
+    }
+}
+
 function getVNDateKey(d = new Date()) {
-    const tzOffset = 7 * 60; 
-    const localTime = d.getTime(); 
-    const localOffset = d.getTimezoneOffset() * 60000;
-    const vnTime = new Date(localTime + localOffset + (tzOffset * 60000));
-    const pad = n => String(n).padStart(2, '0');
-    return `${vnTime.getFullYear()}-${pad(vnTime.getMonth() + 1)}-${pad(vnTime.getDate())}`;
+    try {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(d); // Luôn trả về "YYYY-MM-DD" chuẩn
+    } catch(e) {
+        const vn = getVNDate(d);
+        const pad = n => String(n).padStart(2, '0');
+        return `${vn.getFullYear()}-${pad(vn.getMonth() + 1)}-${pad(vn.getDate())}`;
+    }
 }
 
 function getVNHour(d = new Date()) {
-    const tzOffset = 7 * 60; 
-    const localTime = d.getTime(); 
-    const localOffset = d.getTimezoneOffset() * 60000;
-    const vnTime = new Date(localTime + localOffset + (tzOffset * 60000));
-    return vnTime.getHours();
+    try {
+        const hourStr = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            hour: '2-digit',
+            hour12: false
+        }).format(d);
+        return parseInt(hourStr, 10);
+    } catch(e) {
+        const vn = getVNDate(d);
+        return vn.getHours();
+    }
 }
 
-function formatVNDateDisplay(dateStr) {
-    if (!dateStr) return ""; 
-    let parts = String(dateStr).split('-');
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}`; 
-    return dateStr;
+// 2. Lọc và nhận diện ngày chuẩn, loại bỏ dứt điểm các key rác
+function standardizeDayKey(rawKey) {
+    if (!rawKey || typeof rawKey !== 'string') return null;
+    const str = rawKey.trim();
+    const lower = str.toLowerCase();
+
+    if (['summary', 'days', 'total', 'visits', 'all', 'undefined', 'null'].includes(lower)) {
+        return null;
+    }
+
+    const mIso = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (mIso) {
+        return `${mIso[1]}-${mIso[2].padStart(2, '0')}-${mIso[3].padStart(2, '0')}`;
+    }
+
+    const mSlash = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (mSlash) {
+        const p1 = parseInt(mSlash[1], 10);
+        const p2 = parseInt(mSlash[2], 10);
+        const year = mSlash[3];
+        let month = p1;
+        let day = p2;
+        if (p1 > 12) {
+            day = p1;
+            month = p2;
+        } else if (p2 > 12) {
+            month = p1;
+            day = p2;
+        }
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    const d = new Date(str);
+    if (!isNaN(d.getTime()) && d.getFullYear() >= 2020) {
+        return getVNDateKey(d);
+    }
+
+    return null;
 }
 
-function getDayOfWeekVN(dateStr) {
-    if (!dateStr) return "Ngày"; 
-    const d = new Date(dateStr + "T00:00:00+07:00"); 
-    const day = d.getDay();
-    const names = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-    return names[day] || "Ngày";
+// 3. Hiệu ứng nảy số (BUMP) trực quan khi có lượt truy cập
+function triggerVisitCountBumpAnimation() {
+    const badgeNumber = document.getElementById("visit-today-count");
+    const badgeCard = document.getElementById("site-visit-badge");
+    
+    if (badgeNumber) {
+        badgeNumber.classList.remove("visit-bump-animate");
+        void badgeNumber.offsetWidth; // Force reflow
+        badgeNumber.classList.add("visit-bump-animate");
+    }
+
+    if (badgeCard) {
+        badgeCard.classList.add("badge-flash");
+        setTimeout(() => badgeCard.classList.remove("badge-flash"), 600);
+    }
 }
 
+// 4. Khởi tạo Tracker và kích hoạt kênh Realtime
 async function initSiteVisitTracker() {
+    const client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : supabaseClient;
+    if (!client) {
+        if (initTrackerAttempts < 15) {
+            initTrackerAttempts++;
+            setTimeout(initSiteVisitTracker, 400);
+        }
+        return;
+    }
+
     const todayKey = getVNDateKey(); 
     const currentHour = getVNHour();
     const sessionKey = `site_visit_logged_${todayKey}`;
-    const isLoggedThisSession = safeSession.getItem(sessionKey);
-    
-    if (!isLoggedThisSession) { 
+
+    // Khởi động kênh Realtime ngay lập tức để lắng nghe các máy khác
+    startVisitRealtimeListener();
+
+    // Nếu người này vào phiên mới trong ngày -> Ghi nhận lượt truy cập
+    if (typeof safeSession !== 'undefined' && !safeSession.getItem(sessionKey)) { 
         safeSession.setItem(sessionKey, "true"); 
         await recordSiteVisit(todayKey, currentHour); 
+    } else {
+        // Nếu đã từng mở trong phiên, vẫn tải ngay số liệu mới nhất
+        await fetchAndRenderVisitStats();
     }
-    await fetchAndRenderVisitStats(true);
 }
 
-// Ghi nhận lượt truy cập bằng cơ chế tăng nguyên tử Server Value Increment của Firebase
+// 5. Ghi nhận lượt truy cập lên Supabase và phát sóng Broadcast
 async function recordSiteVisit(todayKey, hour) {
     try {
+        const client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : supabaseClient;
+        if (!client) return;
+
         const hourStr = String(hour).padStart(2, '0');
-        const incrementPayload = { ".sv": { "increment": 1 } };
 
-        await Promise.all([
-            // Tăng tổng lượt truy cập hôm nay
-            fetch(`${FIREBASE_DB_URL}/site_visits/days/${todayKey}/total.json`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(incrementPayload)
-            }).catch(() => null),
+        // Đọc dòng mới nhất của ngày hôm nay
+        const { data } = await client.from('site_visits').select('*').eq('day_key', todayKey).single();
 
-            // Tăng lượt truy cập theo khung giờ của hôm nay
-            fetch(`${FIREBASE_DB_URL}/site_visits/days/${todayKey}/hours/${hourStr}.json`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(incrementPayload)
-            }).catch(() => null),
+        let total = 1;
+        let hours = {};
+        if (data) {
+            total = (Number(data.total) || 0) + 1;
+            hours = (data.hours && typeof data.hours === 'object') ? { ...data.hours } : {};
+            hours[hourStr] = (Number(hours[hourStr]) || 0) + 1;
+        } else {
+            hours[hourStr] = 1;
+        }
 
-            // Tăng tổng truy cập toàn thời gian (Server-side increment, chống đua lệnh và không thể bị tụt)
-            fetch(`${FIREBASE_DB_URL}/site_visits/summary/allTimeTotal.json`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(incrementPayload)
-            }).catch(() => null),
+        // Cập nhật lên Supabase
+        await client.from('site_visits').upsert({
+            day_key: todayKey,
+            total: total,
+            hours: hours
+        });
 
-            // Cập nhật thời điểm mới nhất
-            fetch(`${FIREBASE_DB_URL}/site_visits/summary/lastUpdated.json`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ".sv": "timestamp" })
-            }).catch(() => null)
-        ]);
-    } catch(e) { 
-        console.warn("Lỗi ghi nhận lượt truy cập:", e); 
+        // Bắn tín hiệu Broadcast tức thời 0s tới tất cả các trình duyệt đang mở
+        if (visitRealtimeChannel) {
+            visitRealtimeChannel.send({
+                type: 'broadcast',
+                event: 'instant_visit_ping',
+                payload: { day_key: todayKey, total: total, hour: hourStr }
+            }).catch(() => null);
+        }
+
+        await fetchAndRenderVisitStats();
+        triggerVisitCountBumpAnimation();
+    } catch(e) {
+        console.warn("Lỗi ghi nhận lượt truy cập:", e);
     }
 }
 
-async function fetchAndRenderVisitStats(isSilent = false) {
+// 6. Kênh lắng nghe Realtime - Nhảy số tức thì
+function startVisitRealtimeListener() {
+    const client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : supabaseClient;
+    if (!client) return;
+
+    if (visitRealtimeChannel) {
+        client.removeChannel(visitRealtimeChannel);
+        visitRealtimeChannel = null;
+    }
+
+    const todayKey = getVNDateKey();
+
+    visitRealtimeChannel = client.channel(`realtime_site_visits_${Date.now()}`)
+        // Lắng nghe thay đổi trực tiếp từ Database Table
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'site_visits'
+        }, (payload) => {
+            const row = payload.new;
+            if (row && row.day_key === todayKey && row.total !== undefined) {
+                // Nhảy số ngay lập tức trên UI
+                const newTotal = Number(row.total);
+                if (newTotal > siteVisitStatsCache.todayCount) {
+                    siteVisitStatsCache.todayCount = newTotal;
+                    const badgeNumber = document.getElementById("visit-today-count");
+                    if (badgeNumber) badgeNumber.innerText = newTotal.toLocaleString("vi-VN");
+                    const kpiToday = document.getElementById("kpi-visit-today");
+                    if (kpiToday) kpiToday.innerText = newTotal.toLocaleString("vi-VN");
+                    triggerVisitCountBumpAnimation();
+                }
+            }
+            // Đồng bộ lại toàn bộ thống kê và biểu đồ
+            fetchAndRenderVisitStats();
+        })
+        // Lắng nghe phát sóng tức thời (Broadcast) với độ trễ 0 giây
+        .on('broadcast', { event: 'instant_visit_ping' }, (eventData) => {
+            if (eventData && eventData.payload) {
+                const p = eventData.payload;
+                if (p.day_key === todayKey) {
+                    const newCount = Math.max(Number(p.total) || 0, siteVisitStatsCache.todayCount + 1);
+                    siteVisitStatsCache.todayCount = newCount;
+                    const badgeNumber = document.getElementById("visit-today-count");
+                    if (badgeNumber) badgeNumber.innerText = newCount.toLocaleString("vi-VN");
+                    const kpiToday = document.getElementById("kpi-visit-today");
+                    if (kpiToday) kpiToday.innerText = newCount.toLocaleString("vi-VN");
+                    triggerVisitCountBumpAnimation();
+                }
+            }
+        })
+        .subscribe();
+}
+
+// 7. Đọc dữ liệu, làm sạch DB và cập nhật toàn bộ KPI & Biểu đồ
+async function fetchAndRenderVisitStats() {
     try {
-        const res = await fetch(`${FIREBASE_DB_URL}/site_visits.json`);
-        const data = (res && res.ok) ? await res.json() : null;
-        const todayKey = getVNDateKey(); 
-        const yesterdayObj = new Date(Date.now() - 24 * 3600 * 1000); 
-        const yesterdayKey = getVNDateKey(yesterdayObj);
-        
-        let todayCount = 0; 
-        let yesterdayCount = 0; 
-        let weekCount = 0; 
-        let sumOfAllDays = 0;
-        let allTimeTotal = 0;
-        let hourlyCounts = Array(24).fill(0); 
-        let dailyCounts = [];
+        const client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : supabaseClient;
+        if (!client) return;
 
-        if (data && typeof data === 'object') {
-            const daysObj = data.days || {};
+        const todayKey = getVNDateKey();
 
-            // 1. Tính tổng lượt truy cập của TẤT CẢ các ngày từng được ghi lại trong cơ sở dữ liệu
-            Object.keys(daysObj).forEach(dKey => {
-                const dayItem = daysObj[dKey];
-                if (dayItem && typeof dayItem === 'object') {
-                    const dayTotal = parseInt(dayItem.total, 10) || 0;
-                    sumOfAllDays += dayTotal;
+        const [visitsRes, metaRes] = await Promise.all([
+            client.from('site_visits').select('*'),
+            client.from('app_key_values').select('value').eq('key', 'site_meta').single()
+        ]);
+
+        const rawList = visitsRes.data || [];
+        const visitsByDate = {};
+        const garbageKeys = [];
+        let legacyHistoricalVisits = 0;
+
+        if (metaRes && metaRes.data && metaRes.data.value) {
+            const metaVal = metaRes.data.value;
+            legacyHistoricalVisits = Math.max(
+                legacyHistoricalVisits,
+                Number(metaVal.totalVisits || metaVal.visits || metaVal.allTimeVisits || metaVal.total_visits || metaVal.total || 0)
+            );
+        }
+
+        rawList.forEach(row => {
+            if (!row) return;
+            const rawKey = String(row.day_key || "").trim();
+            const stdKey = standardizeDayKey(rawKey);
+
+            if (!stdKey) {
+                garbageKeys.push(rawKey);
+                if (rawKey.toLowerCase() === 'summary' && Number(row.total) > 0) {
+                    legacyHistoricalVisits = Math.max(legacyHistoricalVisits, Number(row.total));
                 }
+                return;
+            }
+
+            const rowTotal = Number(row.total) || 0;
+            if (!visitsByDate[stdKey]) {
+                visitsByDate[stdKey] = {
+                    day_key: stdKey,
+                    total: rowTotal,
+                    hours: (row.hours && typeof row.hours === 'object') ? { ...row.hours } : {}
+                };
+            } else {
+                visitsByDate[stdKey].total += rowTotal;
+                if (row.hours && typeof row.hours === 'object') {
+                    for (let h in row.hours) {
+                        const hs = String(h).padStart(2, '0');
+                        visitsByDate[stdKey].hours[hs] = (visitsByDate[stdKey].hours[hs] || 0) + (Number(row.hours[h]) || 0);
+                    }
+                }
+            }
+
+            if (rawKey !== stdKey) {
+                garbageKeys.push(rawKey);
+            }
+        });
+
+        // Dọn dẹp key rác ngầm
+        if (garbageKeys.length > 0) {
+            client.from('site_visits').delete().in('day_key', garbageKeys).then();
+            if (visitsByDate[todayKey]) {
+                client.from('site_visits').upsert(visitsByDate[todayKey]).then();
+            }
+        }
+
+        // Tạo danh sách 7 ngày gần nhất
+        const vnNow = getVNDate();
+        const last7Days = [];
+        const dayNames = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+        let weekSum = 0;
+
+        for (let i = 0; i < 7; i++) {
+            const curDate = new Date(vnNow);
+            curDate.setDate(vnNow.getDate() - i);
+
+            const k = getVNDateKey(curDate);
+            const dayOfWeek = curDate.getDay();
+            const dStr = String(curDate.getDate()).padStart(2, '0');
+            const mStr = String(curDate.getMonth() + 1).padStart(2, '0');
+            const shortDate = `${dStr}/${mStr}`;
+
+            let label = "";
+            if (i === 0) {
+                label = `Hôm nay (${shortDate})`;
+            } else if (i === 1) {
+                label = `Hôm qua (${shortDate})`;
+            } else {
+                label = `${dayNames[dayOfWeek]} (${shortDate})`;
+            }
+
+            const dayCount = visitsByDate[k] ? (Number(visitsByDate[k].total) || 0) : 0;
+            weekSum += dayCount;
+
+            last7Days.push({
+                day_key: k,
+                label: label,
+                isToday: (i === 0),
+                total: dayCount
             });
-
-            // 2. Lấy dữ liệu ngày hôm nay
-            if (daysObj[todayKey]) {
-                todayCount = parseInt(daysObj[todayKey].total, 10) || 0;
-                if (daysObj[todayKey].hours) { 
-                    for (let h = 0; h < 24; h++) { 
-                        const hStr = String(h).padStart(2, '0'); 
-                        hourlyCounts[h] = parseInt(daysObj[todayKey].hours[hStr], 10) || 0; 
-                    } 
-                }
-            }
-
-            // 3. Lấy dữ liệu ngày hôm qua
-            if (daysObj[yesterdayKey]) { 
-                yesterdayCount = parseInt(daysObj[yesterdayKey].total, 10) || 0; 
-            }
-
-            // 4. Lấy dữ liệu 7 ngày qua
-            for (let i = 6; i >= 0; i--) {
-                const targetD = new Date(Date.now() - i * 24 * 3600 * 1000); 
-                const dKey = getVNDateKey(targetD);
-                const count = daysObj[dKey] ? (parseInt(daysObj[dKey].total, 10) || 0) : 0;
-                weekCount += count;
-                dailyCounts.push({ 
-                    dateKey: dKey, 
-                    isToday: (i === 0), 
-                    dayLabel: (i === 0) ? "Hôm nay" : getDayOfWeekVN(dKey), 
-                    dateDisplay: formatVNDateDisplay(dKey), 
-                    count: count 
-                });
-            }
-
-            // 5. Tính Tổng truy cập chính xác tuyệt đối: Phải là số lớn nhất và luôn tăng dần
-            const serverAllTime = (data.summary && data.summary.allTimeTotal) ? (parseInt(data.summary.allTimeTotal, 10) || 0) : 0;
-            const cachedMax = parseInt(safeLocal.getItem("site_visits_max_alltime"), 10) || 0;
-
-            allTimeTotal = Math.max(serverAllTime, sumOfAllDays, weekCount, cachedMax);
-
-            // Tự động khôi phục dữ liệu lên Firebase nếu trước đó từng bị lỗi tụt số
-            if (allTimeTotal > serverAllTime) {
-                fetch(`${FIREBASE_DB_URL}/site_visits/summary/allTimeTotal.json`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(allTimeTotal)
-                }).catch(() => null);
-            }
-        } else {
-            // Khi không kết nối được Firebase, dùng giá trị cao nhất từng lưu ở client
-            allTimeTotal = parseInt(safeLocal.getItem("site_visits_max_alltime"), 10) || 0;
         }
 
-        // Lưu mốc cao nhất để ngăn ngừa việc bị giảm số trong bất kỳ hoàn cảnh nào
-        if (allTimeTotal > 0) {
-            safeLocal.setItem("site_visits_max_alltime", String(allTimeTotal));
+        const todayCount = last7Days[0].total;
+        const yesterdayCount = last7Days[1].total;
+        const weekCount = weekSum;
+
+        const allDbDaysSum = Object.values(visitsByDate).reduce((sum, r) => sum + (Number(r.total) || 0), 0);
+        let finalAllTime = Math.max(allDbDaysSum, legacyHistoricalVisits);
+        if (legacyHistoricalVisits > 0 && allDbDaysSum < legacyHistoricalVisits) {
+            finalAllTime = legacyHistoricalVisits + todayCount;
         }
 
-        siteVisitStatsCache = { 
-            todayCount, 
-            yesterdayCount, 
-            weekCount, 
-            totalCount: allTimeTotal, 
-            hourlyCounts, 
-            dailyCounts 
+        const hourly = Array(24).fill(0);
+        const todayRecord = visitsByDate[todayKey];
+        if (todayRecord && todayRecord.hours) {
+            for (let h = 0; h < 24; h++) {
+                const hs = String(h).padStart(2, '0');
+                hourly[h] = Number(todayRecord.hours[hs]) || 0;
+            }
+        }
+
+        siteVisitStatsCache = {
+            todayCount,
+            yesterdayCount,
+            weekCount,
+            totalCount: finalAllTime,
+            hourlyCounts: hourly,
+            dailyList: last7Days
         };
 
-        const badgeNumber = document.getElementById("visit-today-count"); 
+        // Cập nhật giao diện
+        const badgeNumber = document.getElementById("visit-today-count");
         if (badgeNumber) badgeNumber.innerText = todayCount.toLocaleString("vi-VN");
 
-        const kpiToday = document.getElementById("kpi-visit-today"); 
-        const kpiYest = document.getElementById("kpi-visit-yesterday"); 
-        const kpiWeek = document.getElementById("kpi-visit-7days"); 
-        const kpiTotal = document.getElementById("kpi-visit-alltime");
-
+        const kpiToday = document.getElementById("kpi-visit-today");
         if (kpiToday) kpiToday.innerText = todayCount.toLocaleString("vi-VN");
-        if (kpiYest) kpiYest.innerText = yesterdayCount.toLocaleString("vi-VN");
-        if (kpiWeek) kpiWeek.innerText = weekCount.toLocaleString("vi-VN");
-        if (kpiTotal) kpiTotal.innerText = allTimeTotal.toLocaleString("vi-VN");
 
-        const currentHour = getVNHour(); 
-        const curBadge = document.getElementById("current-hour-badge");
-        if (curBadge) curBadge.innerText = `Hiện tại: ${currentHour}:00 - ${currentHour}:59`;
-        
-        renderHourlyBars(hourlyCounts, currentHour); 
-        renderWeeklyBars(dailyCounts);
-    } catch(e) { 
-        if (!isSilent) console.warn("Lỗi nạp thống kê lượt truy cập:", e); 
+        const kpiYesterday = document.getElementById("kpi-visit-yesterday");
+        if (kpiYesterday) kpiYesterday.innerText = yesterdayCount.toLocaleString("vi-VN");
+
+        const kpiWeek = document.getElementById("kpi-visit-7days");
+        if (kpiWeek) kpiWeek.innerText = weekCount.toLocaleString("vi-VN");
+
+        const kpiTotal = document.getElementById("kpi-visit-alltime");
+        if (kpiTotal) kpiTotal.innerText = finalAllTime.toLocaleString("vi-VN");
+
+        renderHourlyBars(hourly, getVNHour());
+        renderWeeklyBars(last7Days);
+
+    } catch(e) {
+        console.warn("Lỗi fetch thống kê:", e);
     }
 }
 
-function renderHourlyBars(hourlyCounts, currentHour) {
-    const container = document.getElementById("hourly-bars-container"); 
-    if (!container) return; 
-    container.innerHTML = "";
-    
-    const maxVal = Math.max(1, ...hourlyCounts);
-    hourlyCounts.forEach((cnt, hour) => {
-        const isCur = (hour === currentHour); 
-        const percent = Math.max(4, Math.round((cnt / maxVal) * 100));
-        const col = document.createElement("div"); 
-        col.className = `hourly-bar-col ${isCur ? 'is-current' : ''}`; 
-        col.title = `Khung giờ ${hour}:00 - ${hour}:59: ${cnt} lượt truy cập`;
-        col.innerHTML = `
-            <div class="hourly-bar-val">${cnt > 0 ? cnt : ''}</div>
-            <div class="hourly-bar-track">
-                <div class="hourly-bar-fill" style="height: ${percent}%;"></div>
-            </div>
-            <div class="hourly-bar-hour">${hour}h</div>
-        `;
-        container.appendChild(col);
-    });
-    
-    setTimeout(() => { 
-        const curEl = container.querySelector(".hourly-bar-col.is-current"); 
-        if (curEl) curEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
-    }, 150);
-}
-
-function renderWeeklyBars(dailyList) {
-    const container = document.getElementById("weekly-bars-container"); 
-    if (!container) return; 
-    container.innerHTML = "";
-    
-    const maxVal = Math.max(1, ...dailyList.map(d => d.count));
-    dailyList.forEach(item => {
-        const percent = Math.max(3, Math.round((item.count / maxVal) * 100));
-        const row = document.createElement("div"); 
-        row.className = `weekly-row-item ${item.isToday ? 'is-today' : ''}`;
-        row.innerHTML = `
-            <div class="weekly-row-day ${item.isToday ? 'is-today' : ''}">
-                ${item.dayLabel} <span style="font-size:10.5px; opacity:0.8;">(${item.dateDisplay})</span>
-            </div>
-            <div class="weekly-row-bar-wrap">
-                <div class="weekly-row-bar-fill" style="width: ${percent}%;"></div>
-            </div>
-            <div class="weekly-row-count">${item.count} lượt</div>
-        `;
-        container.appendChild(row);
-    });
-}
-
+// 8. Đóng mở Modal thống kê
 function toggleVisitStatsModal(event) {
-    if (event) { event.preventDefault(); event.stopPropagation(); }
-    const modal = document.getElementById("visit-stats-modal"); 
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const modal = document.getElementById("visit-stats-modal");
     if (!modal) return;
-    
-    if (modal.style.display === "flex") { 
-        modal.style.display = "none"; 
-    } else { 
-        modal.style.display = "flex"; 
-        fetchAndRenderVisitStats(false); 
+
+    const isVisible = (modal.style.display === "flex");
+    if (isVisible) {
+        closeVisitStatsModal();
+    } else {
+        modal.style.display = "flex";
+        fetchAndRenderVisitStats();
     }
 }
 
 function closeVisitStatsModal(event) {
-    if (event) event.stopPropagation();
-    const modal = document.getElementById("visit-stats-modal"); 
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const modal = document.getElementById("visit-stats-modal");
     if (modal) modal.style.display = "none";
 }
 
 function switchVisitStatsTab(tabName) {
-    const btnHours = document.getElementById("tab-btn-hours"); 
-    const btnWeek = document.getElementById("tab-btn-week");
-    const viewHours = document.getElementById("visit-tab-content-hours"); 
-    const viewWeek = document.getElementById("visit-tab-content-week");
-    
+    const tabHoursBtn = document.getElementById("tab-btn-hours");
+    const tabWeekBtn = document.getElementById("tab-btn-week");
+    const contentHours = document.getElementById("visit-tab-content-hours");
+    const contentWeek = document.getElementById("visit-tab-content-week");
+
     if (tabName === 'hours') {
-        if (btnHours) btnHours.classList.add("active"); 
-        if (btnWeek) btnWeek.classList.remove("active");
-        if (viewHours) viewHours.style.display = "block"; 
-        if (viewWeek) viewWeek.style.display = "none";
+        if (tabHoursBtn) tabHoursBtn.classList.add("active");
+        if (tabWeekBtn) tabWeekBtn.classList.remove("active");
+        if (contentHours) contentHours.style.display = "block";
+        if (contentWeek) contentWeek.style.display = "none";
+
+        const container = document.getElementById("hourly-bars-container");
+        if (container) {
+            const curBar = container.querySelector('.hourly-bar-col.is-current');
+            if (curBar) {
+                container.scrollTo({
+                    left: curBar.offsetLeft - (container.clientWidth / 2) + (curBar.clientWidth / 2),
+                    behavior: 'smooth'
+                });
+            }
+        }
     } else {
-        if (btnHours) btnHours.classList.remove("active"); 
-        if (btnWeek) btnWeek.classList.add("active");
-        if (viewHours) viewHours.style.display = "none"; 
-        if (viewWeek) viewWeek.style.display = "block";
+        if (tabHoursBtn) tabHoursBtn.classList.remove("active");
+        if (tabWeekBtn) tabWeekBtn.classList.add("active");
+        if (contentHours) contentHours.style.display = "none";
+        if (contentWeek) contentWeek.style.display = "block";
     }
 }
 
 async function refreshVisitStatsData() {
     const btn = document.querySelector(".btn-refresh-visits");
-    if (btn) { btn.innerText = "⏳ Đang tải..."; btn.disabled = true; }
-    await fetchAndRenderVisitStats(false);
-    if (btn) { btn.innerText = "🔄 Cập nhật"; btn.disabled = false; }
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⏳ Đang tải...";
+    }
+    await fetchAndRenderVisitStats();
+    triggerVisitCountBumpAnimation();
+    if (btn) {
+        btn.disabled = false;
+        btn.innerText = "🔄 Cập nhật";
+    }
 }
+
+// 9. Vẽ cột 24 giờ
+function renderHourlyBars(hourlyArray, currentHour) {
+    const container = document.getElementById("hourly-bars-container");
+    if (!container) return;
+
+    const hourBadge = document.getElementById("current-hour-badge");
+    if (hourBadge) {
+        hourBadge.innerText = `Hiện tại: ${String(currentHour).padStart(2, '0')}:00`;
+    }
+
+    const maxVal = Math.max(...hourlyArray, 1);
+    let html = "";
+
+    for (let h = 0; h < 24; h++) {
+        const val = hourlyArray[h] || 0;
+        const percent = Math.min(100, Math.max(4, Math.round((val / maxVal) * 100)));
+        const isCur = (h === currentHour);
+
+        html += `
+            <div class="hourly-bar-col ${isCur ? 'is-current' : ''}">
+                <div class="hourly-bar-val">${val > 0 ? val : ''}</div>
+                <div class="hourly-bar-track" title="${h}h: ${val} lượt">
+                    <div class="hourly-bar-fill" style="height: ${percent}%;"></div>
+                </div>
+                <div class="hourly-bar-hour">${h}h</div>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+
+    setTimeout(() => {
+        const curBar = container.querySelector('.hourly-bar-col.is-current');
+        if (curBar) {
+            container.scrollTo({
+                left: curBar.offsetLeft - (container.clientWidth / 2) + (curBar.clientWidth / 2),
+                behavior: 'smooth'
+            });
+        }
+    }, 100);
+}
+
+// 10. Vẽ danh sách 7 ngày
+function renderWeeklyBars(last7DaysList) {
+    const container = document.getElementById("weekly-bars-container");
+    if (!container) return;
+
+    if (!Array.isArray(last7DaysList) || last7DaysList.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#64748b; font-size:12px; padding:10px;">Chưa có dữ liệu thống kê tuần.</div>`;
+        return;
+    }
+
+    const maxVal = Math.max(...last7DaysList.map(r => r.total), 1);
+    let html = "";
+
+    last7DaysList.forEach(item => {
+        const count = Number(item.total) || 0;
+        const percent = count > 0 ? Math.min(100, Math.max(6, Math.round((count / maxVal) * 100))) : 0;
+
+        html += `
+            <div class="weekly-row-item ${item.isToday ? 'is-today' : ''}">
+                <div class="weekly-row-day ${item.isToday ? 'is-today' : ''}" style="width: 130px; min-width: 130px;">
+                    ${item.label}
+                </div>
+                <div class="weekly-row-bar-wrap">
+                    <div class="weekly-row-bar-fill" style="width: ${percent}%;"></div>
+                </div>
+                <div class="weekly-row-count">${count.toLocaleString("vi-VN")}</div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// Đăng ký toàn cục
+window.initSiteVisitTracker = initSiteVisitTracker;
+window.fetchAndRenderVisitStats = fetchAndRenderVisitStats;
+window.toggleVisitStatsModal = toggleVisitStatsModal;
+window.closeVisitStatsModal = closeVisitStatsModal;
+window.switchVisitStatsTab = switchVisitStatsTab;
+window.refreshVisitStatsData = refreshVisitStatsData;
+window.renderHourlyBars = renderHourlyBars;
+window.renderWeeklyBars = renderWeeklyBars;
+window.triggerVisitCountBumpAnimation = triggerVisitCountBumpAnimation;
