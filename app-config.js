@@ -3,8 +3,6 @@
 // CẤU HÌNH HỆ THỐNG VÀ DỮ LIỆU TĨNH DÙNG CHUNG
 // =========================================================
 
-let ADMIN_PASSWORD_HASH = "0a6c968cd9122c2e6011ae39c4a76ec233eea80946b4920aa6d2f036a7d3f764";
-
 const FIREBASE_DB_URL = "https://obahoan40-exam-online-default-rtdb.asia-southeast1.firebasedatabase.app";
 const GOOGLE_DRIVE_UPLOAD_GAS_URL = "https://script.google.com/macros/s/AKfycbxrNBRAAeTohrANj3w9_hd9FLBrxZCF0M0PmN290ul0Wrz4zon4-lqYdPOZ7liuePMCgw/exec";
 
@@ -48,7 +46,6 @@ const PRESET_AVATARS = [
     "https://cdn-icons-png.flaticon.com/512/2072/2072138.png", "https://cdn-icons-png.flaticon.com/512/4207/4207253.png",
     "https://cdn-icons-png.flaticon.com/512/1048/1048953.png", "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"
 ];
-
 const PRESET_20_AVATARS = PRESET_AVATARS.slice(0, 20);
 
 const TOP_BANNER_URL = "https://files.catbox.moe/cf5o9u.jpg"; 
