@@ -1,5 +1,5 @@
 // =========================================================
-// FILE: portal-analytics.js (BẢN SUPABASE REALTIME SIÊU TỐC - NHẢY SỐ TỨC THÌ 0s)
+// FILE: portal-analytics.js (BẢN ĐỒNG BỘ TOÀN CẦU SIÊU TỐC - NHẢY SỐ TỨC THÌ 0s)
 // =========================================================
 
 let siteVisitStatsCache = {
@@ -11,10 +11,13 @@ let siteVisitStatsCache = {
     dailyList: []
 };
 
+// TÊN KÊNH CHUNG CỐ ĐỊNH DUY NHẤT CHO TOÀN BỘ CÁC THIẾT BỊ (PC & ĐIỆN THOẠI)
+const VISIT_GLOBAL_CHANNEL_NAME = "global_site_visits_sync_channel";
 let visitRealtimeChannel = null;
 let initTrackerAttempts = 0;
+let visitSyncIntervalTimer = null;
 
-// Tự động tiêm animation nhảy số nảy sáng nếu chưa có trong CSS
+// Tự động tiêm animation nảy số vàng chớp sáng trực quan
 (function injectVisitPulseStyles() {
     const styleId = "site-visit-realtime-anim-style";
     if (document.getElementById(styleId)) return;
@@ -23,7 +26,7 @@ let initTrackerAttempts = 0;
     style.innerHTML = `
         @keyframes visitBumpAnim {
             0% { transform: scale(1); filter: brightness(1); }
-            35% { transform: scale(1.38); filter: brightness(1.5) drop-shadow(0 0 10px #ffe600); }
+            35% { transform: scale(1.42); filter: brightness(1.6) drop-shadow(0 0 12px #ffe600); }
             70% { transform: scale(0.95); }
             100% { transform: scale(1); filter: brightness(1); }
         }
@@ -33,8 +36,8 @@ let initTrackerAttempts = 0;
         }
         .site-visit-badge.badge-flash {
             border-color: rgba(56, 189, 248, 1) !important;
-            background: rgba(15, 23, 42, 0.75) !important;
-            box-shadow: 0 0 18px rgba(56, 189, 248, 0.6) !important;
+            background: rgba(15, 23, 42, 0.78) !important;
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.75) !important;
         }
     `;
     document.head.appendChild(style);
@@ -58,7 +61,7 @@ function getVNDateKey(d = new Date()) {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
-        }).format(d); // Luôn trả về "YYYY-MM-DD" chuẩn
+        }).format(d);
     } catch(e) {
         const vn = getVNDate(d);
         const pad = n => String(n).padStart(2, '0');
@@ -137,7 +140,30 @@ function triggerVisitCountBumpAnimation() {
     }
 }
 
-// 4. Khởi tạo Tracker và kích hoạt kênh Realtime
+// 4. Hàm cập nhật UI trực tiếp lập tức khi có tín hiệu Realtime
+function applyLiveVisitCount(newTotal) {
+    const val = Number(newTotal) || 0;
+    if (val <= 0) return;
+
+    if (val > siteVisitStatsCache.todayCount) {
+        const diff = val - siteVisitStatsCache.todayCount;
+        siteVisitStatsCache.todayCount = val;
+        siteVisitStatsCache.totalCount += diff;
+
+        const badgeNumber = document.getElementById("visit-today-count");
+        if (badgeNumber) badgeNumber.innerText = val.toLocaleString("vi-VN");
+
+        const kpiToday = document.getElementById("kpi-visit-today");
+        if (kpiToday) kpiToday.innerText = val.toLocaleString("vi-VN");
+
+        const kpiTotal = document.getElementById("kpi-visit-alltime");
+        if (kpiTotal) kpiTotal.innerText = siteVisitStatsCache.totalCount.toLocaleString("vi-VN");
+
+        triggerVisitCountBumpAnimation();
+    }
+}
+
+// 5. Khởi tạo Tracker và kích hoạt kênh Realtime
 async function initSiteVisitTracker() {
     const client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : supabaseClient;
     if (!client) {
@@ -152,20 +178,29 @@ async function initSiteVisitTracker() {
     const currentHour = getVNHour();
     const sessionKey = `site_visit_logged_${todayKey}`;
 
-    // Khởi động kênh Realtime ngay lập tức để lắng nghe các máy khác
+    // 1. Kết nối ngay Kênh Realtime chung cố định giữa PC & Mobile
     startVisitRealtimeListener();
 
-    // Nếu người này vào phiên mới trong ngày -> Ghi nhận lượt truy cập
+    // 2. Lắng nghe sự kiện chuyển Tab / Mở lại trình duyệt trên máy tính
+    setupTabVisibilityWatcher();
+
+    // 3. Nếu người này vào phiên mới trong ngày -> Ghi nhận lượt truy cập
     if (typeof safeSession !== 'undefined' && !safeSession.getItem(sessionKey)) { 
         safeSession.setItem(sessionKey, "true"); 
         await recordSiteVisit(todayKey, currentHour); 
     } else {
-        // Nếu đã từng mở trong phiên, vẫn tải ngay số liệu mới nhất
         await fetchAndRenderVisitStats();
+    }
+
+    // 4. Chu kỳ quét bù ngầm 12s để phòng trường hợp máy tính bị ngắt kết nối mạng tạm thời
+    if (!visitSyncIntervalTimer) {
+        visitSyncIntervalTimer = setInterval(() => {
+            fetchAndRenderVisitStats();
+        }, 12000);
     }
 }
 
-// 5. Ghi nhận lượt truy cập lên Supabase và phát sóng Broadcast
+// 6. Ghi nhận lượt truy cập lên Supabase và phát sóng Broadcast tức thì
 async function recordSiteVisit(todayKey, hour) {
     try {
         const client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : supabaseClient;
@@ -173,7 +208,7 @@ async function recordSiteVisit(todayKey, hour) {
 
         const hourStr = String(hour).padStart(2, '0');
 
-        // Đọc dòng mới nhất của ngày hôm nay
+        // Đọc dữ liệu mới nhất
         const { data } = await client.from('site_visits').select('*').eq('day_key', todayKey).single();
 
         let total = 1;
@@ -186,83 +221,112 @@ async function recordSiteVisit(todayKey, hour) {
             hours[hourStr] = 1;
         }
 
-        // Cập nhật lên Supabase
+        // Cập nhật Database
         await client.from('site_visits').upsert({
             day_key: todayKey,
             total: total,
             hours: hours
         });
 
-        // Bắn tín hiệu Broadcast tức thời 0s tới tất cả các trình duyệt đang mở
-        if (visitRealtimeChannel) {
-            visitRealtimeChannel.send({
-                type: 'broadcast',
-                event: 'instant_visit_ping',
-                payload: { day_key: todayKey, total: total, hour: hourStr }
-            }).catch(() => null);
-        }
+        // Bắn tín hiệu Broadcast 2 nhịp (0s và 600ms) để mọi máy tính đang mở đều nhận được 100%
+        broadcastInstantPing(todayKey, total, hourStr);
 
+        applyLiveVisitCount(total);
         await fetchAndRenderVisitStats();
-        triggerVisitCountBumpAnimation();
     } catch(e) {
         console.warn("Lỗi ghi nhận lượt truy cập:", e);
     }
 }
 
-// 6. Kênh lắng nghe Realtime - Nhảy số tức thì
+// 7. Hàm bắn tín hiệu Broadcast qua kênh cố định
+function broadcastInstantPing(todayKey, total, hourStr) {
+    if (!visitRealtimeChannel) return;
+
+    const payload = { day_key: todayKey, total: total, hour: hourStr, t: Date.now() };
+
+    // Nhịp 1: Bắn tức thì 0s
+    visitRealtimeChannel.send({
+        type: 'broadcast',
+        event: 'instant_visit_ping',
+        payload: payload
+    }).catch(() => null);
+
+    // Nhịp 2: Bắn bù sau 600ms chống rớt gói tin
+    setTimeout(() => {
+        if (visitRealtimeChannel) {
+            visitRealtimeChannel.send({
+                type: 'broadcast',
+                event: 'instant_visit_ping',
+                payload: payload
+            }).catch(() => null);
+        }
+    }, 600);
+}
+
+// 8. Kênh lắng nghe Realtime cố định toàn cầu
 function startVisitRealtimeListener() {
     const client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : supabaseClient;
     if (!client) return;
 
     if (visitRealtimeChannel) {
-        client.removeChannel(visitRealtimeChannel);
+        try { client.removeChannel(visitRealtimeChannel); } catch(e) {}
         visitRealtimeChannel = null;
     }
 
     const todayKey = getVNDateKey();
 
-    visitRealtimeChannel = client.channel(`realtime_site_visits_${Date.now()}`)
-        // Lắng nghe thay đổi trực tiếp từ Database Table
-        .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'site_visits'
-        }, (payload) => {
-            const row = payload.new;
-            if (row && row.day_key === todayKey && row.total !== undefined) {
-                // Nhảy số ngay lập tức trên UI
-                const newTotal = Number(row.total);
-                if (newTotal > siteVisitStatsCache.todayCount) {
-                    siteVisitStatsCache.todayCount = newTotal;
-                    const badgeNumber = document.getElementById("visit-today-count");
-                    if (badgeNumber) badgeNumber.innerText = newTotal.toLocaleString("vi-VN");
-                    const kpiToday = document.getElementById("kpi-visit-today");
-                    if (kpiToday) kpiToday.innerText = newTotal.toLocaleString("vi-VN");
-                    triggerVisitCountBumpAnimation();
+    // DÙNG CHUNG KÊNH CỐ ĐỊNH VISIT_GLOBAL_CHANNEL_NAME ĐỂ PC VÀ ĐIỆN THOẠI CÙNG 1 PHÒNG
+    visitRealtimeChannel = client.channel(VISIT_GLOBAL_CHANNEL_NAME, {
+        config: {
+            broadcast: { ack: false, self: false }
+        }
+    })
+    // 1. Nhận phát sóng Broadcast từ điện thoại gửi sang máy tính (siêu nhạy 0s)
+    .on('broadcast', { event: 'instant_visit_ping' }, (eventData) => {
+        if (eventData && eventData.payload) {
+            const p = eventData.payload;
+            if (p.day_key === todayKey) {
+                const incomingTotal = Number(p.total) || 0;
+                if (incomingTotal > siteVisitStatsCache.todayCount) {
+                    applyLiveVisitCount(incomingTotal);
+                } else {
+                    applyLiveVisitCount(siteVisitStatsCache.todayCount + 1);
                 }
             }
-            // Đồng bộ lại toàn bộ thống kê và biểu đồ
+        }
+    })
+    // 2. Nhận thay đổi từ cơ sở dữ liệu Supabase (postgres_changes)
+    .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'site_visits'
+    }, (payload) => {
+        const row = payload.new;
+        if (row && row.day_key === todayKey && row.total !== undefined) {
+            applyLiveVisitCount(Number(row.total));
+        }
+        fetchAndRenderVisitStats();
+    })
+    .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
             fetchAndRenderVisitStats();
-        })
-        // Lắng nghe phát sóng tức thời (Broadcast) với độ trễ 0 giây
-        .on('broadcast', { event: 'instant_visit_ping' }, (eventData) => {
-            if (eventData && eventData.payload) {
-                const p = eventData.payload;
-                if (p.day_key === todayKey) {
-                    const newCount = Math.max(Number(p.total) || 0, siteVisitStatsCache.todayCount + 1);
-                    siteVisitStatsCache.todayCount = newCount;
-                    const badgeNumber = document.getElementById("visit-today-count");
-                    if (badgeNumber) badgeNumber.innerText = newCount.toLocaleString("vi-VN");
-                    const kpiToday = document.getElementById("kpi-visit-today");
-                    if (kpiToday) kpiToday.innerText = newCount.toLocaleString("vi-VN");
-                    triggerVisitCountBumpAnimation();
-                }
-            }
-        })
-        .subscribe();
+        }
+    });
 }
 
-// 7. Đọc dữ liệu, làm sạch DB và cập nhật toàn bộ KPI & Biểu đồ
+// 9. Bộ theo dõi khi chuyển qua lại giữa các Tab trên máy tính
+function setupTabVisibilityWatcher() {
+    document.addEventListener("visibilitychange", function() {
+        if (!document.hidden) {
+            fetchAndRenderVisitStats();
+        }
+    });
+    window.addEventListener("focus", function() {
+        fetchAndRenderVisitStats();
+    });
+}
+
+// 10. Đọc dữ liệu, làm sạch DB và cập nhật toàn bộ KPI & Biểu đồ
 async function fetchAndRenderVisitStats() {
     try {
         const client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : supabaseClient;
@@ -419,7 +483,7 @@ async function fetchAndRenderVisitStats() {
     }
 }
 
-// 8. Đóng mở Modal thống kê
+// 11. Đóng mở Modal thống kê
 function toggleVisitStatsModal(event) {
     if (event) {
         event.preventDefault();
@@ -490,7 +554,7 @@ async function refreshVisitStatsData() {
     }
 }
 
-// 9. Vẽ cột 24 giờ
+// 12. Vẽ cột 24 giờ
 function renderHourlyBars(hourlyArray, currentHour) {
     const container = document.getElementById("hourly-bars-container");
     if (!container) return;
@@ -531,7 +595,7 @@ function renderHourlyBars(hourlyArray, currentHour) {
     }, 100);
 }
 
-// 10. Vẽ danh sách 7 ngày
+// 13. Vẽ danh sách 7 ngày
 function renderWeeklyBars(last7DaysList) {
     const container = document.getElementById("weekly-bars-container");
     if (!container) return;
