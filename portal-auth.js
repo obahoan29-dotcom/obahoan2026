@@ -1,6 +1,6 @@
 // =========================================================
 // FILE: portal-auth.js
-// QUẢN TRỊ VIÊN XÁC THỰC & HỌC SINH ĐĂNG NHẬP THI
+// QUẢN TRỊ VIÊN XÁC THỰC & ĐỔI MẬT KHẨU BẢO MẬT TUYỆT ĐỐI BẰNG TRUY VẤN MÙ
 // =========================================================
 
 function checkAdminSessionValidity() {
@@ -34,6 +34,7 @@ function parseExpiryDurationMs(val) {
     }
 }
 
+// 🔐 KIỂM TRA MẬT KHẨU BẰNG PHƯƠNG PHÁP "TRUY VẤN MÙ" TRÊN FIREBASE
 async function checkAdminPassword() {
     const inputEl = document.getElementById("admin-pass-input");
     const rawPass = (inputEl ? inputEl.value : "").trim();
@@ -43,27 +44,85 @@ async function checkAdminPassword() {
         return;
     }
 
-    const inputHash = await sha256Hash(rawPass);
-    let isMatched = (typeof ADMIN_PASSWORD_HASH === "string" && ADMIN_PASSWORD_HASH.length === 64 && inputHash.toLowerCase() === ADMIN_PASSWORD_HASH.toLowerCase());
+    const authBtn = document.querySelector(".auth-btn");
+    if(authBtn) { authBtn.innerText = "⏳..."; authBtn.disabled = true; }
 
-    if (isMatched) {
-        isAdminLoggedIn = true;
-        const durationVal = document.getElementById("admin-expiry-select") ? document.getElementById("admin-expiry-select").value : "1d";
-        const durationMs = parseExpiryDurationMs(durationVal);
-        const expiresAt = Date.now() + durationMs;
+    try {
+        const inputHash = await sha256Hash(rawPass);
+        
+        // Gọi Firebase xem đường dẫn mang tên mã băm này có tồn tại chữ "valid_admin" không
+        const res = await fetch(`${FIREBASE_DB_URL}/admin_auth_keys/${inputHash}.json`);
+        const data = await res.json();
 
-        safeLocal.setItem("adminLoggedInSession", "true");
-        safeLocal.setItem("admin_expires_at", String(expiresAt));
-        safeLocal.setItem("admin_duration_choice", durationVal);
-        safeSession.setItem("adminLoggedInSession", "true");
+        if (data === "valid_admin") {
+            isAdminLoggedIn = true;
+            const durationVal = document.getElementById("admin-expiry-select") ? document.getElementById("admin-expiry-select").value : "1d";
+            const durationMs = parseExpiryDurationMs(durationVal);
+            const expiresAt = Date.now() + durationMs;
 
-        document.getElementById("auth-container").classList.remove("show");
-        document.getElementById("admin-popover-panel").classList.add("show");
-        document.getElementById("gear-btn").classList.add("active-gear");
-        inputEl.value = "";
-        refreshAllViews();
-    } else {
-        alert("❌ Sai mật khẩu quản trị viên!");
+            safeLocal.setItem("adminLoggedInSession", "true");
+            safeLocal.setItem("admin_expires_at", String(expiresAt));
+            safeLocal.setItem("admin_duration_choice", durationVal);
+            safeSession.setItem("adminLoggedInSession", "true");
+
+            document.getElementById("auth-container").classList.remove("show");
+            document.getElementById("admin-popover-panel").classList.add("show");
+            document.getElementById("gear-btn").classList.add("active-gear");
+            inputEl.value = "";
+            refreshAllViews();
+        } else {
+            alert("❌ Sai mật khẩu quản trị viên!");
+        }
+    } catch(err) {
+        alert("❌ Lỗi kết nối máy chủ: " + err.message);
+    } finally {
+        if(authBtn) { authBtn.innerText = "VÀO"; authBtn.disabled = false; }
+    }
+}
+
+// 🔑 ĐỔI MẬT KHẨU QUẢN TRỊ BẰNG TRUY VẤN MÙ
+async function changeAdminPassword(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    
+    const oldPass = prompt("🔐 Nhập mật khẩu HIỆN TẠI của quản trị viên:");
+    if (!oldPass) return;
+
+    const newPass = prompt("🔑 Nhập mật khẩu MỚI muốn thay đổi:");
+    if (!newPass) return;
+
+    const confirmPass = prompt("🔑 Xác nhận lại mật khẩu MỚI:");
+    if (newPass !== confirmPass) {
+        alert("❌ Mật khẩu xác nhận không khớp!");
+        return;
+    }
+
+    try {
+        const oldHash = await sha256Hash(oldPass);
+        
+        // Kiểm tra mật khẩu cũ trước khi cho đổi
+        const res = await fetch(`${FIREBASE_DB_URL}/admin_auth_keys/${oldHash}.json`);
+        const data = await res.json();
+
+        if (data === "valid_admin") {
+            const newHash = await sha256Hash(newPass);
+            
+            // 1. Tạo mật khẩu mới trên Firebase
+            await fetch(`${FIREBASE_DB_URL}/admin_auth_keys/${newHash}.json`, {
+                method: 'PUT',
+                body: JSON.stringify("valid_admin")
+            });
+
+            // 2. Xóa mật khẩu cũ
+            await fetch(`${FIREBASE_DB_URL}/admin_auth_keys/${oldHash}.json`, {
+                method: 'DELETE'
+            });
+
+            alert("🎉 ĐỔI MẬT KHẨU THÀNH CÔNG!\nVui lòng sử dụng mật khẩu mới cho lần đăng nhập sau.");
+        } else {
+            alert("❌ Đổi mật khẩu thất bại! Mật khẩu hiện tại không đúng.");
+        }
+    } catch(err) {
+        alert("❌ Lỗi hệ thống: " + err.message);
     }
 }
 
@@ -116,7 +175,9 @@ function togglePasswordVisibility() {
     }
 }
 
+// =========================================================
 // MODAL ĐĂNG NHẬP PHÒNG THI DÀNH CHO HỌC SINH
+// =========================================================
 function openStudentLoginModal(item, categoryId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
