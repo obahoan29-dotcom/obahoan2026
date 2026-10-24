@@ -722,7 +722,7 @@ details[open] .folder-arrow { transform: rotate(90deg); color: var(--primary-blu
 .bottom-banner-img { width: 100%; height: 100%; object-fit: cover; }
 footer { text-align: center; margin-top: 12px; padding: 14px; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; font-size: 13.5px; font-weight: 700; border-radius: 14px; }
 
-/* BIỂU TƯỢNG ĐÈN TRUNG THU & WIDGET TRUY CẬP */
+/* BIỂU TƯỢNG ĐÈN TRUNG THU */
 .mid-autumn-badge {
     position: fixed; right: 4px; top: 48%; transform: translateY(-50%);
     z-index: 9999; display: flex; flex-direction: column; align-items: center;
@@ -743,34 +743,44 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
     100% { filter: drop-shadow(0 0 22px rgba(253, 224, 71, 1)) drop-shadow(0 0 38px rgba(249, 115, 22, 0.95)) drop-shadow(0 0 50px rgba(239, 68, 68, 0.8)); }
 }
 
+/* WIDGET TRUY CẬP REALTIME NHẢY SỐ TỨC THÌ (BẢN ĐẦY ĐỦ ANIMATION) */
 .site-visit-badge {
     position: fixed; top: 8px; left: 8px; z-index: 9998;
-    background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px;
+    background: rgba(15, 23, 42, 0.52); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1.2px solid rgba(255, 255, 255, 0.4); border-radius: 12px;
     padding: 6px 14px; color: #ffffff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28), inset 0 0 10px rgba(255, 255, 255, 0.1);
     display: inline-flex; align-items: center; gap: 7px;
-    cursor: pointer; user-select: none; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    font-size: 13px; font-weight: 800; transform: scale(0.75); transform-origin: top left;
+    cursor: pointer; user-select: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 13px; font-weight: 800; transform: scale(0.78); transform-origin: top left;
 }
 .site-visit-badge:hover {
-    transform: scale(0.8); background: rgba(15, 23, 42, 0.6);
-    border-color: rgba(56, 189, 248, 0.7);
+    transform: scale(0.84); background: rgba(15, 23, 42, 0.75);
+    border-color: rgba(56, 189, 248, 0.9);
+    box-shadow: 0 6px 22px rgba(2, 132, 199, 0.4);
 }
-.site-visit-badge:active { transform: scale(0.72); }
+.site-visit-badge:active { transform: scale(0.74); }
+
+.site-visit-badge.badge-flash {
+    border-color: rgba(56, 189, 248, 1) !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.6) !important;
+}
+
 .visit-pulse-dot {
     width: 9px; height: 9px; border-radius: 50%;
     background-color: #22c55e; box-shadow: 0 0 10px #22c55e;
-    animation: visitDotPulse 1.5s infinite alternate;
+    animation: visitDotPulse 1.4s infinite alternate;
 }
 @keyframes visitDotPulse {
     0% { transform: scale(0.85); opacity: 0.75; }
-    100% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 14px #22c55e; }
+    100% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 14px #22c55e; }
 }
 .visit-icon { font-size: 15px; line-height: 1; }
 .visit-label { color: #f1f5f9; font-weight: 800; font-size: 13px; letter-spacing: -0.1px; }
 
 .visit-number {
+    display: inline-block;
     color: #ffe600; font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
     font-variant-numeric: tabular-nums; font-size: 17.5px; font-weight: 900;
     letter-spacing: 0.6px; line-height: 1; -webkit-text-stroke: 0.8px #b91c1c;
@@ -778,5 +788,19 @@ footer { text-align: center; margin-top: 12px; padding: 14px; background: linear
         -1.2px -1.2px 0 #b91c1c, 1.2px -1.2px 0 #b91c1c,
         -1.2px 1.2px 0 #b91c1c, 1.2px 1.2px 0 #b91c1c,
          0 0 10px rgba(250, 204, 21, 0.95), 0 2px 5px rgba(0, 0, 0, 0.7);
+    transition: transform 0.2s ease;
 }
+
+@keyframes visitBumpAnim {
+    0% { transform: scale(1); filter: brightness(1); }
+    35% { transform: scale(1.38); filter: brightness(1.5) drop-shadow(0 0 10px #ffe600); }
+    70% { transform: scale(0.95); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+.visit-bump-animate {
+    display: inline-block;
+    animation: visitBumpAnim 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
 .visit-arrow { font-size: 13.5px; opacity: 0.95; }
