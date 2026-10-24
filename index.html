@@ -175,6 +175,7 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
                     <div class="admin-popover-title" style="margin-bottom: 0;">🚀 Đăng đề thi & tài liệu</div>
                     <div style="display: flex; gap: 6px; align-items: center;">
+                        <button type="button" onclick="changeAdminPassword(event)" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; border: none; border-radius: 9px; padding: 4px 10px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; box-shadow: 0 2px 5px rgba(245, 158, 11, 0.3); transition: 0.15s;" onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.filter='none'; this.style.transform='none';">🔑 Đổi MK</button>
                         <button type="button" class="admin-cleanup-btn" onclick="openDbCleanupModal(event)" title="Dọn dẹp cơ sở dữ liệu Firebase an toàn">🧹 Dọn Database</button>
                         <button type="button" class="admin-logout-btn" onclick="logoutAdmin(event)" title="Khóa quyền quản trị ngay lập tức">🔒 Khóa lại</button>
                     </div>
@@ -443,8 +444,8 @@
 </div>
 
 <!-- MODAL THỐNG KÊ CHI TIẾT LƯỢT TRUY CẬP -->
-<div class="visit-stats-modal-overlay" id="visit-stats-modal">
-    <div class="visit-stats-modal-box">
+<div class="visit-stats-modal-overlay" id="visit-stats-modal" onclick="if(event.target===this) closeVisitStatsModal(event);">
+    <div class="visit-stats-modal-box" onclick="event.stopPropagation();">
         <div class="visit-modal-header">
             <div class="visit-modal-title">
                 <span class="vm-icon">📊</span>
