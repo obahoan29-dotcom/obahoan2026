@@ -6,8 +6,8 @@
 // NÚT XÓA ĐỀ CHỈ HIỆN KHI LÀ ADMIN | ĐỔI MẬT KHẨU 4 SỐ NỔI LÊN TRÊN
 // CỘT CHẤM CHÉO NHAU (GHI NHẬN DANH TÍNH & HIỆN TOOLTIP KHI HOVER)
 // CỘT NHẬN XÉT (XÒE RA) & XUẤT EXCEL KÈM ẢNH BÀI LÀM VÀ NGƯỜI CHẤM
-// MỚI NHẤT: CHUYỂN SANG SUPABASE TOÀN BỘ, NÚT UPLOAD ĐÁP ÁN CHẤM LÊN DRIVE
-// VÀ NÚT HẸN GIỜ MỞ ĐÁP ÁN TỰ ĐỘNG THÔNG MINH BẢO MẬT 100%!
+// BỔ SUNG: NÚT UPLOAD ĐÁP ÁN CHẤM LÊN DRIVE KHO_TAI_LIEU/Dap_an_cham_tu_luan
+// VÀ NÚT HẸN GIỜ TỰ ĐỘNG MỞ ĐÁP ÁN CHO HỌC SINH ĐỒNG BỘ QUA SUPABASE!
 // =========================================================
 
 // TỰ ĐỘNG NHÚNG CSS BẢNG TỰ LUẬN, NÚT LỚP SIÊU GỌN, ĐÁP ÁN CHẤM & HẸN GIỜ
@@ -2364,6 +2364,7 @@ function toggleStudentFeedbackPopover(cleanSbd, event) {
 
     document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
     document.querySelectorAll(".student-feedback-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".dapan-schedule-popover.show").forEach(p => p.classList.remove("show"));
     document.querySelectorAll(".tuluan-td-active-popover").forEach(td => td.classList.remove("tuluan-td-active-popover"));
 
     if (!isShown) {
@@ -2571,6 +2572,7 @@ function toggleStudentPassPopover(cleanSbd, event) {
 
     document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
     document.querySelectorAll(".student-feedback-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".dapan-schedule-popover.show").forEach(p => p.classList.remove("show"));
     document.querySelectorAll(".tuluan-td-active-popover").forEach(td => td.classList.remove("tuluan-td-active-popover"));
 
     if (!isShown) {
