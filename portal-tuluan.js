@@ -1,14 +1,16 @@
 // =========================================================
 // FILE: portal-tuluan.js
-// QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB ĐỒNG BỘ 1 THƯ MỤC DUY NHẤT
+// QUẢN LÝ NỘP BÀI TỰ LUẬN GOOGLE DRIVE 5TB & ĐỒNG BỘ 100% QUA SUPABASE
 // BẢO MẬT XÓA ẢNH (CHỈ CHÍNH CHỦ & ADMIN) | QUẢN LÝ 5 ĐỀ MỚI NHẤT
-// TỰ ĐỘNG TẠO THƯ MỤC CHUẨN XÁC THEO LỚP ĐANG CHỌN (11C, 11A, 10P...)
+// TỰ ĐỘNG TẠO THƯ MỤC DRIVE PHÂN CẤP THEO LỚP ĐANG CHỌN (11C, 11A, 10P...)
 // NÚT XÓA ĐỀ CHỈ HIỆN KHI LÀ ADMIN | ĐỔI MẬT KHẨU 4 SỐ NỔI LÊN TRÊN
-// THÊM: CỘT CHẤM CHÉO NHAU (TỰ ĐỘNG GHI NHẬN & HIỆN TÊN NGƯỜI CHẤM KHI HOVER)
-// THÊM: CỘT NHẬN XÉT (XÒE RA) & XUẤT EXCEL CÓ ẢNH VÀ NGƯỜI CHẤM
+// CỘT CHẤM CHÉO NHAU (GHI NHẬN DANH TÍNH & HIỆN TOOLTIP KHI HOVER)
+// CỘT NHẬN XÉT (XÒE RA) & XUẤT EXCEL KÈM ẢNH BÀI LÀM VÀ NGƯỜI CHẤM
+// MỚI NHẤT: CHUYỂN SANG SUPABASE TOÀN BỘ, NÚT UPLOAD ĐÁP ÁN CHẤM LÊN DRIVE
+// VÀ NÚT HẸN GIỜ MỞ ĐÁP ÁN TỰ ĐỘNG THÔNG MINH BẢO MẬT 100%!
 // =========================================================
 
-// TỰ ĐỘNG NHÚNG CSS NÚT XÓA ẢNH, NÚT XÓA ĐỀ, CHẤM CHÉO, NHẬN XÉT & EXCEL
+// TỰ ĐỘNG NHÚNG CSS BẢNG TỰ LUẬN, NÚT LỚP SIÊU GỌN, ĐÁP ÁN CHẤM & HẸN GIỜ
 (function injectTuLuanButtonStyles() {
     const styleId = "tuluan-custom-delete-btn-styles";
     if (document.getElementById(styleId)) return;
@@ -50,21 +52,334 @@
             transform: scale(0.9) !important;
         }
 
+        /* NÚT LỚP THU GỌN SIÊU BÉ */
+        .tuluan-class-compact-select {
+            width: 82px !important;
+            max-width: 82px !important;
+            padding: 4px 4px !important;
+            font-size: 11.5px !important;
+            font-weight: 800 !important;
+            border-radius: 7px !important;
+            border: 1.2px solid #cbd5e1 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            height: 30px !important;
+            cursor: pointer !important;
+            text-overflow: ellipsis !important;
+        }
+
+        /* NÚT UPLOAD & HIỂN THỊ ĐÁP ÁN CHẤM BÊN PHẢI NÚT LỚP */
+        .tuluan-dapan-mini-box {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex-shrink: 0 !important;
+        }
+        .btn-tuluan-upload-dapan {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+            color: #ffffff !important;
+            border: 1.2px solid #38bdf8 !important;
+            border-radius: 7px !important;
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            height: 30px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 3px !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 2px 5px rgba(2, 132, 199, 0.25) !important;
+            white-space: nowrap !important;
+            user-select: none !important;
+        }
+        .btn-tuluan-upload-dapan:hover {
+            filter: brightness(1.1) !important;
+            transform: translateY(-1px) !important;
+        }
+        .btn-tuluan-upload-dapan:active {
+            transform: translateY(2px) scale(0.96) !important;
+        }
+
+        /* NÚT HẸN GIỜ MỞ ĐÁP ÁN (BÊN CẠNH NÚT UP ĐÁP ÁN) */
+        .btn-tuluan-schedule-dapan {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            color: #ffffff !important;
+            border: 1.2px solid #fde68a !important;
+            border-radius: 7px !important;
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            height: 30px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 3px !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 2px 5px rgba(245, 158, 11, 0.25) !important;
+            white-space: nowrap !important;
+            user-select: none !important;
+        }
+        .btn-tuluan-schedule-dapan:hover {
+            filter: brightness(1.1) !important;
+            transform: translateY(-1px) !important;
+        }
+        .btn-tuluan-schedule-dapan:active {
+            transform: translateY(2px) scale(0.96) !important;
+        }
+        .btn-tuluan-schedule-dapan.has-schedule {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border-color: #86efac !important;
+        }
+
+        /* POPOVER CẤU HÌNH HẸN GIỜ MỞ ĐÁP ÁN */
+        .dapan-schedule-popover {
+            display: none;
+            position: absolute !important;
+            top: calc(100% + 6px) !important;
+            left: 0 !important;
+            width: 310px !important;
+            background: #ffffff !important;
+            border: 1.5px solid #f59e0b !important;
+            border-radius: 14px !important;
+            padding: 12px 14px !important;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
+            z-index: 100000 !important;
+            text-align: left !important;
+            animation: popInBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .dapan-schedule-popover.show {
+            display: block !important;
+        }
+        .dapan-sched-radio-item {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 7px !important;
+            margin-bottom: 8px !important;
+            cursor: pointer !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
+        }
+        .dapan-sched-radio-item input[type="radio"] {
+            margin-top: 2px !important;
+            accent-color: #f59e0b !important;
+            cursor: pointer !important;
+        }
+        .dapan-sched-input {
+            width: 100% !important;
+            padding: 6px 8px !important;
+            border: 1.2px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            outline: none !important;
+            box-sizing: border-box !important;
+            color: #0f172a !important;
+            margin-top: 4px !important;
+        }
+        .dapan-sched-input:focus {
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15) !important;
+        }
+        .btn-quick-deadline {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            padding: 4px 8px !important;
+            background: #fffbeb !important;
+            border: 1px solid #fde68a !important;
+            border-radius: 6px !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            color: #b45309 !important;
+            cursor: pointer !important;
+            margin-top: 5px !important;
+            transition: 0.15s !important;
+        }
+        .btn-quick-deadline:hover {
+            background: #fef3c7 !important;
+            color: #92400e !important;
+        }
+
+        .btn-dapan-badge-active {
+            background: #f0fdf4 !important;
+            border: 1.2px solid #86efac !important;
+            color: #166534 !important;
+            border-radius: 7px !important;
+            padding: 3px 7px !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            height: 30px !important;
+            box-sizing: border-box !important;
+            max-width: 140px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            transition: 0.15s !important;
+        }
+        .btn-dapan-badge-active:hover {
+            background: #dcfce7 !important;
+            border-color: #22c55e !important;
+        }
+        .btn-dapan-badge-active.is-locked {
+            background: #fffbeb !important;
+            border-color: #fde68a !important;
+            color: #b45309 !important;
+            cursor: not-allowed !important;
+        }
+        .badge-moi-mini {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+            font-size: 9px !important;
+            font-weight: 900 !important;
+            padding: 1px 4px !important;
+            border-radius: 4px !important;
+            flex-shrink: 0 !important;
+        }
+        .dapan-filename-truncate {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            font-weight: 700 !important;
+        }
+
+        .btn-del-dapan-mini {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+            border: 1px solid #fca5a5 !important;
+            border-radius: 50% !important;
+            width: 20px !important;
+            height: 20px !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            padding: 0 !important;
+            flex-shrink: 0 !important;
+            transition: 0.15s !important;
+        }
+        .btn-del-dapan-mini:hover {
+            background: #dc2626 !important;
+            color: #ffffff !important;
+        }
+
+        /* DÒNG HIỂN THỊ ĐÁP ÁN ĐẦY ĐỦ PHONG CÁCH DÂN TRÍ NHƯ ẢNH CHỤP */
+        .tuluan-dapan-full-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+            border-bottom: 1px solid #bae6fd;
+            border-top: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            animation: fadeInModal 0.2s ease-out;
+        }
+        .tuluan-dapan-full-strip.strip-locked {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+            border-bottom-color: #fde68a !important;
+        }
+        .dapan-strip-content {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+        .dapan-badge-new {
+            background: #0284c7;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+        .dapan-badge-new.badge-lock {
+            background: #ea580c !important;
+        }
+        .dapan-strip-title {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #0369a1;
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .dapan-strip-title:hover {
+            text-decoration: underline;
+            color: #0284c7;
+        }
+        .dapan-strip-time {
+            font-size: 11.5px;
+            color: #64748b;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .btn-open-dapan-strip {
+            background: #0284c7;
+            color: #ffffff !important;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: 0.15s;
+        }
+        .btn-open-dapan-strip:hover {
+            filter: brightness(1.1);
+        }
+        .btn-open-dapan-strip.disabled-strip {
+            background: #cbd5e1 !important;
+            color: #64748b !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+        }
+        .btn-del-dapan-strip {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            padding: 3px 6px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-del-dapan-strip:hover {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
         /* NÚT XÓA ĐỀ THI: MẶC ĐỊNH ẨN, CHỈ HIỆN KHI ADMIN ĐĂNG NHẬP */
         .btn-del-exam-selector {
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
             color: #dc2626 !important;
             border: 1.5px solid #f87171 !important;
-            border-radius: 9px !important;
-            padding: 6px 12px !important;
-            height: 34px !important;
-            font-size: 12px !important;
+            border-radius: 7px !important;
+            padding: 4px 9px !important;
+            height: 30px !important;
+            font-size: 11.5px !important;
             font-weight: 800 !important;
             cursor: pointer !important;
             display: none;
             align-items: center !important;
             justify-content: center !important;
-            gap: 4px !important;
+            gap: 3px !important;
             transition: all 0.16s ease !important;
             flex-shrink: 0 !important;
             box-shadow: 0 2px 6px rgba(220, 38, 38, 0.18) !important;
@@ -272,12 +587,14 @@
         .tuluan-td-active-popover,
         .tuluan-table tbody td.tuluan-td-active-popover,
         .tuluan-table tbody td:has(.student-pass-popover.show),
-        .tuluan-table tbody td:has(.student-feedback-popover.show) {
+        .tuluan-table tbody td:has(.student-feedback-popover.show),
+        .tuluan-table tbody td:has(.dapan-schedule-popover.show) {
             z-index: 99999 !important;
             position: relative !important;
         }
         .tuluan-table tbody tr:has(.student-pass-popover.show),
-        .tuluan-table tbody tr:has(.student-feedback-popover.show) {
+        .tuluan-table tbody tr:has(.student-feedback-popover.show),
+        .tuluan-table tbody tr:has(.dapan-schedule-popover.show) {
             z-index: 99999 !important;
             position: relative !important;
         }
@@ -400,10 +717,22 @@ let currentTuLuanModalData = {
     submissionsMap: {},
     availableExams: [],
     customPasswords: {},
-    statusFilter: "all"
+    statusFilter: "all",
+    dapAnCham: null
 };
 
-let tuLuanEventSource = null;
+let tuLuanRealtimeChannel = null;
+
+// HÀM LẤY CLIENT SUPABASE CHÍNH THỨC
+function getDbClient() {
+    if (typeof getSupabaseClient === 'function') {
+        const c = getSupabaseClient();
+        if (c) return c;
+    }
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) return supabaseClient;
+    if (typeof window.supabaseClient !== 'undefined' && window.supabaseClient) return window.supabaseClient;
+    return null;
+}
 
 // Kiểm tra quyền Admin
 function checkCurrentIsAdmin() {
@@ -515,12 +844,10 @@ function getEffectiveStudentPassword(cleanSbd, defaultSbd, defaultPass) {
 
 // HÀM NHẬN DIỆN DANH TÍNH NGƯỜI ĐANG NHẬP ĐIỂM CHẤM CHÉO
 function getCurrentGraderInfo() {
-    // 1. Nếu là Giáo viên (Admin)
     if (checkCurrentIsAdmin()) {
         return { name: "Giáo viên (Admin)", sbd: "ADMIN" };
     }
 
-    // 2. Nếu học sinh đã đăng nhập thi hoặc đã lưu thông tin trên máy
     try {
         const raw = safeLocal.getItem("current_exam_student");
         if (raw) {
@@ -537,13 +864,11 @@ function getCurrentGraderInfo() {
         return { name: sName || sSbd, sbd: sSbd || "" };
     }
 
-    // 3. Nếu phiên làm việc này đã nhập danh tính trước đó
     const sessionGrader = safeSession.getItem("current_peer_grader");
     if (sessionGrader) {
         try { return JSON.parse(sessionGrader); } catch(e) {}
     }
 
-    // 4. Nếu chưa có thông tin, hỏi danh tính người chấm (chỉ hỏi 1 lần trong phiên)
     const inputIdentify = prompt("👤 NHẬP DANH TÍNH NGƯỜI CHẤM:\n\nVui lòng nhập Họ tên hoặc SBD của em để hệ thống ghi nhận người chấm chéo bài này (Ví dụ: 11A01 hoặc LƯỜNG HẢI AN):");
     if (inputIdentify && inputIdentify.trim()) {
         const cleanInput = inputIdentify.trim();
@@ -676,8 +1001,8 @@ function ensureTuLuanModalDOM() {
                 <div class="tuluan-header-title-box">
                     <span class="tuluan-icon-badge">📁</span>
                     <div>
-                        <h3 id="tuluan-modal-heading" style="margin:0; color:#0f172a; font-size:16px; font-weight:900;">📤 NỘP BÀI TỰ LUẬN GOOGLE DRIVE</h3>
-                        <div id="tuluan-modal-subheading" style="font-size:12px; color:#64748b; font-weight:700; margin-top:2px;">
+                        <h3 id="tuluan-modal-heading" style="margin:0; color:#0f172a; font-size:14px; font-weight:900;">📤 NỘP BÀI TỰ LUẬN GOOGLE DRIVE</h3>
+                        <div id="tuluan-modal-subheading" style="font-size:11px; color:#64748b; font-weight:700; margin-top:1px;">
                             Thư mục Drive: <code id="tuluan-drive-folder-path" style="color:#0284c7; background:#e0f2fe; padding:2px 6px; border-radius:6px;">BAI_TAP_TU_LUAN</code>
                         </div>
                     </div>
@@ -685,26 +1010,85 @@ function ensureTuLuanModalDOM() {
                 <button type="button" class="btn-close-cleanup-modal" onclick="closeTuLuanModal(event)">✕</button>
             </div>
 
-            <!-- THANH ĐIỀU HƯỚNG CHỌN LỚP, CHỌN ĐỀ, NÚT XÓA ĐỀ & CÔNG CỤ ADMIN -->
+            <!-- THANH ĐIỀU HƯỚNG CHỌN LỚP (SIÊU BÉ), NÚT UP ĐÁP ÁN, NÚT HẸN GIỜ, CHỌN ĐỀ (RỘNG) & CÔNG CỤ ADMIN -->
             <div class="tuluan-select-bar">
-                <div class="tuluan-select-group">
-                    <label>🏫 Lớp:</label>
-                    <select id="tuluan-class-selector" onchange="onTuLuanClassChanged(this.value)">
-                        <option value="lop-11a">Lớp 11A</option>
-                        <option value="lop-11c">Lớp 11C</option>
-                        <option value="lop-10p">Lớp 10P</option>
-                        <option value="lop-11e">Lớp 11E</option>
+                <!-- 1. NÚT LỚP THU GỌN SIÊU BÉ -->
+                <div class="tuluan-select-group" style="flex-shrink:0;">
+                    <label style="font-size:11px; font-weight:800; color:#334155;">🏫 Lớp:</label>
+                    <select id="tuluan-class-selector" onchange="onTuLuanClassChanged(this.value)" class="tuluan-class-compact-select" title="Chọn lớp">
+                        <option value="lop-11a">11A</option>
+                        <option value="lop-11c">11C</option>
+                        <option value="lop-10p">10P</option>
+                        <option value="lop-11e">11E</option>
                         <option value="them-11">Thêm 11</option>
                         <option value="them-10">Thêm 10</option>
                         <option value="them-12">Thêm 12</option>
-                        <option value="hsg-toan-11">HSG Toán 11</option>
+                        <option value="hsg-toan-11">HSG 11</option>
                     </select>
                 </div>
 
-                <div class="tuluan-select-group" style="flex:1; min-width:260px;">
-                    <label>📝 Chọn đề thi (5 đề mới nhất):</label>
-                    <div style="display:flex; align-items:center; gap:6px; width:100%;">
-                        <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1; min-width: 140px;"></select>
+                <!-- 2. NÚT UPLOAD & NÚT HẸN GIỜ ĐÁP ÁN CHẤM BÊN PHẢI NÚT LỚP (SIÊU GỌN GÀNG) -->
+                <div class="tuluan-dapan-mini-box" id="tuluan-dapan-mini-box">
+                    <input type="file" id="tuluan-dapan-file-input" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.zip,.rar,.xlsx" style="display:none;" onchange="handleUploadDapAnCham(this)">
+                    <button type="button" class="btn-tuluan-upload-dapan" id="btn-up-dapan-cham" onclick="triggerUploadDapAnCham(event)" title="Tải file Đáp án chấm tự luận lên Drive/Dap_an_cham_tu_luan">
+                        📤 Đ.Á chấm
+                    </button>
+
+                    <!-- NÚT HẸN GIỜ MỞ ĐÁP ÁN TỰ ĐỘNG -->
+                    <div style="position:relative; display:inline-block;" id="box-schedule-dapan-wrap">
+                        <button type="button" class="btn-tuluan-schedule-dapan" id="btn-schedule-dapan" onclick="toggleDapAnSchedulePopover(event)" title="Hẹn giờ tự động mở đáp án cho học sinh">
+                            ⏰ Hẹn giờ
+                        </button>
+
+                        <!-- POPOVER CẤU HÌNH HẸN GIỜ XÒE RA -->
+                        <div class="dapan-schedule-popover" id="dapan-schedule-popover" onclick="event.stopPropagation()">
+                            <div class="pass-popover-header">
+                                <span>⏰ Hẹn Giờ Mở Đáp Án Chấm</span>
+                                <button type="button" class="btn-close-pass-pop" onclick="closeDapAnSchedulePopover(event)">✕</button>
+                            </div>
+                            <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.4;">
+                                Cài đặt thời điểm học sinh được phép xem đáp án. Trước thời điểm này, đáp án sẽ tự động khóa để bảo mật.
+                            </div>
+
+                            <label class="dapan-sched-radio-item">
+                                <input type="radio" name="dapan-sched-mode" id="sched-mode-now" value="now" checked onchange="onDapAnScheduleModeChanged('now')">
+                                <span>🔓 Mở ngay lập tức (Học sinh xem được luôn)</span>
+                            </label>
+
+                            <label class="dapan-sched-radio-item">
+                                <input type="radio" name="dapan-sched-mode" id="sched-mode-auto" value="auto" onchange="onDapAnScheduleModeChanged('auto')">
+                                <span>⏰ Tự động mở vào ngày & giờ quy định:</span>
+                            </label>
+
+                            <div id="sched-datetime-input-group" style="display:none; padding-left:20px; margin-bottom:8px;">
+                                <input type="datetime-local" id="dapan-sched-datetime" class="dapan-sched-input">
+                                <button type="button" class="btn-quick-deadline" onclick="setScheduleToExamDeadline()">
+                                    ⚡ Lấy giờ đóng đề thi
+                                </button>
+                            </div>
+
+                            <div class="pass-popover-actions">
+                                <button type="button" class="btn-pass-cancel" onclick="closeDapAnSchedulePopover(event)">Hủy</button>
+                                <button type="button" class="btn-pass-save" style="background:linear-gradient(135deg, #f59e0b, #d97706);" onclick="saveDapAnSchedule(event)">💾 Lưu hẹn giờ</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BADGE HIỂN THỊ LINK ĐÁP ÁN MINI -->
+                    <div id="tuluan-dapan-badge-wrap" style="display:none; align-items:center; gap:3px;">
+                        <a id="tuluan-dapan-badge-link" href="#" target="_blank" class="btn-dapan-badge-active" title="Mở file đáp án chấm">
+                            <span class="badge-moi-mini" id="badge-moi-mini-text">MỚI</span>
+                            <span id="tuluan-dapan-badge-filename" class="dapan-filename-truncate">Đáp án</span>
+                        </a>
+                        <button type="button" class="btn-del-dapan-mini" id="btn-del-dapan-mini" style="display:none;" onclick="deleteDapAnCham(event)" title="Xóa file đáp án chấm này">✕</button>
+                    </div>
+                </div>
+
+                <!-- 3. CHỌN ĐỀ THI DÀNH KHÔNG GIAN TỐI ĐA -->
+                <div class="tuluan-select-group" style="flex:1; min-width:180px;">
+                    <label style="font-size:11px; font-weight:800; color:#334155;">📝 Chọn đề (5 đề mới nhất):</label>
+                    <div style="display:flex; align-items:center; gap:4px; width:100%;">
+                        <select id="tuluan-exam-selector" onchange="onTuLuanExamChanged(this.value)" style="flex:1; min-width: 130px;"></select>
                         <!-- NÚT XÓA ĐỀ: CHỈ HIỆN KHI ADMIN ĐĂNG NHẬP -->
                         <button type="button" class="btn-del-exam-selector" id="btn-del-current-exam" style="display:none;" onclick="deleteCurrentTuLuanExam(event)" title="Xóa đề này khỏi danh sách đề tự luận">
                             🗑️ Xóa đề
@@ -712,17 +1096,32 @@ function ensureTuLuanModalDOM() {
                     </div>
                 </div>
 
-                <div id="tuluan-admin-add-exam-box" style="display:none; align-items:flex-end; gap:6px; flex-wrap:wrap;">
+                <!-- 4. CÔNG CỤ ADMIN -->
+                <div id="tuluan-admin-add-exam-box" style="display:none; align-items:center; gap:4px; flex-wrap:wrap;">
                     <button type="button" class="btn-tuluan-add-exam" onclick="promptAddNewTuLuanExam()">
-                        ➕ Thêm đề mới
+                        ➕ Thêm đề
                     </button>
                     <button type="button" class="btn-tuluan-approve-all" onclick="toggleApproveAllSubmissions(true)" title="Duyệt tất cả bài làm của đề này để học sinh cùng xem">
-                        ✅ Duyệt tất cả
+                        ✅ Duyệt hết
                     </button>
-                    <!-- NÚT XUẤT EXCEL TỰ LUẬN KÈM ẢNH BÀI LÀM THEO HÀNG VÀ NGƯỜI CHẤM -->
                     <button type="button" class="btn-tuluan-export-excel" onclick="exportTuLuanToExcel(event)" title="Xuất toàn bộ bảng điểm, nhận xét và ảnh bài làm đã nộp ra file Excel (.xls) chuẩn đẹp">
-                        📊 Xuất excel điểm tự luận
+                        📊 Xuất excel
                     </button>
+                </div>
+            </div>
+
+            <!-- DÒNG HIỂN THỊ CHI TIẾT ĐÁP ÁN CHẤM PHONG CÁCH BÁO DÂN TRÍ NHƯ ẢNH CHỤP CỦA THẦY -->
+            <div id="tuluan-dapan-full-strip" class="tuluan-dapan-full-strip" style="display:none;">
+                <div class="dapan-strip-content">
+                    <span class="dapan-badge-new" id="strip-dapan-badge-tag">MỚI</span>
+                    <a id="strip-dapan-link" href="#" target="_blank" class="dapan-strip-title" title="Bấm vào để mở xem file Đáp án chấm">
+                        ĐÁP ÁN: <span id="strip-dapan-filename">...</span>
+                    </a>
+                    <span class="dapan-strip-time" id="strip-dapan-time">📅 ...</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <a id="strip-dapan-open-btn" href="#" target="_blank" class="btn-open-dapan-strip">🔗 Mở xem</a>
+                    <button type="button" id="strip-dapan-del-btn" class="btn-del-dapan-strip" style="display:none;" onclick="deleteDapAnCham(event)" title="Xóa file đáp án này">🗑️ Xóa</button>
                 </div>
             </div>
 
@@ -796,6 +1195,18 @@ function updateTuLuanAdminUI() {
     if (delExamBtn) {
         delExamBtn.style.setProperty("display", isAdmin ? "inline-flex" : "none", "important");
     }
+    const upDapanBtn = document.getElementById("btn-up-dapan-cham");
+    if (upDapanBtn) {
+        upDapanBtn.style.setProperty("display", isAdmin ? "inline-flex" : "none", "important");
+    }
+    const schedWrap = document.getElementById("box-schedule-dapan-wrap");
+    if (schedWrap) {
+        schedWrap.style.setProperty("display", isAdmin ? "inline-block" : "none", "important");
+    }
+    const delDapanMini = document.getElementById("btn-del-dapan-mini");
+    const delDapanStrip = document.getElementById("strip-dapan-del-btn");
+    if (delDapanMini) delDapanMini.style.display = isAdmin ? "inline-flex" : "none";
+    if (delDapanStrip) delDapanStrip.style.display = isAdmin ? "inline-flex" : "none";
 }
 
 // Mở Modal Nộp bài tự luận
@@ -825,13 +1236,18 @@ function closeTuLuanModal(event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const modal = document.getElementById("modal-tuluan-submission");
     if (modal) modal.style.display = "none";
-    if (tuLuanEventSource) {
-        tuLuanEventSource.close();
-        tuLuanEventSource = null;
+    
+    // Gỡ kết nối Realtime Supabase khi đóng modal
+    if (tuLuanRealtimeChannel) {
+        const client = getDbClient();
+        if (client) {
+            try { client.removeChannel(tuLuanRealtimeChannel); } catch(e) {}
+        }
+        tuLuanRealtimeChannel = null;
     }
 }
 
-// NẠP 5 ĐỀ MỚI NHẤT CỦA ĐÚNG LỚP ĐANG XEM
+// NẠP 5 ĐỀ MỚI NHẤT CỦA ĐÚNG LỚP ĐANG XEM (QUA SUPABASE)
 async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
     const selector = document.getElementById("tuluan-exam-selector");
     if (!selector) return;
@@ -840,48 +1256,34 @@ async function refreshTuLuanExamList(targetCat, preferredExamId = null) {
     selector.innerHTML = "<option value=''>⏳ Đang tải 5 đề mới nhất...</option>";
 
     let rawExams = [];
+    const client = getDbClient();
 
-    // 1. Quét từ Firebase node /custom_tuluan_exams/{targetCat} (Đề tự luận tạo cho lớp này)
-    try {
-        const resCustom = await fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${targetCat}.json`);
-        if (resCustom && resCustom.ok) {
-            const customData = await resCustom.json();
-            if (customData && typeof customData === 'object') {
-                for (let k in customData) {
-                    if (customData[k] && customData[k].title) {
-                        rawExams.push({
-                            id: k,
-                            title: customData[k].title,
-                            timestamp: customData[k].createdAt || Date.now()
-                        });
-                    }
-                }
-            }
-        }
-    } catch(e) {}
+    // 1. Quét từ Supabase bảng `custom_links` theo category_id
+    if (client) {
+        try {
+            const { data: linksData } = await client
+                .from('custom_links')
+                .select('*')
+                .eq('category_id', targetCat);
 
-    // 2. Quét từ Firebase node /custom_links/{targetCat} (Đề gắn vào lớp này)
-    try {
-        const resCat = await fetch(`${FIREBASE_DB_URL}/custom_links/${targetCat}.json`);
-        if (resCat && resCat.ok) {
-            const catData = await resCat.json();
-            if (catData && typeof catData === 'object') {
-                for (let k in catData) {
-                    const item = catData[k];
+            if (Array.isArray(linksData)) {
+                linksData.forEach(item => {
                     if (item && item.title && String(item.title).trim() !== "") {
                         let t = item.timestamp || (typeof parseDateString === 'function' ? parseDateString(item.date) : 0) || 0;
                         rawExams.push({
-                            id: (typeof extractQuizIdFromItem === 'function') ? (extractQuizIdFromItem(item) || k) : k,
+                            id: (typeof extractQuizIdFromItem === 'function') ? (extractQuizIdFromItem(item) || item.id) : item.id,
                             title: item.title,
                             timestamp: t
                         });
                     }
-                }
+                });
             }
+        } catch(e) {
+            console.warn("Lỗi tải đề từ Supabase custom_links:", e);
         }
-    } catch(e) {}
+    }
 
-    // 3. Quét dự phòng từ danh mục RAM của ĐÚNG lớp này
+    // 2. Quét dự phòng từ danh mục RAM của ĐÚNG lớp này
     const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
     const catObj = allCats.find(c => c.id === targetCat);
     if (catObj && Array.isArray(catObj.links)) {
@@ -965,7 +1367,8 @@ async function switchTuLuanExam(examId, examTitle) {
 
     updateTuLuanAdminUI();
 
-    await loadTuLuanSubmissionsFromFirebase();
+    await loadTuLuanSubmissionsFromSupabase();
+    renderDapAnChamUI();
     renderTuLuanStudentsTable();
     startTuLuanRealtimeListener(examId);
 }
@@ -1016,43 +1419,15 @@ async function deleteCurrentTuLuanExam(event) {
     }
 
     try {
-        const deleteTasks = [
-            fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}/${examId}.json`, { method: "DELETE" }),
-            fetch(`${FIREBASE_DB_URL}/custom_links/${classId}/${examId}.json`, { method: "DELETE" }),
-            fetch(`${FIREBASE_DB_URL}/quizzes/${examId}/tu_luan.json`, { method: "DELETE" }).catch(() => null),
-            fetch(`${FIREBASE_DB_URL}/exams/${examId}/tu_luan.json`, { method: "DELETE" }).catch(() => null)
-        ];
-
-        try {
-            const [cLinksRes, cTuLuanRes] = await Promise.all([
-                fetch(`${FIREBASE_DB_URL}/custom_links/${classId}.json`),
-                fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}.json`)
+        const client = getDbClient();
+        if (client) {
+            await Promise.all([
+                client.from('custom_links').delete().eq('category_id', classId).eq('id', examId),
+                client.from('custom_links').delete().eq('category_id', classId).eq('title', examTitle),
+                client.from('tu_luan_submissions').delete().eq('quiz_id', examId),
+                client.from('app_key_values').delete().eq('key', 'dapan_' + examId)
             ]);
-
-            if (cLinksRes && cLinksRes.ok) {
-                const cLinks = await cLinksRes.json();
-                if (cLinks && typeof cLinks === 'object') {
-                    for (let k in cLinks) {
-                        if (cLinks[k] && (cLinks[k].title === examTitle || k === examId || (cLinks[k].title && cLinks[k].title.trim() === examTitle))) {
-                            deleteTasks.push(fetch(`${FIREBASE_DB_URL}/custom_links/${classId}/${k}.json`, { method: "DELETE" }));
-                        }
-                    }
-                }
-            }
-
-            if (cTuLuanRes && cTuLuanRes.ok) {
-                const cExams = await cTuLuanRes.json();
-                if (cExams && typeof cExams === 'object') {
-                    for (let k in cExams) {
-                        if (cExams[k] && (cExams[k].title === examTitle || k === examId || (cExams[k].title && cExams[k].title.trim() === examTitle))) {
-                            deleteTasks.push(fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}/${k}.json`, { method: "DELETE" }));
-                        }
-                    }
-                }
-            }
-        } catch(scanErr) {}
-
-        await Promise.all(deleteTasks);
+        }
 
         const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
         const catObj = allCats.find(c => c.id === classId);
@@ -1087,25 +1462,19 @@ async function promptAddNewTuLuanExam() {
     const driveClassName = getCleanDriveClassName(classId);
 
     try {
-        await Promise.all([
-            fetch(`${FIREBASE_DB_URL}/custom_tuluan_exams/${classId}/${examId}.json`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: examTitle, createdAt: Date.now() })
-            }),
-            fetch(`${FIREBASE_DB_URL}/custom_links/${classId}/${examId}.json`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title: examTitle,
-                    isDoc: true,
-                    categoryId: classId,
-                    timestamp: Date.now(),
-                    date: new Date().toLocaleDateString("vi-VN"),
-                    url: "#"
-                })
-            }).catch(() => null)
-        ]);
+        const client = getDbClient();
+        if (client) {
+            await client.from('custom_links').upsert({
+                id: examId,
+                category_id: classId,
+                title: examTitle,
+                is_doc: true,
+                badge_text: "MỚI",
+                timestamp: Date.now(),
+                date: new Date().toLocaleDateString("vi-VN"),
+                url: "#"
+            });
+        }
 
         const gasUrl = (typeof GOOGLE_DRIVE_TULUAN_GAS_URL !== "undefined" && GOOGLE_DRIVE_TULUAN_GAS_URL) 
             ? GOOGLE_DRIVE_TULUAN_GAS_URL 
@@ -1135,60 +1504,573 @@ async function promptAddNewTuLuanExam() {
     }
 }
 
-// Đọc danh sách bài nộp và mật khẩu tùy chỉnh từ Firebase
-async function loadTuLuanSubmissionsFromFirebase() {
+// ĐỌC DANH SÁCH BÀI NỘP, MẬT KHẨU & ĐÁP ÁN CHẤM TỪ SUPABASE
+async function loadTuLuanSubmissionsFromSupabase() {
     const qId = currentTuLuanModalData.quizId;
     if (!qId) return;
+
+    const client = getDbClient();
+    if (!client) {
+        currentTuLuanModalData.submissionsMap = {};
+        currentTuLuanModalData.dapAnCham = null;
+        return;
+    }
+
     try {
-        const [qRes, exRes, passRes] = await Promise.all([
-            fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan.json`).catch(() => null),
-            fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan.json`).catch(() => null),
-            fetch(`${FIREBASE_DB_URL}/student_custom_passwords.json`).catch(() => null)
+        const [subsRes, passRes, dapanRes] = await Promise.all([
+            client.from('tu_luan_submissions').select('*').eq('quiz_id', qId),
+            client.from('app_key_values').select('value').eq('key', 'student_custom_passwords').single(),
+            client.from('app_key_values').select('value').eq('key', 'dapan_' + qId).single()
         ]);
 
         let combined = {};
-        if (qRes && qRes.ok) {
-            const data1 = await qRes.json();
-            if (data1 && typeof data1 === 'object') Object.assign(combined, data1);
-        }
-        if (exRes && exRes.ok) {
-            const data2 = await exRes.json();
-            if (data2 && typeof data2 === 'object') {
-                for (let k in data2) {
-                    if (!combined[k] || (data2[k].lastSubmitTime || 0) > (combined[k].lastSubmitTime || 0)) {
-                        combined[k] = data2[k];
-                    }
+        if (subsRes && Array.isArray(subsRes.data)) {
+            subsRes.data.forEach(row => {
+                if (row && row.sbd) {
+                    combined[row.sbd] = {
+                        stt: row.stt,
+                        sbd: row.sbd,
+                        studentName: row.student_name,
+                        className: row.class_name,
+                        examTitle: row.exam_title,
+                        lastSubmit: row.last_submit,
+                        lastSubmitTime: row.last_submit_time,
+                        count: row.count || (Array.isArray(row.images) ? row.images.length : 0),
+                        images: Array.isArray(row.images) ? row.images : [],
+                        crossScore: row.cross_score || "",
+                        crossScoreBy: row.cross_score_by || "",
+                        crossScoreTime: row.cross_score_time || "",
+                        feedback: row.feedback || "",
+                        feedbackTime: row.feedback_time || "",
+                        isApproved: !!row.is_approved
+                    };
                 }
-            }
+            });
         }
         currentTuLuanModalData.submissionsMap = combined;
 
-        if (passRes && passRes.ok) {
-            const pData = await passRes.json();
-            currentTuLuanModalData.customPasswords = (pData && typeof pData === 'object') ? pData : {};
+        if (passRes && passRes.data && passRes.data.value) {
+            currentTuLuanModalData.customPasswords = passRes.data.value;
+        } else {
+            currentTuLuanModalData.customPasswords = {};
+        }
+
+        if (dapanRes && dapanRes.data && dapanRes.data.value && dapanRes.data.value.fileUrl) {
+            currentTuLuanModalData.dapAnCham = dapanRes.data.value;
+        } else {
+            currentTuLuanModalData.dapAnCham = null;
         }
     } catch(e) {
+        console.warn("Lỗi đọc dữ liệu tự luận Supabase:", e);
         currentTuLuanModalData.submissionsMap = {};
+        currentTuLuanModalData.dapAnCham = null;
     }
 }
 
+// BẬT LẮNG NGHE SUPABASE REALTIME CHANNEL ĐỒNG BỘ TỨC THÌ
 function startTuLuanRealtimeListener(quizId) {
-    if (tuLuanEventSource) {
-        tuLuanEventSource.close();
-        tuLuanEventSource = null;
+    const client = getDbClient();
+    if (!client || !quizId) return;
+
+    if (tuLuanRealtimeChannel) {
+        try { client.removeChannel(tuLuanRealtimeChannel); } catch(e) {}
+        tuLuanRealtimeChannel = null;
     }
-    if (!quizId) return;
+
     try {
-        tuLuanEventSource = new EventSource(`${FIREBASE_DB_URL}/quizzes/${quizId}/tu_luan.json`);
-        tuLuanEventSource.addEventListener('put', async () => {
-            await loadTuLuanSubmissionsFromFirebase();
-            renderTuLuanStudentsTable();
-        });
-        tuLuanEventSource.addEventListener('patch', async () => {
-            await loadTuLuanSubmissionsFromFirebase();
-            renderTuLuanStudentsTable();
-        });
-    } catch(e) {}
+        tuLuanRealtimeChannel = client.channel(`tuluan_realtime_${quizId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'tu_luan_submissions',
+                filter: `quiz_id=eq.${quizId}`
+            }, async () => {
+                await loadTuLuanSubmissionsFromSupabase();
+                renderDapAnChamUI();
+                renderTuLuanStudentsTable();
+            })
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'app_key_values',
+                filter: `key=eq.dapan_${quizId}`
+            }, async () => {
+                await loadTuLuanSubmissionsFromSupabase();
+                renderDapAnChamUI();
+            })
+            .subscribe();
+    } catch(e) {
+        console.warn("Lỗi kết nối Supabase Realtime channel:", e);
+    }
+}
+
+// =========================================================
+// QUẢN LÝ UPLOAD, HẸN GIỜ & HIỂN THỊ ĐÁP ÁN CHẤM LÊN SUPABASE & DRIVE
+// =========================================================
+function triggerUploadDapAnCham(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const fileIn = document.getElementById("tuluan-dapan-file-input");
+    if (fileIn) {
+        fileIn.value = "";
+        fileIn.click();
+    }
+}
+
+async function handleUploadDapAnCham(fileInput) {
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    const file = fileInput.files[0];
+
+    const btn = document.getElementById("btn-up-dapan-cham");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⏳ Đang gửi...";
+    }
+
+    const qId = currentTuLuanModalData.quizId || "quiz";
+    const classId = currentTuLuanModalData.classId || "lop-11a";
+
+    const gasUrl = (typeof GOOGLE_DRIVE_TULUAN_GAS_URL !== "undefined" && GOOGLE_DRIVE_TULUAN_GAS_URL) 
+        ? GOOGLE_DRIVE_TULUAN_GAS_URL 
+        : GOOGLE_DRIVE_UPLOAD_GAS_URL;
+
+    if (!gasUrl || gasUrl.includes("DÁN_URL")) {
+        alert("⚠️ Chưa cấu hình GOOGLE_DRIVE_TULUAN_GAS_URL trong app-config.js!");
+        if (btn) { btn.disabled = false; btn.innerText = "📤 Đ.Á chấm"; }
+        return;
+    }
+
+    try {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                let rawResult = String(e.target.result || "");
+                let base64Data = rawResult.includes("base64,") ? rawResult.split("base64,")[1] : rawResult;
+
+                // Cấu hình đẩy vào thư mục: KHO_TAI_LIEU_PDF_WORD_ANH_VIDEO/Dap_an_cham_tu_luan
+                const payload = {
+                    action: "uploadDapAnCham",
+                    rootFolder: "KHO_TAI_LIEU_PDF_WORD_ANH_VIDEO",
+                    className: "Dap_an_cham_tu_luan",
+                    class: "Dap_an_cham_tu_luan",
+                    lop: "Dap_an_cham_tu_luan",
+                    examTitle: "Dap_an_cham_tu_luan",
+                    folderKey: "Dap_an_cham_tu_luan",
+                    studentFolder: "Dap_an_cham_tu_luan",
+                    filename: file.name,
+                    mimeType: file.type || "application/octet-stream",
+                    base64: base64Data
+                };
+
+                const result = await sendToGoogleDriveWithRetry(gasUrl, payload, 2, 75000);
+                if (result && result.status === "success" && result.fileUrl) {
+                    const now = new Date();
+                    const pad = n => String(n).padStart(2, '0');
+                    const uploadTimeStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} - ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+                    const directUrl = result.directUrl || (typeof toDirectGoogleDriveImageUrl === 'function' ? toDirectGoogleDriveImageUrl(result.fileUrl) : result.fileUrl);
+                    const existingDapan = currentTuLuanModalData.dapAnCham || {};
+
+                    const dapanData = {
+                        quizId: qId,
+                        classId: classId,
+                        fileName: file.name,
+                        fileUrl: result.fileUrl,
+                        directUrl: directUrl,
+                        fileId: result.fileId || "",
+                        uploadedAt: uploadTimeStr,
+                        timestamp: Date.now(),
+                        scheduleTime: existingDapan.scheduleTime || null // Bảo lưu lịch hẹn giờ nếu đã có
+                    };
+
+                    const client = getDbClient();
+                    if (client) {
+                        await client.from('app_key_values').upsert({
+                            key: 'dapan_' + qId,
+                            value: dapanData
+                        });
+                    }
+
+                    currentTuLuanModalData.dapAnCham = dapanData;
+                    renderDapAnChamUI();
+                    alert(`🎉 ĐÃ TẢI LÊN ĐÁP ÁN CHẤM THÀNH CÔNG!\n\n📁 Tên file: ${file.name}\n📍 Thư mục Drive: KHO_TAI_LIEU_PDF_WORD_ANH_VIDEO / Dap_an_cham_tu_luan\n🕒 Thời gian: ${uploadTimeStr}`);
+                } else {
+                    throw new Error(result.message || "Không thể lấy đường dẫn tệp từ Google Drive.");
+                }
+            } catch(upErr) {
+                alert("❌ Lỗi khi tải file lên Drive: " + upErr.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "📤 Đ.Á chấm";
+                }
+                fileInput.value = "";
+            }
+        };
+        reader.readAsDataURL(file);
+    } catch(err) {
+        alert("❌ Lỗi đọc file từ máy: " + err.message);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "📤 Đ.Á chấm";
+        }
+        fileInput.value = "";
+    }
+}
+
+// Xóa file đáp án chấm qua Supabase
+async function deleteDapAnCham(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    if (!checkCurrentIsAdmin()) {
+        alert("⛔ Chỉ Giáo viên quản trị mới có quyền xóa file Đáp án chấm!");
+        return;
+    }
+
+    if (!confirm("⚠️ Bạn có chắc chắn muốn XÓA file Đáp án chấm của đề này không?")) return;
+
+    const qId = currentTuLuanModalData.quizId;
+    const curDapan = currentTuLuanModalData.dapAnCham;
+
+    try {
+        const client = getDbClient();
+        if (client) {
+            await client.from('app_key_values').delete().eq('key', 'dapan_' + qId);
+        }
+
+        if (curDapan && curDapan.fileId) {
+            const gasUrl = (typeof GOOGLE_DRIVE_TULUAN_GAS_URL !== "undefined" && GOOGLE_DRIVE_TULUAN_GAS_URL) 
+                ? GOOGLE_DRIVE_TULUAN_GAS_URL 
+                : GOOGLE_DRIVE_UPLOAD_GAS_URL;
+            if (gasUrl && !gasUrl.includes("DÁN_URL")) {
+                fetch(gasUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action: "deleteFile", fileId: curDapan.fileId })
+                }).catch(() => null);
+            }
+        }
+
+        currentTuLuanModalData.dapAnCham = null;
+        renderDapAnChamUI();
+        alert("🗑️ Đã xóa file Đáp án chấm thành công!");
+    } catch(err) {
+        alert("❌ Lỗi khi xóa: " + err.message);
+    }
+}
+
+// =========================================================
+// CƠ CHẾ HẸN GIỜ MỞ ĐÁP ÁN CHẤM TỰ ĐỘNG THÔNG MINH
+// =========================================================
+function toggleDapAnSchedulePopover(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const pop = document.getElementById("dapan-schedule-popover");
+    if (!pop) return;
+    const isShown = pop.classList.contains("show");
+
+    document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".student-feedback-popover.show").forEach(p => p.classList.remove("show"));
+    document.querySelectorAll(".dapan-schedule-popover.show").forEach(p => p.classList.remove("show"));
+
+    if (!isShown) {
+        pop.classList.add("show");
+
+        const curDapan = currentTuLuanModalData.dapAnCham;
+        const radioNow = document.getElementById("sched-mode-now");
+        const radioAuto = document.getElementById("sched-mode-auto");
+        const dateInput = document.getElementById("dapan-sched-datetime");
+
+        if (curDapan && curDapan.scheduleTime) {
+            if (radioAuto) radioAuto.checked = true;
+            onDapAnScheduleModeChanged('auto');
+            if (dateInput) {
+                const d = new Date(curDapan.scheduleTime);
+                if (!isNaN(d.getTime()) && typeof toLocalDatetimeString === 'function') {
+                    dateInput.value = toLocalDatetimeString(d);
+                } else if (!isNaN(d.getTime())) {
+                    const pad = n => String(n).padStart(2, '0');
+                    dateInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                }
+            }
+        } else {
+            if (radioNow) radioNow.checked = true;
+            onDapAnScheduleModeChanged('now');
+            if (dateInput) dateInput.value = "";
+        }
+    }
+}
+
+function closeDapAnSchedulePopover(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const pop = document.getElementById("dapan-schedule-popover");
+    if (pop) pop.classList.remove("show");
+}
+
+function onDapAnScheduleModeChanged(mode) {
+    const inputGroup = document.getElementById("sched-datetime-input-group");
+    if (inputGroup) {
+        inputGroup.style.display = (mode === 'auto') ? 'block' : 'none';
+        if (mode === 'auto') {
+            const dateInput = document.getElementById("dapan-sched-datetime");
+            if (dateInput && !dateInput.value) {
+                setScheduleToExamDeadline();
+            }
+        }
+    }
+}
+
+// Tự động trích xuất hạn chót của đề thi hiện tại để hẹn giờ mở đáp án
+function setScheduleToExamDeadline() {
+    const dateInput = document.getElementById("dapan-sched-datetime");
+    if (!dateInput) return;
+
+    let deadlineStr = null;
+    const currentQuizId = currentTuLuanModalData.quizId;
+
+    if (typeof examData !== 'undefined' && examData && examData.examEndTimeStr) {
+        deadlineStr = examData.examEndTimeStr;
+    } else {
+        const allCats = [...(window.DAY_THEM_CATEGORIES || []), ...(window.CHINH_KHOA_CATEGORIES || [])];
+        for (const cat of allCats) {
+            if (Array.isArray(cat.links)) {
+                const match = cat.links.find(l => (l.id === currentQuizId || l.firebaseId === currentQuizId));
+                if (match && match.examEndTimeStr) {
+                    deadlineStr = match.examEndTimeStr;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (deadlineStr) {
+        const d = new Date(deadlineStr);
+        if (!isNaN(d.getTime()) && typeof toLocalDatetimeString === 'function') {
+            dateInput.value = toLocalDatetimeString(d);
+            return;
+        }
+    }
+
+    // Nếu không có hạn đề thi, mặc định chọn 21h00 ngày hôm nay
+    const def = new Date();
+    def.setHours(21, 0, 0, 0);
+    const pad = n => String(n).padStart(2, '0');
+    dateInput.value = `${def.getFullYear()}-${pad(def.getMonth() + 1)}-${pad(def.getDate())}T${pad(def.getHours())}:${pad(def.getMinutes())}`;
+}
+
+// Lưu cấu hình hẹn giờ lên Supabase
+async function saveDapAnSchedule(event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const qId = currentTuLuanModalData.quizId;
+    if (!qId) return;
+
+    const curDapan = currentTuLuanModalData.dapAnCham;
+    if (!curDapan) {
+        alert("⚠️ Vui lòng upload file Đáp án chấm trước khi thiết lập lịch hẹn giờ!");
+        closeDapAnSchedulePopover();
+        return;
+    }
+
+    const radioAuto = document.getElementById("sched-mode-auto");
+    const isAuto = radioAuto && radioAuto.checked;
+    let scheduleTimeISO = null;
+
+    if (isAuto) {
+        const dateInput = document.getElementById("dapan-sched-datetime");
+        const val = dateInput ? dateInput.value : "";
+        if (!val) {
+            alert("⚠️ Vui lòng chọn ngày và giờ mở đáp án!");
+            return;
+        }
+        const d = new Date(val);
+        if (isNaN(d.getTime())) {
+            alert("⚠️ Thời gian hẹn không hợp lệ!");
+            return;
+        }
+        scheduleTimeISO = d.toISOString();
+    }
+
+    curDapan.scheduleTime = scheduleTimeISO;
+
+    try {
+        const client = getDbClient();
+        if (client) {
+            await client.from('app_key_values').upsert({
+                key: 'dapan_' + qId,
+                value: curDapan
+            });
+        }
+
+        renderDapAnChamUI();
+        closeDapAnSchedulePopover();
+
+        if (scheduleTimeISO) {
+            const formatted = new Date(scheduleTimeISO).toLocaleString("vi-VN");
+            alert(`⏰ ĐÃ THIẾT LẬP HẸN GIỜ MỞ ĐÁP ÁN!\n\n- Đề thi: ${currentTuLuanModalData.examTitle}\n- Thời điểm tự động mở cho học sinh: ${formatted}\n\n(Trước thời điểm này, link đáp án sẽ tự động khóa đối với học sinh, giáo viên vẫn có thể mở xem trước).`);
+        } else {
+            alert("🔓 Đã mở đáp án tự do cho học sinh xem ngay lập tức!");
+        }
+    } catch(err) {
+        alert("❌ Lỗi khi lưu hẹn giờ: " + err.message);
+    }
+}
+
+// Kiểm tra đáp án đã đến giờ mở chưa
+function isDapAnUnlocked(dapan) {
+    if (!dapan || !dapan.fileUrl) return false;
+    if (checkCurrentIsAdmin()) return true; // Giáo viên luôn luôn xem được
+    if (!dapan.scheduleTime) return true; // Mở ngay lập tức
+    const targetMs = new Date(dapan.scheduleTime).getTime();
+    if (isNaN(targetMs)) return true;
+    return Date.now() >= targetMs;
+}
+
+// Định dạng thời gian đếm ngược còn lại
+function formatRemainingLockTime(targetMs) {
+    const diffSec = Math.max(0, Math.floor((targetMs - Date.now()) / 1000));
+    if (diffSec <= 0) return "Đang mở...";
+    const days = Math.floor(diffSec / 86400);
+    const hours = Math.floor((diffSec % 86400) / 3600);
+    const mins = Math.floor((diffSec % 3600) / 60);
+
+    if (days > 0) return `${days} ngày ${hours} giờ`;
+    if (hours > 0) return `${hours} giờ ${mins} phút`;
+    return `${mins} phút`;
+}
+
+// Hiển thị giao diện Đáp án chấm (badge mini và dòng banner phong cách Dân trí)
+function renderDapAnChamUI() {
+    const dapan = currentTuLuanModalData.dapAnCham;
+    const isAdmin = checkCurrentIsAdmin();
+
+    const schedBtn = document.getElementById("btn-schedule-dapan");
+    const badgeWrap = document.getElementById("tuluan-dapan-badge-wrap");
+    const badgeLink = document.getElementById("tuluan-dapan-badge-link");
+    const badgeFilename = document.getElementById("tuluan-dapan-badge-filename");
+    const badgeMoiMini = document.getElementById("badge-moi-mini-text");
+    const delMiniBtn = document.getElementById("btn-del-dapan-mini");
+
+    const fullStrip = document.getElementById("tuluan-dapan-full-strip");
+    const stripFilename = document.getElementById("strip-dapan-filename");
+    const stripLink = document.getElementById("strip-dapan-link");
+    const stripTime = document.getElementById("strip-dapan-time");
+    const stripOpenBtn = document.getElementById("strip-dapan-open-btn");
+    const stripDelBtn = document.getElementById("strip-dapan-del-btn");
+    const stripBadgeTag = document.getElementById("strip-dapan-badge-tag");
+
+    if (schedBtn) {
+        if (dapan && dapan.scheduleTime) {
+            schedBtn.classList.add("has-schedule");
+            schedBtn.title = `Đang hẹn giờ mở lúc: ${new Date(dapan.scheduleTime).toLocaleString("vi-VN")}`;
+            schedBtn.innerHTML = `⏰ Đã hẹn`;
+        } else {
+            schedBtn.classList.remove("has-schedule");
+            schedBtn.title = "Hẹn giờ tự động mở đáp án cho học sinh";
+            schedBtn.innerHTML = `⏰ Hẹn giờ`;
+        }
+    }
+
+    if (dapan && dapan.fileUrl) {
+        const directUrl = dapan.fileUrl;
+        const name = dapan.fileName || "Đáp án chấm";
+        const uploadTime = dapan.uploadedAt || "";
+        const isUnlocked = isDapAnUnlocked(dapan);
+
+        // 1. Badge mini cạnh nút Upload & Hẹn giờ
+        if (badgeWrap) badgeWrap.style.display = "inline-flex";
+        if (badgeFilename) badgeFilename.innerText = name;
+
+        if (badgeLink) {
+            if (isUnlocked) {
+                badgeLink.href = directUrl;
+                badgeLink.classList.remove("is-locked");
+                badgeLink.title = `Mở Đáp án: ${name} (${uploadTime})`;
+                if (badgeMoiMini) {
+                    badgeMoiMini.innerText = "MỚI";
+                    badgeMoiMini.style.backgroundColor = "#0284c7";
+                }
+            } else {
+                badgeLink.href = "javascript:void(0)";
+                badgeLink.classList.add("is-locked");
+                const remain = formatRemainingLockTime(new Date(dapan.scheduleTime).getTime());
+                badgeLink.title = `🔒 Đáp án đang khóa! Sẽ tự động mở sau: ${remain}`;
+                if (badgeMoiMini) {
+                    badgeMoiMini.innerText = "KHÓA";
+                    badgeMoiMini.style.backgroundColor = "#ea580c";
+                }
+            }
+        }
+        if (delMiniBtn) delMiniBtn.style.display = isAdmin ? "inline-flex" : "none";
+
+        // 2. Dòng thông báo nổi bật phong cách Dân trí như ảnh chụp của Thầy
+        if (fullStrip) {
+            fullStrip.style.display = "flex";
+            if (!isUnlocked) {
+                fullStrip.classList.add("strip-locked");
+            } else {
+                fullStrip.classList.remove("strip-locked");
+            }
+        }
+
+        if (isUnlocked) {
+            if (stripBadgeTag) {
+                stripBadgeTag.className = "dapan-badge-new";
+                stripBadgeTag.innerText = "MỚI";
+            }
+            if (stripFilename) stripFilename.innerText = name;
+            if (stripLink) {
+                stripLink.href = directUrl;
+                stripLink.style.pointerEvents = "auto";
+            }
+            if (stripTime) stripTime.innerText = `📅 ${uploadTime}`;
+            if (stripOpenBtn) {
+                stripOpenBtn.href = directUrl;
+                stripOpenBtn.className = "btn-open-dapan-strip";
+                stripOpenBtn.innerText = isAdmin ? "🔗 Mở xem (Admin)" : "🔗 Mở xem";
+            }
+        } else {
+            // Trường hợp đang khóa đối với học sinh
+            const schedStr = new Date(dapan.scheduleTime).toLocaleString("vi-VN");
+            const remain = formatRemainingLockTime(new Date(dapan.scheduleTime).getTime());
+
+            if (stripBadgeTag) {
+                stripBadgeTag.className = "dapan-badge-new badge-lock";
+                stripBadgeTag.innerText = "HẸN GIỜ";
+            }
+            if (stripFilename) {
+                stripFilename.innerText = `${name} [Tự động mở lúc: ${schedStr} - Còn ${remain}]`;
+            }
+            if (stripTime) stripTime.innerText = `⏳ Đang khóa với học sinh`;
+
+            if (isAdmin) {
+                // Giáo viên vẫn có quyền bấm vào xem trước
+                if (stripLink) {
+                    stripLink.href = directUrl;
+                    stripLink.style.pointerEvents = "auto";
+                }
+                if (stripOpenBtn) {
+                    stripOpenBtn.href = directUrl;
+                    stripOpenBtn.className = "btn-open-dapan-strip";
+                    stripOpenBtn.innerText = "🔗 Mở xem (Admin)";
+                }
+            } else {
+                // Học sinh bị vô hiệu hóa liên kết
+                if (stripLink) {
+                    stripLink.href = "javascript:void(0)";
+                    stripLink.style.pointerEvents = "none";
+                }
+                if (stripOpenBtn) {
+                    stripOpenBtn.href = "javascript:void(0)";
+                    stripOpenBtn.className = "btn-open-dapan-strip disabled-strip";
+                    stripOpenBtn.innerText = "🔒 Đang khóa";
+                }
+            }
+        }
+
+        if (stripDelBtn) stripDelBtn.style.display = isAdmin ? "inline-flex" : "none";
+    } else {
+        if (badgeWrap) badgeWrap.style.display = "none";
+        if (fullStrip) fullStrip.style.display = "none";
+    }
+
+    updateTuLuanAdminUI();
 }
 
 // Render bảng học sinh (Bao gồm Cột Chấm chéo nhau và Cột Nhận xét)
@@ -1404,7 +2286,7 @@ function renderTuLuanStudentsTable() {
     updateTuLuanAdminUI();
 }
 
-// LƯU ĐIỂM CHẤM CHÉO NHAU KÈM NGƯỜI NHẬP & THỜI GIAN LÊN FIREBASE
+// LƯU ĐIỂM CHẤM CHÉO NHAU VÀO SUPABASE (tu_luan_submissions)
 async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) {
     const qId = currentTuLuanModalData.quizId;
     if (!qId) return;
@@ -1412,7 +2294,6 @@ async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) 
     const trimmedScore = String(scoreVal || "").trim();
     const driveClassName = getCleanDriveClassName(currentTuLuanModalData.classId);
 
-    // Ghi nhận thông tin người chấm và thời gian nếu có nhập điểm
     let graderDisplay = "";
     let scoreTimeStr = "";
     if (trimmedScore !== "") {
@@ -1444,30 +2325,24 @@ async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) 
     }
 
     try {
-        const patchPayload = { 
-            crossScore: trimmedScore, 
-            crossScoreBy: graderDisplay,
-            crossScoreTime: scoreTimeStr,
-            scoreUpdatedAt: Date.now() 
-        };
-
-        await Promise.all([
-            fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(patchPayload)
-            }),
-            fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${cleanSbd}.json`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(patchPayload)
-            })
-        ]);
+        const client = getDbClient();
+        if (client) {
+            await client.from('tu_luan_submissions').upsert({
+                quiz_id: qId,
+                sbd: cleanSbd,
+                stt: String(stt || "00"),
+                student_name: studentName,
+                class_name: driveClassName,
+                exam_title: currentTuLuanModalData.examTitle || "Tự luận",
+                cross_score: trimmedScore,
+                cross_score_by: graderDisplay,
+                cross_score_time: scoreTimeStr
+            }, { onConflict: 'quiz_id,sbd' });
+        }
 
         const scoreInput = document.getElementById(`cross-score-${cleanSbd}`);
         if (scoreInput) {
             scoreInput.style.borderColor = "#10b981";
-            // Cập nhật tooltip ngay lập tức
             if (trimmedScore !== "") {
                 scoreInput.title = `🎯 Điểm: ${trimmedScore}đ\n👤 Người chấm: ${graderDisplay}\n🕒 Lúc: ${scoreTimeStr}`;
             } else {
@@ -1476,7 +2351,7 @@ async function saveStudentCrossScore(cleanSbd, stt, sbd, studentName, scoreVal) 
             setTimeout(() => { scoreInput.style.borderColor = "#cbd5e1"; }, 1500);
         }
     } catch(err) {
-        console.error("Lỗi lưu điểm chấm chéo:", err);
+        console.error("Lỗi lưu điểm chấm chéo Supabase:", err);
     }
 }
 
@@ -1523,7 +2398,7 @@ function closeStudentFeedbackPopover(cleanSbd, event) {
     }
 }
 
-// LƯU NHẬN XÉT LÊN FIREBASE
+// LƯU NHẬN XÉT VÀO SUPABASE (tu_luan_submissions)
 async function saveStudentFeedback(cleanSbd, stt, sbd, studentName, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const textarea = document.getElementById(`feedback-textarea-${cleanSbd}`);
@@ -1552,22 +2427,19 @@ async function saveStudentFeedback(cleanSbd, stt, sbd, studentName, event) {
     }
 
     try {
-        const patchPayload = {
-            feedback: feedbackVal,
-            feedbackTime: new Date().toLocaleString("vi-VN")
-        };
-        await Promise.all([
-            fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(patchPayload)
-            }),
-            fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${cleanSbd}.json`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(patchPayload)
-            })
-        ]);
+        const client = getDbClient();
+        if (client) {
+            await client.from('tu_luan_submissions').upsert({
+                quiz_id: qId,
+                sbd: cleanSbd,
+                stt: String(stt || "00"),
+                student_name: studentName,
+                class_name: driveClassName,
+                exam_title: currentTuLuanModalData.examTitle || "Tự luận",
+                feedback: feedbackVal,
+                feedback_time: new Date().toLocaleString("vi-VN")
+            }, { onConflict: 'quiz_id,sbd' });
+        }
 
         closeStudentFeedbackPopover(cleanSbd);
         renderTuLuanStudentsTable();
@@ -1603,7 +2475,6 @@ function exportTuLuanToExcel(event) {
         const scoreTime = (record && record.crossScoreTime) ? record.crossScoreTime : "";
         const feedbackVal = (record && record.feedback) ? record.feedback : "";
 
-        // Nhúng ảnh trực tiếp vào ô Excel kèm liên kết mở Drive
         let imagesHtml = "Chưa có ảnh";
         if (hasSub && Array.isArray(record.images)) {
             imagesHtml = record.images.map((im, idx) => {
@@ -1739,7 +2610,7 @@ function closeStudentPassPopover(cleanSbd, event) {
     }
 }
 
-// HỌC SINH TỰ LƯU ĐỔI MẬT KHẨU
+// HỌC SINH TỰ LƯU ĐỔI MẬT KHẨU VÀO SUPABASE (app_key_values)
 async function saveStudentPasswordChange(cleanSbd, defaultSbd, studentName, defaultPass, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     const oldPassInput = document.getElementById(`old-pass-${cleanSbd}`);
@@ -1779,14 +2650,16 @@ async function saveStudentPasswordChange(cleanSbd, defaultSbd, studentName, defa
     }
 
     try {
-        await fetch(`${FIREBASE_DB_URL}/student_custom_passwords/${cleanSbd}.json`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newVal)
-        });
-
         currentTuLuanModalData.customPasswords = currentTuLuanModalData.customPasswords || {};
         currentTuLuanModalData.customPasswords[cleanSbd] = newVal;
+
+        const client = getDbClient();
+        if (client) {
+            await client.from('app_key_values').upsert({
+                key: 'student_custom_passwords',
+                value: currentTuLuanModalData.customPasswords
+            });
+        }
 
         const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
         safeSession.setItem(sessionAuthKey, "true");
@@ -1813,12 +2686,16 @@ async function resetStudentPasswordToDefault(cleanSbd, defaultSbd, studentName, 
     }
 
     try {
-        await fetch(`${FIREBASE_DB_URL}/student_custom_passwords/${cleanSbd}.json`, {
-            method: "DELETE"
-        });
-
         if (currentTuLuanModalData.customPasswords) {
             delete currentTuLuanModalData.customPasswords[cleanSbd];
+        }
+
+        const client = getDbClient();
+        if (client) {
+            await client.from('app_key_values').upsert({
+                key: 'student_custom_passwords',
+                value: currentTuLuanModalData.customPasswords || {}
+            });
         }
 
         const sessionAuthKey = `tuluan_authed_${currentTuLuanModalData.quizId}_${cleanSbd}`;
@@ -1882,26 +2759,18 @@ async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, default
     record.count = record.images.length;
 
     try {
-        if (record.images.length === 0) {
-            delete currentTuLuanModalData.submissionsMap[cleanSbd];
-            await Promise.all([
-                fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, { method: "DELETE" }),
-                fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${cleanSbd}.json`, { method: "DELETE" })
-            ]);
-        } else {
-            currentTuLuanModalData.submissionsMap[cleanSbd] = record;
-            await Promise.all([
-                fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ images: record.images, count: record.images.length })
-                }),
-                fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${cleanSbd}.json`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ images: record.images, count: record.images.length })
-                })
-            ]);
+        const client = getDbClient();
+        if (client) {
+            if (record.images.length === 0) {
+                delete currentTuLuanModalData.submissionsMap[cleanSbd];
+                await client.from('tu_luan_submissions').delete().eq('quiz_id', qId).eq('sbd', cleanSbd);
+            } else {
+                currentTuLuanModalData.submissionsMap[cleanSbd] = record;
+                await client.from('tu_luan_submissions').update({
+                    images: record.images,
+                    count: record.images.length
+                }).eq('quiz_id', qId).eq('sbd', cleanSbd);
+            }
         }
 
         if (removedImg && removedImg.fileId) {
@@ -1924,24 +2793,18 @@ async function deleteSingleStudentImage(cleanSbd, imgIndex, studentName, default
     }
 }
 
-// Bật/Tắt duyệt từng học sinh
+// Bật/Tắt duyệt từng học sinh trong Supabase
 async function handleToggleApproveStudent(cleanSbd, isChecked) {
     const qId = currentTuLuanModalData.quizId;
     if (!qId) return;
 
     try {
-        await Promise.all([
-            fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${cleanSbd}.json`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ isApproved: isChecked })
-            }),
-            fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${cleanSbd}.json`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ isApproved: isChecked })
-            })
-        ]);
+        const client = getDbClient();
+        if (client) {
+            await client.from('tu_luan_submissions').update({
+                is_approved: isChecked
+            }).eq('quiz_id', qId).eq('sbd', cleanSbd);
+        }
 
         if (currentTuLuanModalData.submissionsMap[cleanSbd]) {
             currentTuLuanModalData.submissionsMap[cleanSbd].isApproved = isChecked;
@@ -1952,7 +2815,7 @@ async function handleToggleApproveStudent(cleanSbd, isChecked) {
     }
 }
 
-// Duyệt toàn bộ đề
+// Duyệt toàn bộ đề trong Supabase
 async function toggleApproveAllSubmissions(isApproved) {
     const qId = currentTuLuanModalData.quizId;
     const subMap = currentTuLuanModalData.submissionsMap || {};
@@ -1965,25 +2828,13 @@ async function toggleApproveAllSubmissions(isApproved) {
     if (!confirm(`Bạn có chắc muốn ${isApproved ? 'PHÊ DUYỆT TẤT CẢ' : 'HỦY DUYỆT'} bài làm của đề này không?`)) return;
 
     try {
-        const patchPromises = [];
-        keys.forEach(k => {
-            patchPromises.push(
-                fetch(`${FIREBASE_DB_URL}/quizzes/${qId}/tu_luan/${k}.json`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ isApproved: isApproved })
-                })
-            );
-            patchPromises.push(
-                fetch(`${FIREBASE_DB_URL}/exams/${qId}/tu_luan/${k}.json`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ isApproved: isApproved })
-                })
-            );
-        });
+        const client = getDbClient();
+        if (client) {
+            await client.from('tu_luan_submissions').update({
+                is_approved: isApproved
+            }).eq('quiz_id', qId);
+        }
 
-        await Promise.all(patchPromises);
         keys.forEach(k => { if (subMap[k]) subMap[k].isApproved = isApproved; });
         renderTuLuanStudentsTable();
         alert(`✅ Đã cập nhật trạng thái phê duyệt cho ${keys.length} học sinh!`);
@@ -2027,7 +2878,7 @@ function triggerStudentUpload(stt, sbd, studentName, defaultPass) {
     }
 }
 
-// TỔ CHỨC CÂY THƯ MỤC DRIVE PHÂN CẤP 4 TẦNG:
+// TỔ CHỨC CÂY THƯ MỤC DRIVE PHÂN CẤP 4 TẦNG & LƯU SUPABASE:
 // BAI_TAP_TU_LUAN / LOP / DE / STT_SBD_HOTEN / ANH_CHUP
 async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
     if (!fileInput.files || fileInput.files.length === 0) return;
@@ -2108,7 +2959,31 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
         const pad = n => String(n).padStart(2, '0');
         const submitDateStr = `${pad(now.getHours())}:${pad(now.getMinutes())} ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
 
-        const firebaseRecord = {
+        const subPayload = {
+            quiz_id: quizId,
+            sbd: cleanSbd,
+            stt: String(stt || "00"),
+            student_name: studentName,
+            class_name: driveClassName,
+            exam_title: examTitle,
+            last_submit: submitDateStr,
+            last_submit_time: Date.now(),
+            count: existingImages.length,
+            images: existingImages,
+            cross_score: currentSub.crossScore || "",
+            cross_score_by: currentSub.crossScoreBy || "",
+            cross_score_time: currentSub.crossScoreTime || "",
+            feedback: currentSub.feedback || "",
+            feedback_time: currentSub.feedbackTime || "",
+            is_approved: !!currentSub.isApproved
+        };
+
+        const client = getDbClient();
+        if (client) {
+            await client.from('tu_luan_submissions').upsert(subPayload, { onConflict: 'quiz_id,sbd' });
+        }
+
+        currentTuLuanModalData.submissionsMap[cleanSbd] = {
             stt: stt,
             sbd: sbd,
             studentName: studentName,
@@ -2118,28 +2993,14 @@ async function handleStudentEssayUploadPC(stt, sbd, studentName, fileInput) {
             lastSubmitTime: Date.now(),
             count: existingImages.length,
             images: existingImages,
-            crossScore: currentSub.crossScore !== undefined ? currentSub.crossScore : "",
+            crossScore: currentSub.crossScore || "",
             crossScoreBy: currentSub.crossScoreBy || "",
             crossScoreTime: currentSub.crossScoreTime || "",
             feedback: currentSub.feedback || "",
             feedbackTime: currentSub.feedbackTime || "",
-            isApproved: currentSub.isApproved || false
+            isApproved: !!currentSub.isApproved
         };
 
-        await Promise.all([
-            fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/tu_luan/${cleanSbd}.json`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(firebaseRecord)
-            }).catch(() => null),
-            fetch(`${FIREBASE_DB_URL}/exams/${quizId}/tu_luan/${cleanSbd}.json`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(firebaseRecord)
-            }).catch(() => null)
-        ]);
-
-        currentTuLuanModalData.submissionsMap[cleanSbd] = firebaseRecord;
         renderTuLuanStudentsTable();
         alert(`🎉 THÀNH CÔNG!\n\nĐã lưu ${successCount} ảnh bài làm vào Google Drive theo đường dẫn:\nBAI_TAP_TU_LUAN / ${driveClassName} / ${unifiedFolder} / ${studentFolderName}`);
     }
@@ -2170,7 +3031,7 @@ function closeTuLuanLightbox(event) {
     if (lb) lb.style.display = "none";
 }
 
-// NỘP BÀI TỰ LUẬN TRONG BÀI THI (thi.html)
+// NỘP BÀI TỰ LUẬN TRONG BÀI THI (thi.html) QUA SUPABASE
 async function triggerExamRoomDriveUpload(qId) {
     const sId = document.getElementById("student-id")?.value.trim() || safeLocal.getItem("saved_student_sbd") || "";
     const sName = document.getElementById("student-name")?.value.trim() || safeLocal.getItem("saved_student_name") || "";
@@ -2215,13 +3076,13 @@ async function triggerExamRoomDriveUpload(qId) {
             const cleanSbd = sId.replace(/[^a-zA-Z0-9]/g, '_');
 
             let existingImages = [];
-            try {
-                const res = await fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/tu_luan/${cleanSbd}.json`);
-                if (res.ok) {
-                    const d = await res.json();
-                    if (d && Array.isArray(d.images)) existingImages = d.images;
-                }
-            } catch(e) {}
+            const client = getDbClient();
+            if (client) {
+                try {
+                    const { data } = await client.from('tu_luan_submissions').select('images').eq('quiz_id', quizId).eq('sbd', cleanSbd).single();
+                    if (data && Array.isArray(data.images)) existingImages = data.images;
+                } catch(e) {}
+            }
 
             let successCount = 0;
             for (let i = 0; i < files.length; i++) {
@@ -2267,30 +3128,22 @@ async function triggerExamRoomDriveUpload(qId) {
 
             if (successCount > 0) {
                 const submitRecord = {
+                    quiz_id: quizId,
+                    sbd: cleanSbd,
                     stt: studentFolderName.split('_')[0] || "00",
-                    sbd: sId,
-                    studentName: sName,
-                    className: driveClassName,
-                    examTitle: examTitle,
-                    lastSubmit: new Date().toLocaleTimeString("vi-VN") + " " + new Date().toLocaleDateString("vi-VN"),
-                    lastSubmitTime: Date.now(),
+                    student_name: sName,
+                    class_name: driveClassName,
+                    exam_title: examTitle,
+                    last_submit: new Date().toLocaleTimeString("vi-VN") + " " + new Date().toLocaleDateString("vi-VN"),
+                    last_submit_time: Date.now(),
                     count: existingImages.length,
                     images: existingImages,
-                    isApproved: false
+                    is_approved: false
                 };
 
-                await Promise.all([
-                    fetch(`${FIREBASE_DB_URL}/quizzes/${quizId}/tu_luan/${cleanSbd}.json`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(submitRecord)
-                    }).catch(() => null),
-                    fetch(`${FIREBASE_DB_URL}/exams/${quizId}/tu_luan/${cleanSbd}.json`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(submitRecord)
-                    }).catch(() => null)
-                ]);
+                if (client) {
+                    await client.from('tu_luan_submissions').upsert(submitRecord, { onConflict: 'quiz_id,sbd' });
+                }
 
                 if (statusEl) {
                     statusEl.className = "drive-up-status success";
@@ -2313,10 +3166,13 @@ async function triggerExamRoomDriveUpload(qId) {
 document.addEventListener("click", function(e) {
     if (!e.target.closest(".student-pass-popover") && 
         !e.target.closest(".student-feedback-popover") && 
+        !e.target.closest(".dapan-schedule-popover") && 
         !e.target.closest(".btn-tuluan-change-pass") && 
-        !e.target.closest(".btn-tuluan-comment")) {
+        !e.target.closest(".btn-tuluan-comment") &&
+        !e.target.closest("#btn-schedule-dapan")) {
         document.querySelectorAll(".student-pass-popover.show").forEach(p => p.classList.remove("show"));
         document.querySelectorAll(".student-feedback-popover.show").forEach(p => p.classList.remove("show"));
+        document.querySelectorAll(".dapan-schedule-popover.show").forEach(p => p.classList.remove("show"));
         document.querySelectorAll(".tuluan-td-active-popover").forEach(td => td.classList.remove("tuluan-td-active-popover"));
     }
 });
@@ -2352,3 +3208,13 @@ window.toggleStudentFeedbackPopover = toggleStudentFeedbackPopover;
 window.closeStudentFeedbackPopover = closeStudentFeedbackPopover;
 window.saveStudentFeedback = saveStudentFeedback;
 window.exportTuLuanToExcel = exportTuLuanToExcel;
+window.triggerUploadDapAnCham = triggerUploadDapAnCham;
+window.handleUploadDapAnCham = handleUploadDapAnCham;
+window.deleteDapAnCham = deleteDapAnCham;
+window.renderDapAnChamUI = renderDapAnChamUI;
+window.toggleDapAnSchedulePopover = toggleDapAnSchedulePopover;
+window.closeDapAnSchedulePopover = closeDapAnSchedulePopover;
+window.onDapAnScheduleModeChanged = onDapAnScheduleModeChanged;
+window.setScheduleToExamDeadline = setScheduleToExamDeadline;
+window.saveDapAnSchedule = saveDapAnSchedule;
+window.isDapAnUnlocked = isDapAnUnlocked;
